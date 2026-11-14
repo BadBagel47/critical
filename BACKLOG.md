@@ -21,6 +21,9 @@ Prioritet: Hög, Medel, Låg.
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - F-048 – Musik för de olika lägena
 
+**F** – strong model, high level – Visuella effekter
+- F-054 – Mer utarbetade effekter för explosioner, skott, sköldar, motorer och hopp
+
 Väntar på användaren: D-052 (storyläge eller grund för vad spelet går ut på) behöver ett samtal först. Dessutom provspelning, besked i D-044 och D-045, och motorn för onlineläget (F-040).
 
 ## Hög
@@ -39,6 +42,7 @@ Väntar på användaren: D-052 (storyläge eller grund för vad spelet går ut p
 | F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer | Ej påbörjad |
 | F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
+| F-054 | Mer utarbetade visuella effekter | Ej påbörjad |
 | D-052 | Någon form av storyläge, eller åtminstone grund för vad spelet går ut på, behöver ses över | Väntar på användaren |
 | F-040 | Onlinespel för upp till tre spelare via användarens motor, som bygger på Cloudflares realtidstjänster. Målet är att gratiskontot ska räcka | Väntar på motorn |
 | D-031 | Hoppa tillbaka till gamla sektorer. Beslut tills vidare: det går, och sektorn är som den lämnades | Beslutat tills vidare |
