@@ -131,6 +131,15 @@ function leave(state, it, av, teleported) {
   player.inside = null;
 }
 
+// The ship is leaving: everyone still inside is teleported home, at the usual cost.
+export function teleportAllHome(state, targetId) {
+  const target = findDock(state, targetId);
+  if (!target || !target.interior) return 0;
+  const inside = [...target.interior.avatars];
+  for (const av of inside) leave(state, target.interior, av, true);
+  return inside.length;
+}
+
 function deposit(state, av) {
   if (!av.carry.length) return;
   let fuel = 0, credits = 0;

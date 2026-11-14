@@ -233,10 +233,15 @@ test('near death the player is teleported home, drops the loot and cannot go bac
   assert.equal(tryBoard(s, 0), true, 'a new docking is a new boarding');
 });
 
-test('the captain cannot undock while someone is inside', () => {
-  const { s } = boarded();
+test('undocking with someone inside teleports them home at the usual cost', () => {
+  const { s, it, av } = boarded();
+  const item = it.loot[0]; av.x = item.x; av.y = item.y; step(s, { away: { 0: {} } }, DT);
+  const before = it.loot.length;
   step(s, { captain: { dock: true } }, DT);
-  assert.ok(s.ship.docked);
+  assert.equal(s.ship.docked, null, 'the ship is free');
+  assert.equal(s.players[0].inside, null, 'the player is back on board');
+  assert.equal(it.loot.length, before + 1, 'what was carried stays behind');
+  assert.equal(s.players[0].tele, B.TELEPORT_COOLDOWN, 'the teleporter has to recharge');
 });
 
 test('guards shoot at a player they can see, and the rifle kills them', () => {

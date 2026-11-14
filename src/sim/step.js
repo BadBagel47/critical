@@ -3,7 +3,7 @@
 import { B, SHIP_GEOM, WRECK_GEOM, CRUISER_GEOM, WING_MOUNTS } from './balance.js';
 import { nodeStatus } from './state.js';
 import { clamp, forward, headingTo, angleDiff, turnToward, toWorld, dist, rand, randRange, TAU } from './util.js';
-import { stepBoarding, anyoneInside } from './boarding.js';
+import { stepBoarding, teleportAllHome } from './boarding.js';
 import { damageShip } from './damage.js';
 import { stepMap, useTool } from './map.js';
 import { dockTargets, findDock, portsOf } from './dock.js';
@@ -51,10 +51,11 @@ function stepCaptain(state, cmd, dt) {
     else if (cmd.throttle) ship.throttle = clamp(ship.throttle + cmd.throttle * B.THROTTLE_RATE * dt, -B.REVERSE, 1);
     turnInput = clamp(cmd.turn || 0, -1, 1);
     if (cmd.dock) {
-      if (ship.docked && anyoneInside(state, ship.docked)) {
-        state.events.push({ type: 'crewInside' });
-      } else if (ship.docked) {
+      if (ship.docked) {
         const id = ship.docked;
+        // Undocking with people still inside teleports them home. They lose what they carry.
+        const recalled = teleportAllHome(state, id);
+        if (recalled) state.events.push({ type: 'recalled', count: recalled });
         ship.docked = null;
         for (const p of state.players) p.lockedOut = null;
         const f = forward(ship.heading);

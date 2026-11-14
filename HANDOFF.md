@@ -75,6 +75,7 @@ Poster
 
 Värld
 - Sektorer som nås med stjärnkartor som hittas eller köps. Hopp kostar bränsle.
+- Tills vidare: det går att hoppa tillbaka till sektorer man varit i, och de är som de lämnades (D-031, 2026-11-14).
 - Fri sikt i rymden. Fog of war finns bara på kartan. Stillastående objekt ligger kvar som senast kända läge, skepp syns bara medan de ses.
 - Stationer är vänliga, neutrala eller fientliga. Gratis tankning hos vänliga, betalning hos neutrala.
 - Skeppet kan bara byggas om vid en station med shipyard.
@@ -87,17 +88,16 @@ Bordning
 - Den som nästan dör teleporteras hem och kan inte gå in igen under samma bordning. När alla är tillbaka får alla tillbaka sitt liv.
 - Teleportern måste vara laddad för att spelaren ska kunna borda nästa gång.
 - Det som bärs blir kvar på platsen när någon teleporteras hem, så att en annan bordare kan plocka upp det (2026-11-14).
+- Tills vidare: Captain kan lägga ut medan någon är kvar inne. Alla som är inne teleporteras då hem, tappar det de bär och måste ladda om teleportern (D-043, 2026-11-14).
 - Mål är olika svåra att borda. En scanner visar det.
 - Varje typ av mål har ett eget inbrottsspel på tid.
 
 Bordning, agentens val som användaren inte har sett än (2026-11-14)
 - Valvdörren i ett vrak öppnas genom att hålla in F bredvid den, inte med ett eget inbrottsspel.
 - Reaktorn räknar ner från första steget in. Vid noll sprängs vraket, alla teleporteras hem, ett dockat skepp skadas och ett nytt vrak dyker upp på annat håll.
-- Skeppet kan inte lägga ut medan någon är kvar inne.
 - Bränsle förbrukas av gasen. Tom tank ger ett skepp som nästan står still.
 
 Stationer, vapen och sektorer, agentens val som användaren inte har sett än (2026-11-14)
-- Det går att hoppa tillbaka till sektorer man varit i, och de är som de lämnades (se D-031).
 - Fem fasta sektorer: Kestrel Drift, Ash Belt, Hollow Reach, The Narrows och The Maw. Stationer säljer kartan till nästa sektor, och kartor kan ligga i valv.
 - En neutral station blir fientlig efter sex träffar från skeppet. Den varnar först.
 - En fientlig station tas över från en terminal i dess valv. Misslyckas inbrottet slår stationen tillbaka med två Fighters, och låset får ett nytt pussel.

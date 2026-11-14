@@ -31,8 +31,8 @@ Inget just nu.
 | F-029 | Övriga skeppsuppgraderingar: afterburner, jump drive, tractor beam, point defense, targeting computer, power core, repair drones, fuel tank | Ej påbörjad |
 | F-030 | Automatisk paus när någon varit frånkopplad en stund | Ej påbörjad |
 | F-040 | Onlinespel för upp till tre spelare via användarens motor, som bygger på Cloudflares realtidstjänster. Målet är att gratiskontot ska räcka | Väntar på motorn |
-| D-031 | Avgör om man ska kunna hoppa tillbaka till gamla sektorer. Just nu går det | Väntar på användaren |
-| D-043 | Avgör om skeppet ska kunna lägga ut medan någon är kvar inne. Just nu går det inte | Väntar på användaren |
+| D-031 | Hoppa tillbaka till gamla sektorer. Beslut tills vidare: det går, och sektorn är som den lämnades | Beslutat tills vidare |
+| D-043 | Lägga ut medan någon är kvar inne. Beslut tills vidare: det går, och alla som är inne teleporteras hem på vanligt sätt | Beslutat tills vidare |
 
 ## Låg
 

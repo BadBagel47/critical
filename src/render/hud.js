@@ -64,6 +64,8 @@ function dockedLine(state) {
   const ship = state.ship, t = findDock(state, ship.docked), tele = state.players[0].tele;
   if (!t) return null;
   const calm = { color: COL.ion[2], border: COL.ion[0] }, warm = { color: COL.ochre[2], border: COL.ochre[0] };
+  const inside = state.players.filter((p) => p.inside === t.id).length;
+  if (inside) return { text: `${inside} INSIDE  ·  E UNDOCKS AND TELEPORTS ${inside === 1 ? 'THEM' : 'THEM ALL'} HOME`, ...warm };
   if (t.kind === 'station' && t.align !== 'hostile') return { text: `DOCKED AT ${t.name}  ·  F SERVICES  ·  E UNDOCK`, ...calm };
   const what = t.kind === 'station' ? t.name : 'WRECK';
   if (t.lock !== 'open') {
