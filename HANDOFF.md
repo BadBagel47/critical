@@ -30,7 +30,7 @@ Idéer spånas i chatten och samlas i designskissen. Det som ska byggas läggs i
 
 ## Publicering
 
-GitHub Pages direkt från main, rotmappen. Spelet har inget byggsteg, så det som ligger på main är det som publiceras. Adress: https://badbagel47.github.io/critical/
+GitHub Pages direkt från main, rotmappen. Spelet har inget byggsteg, så det som ligger på main är det som publiceras. Agentens grenar (claude/) slås ihop med main automatiskt. Adress: https://badbagel47.github.io/critical/
 
 Pages slogs på 2026-11-14. Flytt till Cloudflare sker när nätverksmotorn byggs in.
 
@@ -165,12 +165,13 @@ Grafik
 ## Miljö och begränsningar
 
 - 2026-11-14: Agenten kan klona och pusha via git. GitHub-verktygen (gh och GitHub-kopplingen) fungerade inte i sessionen, så agenten kunde inte läsa eller ändra repoinställningar, till exempel GitHub Pages.
-- 2026-11-14, senare session: GitHub-kopplingen fungerar för att läsa pull requests och issues. Kommandot gh finns inte. Sessionen fick bara pusha till sin egen gren (claude/), inte direkt till main, och repot saknar automatisk merge.
+- 2026-11-14, senare session: GitHub-kopplingen fungerar för att läsa pull requests och issues. Kommandot gh finns inte. Sessionen fick bara pusha till sin egen gren (claude/), inte direkt till main. Därför finns nu automatisk merge, se Engångsåtgärder.
 
 ## Engångsåtgärder
 
 - Klar 2026-11-14: `badbagel47.github.io` är tillåten i användarens molnmiljö, så att agenten kan kontrollera den publicerade sidan.
 - Klar 2026-11-14: användaren slog på GitHub Pages för repot (Deploy from a branch, main, rot).
+- Klar 2026-11-14: automatisk merge enligt agentreglernas mall (`.github/workflows/auto-merge.yml`), vald av användaren. Grenar som börjar med claude/ slås ihop med main av sig själva.
 
 ## Teknisk bedömning
 
