@@ -1,7 +1,9 @@
 // Music (F-048). Made in the browser with the Web Audio API, with no audio files.
 // How it fits together:
-//   music/theory.js    notes, scales, the title theme and each sector's colour
-//   music/pieces.js    one piece for each kind of moment, as plain functions that give the notes of each step
+//   music/theory.js    notes, scales, the title themes and each sector's colour
+//   music/sets.js      the sets of music: each has a title theme and one piece for each kind of moment
+//   music/pieces.js    set A, as plain functions that give the notes of each step
+//   music/pieces-b.js  set B, the same way
 //   music/director.js  which piece should play, with inertia so that a flickering scene is never heard
 //   music/synth.js     the instruments
 //   music/engine.js    plays the pieces on the audio clock and fades between them
@@ -10,12 +12,13 @@ import { musicOutput } from './audio.js';
 import { createEngine } from './music/engine.js';
 import { startSteer, steer, wanted } from './music/director.js';
 
-// The title theme, as an index into THEMES in music/theory.js. Chosen by ear on the listening page.
-export const THEME = 0;
+// The set of music the game plays, see music/sets.js. The user chose set A (2026-11-14). It stays until the user
+// explicitly asks to change it. Other sets can be heard on the listening page.
+export const SET = 'A';
 
 let engine = null;
 let engineOut = null;
-let theme = THEME;
+let set = SET;
 let mem = startSteer();
 let wonBefore = null;
 let victory = false;
@@ -34,7 +37,7 @@ export function updateMusic(info, dt) {
   if (!engine || engineOut !== output.out) {
     engine = createEngine(output.context, output.out);
     engineOut = output.out;
-    engine.setTheme(theme);
+    engine.setSet(set);
   }
   // The victory plays once, when the boss falls. A game loaded after the victory does not play it again.
   if (wonBefore === false && info.won && info.scene !== 'title') victory = true;
@@ -50,10 +53,10 @@ export function updateMusic(info, dt) {
   engine.update(piece, info.sector || 0);
 }
 
-// For the listening page: choose the title theme, and see what is playing.
-export function setMusicTheme(i) {
-  theme = i;
-  if (engine) engine.setTheme(i);
+// For the listening page: choose the set of music, and see what is playing.
+export function setMusicSet(name) {
+  set = name;
+  if (engine) engine.setSet(name);
 }
 // The listening page can switch at once instead of with the game's inertia.
 export function setMusicInstant(on) {

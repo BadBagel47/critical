@@ -60,59 +60,55 @@ export function colourOf(sector) {
   };
 }
 
-// The title theme. Three candidates to choose between by ear. Each is four bars:
-// notes as [semitones from the root, length in steps], null for a rest, and one chord per bar.
-export const THEMES = [
-  {
-    name: 'Signal',
-    // prettier-ignore
-    notes: [
-      [0, 4], [7, 4], [5, 2], [3, 2], [5, 4],
-      [3, 2], [2, 2], [0, 4], [-2, 4], [0, 4],
-      [0, 4], [7, 4], [10, 2], [8, 2], [7, 4],
-      [5, 2], [3, 2], [2, 4], [7, 8],
-    ],
-    chords: [
-      [0, 'min'],
-      [-2, 'maj'],
-      [0, 'min'],
-      [7, 'min'],
-    ],
-  },
-  {
-    name: 'Drift',
-    // prettier-ignore
-    notes: [
-      [0, 2], [3, 2], [7, 2], [14, 6], [12, 2], [10, 2],
-      [7, 4], [8, 4], [7, 8],
-      [0, 2], [3, 2], [7, 2], [15, 6], [14, 2], [12, 2],
-      [10, 4], [7, 4], [12, 8],
-    ],
-    chords: [
-      [0, 'min'],
-      [-4, 'maj'],
-      [0, 'min'],
-      [-2, 'maj'],
-    ],
-  },
-  {
-    name: 'Pulse',
-    // prettier-ignore
-    notes: [
-      [0, 3], [0, 3], [12, 2], [10, 2], [7, 2], [10, 4],
-      [8, 3], [7, 3], [3, 2], [5, 8],
-      [0, 3], [0, 3], [12, 2], [15, 2], [14, 2], [12, 4],
-      [10, 3], [7, 3], [5, 2], [7, 8],
-    ],
-    chords: [
-      [0, 'min'],
-      [-4, 'maj'],
-      [0, 'min'],
-      [7, 'min'],
-    ],
-  },
-];
-export const THEME_STEPS = 4 * BAR;
+// The title themes, one for each set of music. Notes are [semitones from the root, length in steps], null for a rest,
+// and there is one chord per bar, given as [semitones from the root, 'maj' or 'min']. `bar` is the steps in a bar.
+// Signal belongs to set A: four bars of 4/4 in a minor key.
+export const SIGNAL = {
+  name: 'Signal',
+  bar: BAR,
+  // prettier-ignore
+  notes: [
+    [0, 4], [7, 4], [5, 2], [3, 2], [5, 4],
+    [3, 2], [2, 2], [0, 4], [-2, 4], [0, 4],
+    [0, 4], [7, 4], [10, 2], [8, 2], [7, 4],
+    [5, 2], [3, 2], [2, 4], [7, 8],
+  ],
+  chords: [
+    [0, 'min'],
+    [-2, 'maj'],
+    [0, 'min'],
+    [7, 'min'],
+  ],
+};
+// Horizon belongs to set B: eight bars of a slow 6/8 in the dorian mode, whose raised sixth (bar four) gives it
+// a hopeful, far-away colour.
+export const HORIZON = {
+  name: 'Horizon',
+  bar: 12,
+  // prettier-ignore
+  notes: [
+    [0, 6], [2, 3], [3, 3],
+    [7, 9], [5, 3],
+    [3, 6], [5, 3], [7, 3],
+    [9, 12],
+    [10, 6], [9, 3], [7, 3],
+    [5, 6], [3, 3], [2, 3],
+    [3, 6], [2, 3], [-2, 3],
+    [0, 12],
+  ],
+  chords: [
+    [0, 'min'],
+    [-2, 'maj'],
+    [-4, 'maj'],
+    [5, 'maj'],
+    [-2, 'maj'],
+    [3, 'maj'],
+    [-2, 'maj'],
+    [0, 'min'],
+  ],
+};
+export const THEMES = [SIGNAL, HORIZON];
+export const themeSteps = (theme) => theme.notes.reduce((sum, [, len]) => sum + len, 0);
 
 // The note of a theme that starts on a step, or null. Steps outside the theme have none.
 const starts = new Map();
@@ -135,6 +131,7 @@ export function toMajor(semi) {
   return semi + (RAISE[((semi % 12) + 12) % 12] || 0);
 }
 // A chord of the theme in the major key. The tonic and the fifth become major, chords that moved become minor.
+/** @returns {[number, string]} */
 export function majorChord(c) {
   const [root, quality] = c;
   const moved = toMajor(root);

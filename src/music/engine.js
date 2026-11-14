@@ -1,8 +1,8 @@
 // Plays the pieces. Each piece runs in a layer of its own with its own fader, so one piece can fade out while the next
 // fades in. Notes are scheduled a short moment ahead of the audio clock, never further: when the tab is hidden the
 // frames stop, the music falls silent by itself, and no long tail of old notes is heard when it comes back.
-import { PIECES } from './pieces.js';
-import { BAR, THEMES, colourOf } from './theory.js';
+import { SETS } from './sets.js';
+import { BAR, colourOf } from './theory.js';
 import { fades } from './director.js';
 import { play } from './synth.js';
 
@@ -44,19 +44,19 @@ export function createEngine(context, out) {
 
   let layers = [];
   let sounding = 0;
-  let theme = 0;
+  let set = 'A';
   let paused = false;
   const done = () => sounding--;
 
   function startLayer(name, sector, fadeIn, now) {
-    const piece = PIECES[name];
+    const piece = SETS[set].pieces[name];
     const colour = colourOf(piece.fixedColour ? 0 : sector);
     const fader = context.createGain();
     fader.gain.setValueAtTime(0, now);
     fader.gain.linearRampToValueAtTime(1, now + Math.max(0.02, fadeIn));
     fader.connect(bus);
     const step = 60 / (piece.bpm * (piece.fixedColour ? 1 : colour.tempo)) / 4;
-    return { name, sector, piece, colour, fader, step, at: 0, next: now + 0.05, until: Infinity, finished: false };
+    return { name, sector, set, piece, colour, fader, step, at: 0, next: now + 0.05, until: Infinity, finished: false };
   }
 
   function stopLayer(layer, fadeOut, now) {
@@ -70,7 +70,7 @@ export function createEngine(context, out) {
   function schedule(layer, now) {
     // Coming back after the tab was hidden: skip what was missed instead of playing it all at once.
     if (layer.next < now - 0.1) layer.next = now + 0.02;
-    const c = { colour: layer.colour, theme: THEMES[theme] };
+    const c = { colour: layer.colour, theme: SETS[layer.set].theme };
     while (layer.next < now + AHEAD && layer.next < layer.until && !layer.finished) {
       if (layer.piece.length !== undefined && layer.at >= layer.piece.length) {
         layer.finished = true;
@@ -96,9 +96,10 @@ export function createEngine(context, out) {
       const now = context.currentTime;
       const current = layers.find((l) => l.until === Infinity) || null;
       const colourChanged = current && !current.piece.fixedColour && current.sector !== sector;
-      if (!current || current.name !== name || colourChanged) {
+      const setChanged = current && current.set !== set;
+      if (!current || current.name !== name || colourChanged || setChanged) {
         const fade = fades(current && current.name, name);
-        if (current) stopLayer(current, colourChanged && current.name === name ? 3 : fade.out, now);
+        if (current) stopLayer(current, current.name === name ? (setChanged ? 1 : 3) : fade.out, now);
         layers.push(startLayer(name, sector, fade.in, now));
       }
       for (const layer of layers) schedule(layer, now);
@@ -118,8 +119,9 @@ export function createEngine(context, out) {
       bus.gain.setTargetAtTime(on ? LEVEL * PAUSED.level : LEVEL, now, 0.3);
       tone.frequency.setTargetAtTime(on ? PAUSED.tone : 18000, now, 0.3);
     },
-    setTheme(i) {
-      theme = Math.max(0, Math.min(THEMES.length - 1, i | 0));
+    // Which set of music plays, see sets.js.
+    setSet(name) {
+      if (SETS[name]) set = name;
     },
     // Whether a piece that plays once has come to its end.
     finished(name) {
@@ -131,10 +133,10 @@ export function createEngine(context, out) {
       return {
         piece: current ? current.name : null,
         sector: current ? current.colour.sector : null,
-        bar: current ? Math.floor(current.at / BAR) : 0,
+        bar: current ? Math.floor(current.at / (current.piece.bar || BAR)) : 0,
         layers: layers.length,
         sounding,
-        theme,
+        set,
       };
     },
   };

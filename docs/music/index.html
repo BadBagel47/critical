@@ -38,9 +38,9 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   <p id="muted" class="warn" hidden>Ljudet är avstängt i spelet (tangenten N). <button id="unmute">Slå på ljudet</button></p>
 
   <section>
-    <h2>Introtemat</h2>
-    <p>Välj vilket av de tre förslagen som ska bli spelets tema. Det hörs på startskärmen, och varianter av det hörs i rymden, på stationer, vid vinst och vid förlust.</p>
-    <div class="grid" id="themes" style="margin-top:12px"></div>
+    <h2>Uppsättning</h2>
+    <p>Varje uppsättning är en hel egen musik till spelet, med ett eget introtema. Temat hörs på startskärmen, och varianter av det hörs i rymden, på stationer, vid vinst och vid förlust.</p>
+    <div class="grid" id="sets" style="margin-top:12px"></div>
   </section>
 
   <section>
@@ -68,8 +68,8 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
 <script type="module">
 import { initAudio, isMuted, toggleMute } from '../../src/audio.js';
-import { updateMusic, setMusicTheme, setMusicInstant, musicStatus, THEME } from '../../src/music.js';
-import { THEMES } from '../../src/music/theory.js';
+import { updateMusic, setMusicSet, setMusicInstant, musicStatus, SET } from '../../src/music.js';
+import { SETS } from '../../src/music/sets.js';
 
 const SCENES = [
   ['title', 'Startskärm', 'Introtemat'],
@@ -86,7 +86,11 @@ const SECTORS = ['Kestrel Drift', 'Ash Belt', 'Hollow Reach', 'The Narrows', 'Th
 const NAMES = Object.fromEntries(SCENES.map(([k, v]) => [k, v]));
 
 const info = { scene: 'title', sector: 0, paused: false, won: false };
-let theme = THEME;
+let set = SET;
+const ABOUT = {
+  A: 'Drivande syntar i 4/4, temat Signal',
+  B: 'Svävande klockspel, glas, kör och mässing i 6/8, 7/8 och 3/4, temat Horizon',
+};
 let started = false;
 
 function buttons(box, items, pick) {
@@ -104,17 +108,16 @@ function buttons(box, items, pick) {
   return all;
 }
 
-const themeButtons = buttons(
-  document.getElementById('themes'),
-  THEMES.map((t, i) => [i, `${String.fromCharCode(65 + i)}: ${t.name}`, i === THEME ? 'Används i spelet nu' : '']),
-  (i) => {
-    theme = i;
-    setMusicTheme(i);
-    info.scene = 'title';
-    sceneButtons.forEach((b, j) => b.setAttribute('aria-pressed', String(j === 0)));
+const setNames = Object.keys(SETS);
+const setButtons = buttons(
+  document.getElementById('sets'),
+  setNames.map((name) => [name, `${name}${name === SET ? ' (i spelet nu)' : ''}`, ABOUT[name] || '']),
+  (name) => {
+    set = name;
+    setMusicSet(name);
   },
 );
-themeButtons[theme].setAttribute('aria-pressed', 'true');
+setButtons[setNames.indexOf(set)].setAttribute('aria-pressed', 'true');
 
 const sceneButtons = buttons(document.getElementById('scenes'), SCENES, (key) => {
   if (key === 'won') {
@@ -171,7 +174,7 @@ function frame(t) {
     if (s && s.piece) {
       const sector = ['title', 'won', 'lost'].includes(s.piece) ? '' : ` · ${SECTORS[s.sector] ?? `sektor ${s.sector + 1}`}`;
       now.textContent = `Spelar: ${NAMES[s.piece] ?? s.piece}${sector} · takt ${s.bar + 1}` +
-        ` · tema ${String.fromCharCode(65 + theme)}${info.paused ? ' · pausad' : ''}`;
+        ` · uppsättning ${set}${info.paused ? ' · pausad' : ''}`;
     }
   }
   requestAnimationFrame(frame);

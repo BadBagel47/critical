@@ -100,7 +100,8 @@ Flera agenter arbetar i repot samtidigt. För att det inte ska krocka:
 
 ## Besked från användaren (2026-11-14)
 
-- Startskärmen ska ha en melodi som fastnar och ger spelet en identitet. Tre förslag finns att välja mellan på lyssningssidan. Valet sätts i `THEME` i `src/music.js`.
+- Startskärmen ska ha en melodi som fastnar och ger spelet en identitet. Av tre förslag valdes Signal (2026-11-14).
+- Musiken finns i uppsättningar, var och en med eget introtema och ett stycke per scen. Uppsättning A (temat Signal) används och ska behållas tills användaren uttryckligen säger att den ska bytas (2026-11-14). Uppsättning B (temat Horizon) är ett fritt förslag från agenten att jämföra med. Inga låtar får vara för korta.
 - Introtemat återkommer sparsamt och i förklädnad, som ett tema i en film: långsamt och dovt i rymden, varmt på stationer, fullt ut i dur vid vinst och långsamt i moll vid förlust, där det bryts av. Inte i strid, smyg eller larm.
 - Rymden är mest stämning.
 - Bordning har två lägen: smyg med spänning, där man väntar på att allt ska braka loss, och larm som höjer pulsen. Spelet skiljer inte på dem än, se F-120.
@@ -111,4 +112,4 @@ Flera agenter arbetar i repot samtidigt. För att det inte ska krocka:
 
 ## Öppna frågor till användaren
 
-- Vilket av de tre förslagen ska bli introtemat?
+- Hur låter uppsättning B jämfört med A?

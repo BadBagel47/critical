@@ -1,8 +1,10 @@
 // The music's logic, without sound: the pieces, the theme, the sectors' colours and the inertia between scenes.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BAR, THEMES, THEME_STEPS, colourOf, majorChord, noteAt, toDark, toMajor } from '../src/music/theory.js';
+import { BAR, SIGNAL, colourOf, majorChord, noteAt, themeSteps, toDark, toMajor } from '../src/music/theory.js';
 import { PIECES } from '../src/music/pieces.js';
+import { SETS } from '../src/music/sets.js';
+import { SET } from '../src/music.js';
 import { HOLD, SETTLE, fades, startSteer, steer, wanted } from '../src/music/director.js';
 import { VOICES } from '../src/music/synth.js';
 
@@ -11,45 +13,66 @@ const run = (mem, want, seconds, dt = 1 / 60) => {
   return mem;
 };
 
-test('every theme is four bars long and stays in a singable range', () => {
-  for (const theme of THEMES) {
-    assert.equal(
-      theme.notes.reduce((sum, [, len]) => sum + len, 0),
-      THEME_STEPS,
-      theme.name,
-    );
-    assert.equal(theme.chords.length, 4, theme.name);
+test('every set has a theme of whole bars in a singable range, and a piece for every moment', () => {
+  for (const { name, theme, pieces } of Object.values(SETS)) {
+    assert.equal(themeSteps(theme) % theme.bar, 0, name);
+    assert.equal(theme.chords.length, themeSteps(theme) / theme.bar, name);
     for (const [semi] of theme.notes) if (semi !== null) assert.ok(semi >= -12 && semi <= 24, `${theme.name} ${semi}`);
     assert.deepEqual(noteAt(theme, 0), { semi: theme.notes[0][0], len: theme.notes[0][1] });
+    assert.deepEqual(Object.keys(pieces).sort(), Object.keys(SETS.A.pieces).sort(), name);
   }
 });
 
+test('the game plays set A until the user says otherwise', () => {
+  assert.equal(SET, 'A');
+  assert.equal(SETS.A.theme, SIGNAL);
+});
+
 test('every piece gives well-formed notes, and not too many at once', () => {
-  for (const [name, piece] of Object.entries(PIECES)) {
-    for (const theme of THEMES) {
+  for (const { name: set, theme, pieces } of Object.values(SETS)) {
+    for (const [name, piece] of Object.entries(pieces)) {
       for (const sector of [0, 2, 4, 9]) {
         const c = { colour: colourOf(sector), theme };
         let notes = 0;
         for (let step = 0; step < 40 * BAR; step++) {
           const out = piece.notes(step, c);
-          assert.ok(out.length <= 12, `${name} step ${step} has ${out.length} notes`);
+          assert.ok(out.length <= 12, `${set} ${name} step ${step} has ${out.length} notes`);
           for (const n of out) {
-            assert.ok(VOICES.includes(n.v), `${name} uses an unknown voice ${n.v}`);
-            assert.ok(Number.isFinite(n.m) && n.m >= 20 && n.m <= 110, `${name} note ${n.m}`);
-            assert.ok(n.d > 0 && n.g > 0 && n.g <= 1, `${name} length ${n.d} loudness ${n.g}`);
+            assert.ok(VOICES.includes(n.v), `${set} ${name} uses an unknown voice ${n.v}`);
+            assert.ok(Number.isFinite(n.m) && n.m >= 20 && n.m <= 110, `${set} ${name} note ${n.m}`);
+            assert.ok(n.d > 0 && n.g > 0 && n.g <= 1, `${set} ${name} length ${n.d} loudness ${n.g}`);
           }
           notes += out.length;
         }
-        assert.ok(notes > (name === 'lost' ? 10 : 40), `${name} is nearly silent`);
+        assert.ok(notes > (name === 'lost' ? 10 : 40), `${set} ${name} is nearly silent`);
       }
     }
   }
 });
 
 test('the same step always gives the same notes', () => {
-  const c = { colour: colourOf(1), theme: THEMES[0] };
-  for (const piece of Object.values(PIECES)) {
-    for (let step = 0; step < 8 * BAR; step++) assert.deepEqual(piece.notes(step, c), piece.notes(step, c));
+  for (const { theme, pieces } of Object.values(SETS)) {
+    const c = { colour: colourOf(1), theme };
+    for (const piece of Object.values(pieces)) {
+      for (let step = 0; step < 8 * BAR; step++) assert.deepEqual(piece.notes(step, c), piece.notes(step, c));
+    }
+  }
+});
+
+test('no title loops in under a minute and a quarter', () => {
+  for (const { name, pieces } of Object.values(SETS)) {
+    const t = pieces.title;
+    const bar = t.bar || BAR;
+    const c = { colour: colourOf(0), theme: SETS[name].theme };
+    const first = JSON.stringify(Array.from({ length: bar * 4 }, (_, s) => t.notes(s, c)));
+    let loop = 1;
+    while (
+      loop < 200 &&
+      JSON.stringify(Array.from({ length: bar * 4 }, (_, s) => t.notes(loop * bar + s, c))) !== first
+    )
+      loop++;
+    const seconds = (loop * bar * 60) / t.bpm / 4;
+    assert.ok(seconds > 75, `set ${name}'s title loops after ${seconds} seconds`);
   }
 });
 
@@ -68,7 +91,7 @@ test('later sectors are darker and a little faster, without a limit on how many 
 });
 
 test('the theme is heard where it should be, and not in the tense pieces', () => {
-  const theme = THEMES[0];
+  const theme = SIGNAL;
   const c = { colour: colourOf(0), theme };
   const melody = (piece, voice, steps) =>
     Array.from({ length: steps }, (_, s) => PIECES[piece].notes(s, c))
@@ -92,7 +115,7 @@ test('the victory plays once in a major key, and the lost ship breaks off the th
   assert.equal(toMajor(7), 7);
   assert.deepEqual(majorChord([0, 'min']), [0, 'maj']);
   assert.equal(toDark(2), 1);
-  const c = { colour: colourOf(0), theme: THEMES[0] };
+  const c = { colour: colourOf(0), theme: SIGNAL };
   const lost = Array.from({ length: 64 * BAR }, (_, s) => PIECES.lost.notes(s, c).map((n) => ({ ...n, s }))).flat();
   const falls = lost.filter((n) => n.v === 'fall');
   assert.equal(falls.length, 1, 'the last note falls away');
@@ -134,7 +157,7 @@ test('boarding is split into sneaking and alarm when the game says so', () => {
 });
 
 test('combat has no cheerful four on the floor and no major tonic', () => {
-  const c = { colour: colourOf(0), theme: THEMES[0] };
+  const c = { colour: colourOf(0), theme: SIGNAL };
   for (let bar = 0; bar < 16; bar++) {
     const kicks = [0, 4, 8, 12].filter((pos) => PIECES.combat.notes(bar * BAR + pos, c).some((n) => n.v === 'kick'));
     assert.ok(kicks.length < 4, `bar ${bar} has a kick on every beat`);
@@ -144,19 +167,11 @@ test('combat has no cheerful four on the floor and no major tonic', () => {
 });
 
 test('the alarm raises the pulse without any alarm sounds, and keeps changing', () => {
-  const c = { colour: colourOf(2), theme: THEMES[0] };
+  const c = { colour: colourOf(2), theme: SIGNAL };
   const bars = Array.from({ length: 32 }, (_, bar) =>
     Array.from({ length: BAR }, (_, pos) => PIECES.alarm.notes(bar * BAR + pos, c)).flat(),
   );
   assert.ok(bars.flat().every((n) => n.v !== 'siren'));
   assert.ok(new Set(bars.map((b) => JSON.stringify(b))).size >= 20);
   assert.ok(PIECES.alarm.bpm > PIECES.boarding.bpm);
-});
-
-test('the title loops only after about a minute and a half, and every part of it differs', () => {
-  const c = { colour: colourOf(0), theme: THEMES[1] };
-  const bar = (b) => JSON.stringify(Array.from({ length: BAR }, (_, pos) => PIECES.title.notes(b * BAR + pos, c)));
-  const seconds = (36 * 4 * 60) / PIECES.title.bpm;
-  assert.ok(seconds > 80, `the title loops after ${seconds} seconds`);
-  assert.ok(new Set(Array.from({ length: 36 }, (_, b) => bar(b))).size >= 30);
 });

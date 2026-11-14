@@ -21,6 +21,15 @@ const LEVEL = {
   hat: 0.1,
   heart: 0.45,
   crash: 0.1,
+  // set B
+  mallet: 0.2,
+  glass: 0.12,
+  choir: 0.09,
+  brass: 0.07,
+  tom: 0.4,
+  rim: 0.18,
+  shaker: 0.07,
+  drone: 0.1,
 };
 export const VOICES = Object.keys(LEVEL);
 
@@ -51,6 +60,9 @@ export function play(context, note, t, { dest, echo, step, grit, done }) {
   const len = Math.max(0.03, note.d * step);
   const hz = midiToHz(note.m);
   const amp = context.createGain();
+  // Silent until the note starts. A gain is 1 by default, and a source can start a sample before the envelope does,
+  // which would be heard as a click.
+  amp.gain.value = 0;
   amp.connect(dest);
   if (note.e && echo) amp.connect(echo);
   const nodes = [amp];
@@ -154,6 +166,70 @@ export function play(context, note, t, { dest, echo, step, grit, done }) {
       o.frequency.exponentialRampToValueAtTime(note.v === 'kick' ? 42 : 38, t + 0.12);
       o.connect(amp);
       end = envelope(amp.gain, t, peak, 0.003, 0, note.v === 'kick' ? 0.25 : 0.2);
+      break;
+    }
+    case 'mallet': {
+      // a struck bar: a sine and a high overtone that dies quickly
+      osc('sine', hz).connect(amp);
+      const over = context.createGain();
+      nodes.push(over);
+      over.gain.setValueAtTime(0.3, t);
+      over.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      osc('sine', hz * 4).connect(over);
+      over.connect(amp);
+      end = envelope(amp.gain, t, peak, 0.003, 0, Math.min(0.9, 0.25 + len));
+      break;
+    }
+    case 'glass': {
+      // two sines a hair apart, which shimmer against each other
+      osc('sine', hz).connect(amp);
+      const over = context.createGain();
+      over.gain.value = 0.3;
+      nodes.push(over);
+      osc('sine', hz * 2.01).connect(over);
+      over.connect(amp);
+      end = envelope(amp.gain, t, peak, 0.02, len * 0.8, 1.6);
+      break;
+    }
+    case 'choir': {
+      // three soft voices slightly out of tune with each other
+      const f = filter('lowpass', 1300 + grit * 700, 0.7);
+      for (const d of [-8, 8]) osc('triangle', hz, d).connect(f);
+      f.connect(amp);
+      end = envelope(amp.gain, t, peak, Math.min(len / 2, 0.6), len, 1.6);
+      break;
+    }
+    case 'brass': {
+      // a swell: the filter opens as the note starts, then settles
+      const f = filter('lowpass', 300, 1.2);
+      f.frequency.linearRampToValueAtTime(1700 + grit * 900, t + 0.12);
+      f.frequency.linearRampToValueAtTime(1000 + grit * 500, t + 0.5);
+      for (const d of [-5, 5]) osc('sawtooth', hz, d).connect(f);
+      f.connect(amp);
+      end = envelope(amp.gain, t, peak, 0.08, len * 0.85, 0.25);
+      break;
+    }
+    case 'drone': {
+      const f = filter('lowpass', 240 + grit * 160, 2);
+      osc('sawtooth', hz).connect(f);
+      f.connect(amp);
+      end = envelope(amp.gain, t, peak, Math.min(len / 2, 2), len, 3);
+      break;
+    }
+    case 'tom': {
+      const o = osc('sine', hz);
+      o.frequency.exponentialRampToValueAtTime(hz * 0.45, t + 0.25);
+      o.connect(amp);
+      end = envelope(amp.gain, t, peak, 0.003, 0, 0.35);
+      break;
+    }
+    case 'rim':
+    case 'shaker': {
+      const s = hiss();
+      const f = note.v === 'rim' ? filter('bandpass', 2300, 4) : filter('highpass', 5500);
+      s.connect(f);
+      f.connect(amp);
+      end = envelope(amp.gain, t, peak, note.v === 'rim' ? 0.001 : 0.012, 0, note.v === 'rim' ? 0.035 : 0.07);
       break;
     }
     default: {
