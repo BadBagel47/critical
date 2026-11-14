@@ -7,7 +7,7 @@ checked so that the way from each airlock to the vault or the mainframe is open.
 """
 import math, os, random
 from collections import deque
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 import style as S
 
 TEAL = ['#2e6b5f', '#3f8f80', '#58b0a0', '#a0e0d0']
@@ -129,52 +129,87 @@ def room(im, ox, oy, st, seed=1):
     return im
 
 
-def mood(im, ox, oy, kind, t):
-    """The same room in lockdown (dark, with a red light that sweeps round), with the alarm on, and with a
-    louder alarm where every lamp flashes. `t` is the time in seconds, for the pictures that move."""
+def flat_alarm(im, ox, oy, t):
+    """The alarm the way it was first drawn: a sheet of red laid over the room. It lifts the blacks and looks milky."""
     w, h = COLS * T, ROWS * T
-    cx, cy = ox + 5 * T, oy + T + 6
-    beat = t * 2 % 1 < 0.5
     ov = Image.new('RGBA', im.size, (0, 0, 0, 0))
     o = ImageDraw.Draw(ov)
-    o.rectangle([ox, oy, ox + w - 1, oy + h - 1], fill=(4, 3, 8, 150 if kind == 'lockdown' else 120))
+    o.rectangle([ox, oy, ox + w - 1, oy + h - 1], fill=(4, 3, 8, 120))
     im = Image.alpha_composite(im, ov)
     ov = Image.new('RGBA', im.size, (0, 0, 0, 0))
-    o = ImageDraw.Draw(ov)
-
-    def beam(angle, strength):
-        pts = [(cx, cy)] + [(cx + math.cos(angle + k * 0.12) * 190, cy + math.sin(angle + k * 0.12) * 190) for k in range(-3, 4)]
-        o.polygon(pts, fill=S.rgb(S.EMBER[1]) + (strength,))
-    if kind == 'lockdown':
-        # A beacon on the wall throws a red beam that turns slowly.
-        beam(0.9 + t * math.tau / 3, 70)
-    elif kind == 'alarm':
-        # The whole room glows red, and the glow swells and fades.
-        o.rectangle([ox, oy, ox + w - 1, oy + h - 1], fill=S.rgb(S.EMBER[0]) + (round(75 + 35 * math.sin(t * math.tau)),))
-    else:
-        # Louder: the room flashes, and two beams spin fast.
-        o.rectangle([ox, oy, ox + w - 1, oy + h - 1], fill=S.rgb(S.EMBER[0]) + (120 if beat else 40,))
-        beam(t * math.tau, 90)
-        beam(t * math.tau + math.pi, 90)
-    clip = Image.new('L', im.size, 0)
-    ImageDraw.Draw(clip).rectangle([ox, oy, ox + w - 1, oy + h - 1], fill=255)
-    ov.putalpha(Image.composite(ov.getchannel('A'), Image.new('L', im.size, 0), clip))
+    ImageDraw.Draw(ov).rectangle([ox, oy, ox + w - 1, oy + h - 1], fill=S.rgb(S.EMBER[0]) + (round(75 + 35 * math.sin(t * math.tau)),))
     im = Image.alpha_composite(im, ov)
     d = ImageDraw.Draw(im)
-    d.rectangle([cx - 2, cy - 3, cx + 2, cy + 1], fill=S.EMBER[2], outline=S.OUT)
+    d.rectangle([ox, oy, ox + w - 1, oy + h - 1], outline=S.EMBER[1])
+    return im
+
+
+def mood(im, ox, oy, kind, t):
+    """The same room in lockdown, with the alarm on, and with a louder alarm where every lamp flashes.
+    `t` is the time in seconds, for the pictures that move.
+
+    The light is worked out the way real light behaves: the room is multiplied by a map of how much light
+    falls on each spot, in which colour. What is black stays black, and a red light makes things red instead of
+    laying a red haze over them. The lamps themselves then get a glow added on top."""
+    w, h = COLS * T, ROWS * T
+    cx, cy = 5 * T, T + 6
+    beat = t * 2 % 1 < 0.5
+    box = (ox, oy, ox + w, oy + h)
+    scene = im.crop(box).convert('RGB')
+    black = lambda: Image.new('RGB', (w, h), (0, 0, 0))
+
+    def beam(layer, angle, colour, spread):
+        d = ImageDraw.Draw(layer)
+        d.polygon([(cx, cy)] + [(cx + math.cos(angle + k * spread / 3) * 240, cy + math.sin(angle + k * spread / 3) * 240) for k in range(-3, 4)], fill=colour)
+
+    def pool(layer, x, y, r, colour):
+        ImageDraw.Draw(layer).ellipse([x - r, y - r, x + r, y + r], fill=colour)
+    lamps = [(k * T + 8, T + 5, (k % 2 == 0) == beat) for k in range(1, COLS - 1) if k != 6]
+    # `ambient` is the light that is everywhere, `light` what the lamps and beams add where they fall, and
+    # `glow` the lamps themselves.
+    light = black()
+    glow = black()
+
+    def add(shape, *args):
+        nonlocal light
+        layer = black(); shape(layer, *args); light = ImageChops.add(light, layer)
+    if kind == 'lockdown':
+        ambient = (58, 54, 80)
+        for colour, spread in (((90, 14, 10), 0.46), ((120, 22, 16), 0.22)):
+            add(beam, 0.9 + t * math.tau / 3, colour, spread)
+        pool(glow, cx, cy, 7, (70, 16, 8))
+    elif kind == 'alarm':
+        k = 0.5 + 0.5 * math.sin(t * math.tau)
+        ambient = (round(110 + 50 * k), 34, 36)
+        for x, y, _ in lamps:
+            add(pool, x, y + 8, 30, (round(30 + 30 * k), 10, 6))
+            pool(glow, x, y, 6, (round(40 + 30 * k), 10, 4))
+    else:
+        ambient = (104, 30, 34)
+        for turn in (0, math.pi):
+            for colour, spread in (((70, 12, 8), 0.5), ((110, 26, 14), 0.24)):
+                add(beam, t * math.tau + turn, colour, spread)
+        for x, y, on in lamps:
+            if not on:
+                continue
+            add(pool, x, y + 8, 40, (60, 18, 8))
+            add(pool, x, y + 8, 22, (80, 40, 16))
+            pool(glow, x, y, 8, (90, 40, 14))
+    # Light that falls on something is counted twice, so that a strong lamp can light a dark floor.
+    lit = ImageChops.multiply(scene, light)
+    scene = ImageChops.add(ImageChops.add(ImageChops.multiply(scene, Image.new('RGB', (w, h), ambient)), ImageChops.add(lit, lit)), glow)
+    im.paste(scene, box)
+    d = ImageDraw.Draw(im)
+    d.rectangle([ox + cx - 2, oy + cy - 3, ox + cx + 2, oy + cy + 1], fill=S.EMBER[2], outline=S.OUT)
     if kind == 'alarm':
         d.rectangle([ox, oy, ox + w - 1, oy + h - 1], outline=S.EMBER[1])
         d.rectangle([ox + 1, oy + 1, ox + w - 2, oy + h - 2], outline=S.EMBER[0])
     if kind == 'alarm2':
-        # Every strip light flashes red, every other one in turn, and the frame round the picture blinks.
-        for k in range(1, COLS - 1):
-            if k == 6:
-                continue
-            on = (k % 2 == 0) == beat
-            x, y = ox + k * T + 3, oy + T + 3
-            d.rectangle([x, y, x + 9, y + 3], fill=S.EMBER[2] if on else S.DARK[0])
+        # The lamps that are lit burn bright, the others are dark, and the frame round the picture blinks.
+        for x, y, on in lamps:
+            d.rectangle([ox + x - 5, oy + y - 2, ox + x + 4, oy + y + 1], fill=S.EMBER[2] if on else S.DARK[0])
             if on:
-                d.line([(x + 1, y + 1), (x + 8, y + 1)], fill=S.EMBER[3])
+                d.line([(ox + x - 4, oy + y - 1), (ox + x + 3, oy + y - 1)], fill=S.EMBER[3])
         for k in range(3 if beat else 1):
             d.rectangle([ox + k, oy + k, ox + w - 1 - k, oy + h - 1 - k], outline=S.EMBER[2 if beat else 0])
     return im
@@ -184,25 +219,26 @@ def mood_gif():
     """Lockdown and the two alarms side by side, moving, since the difference between them is in how the light moves."""
     gap = 14
     cw = COLS * T + gap
-    W, H = 8 + cw * 3, 20 + ROWS * T + 34
+    W, H = 8 + cw * 4, 20 + ROWS * T + 34
     base = Image.new('RGBA', (W, H), S.rgb(S.BG) + (255,))
     d = ImageDraw.Draw(base)
-    S.txt(d, 8, 6, 'LOCKDOWN AND ALARM  ·  THE SAME ROOM, AND HOW THE LIGHT MOVES', S.STEEL[3])
+    S.txt(d, 8, 6, 'LOCKDOWN AND ALARM  ·  THE SAME ROOM, LIT THE WAY REAL LIGHT WORKS: DARK STAYS DARK, AND LIGHT IS ADDED ON TOP', S.STEEL[3])
     views = (('LOCKDOWN', 'DARK, ONE SLOW RED LIGHT', 'lockdown'),
-             ('ALARM  ·  AS FIRST PROPOSED', 'A RED GLOW AND A RED FRAME', 'alarm'),
-             ('ALARM  ·  LOUDER', 'LAMPS FLASH, FAST BEAMS', 'alarm2'))
+             ('ALARM  ·  CALMER', 'RED LIGHT THAT SWELLS AND FADES', 'alarm'),
+             ('ALARM  ·  LOUDER', 'LAMPS FLASH, FAST BEAMS', 'alarm2'),
+             ('BEFORE  ·  A SHEET OF RED', 'MILKY: THE BLACKS ARE LOST', 'flat'))
     for i, (name, note, kind) in enumerate(views):
         x = 8 + i * cw
         base = room(base, x, 20, STYLES['PIRATES'], seed=8)
         d = ImageDraw.Draw(base)
-        S.txt(d, x + COLS * T // 2, 20 + ROWS * T + 5, name, S.EMBER[2], 'c')
+        S.txt(d, x + COLS * T // 2, 20 + ROWS * T + 5, name, S.STEEL[1] if kind == 'flat' else S.EMBER[2], 'c')
         S.txt(d, x + COLS * T // 2, 20 + ROWS * T + 17, note, S.STEEL[1], 'c')
     frames = []
     count, step = 24, 0.125
     for f in range(count):
         im = base.copy()
         for i, (_, _, kind) in enumerate(views):
-            im = mood(im, 8 + i * cw, 20, kind, f * step)
+            im = flat_alarm(im, 8 + i * cw, 20, f * step) if kind == 'flat' else mood(im, 8 + i * cw, 20, kind, f * step)
         frames.append(im.convert('RGB').resize((W * 2, H * 2), Image.NEAREST))
     # One palette for all frames, so that the colours do not flicker from frame to frame.
     strip = Image.new('RGB', (W * 2, H * 2 * 6))
