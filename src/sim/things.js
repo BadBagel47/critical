@@ -7,6 +7,11 @@ import { has } from './upgrades.js';
 import { toWorld, dist } from './util.js';
 
 const rank = (kind) => Object.keys(THINGS).indexOf(kind);
+// What kinds.js says about the shape of a thing, for the kinds where that depends on the thing itself.
+function shapeOf(t, what) {
+  const shape = THINGS[t.kind][what];
+  return typeof shape === 'function' ? shape(t) : shape;
+}
 
 // Things are kept sorted by kind, oldest first within a kind, so the game never depends on creation order.
 export function addThing(state, thing) {
@@ -28,9 +33,7 @@ export const findThing = (state, id) => (id == null ? null : state.things.find((
 export function solidCircles(state) {
   const out = [];
   for (const t of state.things) {
-    const hit = THINGS[t.kind].hit;
-    if (!hit) continue;
-    for (const c of typeof hit === 'function' ? hit(t) : hit) {
+    for (const c of shapeOf(t, 'hit') || []) {
       const p = toWorld(t, c);
       out.push({ x: p.x, y: p.y, r: c.r, thing: t });
     }
@@ -39,13 +42,15 @@ export function solidCircles(state) {
 }
 
 // ---------- docking ----------
+// The ports of a thing in its own pixels, as kinds.js describes them.
+export const localPorts = (t) => shapeOf(t, 'ports') || [];
 export const canDock = (t) => !!THINGS[t.kind].ports;
 export const dockTargets = (state) => state.things.filter(canDock);
 export const findDock = (state, id) => {
   const t = findThing(state, id);
   return t && canDock(t) ? t : null;
 };
-export const portsOf = (t) => THINGS[t.kind].ports.map((p) => toWorld(t, p));
+export const portsOf = (t) => localPorts(t).map((p) => toWorld(t, p));
 // What the HUD calls a thing: its own name, or what kind of thing it is.
 export const nameOf = (t) => t.name || THINGS[t.kind].label;
 

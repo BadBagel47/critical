@@ -12,10 +12,11 @@ import {
   speedOf,
 } from '../src/sim/ship.js';
 import { damageShip } from '../src/sim/damage.js';
-import { thingsOf, portsOf } from '../src/sim/things.js';
-import { hurtVessel } from '../src/sim/vessels.js';
+import { thingsOf, portsOf, solidCircles } from '../src/sim/things.js';
+import { hurtVessel, makeVessel } from '../src/sim/vessels.js';
 import { weaponsOf } from '../src/sim/weapons.js';
-import { SHIPS } from '../src/sim/kinds.js';
+import { SHIPS, HULLS } from '../src/sim/kinds.js';
+import { createWreck, jumpBlocked } from '../src/sim/sectors.js';
 import { B, SHIP_GEOM } from '../src/sim/balance.js';
 import { headingTo } from '../src/sim/util.js';
 
@@ -245,6 +246,47 @@ test('docking works from a little way off, and the ship is pulled in until its n
   s.ship.x += 400;
   run(s, {}, 1);
   assert.equal(s.ship.x, rest.x + 400, 'a ship that is nowhere near the port is left alone');
+});
+
+test('a wreck has the shape of the ship it was: its own port, its own size and how dangerous it can be', () => {
+  const s = quiet(createState(1));
+  assert.deepEqual(Object.keys(HULLS), ['hull', 'gunboat', 'freighter']);
+  for (const hull of Object.keys(HULLS)) {
+    for (const risk of [1, 2, 3]) {
+      const w = createWreck(s, 5000, 5000, risk, hull);
+      const [low, high] = HULLS[hull].risk;
+      assert.equal(w.difficulty, Math.max(low, Math.min(high, risk)), hull + ' asked for risk ' + risk);
+    }
+  }
+  const small = createWreck(s, 7000, 0, 1, 'gunboat');
+  const long = createWreck(s, 9000, 0, 2, 'freighter');
+  small.heading = long.heading = 0;
+  s.things.push(small, long);
+  assert.deepEqual(portsOf(small), [{ x: 7000 - 23, y: -4 }]);
+  assert.deepEqual(portsOf(long), [{ x: 9000 - 26, y: -3 }]);
+  const circles = (w) => solidCircles(s).filter((c) => c.thing === w);
+  assert.equal(circles(small).length, 1);
+  assert.equal(circles(long).length, 4, 'a long hull takes more circles to cover');
+  // Without a hull given, one that can be that dangerous is picked.
+  for (let i = 0; i < 20; i++) {
+    const w = createWreck(s, 0, 0, 3);
+    assert.ok(HULLS[w.hull].risk[1] >= 3, w.hull + ' can be boarded at risk 3');
+  }
+});
+
+test('a destroyed gunboat or freighter leaves a wreck of its own kind', () => {
+  const s = quiet(createState(1));
+  s.traffic.timer = 1e9;
+  s.ship.x = s.ship.y = 9000;
+  const before = wrecks(s).length;
+  const boat = makeVessel(s, 'gunboat', 8000, 8000);
+  const hauler = makeVessel(s, 'freighter', 8500, 8000, 'charter');
+  s.vessels.push(boat, hauler);
+  hurtVessel(s, boat, 9999, 'pirate');
+  hurtVessel(s, hauler, 9999, 'pirate');
+  const left = wrecks(s).slice(before);
+  assert.deepEqual(left.map((w) => w.hull).sort(), ['freighter', 'gunboat']);
+  assert.ok(left.every((w) => w.lock === 'locked'));
 });
 
 test('the nearest port is the one the ship docks at', () => {
@@ -642,7 +684,6 @@ import {
   itemsOf,
 } from '../src/sim/upgrades.js';
 import { servicePrices, takeOver } from '../src/sim/stations.js';
-import { jumpBlocked } from '../src/sim/sectors.js';
 
 const station = (s, align) => stations(s).find((x) => x.align === align);
 // The side of a station falls out with the crew for good, and the station turns on them.

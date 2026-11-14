@@ -28,7 +28,7 @@ def wrecked(ship, seed, holes=5, split=None, tag=True):
     g = random.Random(seed)
     w, h = ship.size
     out = S.rgb(S.OUT)
-    im = Image.new('RGBA', (w + 16, h + 18), (0, 0, 0, 0))
+    im = Image.new('RGBA', (w + 16, h + 20), (0, 0, 0, 0))
     src = ship.load()
     dst = im.load()
     glows = {S.rgb(c) for ramp in (S.ION, S.EMBER) for c in ramp}
@@ -46,7 +46,7 @@ def wrecked(ship, seed, holes=5, split=None, tag=True):
             else:
                 lum = (r * 3 + gg * 6 + b) / 10
                 col = S.rgb(WRECK[0 if lum < 60 else 1 if lum < 105 else 2 if lum < 160 else 3])
-            dst[x + 6 + dx, y + 6 + dy] = col + (255,)
+            dst[x + 8 + dx, y + 8 + dy] = col + (255,)
     d = ImageDraw.Draw(im)
     solid = [(x, y) for y in range(im.height) for x in range(im.width) if dst[x, y][3] and dst[x, y][:3] != out]
     for _ in range(holes):
@@ -75,10 +75,18 @@ def wrecked(ship, seed, holes=5, split=None, tag=True):
                 px[x, y] = out + (255,)
     if tag:
         # The docking port: a salvage beacon that still has power.
-        x, y = min((p for p in solid if abs(p[1] - im.height // 2) < 6), key=lambda p: p[0])
+        x, y = wreck_port(im)
         d.rectangle([x - 3, y - 4, x + 1, y + 4], fill=S.OCHRE[1], outline=S.OUT)
         d.rectangle([x - 2, y - 1, x, y + 1], fill=S.OUT)
     return im
+
+
+def wreck_port(im):
+    """Where the frigate docks at a wreck: the leftmost bit of hull near the middle of its length."""
+    px = im.load()
+    out = S.rgb(S.OUT)
+    solid = [(x, y) for y in range(im.height) for x in range(im.width) if px[x, y][3] and px[x, y][:3] != out]
+    return min((p for p in solid if abs(p[1] - im.height // 2) < 6), key=lambda p: p[0])
 
 
 def wreck_sheet():
@@ -125,7 +133,8 @@ def at(r, deg):
 
 
 def station(hull1, hull2, accent, glass, arms='in'):
-    """The ring station of today. `arms` is 'in' for folded docking arms and 'out' for arms that reach out."""
+    """The ring station of today. `arms` is 'in' for folded docking arms, 'out' for arms that reach out, and
+    'none' for the station without them: in the game the arms are drawn by themselves, so that they can move."""
     c = C
     tip = 2 if arms == 'out' else 14
 
@@ -134,8 +143,13 @@ def station(hull1, hull2, accent, glass, arms='in'):
     parts = [
         disc(2, 78), disc(1, 75), disc(2, 70), disc(0, 64),
         disc(2, 50), disc(0, 47),
-        (2, 'r', [c - 7, tip, c, 24]), (2, 'r', [c - 7, 168, c, 191 - tip]), (2, 'r', [tip, c - 7, 24, c + 6]),
-        (1, 'r', [c - 10, tip, c, tip + 6]), (1, 'r', [c - 10, 185 - tip, c, 191 - tip]), (1, 'r', [tip, c - 10, tip + 6, c + 9]),
+    ]
+    if arms != 'none':
+        parts += [
+            (2, 'r', [c - 7, tip, c, 24]), (2, 'r', [c - 7, 168, c, 191 - tip]), (2, 'r', [tip, c - 7, 24, c + 6]),
+            (1, 'r', [c - 10, tip, c, tip + 6]), (1, 'r', [c - 10, 185 - tip, c, 191 - tip]), (1, 'r', [tip, c - 10, tip + 6, c + 9]),
+        ]
+    parts += [
         (1, 'r', [c - 4, 30, c, 66]), (1, 'r', [c - 4, 126, c, 162]), (1, 'r', [30, c - 4, 66, c + 3]),
         (2, 'p', [(48, 52), (52, 48), (78, 74), (74, 78)]), (2, 'p', [(48, 139), (52, 143), (78, 117), (74, 113)]),
         disc(2, 34), disc(1, 30), disc(2, 22), disc(4, 14),
@@ -155,6 +169,29 @@ def station(hull1, hull2, accent, glass, arms='in'):
         px([at(67, deg) for deg in (210, 240, 300, 330)], accent[1])
         ln((c - 2, 34), (c - 2, 62), hull1[0]); ln((c - 2, 130), (c - 2, 158), hull1[0]); ln((34, c - 1), (62, c - 1), hull1[0])
     return S.sprite(SIZE, SIZE, parts, {1: hull1, 2: hull2, 3: accent, 4: glass, 5: S.DARK, 'glassy': (4,), 'glow': (3,)}, det)
+
+
+def arm(hull1, hull2):
+    """One docking arm by itself, pointing up: a shaft with a wider head, and the dark mouth that a ship noses into."""
+    m = 11
+    parts = [(2, 'r', [m - 7, 0, m, 22]), (1, 'r', [m - 10, 0, m, 6]), (5, 'r', [m - 4, 9, m, 19])]
+    return S.sprite(22, 24, parts, {1: hull1, 2: hull2, 5: S.DARK, 'glassy': (), 'glow': ()})
+
+
+GAME_PAD = 34
+
+
+def game_station(key):
+    """The station of a side as the game draws it: without its arms, on a canvas wide enough for the add-ons."""
+    name, note, colours, addon, light = next(s for s in SIDES if s[0] == key)
+    size = SIZE + GAME_PAD * 2
+    layer = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    layer.alpha_composite(station(*colours, arms='none'), (GAME_PAD, GAME_PAD))
+    OFF[:] = [GAME_PAD, GAME_PAD]
+    if addon:
+        addon(layer)
+    OFF[:] = [0, 0]
+    return layer
 
 
 def arm_lights(im, colour, arms='in', lit=True):

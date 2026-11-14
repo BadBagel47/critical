@@ -402,7 +402,13 @@ export function drawSpace(ctx, state, view, assets) {
   const ship = state.ship;
   const fx = view.fx;
   const post = playerById(state, view.playerId).post;
-  const env = { img, state, scan: has(ship, 'tscan'), aimHelp: post === 'gunner' && has(ship, 'tcomp') };
+  const env = {
+    img,
+    state,
+    scan: has(ship, 'tscan'),
+    aimHelp: post === 'gunner' && has(ship, 'tcomp'),
+    arms: view.fx ? view.fx.arms : null,
+  };
   drawStars(ctx, cam, fx, state.sector);
   ctx.save();
   ctx.translate(VIEW_W / 2 - cam.x + (fx ? fx.offset.x : 0), VIEW_H / 2 - cam.y + (fx ? fx.offset.y : 0));

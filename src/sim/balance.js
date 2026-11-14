@@ -68,6 +68,8 @@ export const B = {
   DOCK_RANGE: 48,
   DOCK_SPEED: 32,
   DOCK_PULL: 70,
+  // seconds for a station's docking arm to fold out or in
+  ARM_TIME: 0.8,
   DOCK_TURN: 1.6,
   DOCK_GUIDE_RANGE: 320,
   // collisions

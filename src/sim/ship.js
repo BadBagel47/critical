@@ -1,7 +1,6 @@
 // The crew's frigate: how it starts, and values worked out from its state.
 import { B, SHIP_GEOM } from './balance.js';
-import { THINGS } from './kinds.js';
-import { dockTargets, portsOf } from './things.js';
+import { dockTargets, portsOf, localPorts } from './things.js';
 import { powerTotal } from './upgrades.js';
 import { clamp, toWorld, dist, headingTo } from './util.js';
 
@@ -115,7 +114,7 @@ export function dockPose(ship, thing) {
   const nose = shipNose(ship);
   let best = null;
   let bestD = B.DOCK_RANGE * 3;
-  for (const local of THINGS[thing.kind].ports) {
+  for (const local of localPorts(thing)) {
     const p = toWorld(thing, local);
     const d = dist(nose.x, nose.y, p.x, p.y);
     if (d < bestD) {

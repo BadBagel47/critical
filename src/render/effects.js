@@ -34,6 +34,8 @@ export function createEffects() {
     ripples: [],
     acc: {},
     nebula: new Map(),
+    // How far out the docking arms of each station are, see looks.js.
+    arms: new Map(),
     offset: { x: 0, y: 0 },
   };
 }
@@ -41,6 +43,7 @@ export function resetEffects(fx) {
   fx.space.clear();
   fx.inside.clear();
   fx.ripples.length = 0;
+  fx.arms.clear();
   fx.shake = 0;
 }
 

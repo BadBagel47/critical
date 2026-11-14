@@ -82,47 +82,21 @@ for side, colours in FACTION.items():
     save(recolour(S.FI.transpose(Image.FLIP_TOP_BOTTOM), colours), 'fighter_' + side)
     save(recolour(S.GB.transpose(Image.FLIP_TOP_BOTTOM), colours), 'gunboat_' + side)
 
-# ---- stations, one sprite per allegiance ----
-TEAL = ['#2e6b5f', '#3f8f80', '#58b0a0', '#a0e0d0']
-# A station seen from above: a ring around a hub, four docking arms, and a pad on each diagonal of the ring.
-STATION_SIZE = 192
-def station(hull1, hull2, accent, glass):
-    c = STATION_SIZE // 2
-    def disc(m, r): return (m, 'e', [c - r, c - r, c + r, c + r])
-    parts = [
-        # the ring: dark rims with a lighter band between them
-        disc(2, 78), disc(1, 75), disc(2, 70), disc(0, 64),
-        # a thin inner ring that ties the spokes together
-        disc(2, 50), disc(0, 47),
-        # docking arms, top, bottom and left (the right one is mirrored), each with a wider head
-        (2, 'r', [c - 7, 2, c, 24]), (2, 'r', [c - 7, 168, c, 189]), (2, 'r', [2, c - 7, 24, c + 6]),
-        (1, 'r', [c - 10, 2, c, 8]), (1, 'r', [c - 10, 183, c, 189]), (1, 'r', [2, c - 10, 8, c + 9]),
-        # spokes from the ring to the hub
-        (1, 'r', [c - 4, 30, c, 66]), (1, 'r', [c - 4, 126, c, 162]), (1, 'r', [30, c - 4, 66, c + 3]),
-        (2, 'p', [(48, 52), (52, 48), (78, 74), (74, 78)]), (2, 'p', [(48, 139), (52, 143), (78, 117), (74, 113)]),
-        # the hub with its glass dome
-        disc(2, 34), disc(1, 30), disc(2, 22), disc(4, 14),
-        # pads on the diagonals of the ring
-        (2, 'e', [31, 31, 53, 53]), (1, 'e', [34, 34, 50, 50]), (5, 'e', [38, 38, 46, 46]),
-        (2, 'e', [31, 138, 53, 160]), (1, 'e', [34, 141, 50, 157]), (5, 'e', [38, 145, 46, 153]),
-        # hangar mouths on the arms, and lights at their tips
-        (5, 'r', [c - 4, 11, c, 21]), (5, 'r', [c - 4, 170, c, 180]), (5, 'r', [11, c - 4, 21, c + 3]),
-        (3, 'r', [c - 6, 2, c, 3]), (3, 'r', [c - 6, 188, c, 189]), (3, 'r', [2, c - 6, 3, c + 5]),
-    ]
-    def at(r, deg): a = math.radians(deg); return (round(c - 0.5 + math.sin(a) * r), round(c - 0.5 - math.cos(a) * r))
-    def det(px, ln):
-        # panel seams across the ring, lights along its outer rim, windows around the hub
-        for deg in range(195, 360, 15):
-            if deg % 45 == 0 or deg % 90 == 0: continue
-            ln(at(71, deg), at(74, deg), hull1[0])
-        px([at(77, deg) for deg in range(190, 360, 20)], hull2[3])
-        px([at(26, deg) for deg in range(200, 360, 40)], accent[2])
-        px([at(67, deg) for deg in (210, 240, 300, 330)], accent[1])
-        ln((c - 2, 34), (c - 2, 62), hull1[0]); ln((c - 2, 130), (c - 2, 158), hull1[0]); ln((34, c - 1), (62, c - 1), hull1[0])
-    return S.sprite(STATION_SIZE, STATION_SIZE, parts, {1: hull1, 2: hull2, 3: accent, 4: glass, 5: S.DARK, 'glassy': (4,), 'glow': (3,)}, det)
-save(station(S.STEEL, S.STEEL2, TEAL, S.GLASS), 'station_friendly')
-save(station(S.STEEL, S.STEEL2, S.OCHRE, S.GLASS), 'station_neutral')
-save(station(S.PLUM, S.PLUM2, S.EMBER, S.ACID), 'station_hostile')
+# ---- stations, one sprite per side, and their docking arms ----
+# The station is drawn without its arms. The arms are sprites of their own, so that they can fold in and out.
+import places as PL  # noqa: E402  (the design of wrecks and stations)
+TEAL = PL.TEAL
+for name, key in (('crew', 'YOURS'), ('free', 'NO FACTION'), ('charter', 'THE CHARTER'), ('wardens', 'THE WARDENS'), ('drifters', 'THE DRIFTERS'), ('pirate', 'PIRATES')):
+    save(PL.game_station(key), 'station_' + name)
+for name, (h1, h2) in (('steel', (S.STEEL, S.STEEL2)), ('rust', (PL.RUST, S.DARK)), ('plum', (S.PLUM, S.PLUM2))):
+    save(PL.arm(h1, h2), 'arm_' + name)
+
+# ---- wrecks, one for each ship class that leaves one ----
+for name, ship, seed, opts in (('gunboat', S.GB.transpose(Image.FLIP_TOP_BOTTOM), 4, dict(holes=3)), ('freighter', NEW.freighter_a(NEW.TRADER), 11, dict(holes=6, split=92))):
+    im = PL.wrecked(ship, seed, **opts)
+    save(im, 'wreck_' + name)
+    px, py = PL.wreck_port(im)
+    print('wreck_' + name, im.size, 'port', (px - 3 - im.width // 2, py - im.height // 2))
 
 # ---- the pirate cruiser, the boss of the last sector ----
 def cruiser():

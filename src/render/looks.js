@@ -2,8 +2,11 @@
 // What each kind is and does is described in src/sim/kinds.js. A new kind needs an entry in both.
 import { COL } from '../config.js';
 import { B } from '../sim/balance.js';
-import { toWorld } from '../sim/util.js';
-import { FACTIONS, moodOf } from '../sim/sides.js';
+import { toWorld, dist, forward } from '../sim/util.js';
+import { CREW, PIRATE, FACTIONS, moodOf, enemies } from '../sim/sides.js';
+import { THINGS, SHIPS } from '../sim/kinds.js';
+import { portsOf } from '../sim/things.js';
+import { shipNose, speedOf } from '../sim/ship.js';
 import { sprite, rect, bar } from './draw.js';
 
 export const ALIGN_COL = { friendly: COL.engineer, neutral: COL.steel[3], hostile: COL.ember[1] };
@@ -23,8 +26,77 @@ const blink = (state, rate, offset = 0) => Math.floor(state.time * rate + offset
 
 // ---------- things ----------
 // `env` is { img, state, scan }: the sprites, the game, and whether the ship has a target scanner.
+// Which picture a station has: its side's own, or the plain one for a station that stands on its own.
+const stationLook = (st) =>
+  st.side === CREW ? 'crew' : st.side === PIRATE ? 'pirate' : FACTIONS[st.side] ? st.side : 'free';
+const ARM_LOOK = { drifters: 'rust', pirate: 'plum' };
+// The lights on the docking arms say how the station treats the crew.
+const ARM_LIGHT = { friendly: COL.acid[2], neutral: COL.white, wary: COL.ochre[2], closed: '#1c1c28' };
+
+// Which docking arms have a ship at them, or coming in: 1 for an arm that should be out, 0 for one that is folded.
+function armsWanted(st, state) {
+  const ports = portsOf(st);
+  const want = ports.map(() => 0);
+  const reach = (nose) => {
+    let best = -1;
+    let bestD = 150;
+    ports.forEach((p, i) => {
+      const d = dist(nose.x, nose.y, p.x, p.y);
+      if (d < bestD) {
+        best = i;
+        bestD = d;
+      }
+    });
+    if (best >= 0) want[best] = 1;
+  };
+  const ship = state.ship;
+  if (ship.docked === st.id || (!ship.docked && speedOf(ship) < B.DOCK_SPEED * 3)) reach(shipNose(ship));
+  for (const v of state.vessels) {
+    // A visiting ship that is heading for a berth, or lying at one.
+    if (!v.legs || !v.legs[0] || v.legs[0].face === undefined) continue;
+    const f = forward(v.heading);
+    const half = (SHIPS[v.kind].length || 0) / 2;
+    reach({ x: v.x + f.x * half, y: v.y + f.y * half });
+  }
+  return want;
+}
+
+// How far out each arm is, from 0 to 1. It is kept between frames in `env.arms`, and follows the game's clock.
+function armsNow(st, env) {
+  const want = armsWanted(st, env.state);
+  const now = env.state.time;
+  let kept = env.arms && env.arms.get(st.id);
+  if (!kept || now < kept.t) kept = { t: now, out: want.map(() => 0) };
+  const step = Math.min(0.1, now - kept.t) / B.ARM_TIME;
+  kept.out = kept.out.map((e, i) => e + Math.max(-step, Math.min(step, want[i] - e)));
+  kept.t = now;
+  if (env.arms) env.arms.set(st.id, kept);
+  return kept.out;
+}
+
+function drawArms(ctx, st, env) {
+  const state = env.state;
+  const img = env.img['arm_' + (ARM_LOOK[stationLook(st)] || 'steel')];
+  const hostile = enemies(state, CREW, st.side);
+  const light = hostile ? (blink(state, 3) ? COL.ember[3] : COL.ember[1]) : ARM_LIGHT[moodOf(state, st.side)];
+  const out = armsNow(st, env);
+  THINGS.station.ports.forEach((p, i) => {
+    const far = Math.hypot(p.x, p.y);
+    // The arm slides 12 pixels: folded, its tip is at the ring. Out, it reaches the port.
+    const mid = far - 26 + 12 * out[i];
+    ctx.save();
+    ctx.translate(st.x + (p.x / far) * mid, st.y + (p.y / far) * mid);
+    ctx.rotate(Math.atan2(p.x, -p.y));
+    ctx.drawImage(img, -11, -12);
+    ctx.fillStyle = light;
+    ctx.fillRect(-6, -12, 12, 2);
+    ctx.restore();
+  });
+}
+
 function drawStation(ctx, st, env) {
-  sprite(ctx, env.img['station_' + st.align], st.x, st.y, st.heading);
+  sprite(ctx, env.img['station_' + stationLook(st)], st.x, st.y, st.heading);
+  drawArms(ctx, st, env);
   // Pirate strongholds have their own guns. Everyone else mounts the same turrets as the frigate.
   const pirate = st.side === 'pirate';
   for (const gun of st.guns) {
@@ -123,14 +195,14 @@ const spriteOf = (name) => (ctx, t, env) =>
 export const THING_LOOK = {
   rock: { margin: 30, draw: spriteOf((rock) => 'rock' + rock.variant) },
   wreck: {
-    margin: 100,
-    draw: spriteOf('wreck'),
+    margin: 110,
+    draw: spriteOf((wreck) => (wreck.hull === 'hull' ? 'wreck' : 'wreck_' + wreck.hull)),
     mark: markWreck,
     dot: { size: 3, color: () => COL.ochre[2] },
     arrow: () => COL.ochre[2],
   },
   station: {
-    margin: 130,
+    margin: 170,
     draw: drawStation,
     mark: markStation,
     dot: { size: 4, color: (k) => ALIGN_COL[k.align] },

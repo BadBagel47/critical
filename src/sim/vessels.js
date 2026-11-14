@@ -103,7 +103,7 @@ export function hurtVessel(state, v, dmg, by = CREW) {
     side: v.side,
   });
   if (c.leavesWreck && thingsOf(state, 'wreck').length < B.MAX_WRECKS) {
-    const wreck = createWreck(state, v.x, v.y, Math.min(3, 1 + currentSector(state).tier));
+    const wreck = createWreck(state, v.x, v.y, Math.min(3, 1 + currentSector(state).tier), v.kind);
     wreck.heading = v.heading;
     addThing(state, wreck);
   }

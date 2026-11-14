@@ -1,7 +1,7 @@
 // Sectors: the world is split into sectors, and a star chart unlocks the jump to the next one.
 // Only the sector the ship is in is simulated. The others are stored as they were left.
 import { B } from './balance.js';
-import { THINGS } from './kinds.js';
+import { THINGS, HULLS } from './kinds.js';
 import { addThing, dockTargets } from './things.js';
 import { makeVessel, firstWaveDelay } from './vessels.js';
 import { createMap } from './map.js';
@@ -82,14 +82,23 @@ export const createSectors = () =>
   }));
 export const currentSector = (state) => state.sectors[state.sector];
 
-export function createWreck(s, x, y, difficulty) {
+// `hull` is the shape of the wreck, see HULLS in kinds.js. Without one it is picked among those that can be as
+// dangerous as asked for, and a hull that cannot be that dangerous makes the wreck less so.
+export function createWreck(s, x, y, difficulty, hull = null) {
+  const fits = Object.keys(HULLS).filter((h) => HULLS[h].risk[0] <= difficulty && difficulty <= HULLS[h].risk[1]);
+  // The hull is read off the heading instead of drawing one more random number, so that a world made from
+  // the same seed is laid out as it was before wrecks had hulls.
+  const heading = randRange(s, 0, TAU);
+  if (!hull) hull = fits[Math.floor(heading * 7919) % fits.length];
+  const [low, high] = HULLS[hull].risk;
   return {
     id: s.nextId++,
     kind: 'wreck',
+    hull,
     x,
     y,
-    heading: randRange(s, 0, TAU),
-    difficulty,
+    heading,
+    difficulty: Math.max(low, Math.min(high, difficulty)),
     interior: null,
     lock: 'locked',
     breakin: null,

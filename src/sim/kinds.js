@@ -5,6 +5,7 @@
 //   hit      circles, in the thing's own pixels, that the frigate and shots run into
 //   ports    where the frigate's nose can dock, in the thing's own pixels. A docked ship points at the middle
 //            of the thing, or at `toward` for a port that has one
+//            Both can be a function of the thing, for kinds that come in more than one shape
 //   lock     the break-in game that opens it (see breakin.js)
 //   inside   it has an interior that the crew can board
 //   onMap    the map remembers it as last seen, together with these extra fields
@@ -15,14 +16,10 @@ export const THINGS = {
     hit: (rock) => [{ x: 0, y: 0, r: rock.r }],
     persist: true,
   },
-  // Sprite is 80 x 140, nose up.
+  // A wreck has the shape of the ship it was, see HULLS below.
   wreck: {
-    hit: [
-      { x: 0, y: -40, r: 22 },
-      { x: 0, y: 0, r: 28 },
-      { x: 0, y: 40, r: 26 },
-    ],
-    ports: [{ x: -33, y: 10, toward: { x: 0, y: 10 } }],
+    hit: (wreck) => HULLS[wreck.hull].hit,
+    ports: (wreck) => HULLS[wreck.hull].ports,
     lock: 'pipes',
     inside: true,
     onMap: () => ({}),
@@ -65,6 +62,40 @@ export const THINGS = {
   },
   salvage: {},
   buoy: { persist: true },
+};
+
+// The hulls that wrecks come in, nose up. `ship` is the class of ship that leaves that wreck when it is
+// destroyed, and `risk` how dangerous such a wreck can be to board: a small hull holds less, and fewer guards.
+export const HULLS = {
+  // An old hull that nobody can put a name to. Sprite is 80 x 140.
+  hull: {
+    hit: [
+      { x: 0, y: -40, r: 22 },
+      { x: 0, y: 0, r: 28 },
+      { x: 0, y: 40, r: 26 },
+    ],
+    ports: [{ x: -33, y: 10, toward: { x: 0, y: 10 } }],
+    risk: [1, 3],
+  },
+  // Sprite is 64 x 78.
+  gunboat: {
+    ship: 'gunboat',
+    hit: [{ x: 0, y: 0, r: 22 }],
+    ports: [{ x: -23, y: -4, toward: { x: 0, y: -4 } }],
+    risk: [1, 2],
+  },
+  // Sprite is 80 x 160. The stern has broken off and drifted a little.
+  freighter: {
+    ship: 'freighter',
+    hit: [
+      { x: 0, y: -52, r: 20 },
+      { x: 0, y: -18, r: 24 },
+      { x: 2, y: 22, r: 24 },
+      { x: 4, y: 56, r: 24 },
+    ],
+    ports: [{ x: -26, y: -3, toward: { x: 0, y: -3 } }],
+    risk: [2, 3],
+  },
 };
 
 // Ship classes, other than the crew's own frigate.
@@ -123,6 +154,7 @@ export const SHIPS = {
     boom: { size: 50, dur: 0.9 },
     salvage: { count: 3, value: [15, 35] },
     aloof: true,
+    leavesWreck: true,
   },
   // Sprite is 96 x 168.
   cruiser: {
