@@ -8,61 +8,65 @@ Prioritet: Hög, Medel, Låg.
 **A** – standard model, medium level – Tester och verktyg
 - D-058 – Låt provkörningen klicka på namngivna knappar, lägg till kontroll av stavfel och typer, och kör testerna automatiskt vid varje sparning
 
-**B** – strong model, high level – Spara spelet
+**B** – standard model, medium level – Lättare inbrott i vrak
+- B-092 – Gör rörspelet lättare med färre rutor och färre som behöver vridas, med samma tid som nu, så att det går att hinna
+
+**C** – strong model, high level – Spara spelet
 - F-079 – Spara och fortsätta en omgång i webbläsaren, och exportera och importera en sparfil, så att långa omgångar inte går förlorade
 
-**C** – strong model, high level – Faktioner och trafik
+**D** – strong model, high level – Faktioner och trafik
 - F-035 – Faktioner med egna stationer, områden och anseende, så att världen får sidor att förhålla sig till
 - F-069 – Lägg till freighter som skeppsklass, större och långsam, så att trafiken får ett eget skepp
 - F-066 – Låt andra skepp flyga fram till stationer, docka en stund och lämna, så att stationerna känns besökta
 - F-067 – Låt handelsskepp, patruller och pirater hoppa in och ut ur systemet och slåss med varandra, så att miljön känns levande
 
-**D** – strong model, high level – Sällsynta skepp
+**E** – strong model, high level – Sällsynta skepp
 - F-070 – Juggernaut som långsamt och tungt bestyckat krigsskepp, på patrull hos faktioner och i mycket sällsynta fall som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**E** – strong model, high level – Handel
+**F** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**F** – strong model, medium level – Butik med bilder
+**G** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**G** – strong model, high level – Värme
+**H** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**H** – strong model, high level – Slå ut och borda
+**I** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**I** – strong model, high level – Missiler och raketer
+**J** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**J** – strong model, high level – Kontakt med andra skepp
+**K** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**K** – strong model, high level – Asteroider och anomalier
-- F-085 – Skjut sönder asteroider och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
+**L** – strong model, high level – Asteroider och anomalier
+- F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**L** – strong model, high level – En värld som förändras
+**M** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 
-**M** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**N** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**N** – strong model, high level – Musik och ljud
+**O** – strong model, high level – Musik och ljud
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - F-048 – Musik för de olika lägena
 
-Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. D-072 (två våningar), D-073 (uppdrag), D-074 (smuggelgods), D-089 (nät av system) och D-052 (storyläge) behöver ett samtal först. D-060, D-061 och D-062 (nätverksförberedelser) behöver besked om hur motorn fungerar. Dessutom besked i D-044 och D-045, och motorn för onlineläget (F-040).
+Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. F-091 (mining laser) tas upp när F-085 är provad. D-093 (nya eller fler minigames) behöver ett samtal först. D-072 (två våningar), D-073 (uppdrag), D-074 (smuggelgods), D-089 (nät av system) och D-052 (storyläge) behöver ett samtal först. D-060, D-061 och D-062 (nätverksförberedelser) behöver besked om hur motorn fungerar. Dessutom besked i D-044 och D-045, och motorn för onlineläget (F-040).
 
 ## Hög
 
 | ID | Vad | Status |
 |---|---|---|
 | F-079 | Med tanke på att detta kan bli långa spelomgångar så behöver vi också titta på hur man kan spara sin progress. Eftersom det är i webbläsaren så behöver man även kunna exportera och importera en sparfil | Ej påbörjad |
+| B-092 | Minispelet för att ta sig in i skepp är lite för svårt på så kort tid. Tror det är bättre att göra det lättare än att ge mer tid för att lösa det. Mätt 2026-11-14: 28 rutor, och i snitt 13 vridningar för den som redan kan lösningen, på 42 till 60 sekunder | Ej påbörjad |
 | F-050 | Justerade nivåer för vapen, sköld, motorer och engineering så att det känns att det är svårt i början och att det ska vara värt att uppgradera | Ej påbörjad |
 
 ## Medel
@@ -93,7 +97,9 @@ Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. D-
 | F-082 | Från D-075: anropa andra skepp och stationer. Be om bränsle eller hjälp, muta, kräva tribut. En ny uppgift för Captain | Ej påbörjad |
 | F-083 | Från D-075: skepp i nöd som ber om bränsle eller reparation och betalar eller minns det | Ej påbörjad |
 | F-084 | Från D-075: värme som en andra resurs bredvid energi. Vapen och motorer blir varma, och Engineer måste kyla. Användaren: det där med värme är riktigt bra, då kan vi även göra uppgraderingar som kyler systemen bättre | Ej påbörjad |
-| F-085 | Från D-075: asteroidbrytning. Skjut sönder asteroider och dra in malm att sälja | Ej påbörjad |
+| F-085 | Från D-075: asteroidbrytning. Skjut sönder asteroider och dra in malm att sälja. Användaren 2026-11-14: vi kanske ska börja med att det räcker med vanliga vapen. Om en speciell mining laser ska finnas, se F-091 | Ej påbörjad |
+| F-091 | Ska man ha en speciell mining laser för att mina asteroider? Ska vanliga vapen kunna skjuta sönder asteroider? Om ja, ska de ge miningresurser eller är det reserverat för mining laser? Tas upp när F-085 är byggd och provad med vanliga vapen | Väntar på användaren |
+| D-093 | Eventuellt skapa nytt eller fler minigames | Väntar på användaren |
 | F-090 | Spela på mobil och surfplatta med pekskärm, i liggande format. I dag finns bara tangentbord, mus och handkontroll, så spelet går inte att styra med fingrarna. Användaren frågade 2026-11-14 och har inte bestämt om det ska byggas | Väntar på användaren |
 | D-089 | Från D-075: fler och mindre system i ett nät av hoppvägar i stället för fem sektorer i rad. Stor ändring av världen som behöver pratas igenom först | Väntar på användaren |
 | D-052 | Någon form av storyläge, eller åtminstone grund för vad spelet går ut på, behöver ses över | Väntar på användaren |
