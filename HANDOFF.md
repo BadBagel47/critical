@@ -42,7 +42,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 
 - [docs/design/index.html](docs/design/index.html): designskissen (utkast 3), på svenska. Samma sida finns som privat sida hos användaren: https://claude.ai/artifact/Ebx9u3e5cy33EHWXoViYJz
 - [docs/design/img/](docs/design/img/): exempelskärmar och skeppsbilder.
-- [docs/design/tools/](docs/design/tools/): Python-skript som ritar bilderna. Kräver Pillow och typsnittet DejaVu Sans Bold. Kör `python3 frigate.py`, `python3 rot.py` och `python3 screens2.py`.
+- [docs/design/tools/](docs/design/tools/): Python-skript som ritar bilderna. Kräver Pillow och typsnittet DejaVu Sans Bold. Kör `python3 frigate.py`, `python3 rot.py` och `python3 screens2.py`, samt `python3 ships2.py` för förslagen på nya skeppsklasser.
 - [tools/export_assets.py](tools/export_assets.py): gör spelets bilder av ritskripten, och typsnittet av DejaVu Sans Bold. Kör `npm run assets`.
 
 ## Kod
@@ -174,6 +174,7 @@ Skepp och uppgraderingar
 - Fighter bay är en uppgradering. Darts är den minsta skeppsklassen.
 - Skeppsklasser: Dart, Fighter, Interceptor, Gunboat, Frigate, Cruiser.
 - Två nya skeppsklasser ska in: Freighter, lite större och långsam (F-069), och Juggernaut, ett ovanligt krigsskepp som är långsamt och tungt bestyckat (F-070). Juggernaut patrullerar hos faktioner och dyker i mycket sällsynta fall upp som pirat (2026-11-14).
+- Nya skepp designas och visas för användaren innan de läggs in i spelet (2026-11-14). Förslagen ritas av `docs/design/tools/ships2.py`.
 
 Grafik
 - En pixelstil för hela spelet, alltid uppifrån, med dämpade färger. Stark färg används bara för ljus, skott och loot.

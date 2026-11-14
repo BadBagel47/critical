@@ -16,12 +16,10 @@ Prioritet: Hög, Medel, Låg.
 
 **D** – strong model, high level – Faktioner och trafik
 - F-035 – Faktioner med egna stationer, områden och anseende, så att världen får sidor att förhålla sig till
-- F-069 – Lägg till freighter som skeppsklass, större och långsam, så att trafiken får ett eget skepp
 - F-066 – Låt andra skepp flyga fram till stationer, docka en stund och lämna, så att stationerna känns besökta
 - F-067 – Låt handelsskepp, patruller och pirater hoppa in och ut ur systemet och slåss med varandra, så att miljön känns levande
 
-**E** – strong model, high level – Sällsynta skepp
-- F-070 – Juggernaut som långsamt och tungt bestyckat krigsskepp, på patrull hos faktioner och i mycket sällsynta fall som pirat
+**E** – strong model, high level – Unika skepp
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
 **F** – strong model, high level – Handel
@@ -59,7 +57,7 @@ Prioritet: Hög, Medel, Låg.
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - F-048 – Musik för de olika lägena
 
-Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. F-091 (mining laser) tas upp när F-085 är provad. D-093 (nya eller fler minigames) behöver ett samtal först. D-072 (två våningar), D-073 (uppdrag), D-074 (smuggelgods), D-089 (nät av system) och D-052 (storyläge) behöver ett samtal först. D-060, D-061 och D-062 (nätverksförberedelser) behöver besked om hur motorn fungerar. Dessutom besked i D-044 och D-045, och motorn för onlineläget (F-040).
+Väntar på användaren: D-094 (design på nya skepp) behöver ett val mellan förslagen. Därefter kommer F-069 (freighter) tillbaka i gruppen Faktioner och trafik, och F-070 (Juggernaut) i gruppen Unika skepp. F-090 (pekskärm) behöver besked om det ska byggas. F-091 (mining laser) tas upp när F-085 är provad. D-093 (nya eller fler minigames) behöver ett samtal först. D-072 (två våningar), D-073 (uppdrag), D-074 (smuggelgods), D-089 (nät av system) och D-052 (storyläge) behöver ett samtal först. D-060, D-061 och D-062 (nätverksförberedelser) behöver besked om hur motorn fungerar. Dessutom besked i D-044 och D-045, och motorn för onlineläget (F-040).
 
 ## Hög
 
@@ -85,8 +83,9 @@ Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. F-
 | F-066 | Det vore trevligt om andra skepp kan besöka stationer. Att de åker fram, dockar en stund, och sedan lämnar. Från D-075: varje sektor har sin egen blandning av handelsskepp, patruller och pirater | Ej påbörjad |
 | F-067 | Vänliga skepp kan hyperjumpa in och ut ur systemet. De kan stanna en stund och sedan antingen flyga till något annat ställe, eller hoppa vidare. Detta för att miljön ska kännas mer levande. Från D-075: skeppen slåss också med varandra, och pirater anfaller freighters | Ej påbörjad |
 | F-068 | Handelssystem för goods. Att man kan köpa och sälja varor mellan olika stationer med olika priser. Det är inget som man själv kan använda, utan det är bara för att kunna tjäna pengar. Agentens förslag som användaren inte invänt mot: lastrum med begränsad plats som går att bygga ut, och priser som rör sig långsamt. Från D-075: prisnivåer per vara och station, och en kartvy som visar var det lönar sig | Ej påbörjad |
-| F-069 | Skeppstypen freighter. Lite större långsamma skepp | Ej påbörjad |
-| F-070 | Skeppstyp Juggernaut. Ett ovanligt krigsskepp som är långsamt och tungt bestyckat. Besked 2026-11-14: det kan både vara patrullerande skepp i faktioner, men i väldigt sällsynta fall även dyka upp som pirat. Kräver F-035 | Ej påbörjad |
+| F-069 | Skeppstypen freighter. Lite större långsamma skepp. Väntar på val av design (D-094) | Väntar på användaren |
+| F-070 | Skeppstyp Juggernaut. Ett ovanligt krigsskepp som är långsamt och tungt bestyckat. Besked 2026-11-14: det kan både vara patrullerande skepp i faktioner, men i väldigt sällsynta fall även dyka upp som pirat. Kräver F-035. Väntar på val av design (D-094) | Väntar på användaren |
+| D-094 | Ta fram design på nya skepp innan vi lägger in dem. Förslag på Freighter (A och B) och Juggernaut (A och B) finns i docs/design/img/new-ships.png och i designskissen. Användaren väljer ett förslag per klass, eller ber om ändringar | Väntar på användaren |
 | D-071 | Vi behöver en lösning för eskortskepp. Från D-075, godkänt av användaren: eskorter som hyrs mot lön och tar enkla order (följ, anfall mitt mål, håll avstånd). Hyrs på stationer, och i baren när den finns (D-072) | Ej påbörjad |
 | D-072 | Baser ska ha två våningar med olika funktioner. Vi funderar lite på hur detta kan göras bra. Agentens första tanke: nedre våningen med luftsluss, services och shipyard, övre med armory och en bar, hiss eller trappa emellan | Väntar på användaren |
 | D-073 | Det ska gå att få uppdrag på stationer man kan besöka genom att prata med folk. Detta kräver mer genomgång innan vi inför. Hänger ihop med D-052. Från D-075: fraktjobb och passagerare med tidsgräns på en anslagstavla, uppdrag med berättelse från folk i baren | Väntar på användaren |
