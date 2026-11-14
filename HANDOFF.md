@@ -1,6 +1,6 @@
 # HANDOFF
 
-Rules version: v1.6
+Rules version: v1.7
 Inventory: 2026-11-14
 Project language: English (all text in the game and README)
 
@@ -157,6 +157,7 @@ Grafik
 ## Miljö och begränsningar
 
 - 2026-11-14: Agenten kan klona och pusha via git. GitHub-verktygen (gh och GitHub-kopplingen) fungerade inte i sessionen, så agenten kunde inte läsa eller ändra repoinställningar, till exempel GitHub Pages.
+- 2026-11-14, senare session: GitHub-kopplingen fungerar för att läsa pull requests och issues. Kommandot gh finns inte. Sessionen fick bara pusha till sin egen gren (claude/), inte direkt till main, och repot saknar automatisk merge.
 
 ## Engångsåtgärder
 
