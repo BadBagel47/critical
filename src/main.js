@@ -14,6 +14,7 @@ import { findDock } from './sim/dock.js';
 import { SHIP_GEOM } from './sim/balance.js';
 import { toWorld } from './sim/util.js';
 import { initAudio, playEvents, setEngine, toggleMute, isMuted } from './audio.js';
+import { createEffects, resetEffects, updateEffects, updateInside, drawFlash } from './render/effects.js';
 import { drawEngineer, engineerClick, SYSTEM_KEYS } from './render/engineer.js';
 
 const canvas = document.getElementById('game');
@@ -30,7 +31,7 @@ resize();
 
 const input = createInput(canvas);
 input.onGesture = initAudio;
-const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [], hacking: false, map: false, station: false, stationTab: 'hull', wonSeen: false, padAim: 0 };
+const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [], hacking: false, map: false, station: false, stationTab: 'hull', wonSeen: false, padAim: 0, fx: createEffects() };
 // Test mode can be started from the title screen with T, or by adding ?test to the address.
 let testMode = /[?&]test\b/.test(window.location.search);
 let state = createState(Date.now() % 100000, { test: testMode });
@@ -150,7 +151,7 @@ function localKeys() {
   if (input.hit('Tab')) view.post = POSTS[(POSTS.indexOf(view.post) + 1) % POSTS.length];
   if (input.hit('PadPrevPost')) view.post = POSTS[(POSTS.indexOf(view.post) + POSTS.length - 1) % POSTS.length];
   if (state.over && input.hit('KeyR')) {
-    view.toasts = []; view.hacking = false; view.map = false; view.station = false; view.wonSeen = false; state = createState((state.seed * 7 + 13) % 100000, { test: testMode }); view.post = 'captain'; view.cam = { x: 0, y: 0 }; }
+    view.toasts = []; view.hacking = false; view.map = false; view.station = false; view.wonSeen = false; resetEffects(view.fx); state = createState((state.seed * 7 + 13) % 100000, { test: testMode }); view.post = 'captain'; view.cam = { x: 0, y: 0 }; }
 }
 
 function render(t) {
@@ -174,6 +175,7 @@ function render(t) {
   if (view.station || view.hacking) drawToasts(ctx, font, view, state.time, 312);
   else if (view.map && !away) drawToasts(ctx, font, view, state.time, 296, 180);
   else drawToasts(ctx, font, view, state.time, away ? 42 : 44);
+  drawFlash(ctx, view.fx);
   if (state.won && !view.wonSeen && !state.over) drawOverlay(ctx, font, 'THE MAW IS CLEAR', ['THE PIRATE CRUISER IS DESTROYED', `KILLS  ${state.kills}     CREDITS  ${state.credits}`, '', 'PRESS ENTER TO KEEP FLYING'], COL.acid[2]);
   if (state.over) drawOverlay(ctx, font, 'SHIP LOST', [`KILLS  ${state.kills}`, `TIME  ${Math.floor(state.time / 60)}:${String(Math.floor(state.time % 60)).padStart(2, '0')}`, '', 'PRESS R TO TRY AGAIN'], COL.ember[2]);
   else if (state.paused) drawOverlay(ctx, font, 'PAUSED', [`PAUSED BY ${state.pausedBy}`, '', 'PRESS P TO RESUME'], COL.text);
@@ -204,6 +206,10 @@ function frame(now) {
     toasts();
     state.events.length = 0;
     snapCam();
+    // Effects follow real time and only watch the state. They never change it.
+    updateEffects(view.fx, state, view, dt);
+    const inside = findDock(state, state.players[view.playerId].inside);
+    if (inside && inside.interior) updateInside(view.fx, inside.interior, dt, state.paused);
   }
   render(now / 1000);
   input.endFrame();

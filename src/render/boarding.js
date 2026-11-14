@@ -74,12 +74,13 @@ export function drawBoarding(ctx, state, view, assets) {
   const { img, font } = assets, player = state.players[0];
   const wreck = findDock(state, player.inside), it = wreck.interior, isStation = wreck.kind === 'station';
   const me = it.avatars.find((a) => a.player === player.id);
-  drawStars(ctx, { x: wreck.x * 0.2, y: wreck.y * 0.2 });
+  const fx = view.fx;
+  drawStars(ctx, { x: wreck.x * 0.2, y: wreck.y * 0.2 }, fx, state.sector);
   // The docked ship and the tunnel into the wreck.
   sprite(ctx, img.frigate, 16, OY + 9 * TILE, Math.PI / 2);
   rect(ctx, 60, OY + 8 * TILE - 2, OX - 60, 36, WALL[0], COL.out); rect(ctx, 61, OY + 8 * TILE + 2, OX - 61, 28, '#191a25');
   for (let x = 68; x < OX; x += 10) { ctx.fillStyle = WALL[0]; ctx.fillRect(x, OY + 8 * TILE + 2, 1, 28); }
-  ctx.save(); ctx.translate(OX, OY);
+  ctx.save(); ctx.translate(OX + (fx ? fx.offset.x : 0), OY + (fx ? fx.offset.y : 0));
   drawTiles(ctx, it, state.time);
   const DESK = { services: ['SERVICES', COL.ochre[2]], shipyard: [wreck.shipyard ? 'SHIPYARD' : 'NO SHIPYARD', wreck.shipyard ? COL.captain : COL.faint], armory: ['ARMORY', COL.ember[1]] };
   for (const dk of it.desks) {
@@ -120,6 +121,7 @@ export function drawBoarding(ctx, state, view, assets) {
     if (u >= 1) { ctx.strokeStyle = COL.ember[1]; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(g.x, g.y, B.GRENADE_RADIUS, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
   }
   for (const f of it.fx) effect(ctx, f);
+  if (fx) fx.inside.draw(ctx);
   ctx.restore();
 
   // ---- HUD ----

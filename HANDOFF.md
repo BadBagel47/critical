@@ -45,7 +45,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - `index.html` och `src/`: spelet. Ren JavaScript utan byggsteg.
 - `src/sim/`: spellogiken, helt skild från bild och inmatning. Varje post skickar kommandon till `step()`. Det är här nätverksmotorn ska kopplas in.
 - `src/sim/balance.js`: alla siffror för fart, skada och liknande.
-- `src/render/`: skärmarna.
+- `src/render/`: skärmarna. `effects.js` och `particles.js` ritar effekterna. De läser bara spelets tillstånd och ändrar det aldrig, så de påverkar inte ett kommande onlineläge.
 - `assets/`: bilder och typsnitt som skapas av `tools/export_assets.py`.
 
 ## Test

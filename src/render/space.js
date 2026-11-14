@@ -9,6 +9,8 @@ import { isVisible, visionSources } from '../sim/map.js';
 import { dockTargets, portsOf } from '../sim/dock.js';
 import { has, level, shieldMax } from '../sim/upgrades.js';
 import { rect } from './draw.js';
+import { drawNebula, drawRipples } from './effects.js';
+import { currentSector } from '../sim/sectors.js';
 
 const STARS = (() => {
   let seed = 12345; const r = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
@@ -17,11 +19,15 @@ const STARS = (() => {
 const mod = (v, m) => ((v % m) + m) % m;
 export const ALIGN_COL = { friendly: COL.engineer, neutral: COL.steel[3], hostile: COL.ember[1] };
 
-export function drawStars(ctx, cam) {
+// `fx` adds the sector's cloud layer and, right after a jump, stretches the stars into streaks.
+export function drawStars(ctx, cam, fx = null, sector = 0) {
   ctx.fillStyle = COL.bg; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  if (fx) drawNebula(ctx, fx, sector, cam);
+  const warp = fx ? fx.warp : 0;
   for (const layer of STARS) for (const s of layer.stars) {
     const x = Math.floor(mod(s.x - cam.x * layer.f, VIEW_W)), y = Math.floor(mod(s.y - cam.y * layer.f, VIEW_H));
     ctx.fillStyle = s.c; ctx.fillRect(x, y, 1, 1);
+    if (warp > 0) { const len = Math.round(warp * 90 * layer.f * 2); ctx.globalAlpha = 0.6; ctx.fillRect(x, y, 1, len); ctx.globalAlpha = 1; }
     if (s.big) { ctx.fillStyle = '#55587a'; ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3); ctx.fillStyle = s.c; ctx.fillRect(x, y, 1, 1); }
   }
 }
@@ -29,6 +35,9 @@ export function drawStars(ctx, cam) {
 function bolt(ctx, b) {
   const a = headingTo(b.vx, b.vy), player = b.owner === 'player', k = b.small ? 0.6 : 1;
   ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(a);
+  // A soft glow around every shot.
+  ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.22; ctx.fillStyle = player ? (b.small ? COL.ion[1] : COL.ochre[2]) : COL.acid[2];
+  ctx.beginPath(); ctx.ellipse(0, 1, 4 * k, 9 * k, 0, 0, 7); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   ctx.fillStyle = player ? (b.small ? COL.ion[1] : COL.ochre[1]) : COL.acid[1]; ctx.fillRect(-1, 0, 2, 6 * k);
   ctx.fillStyle = player ? (b.small ? COL.ion[3] : COL.ochre[3]) : COL.acid[3]; ctx.fillRect(-1, -4 * k, 2, 5 * k);
   ctx.restore();
@@ -37,15 +46,13 @@ function bolt(ctx, b) {
 function effect(ctx, f) {
   const u = f.t / f.dur;
   if (f.type === 'boom') {
-    ctx.globalAlpha = Math.max(0, 1 - u * 1.4); ctx.fillStyle = COL.ember[3];
-    ctx.beginPath(); ctx.arc(f.x, f.y, f.size * (0.25 + u * 0.4), 0, 7); ctx.fill();
-    ctx.globalAlpha = Math.max(0, 1 - u);
-    for (let i = 0; i < 14; i++) {
-      const a = i * 0.449 + f.size, r = f.size * u * (0.6 + ((i * 37) % 10) / 14), s = i % 3 === 0 ? 3 : 2;
-      ctx.fillStyle = i % 2 ? COL.ochre[2] : COL.ember[1];
-      ctx.fillRect(f.x + Math.cos(a) * r - s / 2, f.y + Math.sin(a) * r - s / 2, s, s);
-    }
-    ctx.globalAlpha = 1;
+    // The bright core of an explosion. Sparks, smoke and debris come from the particle system.
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = Math.max(0, 1 - u * 1.8); ctx.fillStyle = '#fff3c4';
+    ctx.beginPath(); ctx.arc(f.x, f.y, f.size * (0.3 + u * 0.5), 0, 7); ctx.fill();
+    ctx.globalAlpha = Math.max(0, 0.7 - u); ctx.fillStyle = COL.ember[1];
+    ctx.beginPath(); ctx.arc(f.x, f.y, f.size * (0.5 + u * 0.7), 0, 7); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   } else if (f.type === 'jump') {
     ctx.globalAlpha = 1 - u; ctx.strokeStyle = COL.ion[3]; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(f.x, f.y, 20 + u * 260, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
@@ -56,7 +63,7 @@ function effect(ctx, f) {
   }
 }
 
-function drawShip(ctx, state, img) {
+function drawShip(ctx, state, img, fx) {
   const ship = state.ship;
   ctx.save(); ctx.translate(ship.x, ship.y); ctx.rotate(ship.heading);
   const th = Math.max(0, ship.throttle);
@@ -88,6 +95,7 @@ function drawShip(ctx, state, img) {
     ctx.beginPath(); ctx.ellipse(0, 0, 44, 62, 0, 0, 7); ctx.stroke();
     ctx.globalAlpha *= 0.15; ctx.fillStyle = COL.ion[2]; ctx.fill(); ctx.restore();
   }
+  if (fx && ship.shield > 0) { ctx.save(); ctx.translate(ship.x, ship.y); ctx.rotate(ship.heading); drawRipples(ctx, fx); ctx.restore(); }
 }
 
 function edgeMarker(ctx, font, cam, x, y, color, text) {
@@ -119,9 +127,9 @@ export function dockingInfo(state) {
 function hpBar(ctx, x, y, w, frac) { bar(ctx, x - w / 2, y, w, frac, COL.ember[1], 4); }
 
 export function drawSpace(ctx, state, view, assets) {
-  const { img, font } = assets, cam = view.cam, ship = state.ship, scan = has(ship, 'tscan');
-  drawStars(ctx, cam);
-  ctx.save(); ctx.translate(VIEW_W / 2 - cam.x, VIEW_H / 2 - cam.y);
+  const { img, font } = assets, cam = view.cam, ship = state.ship, scan = has(ship, 'tscan'), fx = view.fx;
+  drawStars(ctx, cam, fx, state.sector);
+  ctx.save(); ctx.translate(VIEW_W / 2 - cam.x + (fx ? fx.offset.x : 0), VIEW_H / 2 - cam.y + (fx ? fx.offset.y : 0));
   const near = (o, m) => Math.abs(o.x - cam.x) < VIEW_W / 2 + m && Math.abs(o.y - cam.y) < VIEW_H / 2 + m;
   for (const r of state.rocks) if (near(r, 30)) sprite(ctx, img['rock' + r.kind], r.x, r.y, r.spin);
   for (const w of state.wrecks) if (near(w, 100)) sprite(ctx, img.wreck, w.x, w.y, w.heading);
@@ -146,6 +154,7 @@ export function drawSpace(ctx, state, view, assets) {
   if (ship.pulse) { ctx.globalAlpha = Math.max(0, 0.5 * (1 - ship.pulse.t / 1.2)); ctx.strokeStyle = COL.ion[2]; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(ship.pulse.x, ship.pulse.y, 40 + ship.pulse.t * 500, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
   for (const b of state.beams) {
     const u = b.t / b.dur; ctx.globalAlpha = 1 - u;
+    ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = COL.ion[0]; ctx.lineWidth = 22 * (1 - u); ctx.beginPath(); ctx.moveTo(b.x0, b.y0); ctx.lineTo(b.x1, b.y1); ctx.stroke(); ctx.globalCompositeOperation = 'source-over';
     ctx.strokeStyle = COL.ion[1]; ctx.lineWidth = 7 * (1 - u * 0.5); ctx.beginPath(); ctx.moveTo(b.x0, b.y0); ctx.lineTo(b.x1, b.y1); ctx.stroke();
     ctx.strokeStyle = COL.ion[3]; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(b.x0, b.y0); ctx.lineTo(b.x1, b.y1); ctx.stroke(); ctx.globalAlpha = 1;
   }
@@ -167,7 +176,8 @@ export function drawSpace(ctx, state, view, assets) {
     if (view.post === 'gunner' && has(ship, 'tcomp')) { const t = dist(p.x, p.y, ship.x, ship.y) / B.BOLT_SPEED, lx = p.x + (p.vx - ship.vx) * t, ly = p.y + (p.vy - ship.vy) * t; ctx.strokeStyle = COL.ochre[2]; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(lx, ly, 4, 0, 7); ctx.stroke(); ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(lx, ly); ctx.stroke(); ctx.globalAlpha = 1; }
   }
   for (const d of state.darts) { ctx.globalAlpha = 0.5; ctx.fillStyle = COL.ion[1]; const e = toWorld(d, { x: 0, y: 9 }); ctx.beginPath(); ctx.arc(e.x, e.y, 2.5, 0, 7); ctx.fill(); ctx.globalAlpha = 1; sprite(ctx, img.dart, d.x, d.y, d.heading); }
-  if (!state.over) drawShip(ctx, state, img);
+  if (fx) fx.space.draw(ctx);
+  if (!state.over) drawShip(ctx, state, img, fx);
   for (const f of state.fx) effect(ctx, f);
   ctx.restore();
   // Arrows at the screen edge point at what the crew knows about: pirates in sight or inside the alarm range,
