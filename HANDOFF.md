@@ -182,11 +182,11 @@ Faktioner, platshållare som ska ses över i D-095 (2026-11-14)
 Sparande, uppdrag och omgångar (2026-11-14)
 - En autosparfil vid dockning och fem manuella platser. Vid död laddas senaste sparfilen om. Hardcore mode med ett liv är en egen punkt (F-096).
 - Varje omgång ska vara genererad: systemen, en röd tråd av berättelse och frivilliga sidouppdrag. Kartans storlek väljs vid start. Ingen färdigskriven story från början till slut.
-- Uppdrag: alla sorter, högst fem samtidigt för stunden. Vissa har tidsgräns och betalar mer.
+- Uppdrag: alla sorter, högst fem samtidigt för stunden. Vissa har tidsgräns och betalar mer. Ett misslyckat uppdrag kostar lönen och lite anseende hos stationens faktion, eller hos just den stationen om den är neutral.
 - Det får aldrig gå att låsa sig, till exempel utan pengar eller bränsle (D-100).
 - Små stationer har en våning, större har två. Samma gäller för fientliga.
 - Mobil är viktigt (F-090).
-- Onlineläget: spelare ansluter med rumskod eller länk. Motorns gränser är inte kända än.
+- Onlineläget: spelare ansluter med rumskod eller länk. Motorns gränser är inte kända än. Att hoppa in mitt i ett spel (F-038) görs i samband med nätverkskoden.
 
 Skepp och uppgraderingar
 - Spelarskeppet är alltid samma fregatt. Uppgraderingar syns på skrovet.
@@ -194,7 +194,7 @@ Skepp och uppgraderingar
 - Fighter bay är en uppgradering. Darts är den minsta skeppsklassen.
 - Skeppsklasser: Dart, Fighter, Interceptor, Gunboat, Frigate, Cruiser.
 - Två nya skeppsklasser ska in: Freighter, lite större och långsam (F-069), och Juggernaut, ett ovanligt krigsskepp som är långsamt och tungt bestyckat (F-070). Juggernaut patrullerar hos faktioner och dyker i mycket sällsynta fall upp som pirat (2026-11-14).
-- Freighterns design är vald: en ryggrad med containrar, förslag A. Juggernauten ska ha en rundare form som en bepansrad skalbagge och vara mindre än Cruisern. Två förslag väntar på val (D-094, 2026-11-14).
+- Freighterns design är vald: en ryggrad med containrar, förslag A. Juggernauten ska ha en lite rund form som ett ägg fast inte fullt så mjukt, vara bepansrad med monterade turrets, ha samma känsla som de andra rymdskeppen och vara mindre än Cruisern. Två förslag väntar på val (D-094, 2026-11-14).
 - Stationernas storlek är godkänd. Stora baser med två våningar blir 1,5 gånger större, med annan design, mer vapen och starkare sköld (F-103, 2026-11-14).
 - Nya skepp designas och visas för användaren innan de läggs in i spelet (2026-11-14). Förslagen ritas av `docs/design/tools/ships2.py`.
 

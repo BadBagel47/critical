@@ -186,16 +186,77 @@ def juggernaut_d(c):
     return S.sprite(w, h, parts, ramps(c), det)
 
 
+def _turret(m, x, y):
+    """A mounted turret: a round base with a barrel pointing forward. `x` is how far left of the centre line."""
+    return [(5, 'e', [m - x - 5, y - 5, m - x + 5, y + 5]), (7, 'r', [m - x - 1, y - 10, m - x, y - 1]), (7, 'r', [m - x - 2, y - 2, m - x + 1, y + 1])]
+
+
+def juggernaut_e(c):
+    """Egg, narrow end first: an angular armoured hull that widens towards the stern, with turrets along the flanks."""
+    w, h, m = 88, 142, 44
+    parts = [
+        (2, 'p', [(m, 3), (m - 9, 7), (m - 21, 24), (m - 31, 48), (m - 38, 78), (m - 38, 102), (m - 32, 122), (m - 21, 133), (m, 135)]),   # outer armour
+        (1, 'p', [(m, 8), (m - 7, 11), (m - 17, 26), (m - 26, 50), (m - 32, 78), (m - 32, 100), (m - 27, 118), (m - 18, 128), (m, 130)]),   # hull
+        (2, 'p', [(m - 9, 16), (m - 20, 31), (m - 27, 52), (m - 19, 52), (m - 9, 28)]),                  # bow plates
+        (2, 'p', [(m - 27, 60), (m - 33, 78), (m - 33, 100), (m - 27, 106)]),                             # belt armour
+        (2, 'p', [(m - 27, 110), (m - 19, 127), (m - 9, 127), (m - 15, 110)]),                            # stern plates
+        (5, 'r', [m - 8, 58, m, 104]),                                                                   # deck
+        (4, 'p', [(m, 28), (m - 5, 30), (m - 6, 40), (m, 43)]),                                           # bridge glass
+        (3, 'p', [(m - 14, 60), (m - 20, 66), (m - 20, 69), (m - 14, 63)]),                               # accent marks
+        (3, 'p', [(m - 14, 92), (m - 20, 98), (m - 20, 101), (m - 14, 95)]),
+        (2, 'p', [(m, 128), (m - 20, 128), (m - 25, 134), (m - 25, 138), (m, 138)]),                      # engine block
+        (5, 'r', [m - 23, 138, m - 14, 141]), (5, 'r', [m - 10, 138, m, 141]),
+        (6, 'r', [m - 22, 142, m - 15, 142]), (6, 'r', [m - 9, 142, m, 142]),
+    ]
+    for x, y in ((0, 20), (22, 46), (30, 84), (21, 118), (0, 114)): parts += _turret(m, x, y)
+
+    def det(px, ln):
+        for y in (66, 74, 82, 90, 98): ln((m - 7, y), (m - 1, y), S.DARK[2])
+        ln((m - 4, 59), (m - 4, 103), S.DARK[2])
+        ln((m - 30, 56), (m - 9, 56), c['hull'][0]); ln((m - 31, 108), (m - 9, 108), c['hull'][0]); ln((m - 13, 30), (m - 13, 54), c['hull'][0])
+        px([(m - 12, 58), (m - 12, 106), (m - 24, 72), (m - 24, 96), (m - 6, 14), (m - 16, 124)], c['hull2'][3])
+        px([(m - 10, y) for y in range(62, 104, 6)], c['accent'][2])
+    return S.sprite(w, h, parts, ramps(c, {7: S.STEEL2 if c is not PIRATE else S.BONE}), det)
+
+
+def juggernaut_f(c):
+    """Egg, broad end first: a blunt armoured bow that carries the heaviest turrets, narrowing to the engines."""
+    w, h, m = 92, 136, 46
+    parts = [
+        (2, 'p', [(m, 3), (m - 20, 5), (m - 33, 16), (m - 40, 36), (m - 40, 62), (m - 34, 90), (m - 24, 114), (m - 14, 126), (m, 128)]),   # outer armour
+        (1, 'p', [(m, 8), (m - 18, 10), (m - 29, 19), (m - 34, 37), (m - 34, 60), (m - 29, 87), (m - 20, 110), (m - 12, 121), (m, 123)]),   # hull
+        (2, 'p', [(m, 8), (m - 18, 10), (m - 26, 17), (m - 22, 25), (m, 23)]),                           # bow shield
+        (2, 'p', [(m - 29, 32), (m - 35, 38), (m - 35, 60), (m - 29, 66)]),                               # shoulder armour
+        (2, 'p', [(m - 24, 78), (m - 29, 86), (m - 21, 108), (m - 15, 108), (m - 18, 78)]),               # flank plates
+        (5, 'r', [m - 8, 50, m, 98]),                                                                    # deck
+        (4, 'p', [(m, 30), (m - 6, 32), (m - 7, 42), (m, 45)]),                                           # bridge glass
+        (3, 'p', [(m - 14, 52), (m - 20, 58), (m - 20, 61), (m - 14, 55)]),                               # accent marks
+        (3, 'p', [(m - 12, 84), (m - 17, 89), (m - 17, 92), (m - 12, 87)]),
+        (2, 'p', [(m, 120), (m - 14, 120), (m - 19, 126), (m - 19, 131), (m, 131)]),                      # engine block
+        (5, 'r', [m - 17, 131, m - 10, 134]), (5, 'r', [m - 7, 131, m, 134]),
+        (6, 'r', [m - 16, 135, m - 11, 135]), (6, 'r', [m - 6, 135, m, 135]),
+    ]
+    for x, y in ((14, 20), (30, 48), (25, 74), (0, 62), (14, 104)): parts += _turret(m, x, y)
+
+    def det(px, ln):
+        for y in (56, 64, 72, 80, 88): ln((m - 7, y), (m - 1, y), S.DARK[2])
+        ln((m - 4, 51), (m - 4, 97), S.DARK[2])
+        ln((m - 33, 28), (m - 9, 28), c['hull'][0]); ln((m - 30, 70), (m - 9, 70), c['hull'][0]); ln((m - 21, 112), (m - 1, 112), c['hull'][0])
+        px([(m - 12, 30), (m - 12, 68), (m - 30, 44), (m - 30, 54), (m - 10, 14), (m - 10, 116)], c['hull2'][3])
+        px([(m - 10, y) for y in range(54, 98, 6)], c['accent'][2])
+    return S.sprite(w, h, parts, ramps(c, {7: S.STEEL2 if c is not PIRATE else S.BONE}), det)
+
+
 SCALE = 3
 def sheet():
     game = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'assets', 'sprites')
     known = [(n, Image.open(os.path.join(game, n + '.png')).convert('RGBA')) for n in ('fighter', 'gunboat', 'frigate', 'cruiser')]
     chosen = ('FREIGHTER  ·  CHOSEN', [('TRADER', freighter_a(TRADER)), ('PIRATE', freighter_a(PIRATE))])
     rows = [
-        ('JUGGERNAUT C  ·  BEETLE', [('PATROL', juggernaut_c(PATROL)), ('PIRATE', juggernaut_c(PIRATE))]),
-        ('JUGGERNAUT D  ·  ARMADILLO', [('PATROL', juggernaut_d(PATROL)), ('PIRATE', juggernaut_d(PIRATE))]),
+        ('JUGGERNAUT E  ·  NARROW END FIRST', [('PATROL', juggernaut_e(PATROL)), ('PIRATE', juggernaut_e(PIRATE))]),
+        ('JUGGERNAUT F  ·  BROAD END FIRST', [('PATROL', juggernaut_f(PATROL)), ('PIRATE', juggernaut_f(PIRATE))]),
     ]
-    W, H = 640, 400
+    W, H = 640, 410
     im = Image.new('RGBA', (W, H), S.rgb(S.BG) + (255,)); d = ImageDraw.Draw(im)
     S.txt(d, 8, 6, 'NEW SHIP CLASSES  ·  SAME SCALE AS THE SHIPS IN THE GAME', S.STEEL[3])
     def place(x, y, title, variants, color):
