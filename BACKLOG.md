@@ -5,15 +5,10 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – strong model, high level – Bordning
-- F-014 – Gå in i vraket uppifrån och slåss mot vakter och kanontorn
-- F-015 – Teleportern som räddar den som nästan dör
-- F-017 – Loot som ger bränsle och krediter
-
-**B** – standard model, medium level – Inbrottsspel
+**A** – standard model, medium level – Inbrottsspel
 - F-016 – Koppla förbi dockningslåset på tid innan ni kommer in i ett vrak
 
-**C** – strong model, high level – Karta och scanner
+**B** – strong model, high level – Karta och scanner
 - F-018 – Gemensam karta där dimman lyfts av det ni ser
 - F-019 – Scannerpuls, sonder och radarbojar som avslöjar mer av kartan
 
@@ -25,10 +20,7 @@ Inget just nu.
 
 | ID | Vad | Status |
 |---|---|---|
-| F-014 | Bordning uppifrån: gå in och ut fritt, vakter, kanontorn, loot | Ej påbörjad |
-| F-015 | Teleporter: hem vid nästan död, inte in igen samma bordning, liv åter när alla är tillbaka, laddning före nästa bordning | Ej påbörjad |
 | F-016 | Inbrottsspel för vrak: koppla förbi dockningslåset | Ej påbörjad |
-| F-017 | Loot: bränsle och krediter | Ej påbörjad |
 | F-018 | Gemensam karta med fog of war | Ej påbörjad |
 | F-019 | Scanner pulse, sonder och radarbojar | Ej påbörjad |
 | F-020 | Stationer: vänlig, neutral och fientlig, tankning och shipyard | Ej påbörjad |
@@ -44,7 +36,8 @@ Inget just nu.
 | F-030 | Automatisk paus när någon varit frånkopplad en stund | Ej påbörjad |
 | F-040 | Onlinespel för upp till tre spelare via användarens motor, som bygger på Cloudflares realtidstjänster. Målet är att gratiskontot ska räcka | Väntar på motorn |
 | D-031 | Avgör om man ska kunna hoppa tillbaka till gamla sektorer | Väntar på användaren |
-| D-032 | Avgör om lootet blir kvar på platsen när någon teleporteras hem | Väntar på användaren |
+| D-032 | Avgör om lootet blir kvar på platsen när någon teleporteras hem. Just nu blir det kvar | Väntar på användaren |
+| D-043 | Avgör om skeppet ska kunna lägga ut medan någon är kvar inne. Just nu går det inte | Väntar på användaren |
 
 ## Låg
 
@@ -82,3 +75,6 @@ Inget just nu.
 | F-011 | Vrak att docka med, med dockningshjälp | 2026-11-14 |
 | F-012 | Pausknapp som fryser världen och visar vem som pausade | 2026-11-14 |
 | D-013 | Grafik in i spelet: sprites och pixeltypsnitt exporteras från ritskripten | 2026-11-14 |
+| F-014 | Bordning uppifrån: gå in och ut, vakter, kanontorn, granater och en låst valvdörr | 2026-11-14 |
+| F-015 | Teleporter: hem vid nästan död, inte in igen samma bordning, liv åter när alla är tillbaka, laddning före nästa bordning | 2026-11-14 |
+| F-017 | Loot: bränsleceller och lådor med krediter, högst tre saker per vända | 2026-11-14 |

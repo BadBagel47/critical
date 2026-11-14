@@ -3,6 +3,9 @@
 import { B, SHIP_GEOM, WRECK_GEOM } from './balance.js';
 import { nodeStatus } from './state.js';
 import { clamp, forward, headingTo, angleDiff, turnToward, toWorld, dist, rand, randRange, TAU } from './util.js';
+import { stepBoarding, anyoneInside } from './boarding.js';
+import { damageShip } from './damage.js';
+export { damageShip };
 
 // ---------- derived values ----------
 export function nodeFactor(ship, id) {
@@ -33,29 +36,6 @@ export function dockCandidate(state) {
   return null;
 }
 
-// ---------- damage ----------
-export function damageShip(state, dmg, at) {
-  const ship = state.ship;
-  ship.lastHit = state.time;
-  const absorbed = Math.min(ship.shield, dmg);
-  ship.shield -= absorbed;
-  const rest = dmg - absorbed;
-  if (rest > 0) {
-    ship.hull = Math.max(0, ship.hull - rest);
-    const node = ship.nodes[Math.floor(rand(state) * ship.nodes.length)];
-    node.hp = Math.max(0, node.hp - rest * B.NODE_DMG_MULT);
-    state.events.push({ type: 'hullHit', node: node.id });
-  } else {
-    state.events.push({ type: 'shieldHit' });
-  }
-  if (at) state.fx.push({ type: rest > 0 ? 'hit' : 'shield', x: at.x, y: at.y, t: 0, dur: 0.25 });
-  if (ship.hull <= 0 && !state.over) {
-    state.over = true;
-    state.fx.push({ type: 'boom', x: ship.x, y: ship.y, t: 0, dur: 1.4, size: 70 });
-    state.events.push({ type: 'shipLost' });
-  }
-}
-
 // ---------- posts ----------
 function stepCaptain(state, cmd, dt) {
   const ship = state.ship;
@@ -65,9 +45,12 @@ function stepCaptain(state, cmd, dt) {
     else if (cmd.throttle) ship.throttle = clamp(ship.throttle + cmd.throttle * B.THROTTLE_RATE * dt, -B.REVERSE, 1);
     turnInput = clamp(cmd.turn || 0, -1, 1);
     if (cmd.dock) {
-      if (ship.docked) {
+      if (ship.docked && anyoneInside(state, ship.docked)) {
+        state.events.push({ type: 'crewInside' });
+      } else if (ship.docked) {
         const w = state.wrecks.find((x) => x.id === ship.docked);
         ship.docked = null;
+        for (const p of state.players) p.lockedOut = null;
         const f = forward(ship.heading);
         ship.vx = -f.x * 14; ship.vy = -f.y * 14;
         state.events.push({ type: 'undock', wreck: w && w.id });
@@ -81,7 +64,9 @@ function stepCaptain(state, cmd, dt) {
     }
   }
   if (ship.docked) return;
-  const eng = B.ENGINE_POWER[ship.power.engines] * nodeFactor(ship, 'engines');
+  let eng = B.ENGINE_POWER[ship.power.engines] * nodeFactor(ship, 'engines');
+  ship.fuel = Math.max(0, ship.fuel - B.FUEL_BURN * Math.abs(ship.throttle) * B.ENGINE_POWER[ship.power.engines] * dt);
+  if (ship.fuel <= 0) eng *= B.ADRIFT_FACTOR;
   ship.turn += (turnInput - ship.turn) * Math.min(1, B.TURN_SMOOTH * dt);
   ship.heading = (ship.heading + ship.turn * B.TURN_RATE * nodeFactor(ship, 'bridge') * dt + TAU) % TAU;
   const f = forward(ship.heading), a = B.ACCEL * eng * ship.throttle;
@@ -318,6 +303,7 @@ export function step(state, cmds, dt) {
   const solids = solidCircles(state);
   stepCollisions(state, dt, solids);
   stepBolts(state, dt, solids);
+  stepBoarding(state, cmds, dt);
   if (state.time - ship.lastHit > B.SHIELD_DELAY) {
     const emit = (nodeFactor(ship, 'port') + nodeFactor(ship, 'starboard')) / 2;
     ship.shield = Math.min(B.SHIELD_MAX, ship.shield + B.SHIELD_RECHARGE[ship.power.shields] * emit * dt);

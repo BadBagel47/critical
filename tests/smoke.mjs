@@ -61,17 +61,37 @@ const t0 = await get('s.time'); await page.waitForTimeout(400);
 check(await get('s.paused') === true && await get('s.time') === t0, 'P pauses the world');
 await page.keyboard.press('Digit1'); await page.waitForTimeout(100); await shot('05-paused');
 await page.keyboard.press('KeyP');
-await page.keyboard.press('KeyH'); await page.waitForTimeout(100); await shot('06-help'); await page.keyboard.press('KeyH');
+await page.keyboard.press('KeyH'); await page.waitForTimeout(100); await shot('06-help');
+
+// Boarding: dock, go in, move, shoot, throw a grenade, come back.
+await page.keyboard.press('KeyH');
+await page.evaluate(() => { const s = window.__critical.state; s.spawn.timer = 1e9; s.pirates = []; s.ship.docked = s.wrecks[0].id; s.ship.vx = s.ship.vy = 0; s.ship.throttle = 0; });
+await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
+check(await get('s.players[0].inside') !== null, 'F boards a docked wreck');
+const x0 = await get('s.wrecks[0].interior.avatars[0].x');
+await page.keyboard.down('KeyD'); await page.waitForTimeout(700); await page.keyboard.up('KeyD');
+check(await get('s.wrecks[0].interior.avatars[0].x') > x0 + 20, 'the boarder walks');
+await page.mouse.move(box.x + 500 * k, box.y + 180 * k); await page.mouse.down(); await page.waitForTimeout(400); await page.mouse.up();
+await page.keyboard.press('KeyG'); await page.waitForTimeout(250);
+check(await get('s.wrecks[0].interior.avatars[0].grenades') === 2, 'G throws a grenade');
+await shot('07-boarding');
+await page.keyboard.press('Digit3'); await page.waitForTimeout(100);
+check(await get('s.players[0].inside') !== null && await get('v.post') !== 'engineer', 'posts cannot be taken while away');
+await page.evaluate(() => { const it = window.__critical.state.wrecks[0].interior, a = it.avatars[0]; it.guards = []; it.turrets = []; a.x = it.entry.x; a.y = it.entry.y; });
+await page.waitForTimeout(100); await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
+check(await get('s.players[0].inside') === null, 'F at the airlock returns to the ship');
+await shot('08-docked');
+await page.evaluate(() => { const s = window.__critical.state; s.ship.docked = null; s.spawn.timer = 5; });
 
 // Let the world run: pirates arrive and attack, and an idle ship is eventually lost.
 await page.evaluate(() => window.__critical.advance(45));
 await page.waitForTimeout(300);
 check(await get('s.spawn.wave') >= 1, 'a pirate wave arrives');
-await page.keyboard.press('Digit2'); await page.waitForTimeout(1200); await shot('07-pirates');
+await page.keyboard.press('Digit2'); await page.waitForTimeout(1200); await shot('09-pirates');
 await page.evaluate(() => { for (let i = 0; i < 40 && !window.__critical.state.over; i++) window.__critical.advance(30); });
 await page.waitForTimeout(300);
 check(await get('s.over') === true, 'an undefended ship is lost in the end');
-await shot('08-lost');
+await shot('10-lost');
 await page.keyboard.press('KeyR'); await page.waitForTimeout(200);
 check(await get('s.over') === false && await get('s.time') < 2, 'R starts a new run');
 

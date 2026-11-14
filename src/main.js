@@ -5,7 +5,8 @@ import { createInput } from './input.js';
 import { createState } from './sim/state.js';
 import { step } from './sim/step.js';
 import { drawSpace, drawStars } from './render/space.js';
-import { drawHud, drawOverlay, drawHelp, drawTitle } from './render/hud.js';
+import { drawHud, drawOverlay, drawHelp, drawTitle, drawToasts } from './render/hud.js';
+import { drawBoarding, OX, OY } from './render/boarding.js';
 import { drawEngineer, engineerClick, SYSTEM_KEYS } from './render/engineer.js';
 
 const canvas = document.getElementById('game');
@@ -21,7 +22,7 @@ window.addEventListener('resize', resize);
 resize();
 
 const input = createInput(canvas);
-const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1' };
+const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [] };
 let state = createState(Date.now() % 100000);
 let assets = null;
 
@@ -36,6 +37,19 @@ function commands() {
   const cmds = { system: {}, captain: null, gunner: null, engineer: null };
   if (input.hit('KeyP', 'Escape')) cmds.system = { pause: true, by: view.player };
   if (state.paused || state.over) return cmds;
+  const me = state.players[view.playerId];
+  if (me.inside !== null) {
+    // Away on a boarding: the player has no post on the ship.
+    const m = input.mouse, at = { x: m.x - OX, y: m.y - OY };
+    cmds.away = { [me.id]: {
+      mx: (input.down('KeyD', 'ArrowRight') ? 1 : 0) - (input.down('KeyA', 'ArrowLeft') ? 1 : 0),
+      my: (input.down('KeyS', 'ArrowDown') ? 1 : 0) - (input.down('KeyW', 'ArrowUp') ? 1 : 0),
+      aim: at, fire: m.down || input.down('Space'), grenade: input.hit('KeyG') || m.rightClicked ? at : null,
+      use: input.down('KeyF'), usePressed: input.hit('KeyF'),
+    } };
+    return cmds;
+  }
+  if (input.hit('KeyF') && state.ship.docked) cmds.system.board = [me.id];
   if (view.post === 'captain') {
     cmds.captain = {
       throttle: (input.down('KeyW', 'ArrowUp') ? 1 : 0) - (input.down('KeyS', 'ArrowDown') ? 1 : 0),
@@ -67,11 +81,13 @@ function localKeys() {
     return;
   }
   if (input.hit('KeyH')) view.help = !view.help;
+  if (state.players[view.playerId].inside !== null) return;
   if (input.hit('Digit1')) view.post = 'captain';
   if (input.hit('Digit2')) view.post = 'gunner';
   if (input.hit('Digit3')) view.post = 'engineer';
   if (input.hit('Tab')) view.post = POSTS[(POSTS.indexOf(view.post) + 1) % POSTS.length];
-  if (state.over && input.hit('KeyR')) { state = createState((state.seed * 7 + 13) % 100000); view.post = 'captain'; view.cam = { x: 0, y: 0 }; }
+  if (state.over && input.hit('KeyR')) {
+    view.toasts = []; state = createState((state.seed * 7 + 13) % 100000); view.post = 'captain'; view.cam = { x: 0, y: 0 }; }
 }
 
 function render(t) {
@@ -83,8 +99,10 @@ function render(t) {
     drawTitle(ctx, font, assets, t);
     return;
   }
-  if (view.post === 'engineer') drawEngineer(ctx, state, view, assets);
+  if (state.players[view.playerId].inside !== null) drawBoarding(ctx, state, view, assets);
+  else if (view.post === 'engineer') drawEngineer(ctx, state, view, assets);
   else { const dock = drawSpace(ctx, state, view, assets); drawHud(ctx, state, view, assets, dock); }
+  drawToasts(ctx, font, view, state.time, state.players[view.playerId].inside !== null ? 26 : 44);
   if (state.over) drawOverlay(ctx, font, 'SHIP LOST', [`KILLS  ${state.kills}`, `TIME  ${Math.floor(state.time / 60)}:${String(Math.floor(state.time % 60)).padStart(2, '0')}`, '', 'PRESS R TO TRY AGAIN'], COL.ember[2]);
   else if (state.paused) drawOverlay(ctx, font, 'PAUSED', [`PAUSED BY ${state.pausedBy}`, '', 'PRESS P TO RESUME'], COL.text);
   if (view.help && !state.over) drawHelp(ctx, font);
@@ -97,13 +115,14 @@ function frame(now) {
   if (view.screen === 'game') {
     acc += dt;
     // A key press or click must never be lost, so a frame that carries one always runs a step.
-    if (acc < STEP && (input.pressed.size || input.mouse.clicked)) acc = STEP;
+    if (acc < STEP && (input.pressed.size || input.mouse.clicked || input.mouse.rightClicked)) acc = STEP;
     let first = true;
     while (acc >= STEP) {
       // One-frame inputs (key presses, clicks) only count for the first step of a frame.
       step(state, first ? commands() : heldCommands(), STEP);
       first = false; acc -= STEP;
     }
+    toasts();
     state.events.length = 0;
     snapCam();
   }
@@ -112,11 +131,34 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 function heldCommands() {
-  const saved = new Set(input.pressed), clicked = input.mouse.clicked;
-  input.pressed.clear(); input.mouse.clicked = false;
+  const saved = new Set(input.pressed), clicked = input.mouse.clicked, right = input.mouse.rightClicked;
+  input.pressed.clear(); input.mouse.clicked = false; input.mouse.rightClicked = false;
   const c = commands();
-  for (const k of saved) input.pressed.add(k); input.mouse.clicked = clicked;
+  for (const k of saved) input.pressed.add(k); input.mouse.clicked = clicked; input.mouse.rightClicked = right;
   return c;
+}
+
+// Short messages at the top of the screen for things that just happened.
+const TOAST = {
+  boarded: () => ['BOARDING  ·  THE REACTOR IS UNSTABLE', COL.ochre[2]],
+  teleported: () => ['TELEPORTED HOME  ·  TELEPORTER CHARGING', COL.ember[2]],
+  returned: () => ['BACK ON THE SHIP', COL.acid[2]],
+  deposit: (e) => [`STOWED ${e.count}  ·  +${e.fuel} FUEL  ·  +${e.credits} CREDITS`, COL.ochre[3]],
+  teleCharging: (e) => [`TELEPORTER CHARGING  ·  ${Math.ceil(e.left)} S`, COL.ion[2]],
+  lockedOut: () => ['TELEPORTED OUT  ·  NO WAY BACK IN THIS DOCKING', COL.ember[2]],
+  crewInside: () => ['CREW STILL INSIDE  ·  CANNOT UNDOCK', COL.ochre[2]],
+  doorOpen: () => ['VAULT OPEN', COL.ochre[3]],
+  wreckExploded: () => ['THE WRECK BLEW UP', COL.ember[2]],
+  noPower: () => ['NO FREE POWER  ·  LOWER ANOTHER SYSTEM FIRST', COL.ochre[2]],
+  powerLost: () => ['REACTOR DAMAGED  ·  POWER LOST', COL.ember[2]],
+};
+function toasts() {
+  for (const e of state.events) {
+    const make = TOAST[e.type]; if (!make) continue;
+    const [text, color] = make(e);
+    if (view.toasts.some((t) => t.text === text)) continue;
+    view.toasts.push({ text, color, until: state.time + 3.5 });
+  }
 }
 
 loadAssets().then((a) => {

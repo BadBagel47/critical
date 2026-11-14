@@ -6,7 +6,7 @@ Project language: English (all text in the game and README)
 
 ## Nuläge
 
-Första spelbara versionen finns: en ensam spelare flyger fregatten, skjuter pirater, sköter energi och reparationer, byter fritt mellan de tre posterna och kan docka med vrak. Bordning, loot, karta och stationer saknas än.
+Spelet går att spela ensam: flyga fregatten, skjuta pirater, sköta energi och reparationer, byta fritt mellan de tre posterna, docka med vrak och borda dem uppifrån för att hämta bränsle och krediter. Inbrottsspel, karta, stationer och uppgraderingar saknas än. Ingen människa har provspelat än, så balansen är otestad.
 
 ## Nästa steg
 
@@ -84,6 +84,13 @@ Bordning
 - Teleportern måste vara laddad för att spelaren ska kunna borda nästa gång.
 - Mål är olika svåra att borda. En scanner visar det.
 - Varje typ av mål har ett eget inbrottsspel på tid.
+
+Bordning, agentens val som användaren inte har sett än (2026-11-14)
+- Det som bärs blir kvar på platsen när någon teleporteras hem (se D-032).
+- Valvdörren i ett vrak öppnas genom att hålla in F bredvid den, inte med ett eget inbrottsspel.
+- Reaktorn räknar ner från första steget in. Vid noll sprängs vraket, alla teleporteras hem, ett dockat skepp skadas och ett nytt vrak dyker upp på annat håll.
+- Skeppet kan inte lägga ut medan någon är kvar inne.
+- Bränsle förbrukas av gasen. Tom tank ger ett skepp som nästan står still.
 
 Skepp och uppgraderingar
 - Spelarskeppet är alltid samma fregatt. Uppgraderingar syns på skrovet.
