@@ -1,6 +1,8 @@
 // Boarding: the top-down interior of a wreck, with guards, turrets, loot and the teleporter.
 import { B } from './balance.js';
-import { createWreck } from './state.js';
+import { createWreck, currentSector } from './sectors.js';
+import { dockTargets, findDock } from './dock.js';
+import { takeOver } from './stations.js';
 import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
 import { clamp, forward, headingTo, angleDiff, turnToward, dist, rand, randRange, TAU } from './util.js';
@@ -46,7 +48,7 @@ export function createInterior(state, wreck) {
   });
   set(0, 8, 'A'); set(0, 9, 'A');
   const it = {
-    tiles, rooms, vault, entry: { x: 1.5 * TILE, y: 9 * TILE }, timer: null, doorCut: 0, doorOpen: false,
+    tiles, rooms, vault, entry: { x: 1.5 * TILE, y: 9 * TILE }, timer: null, live: false, doorCut: 0, doorOpen: false, terminal: null, takeover: 0,
     avatars: [], guards: [], turrets: [], loot: [], bolts: [], grenades: [], fx: [],
   };
   const taken = [];
@@ -75,6 +77,12 @@ export function createInterior(state, wreck) {
   for (let i = 0; i < 2 + d; i++) { const p = spot(pick()); it.loot.push({ id: state.nextId++, type: 'crate', value: credits(B.CRATE_CREDITS), ...p }); }
   for (let i = 0; i < 2; i++) { const p = spot(rooms[vault]); it.loot.push({ id: state.nextId++, type: 'crate', value: credits(B.VAULT_CREDITS), ...p }); }
   { const p = spot(rooms[vault]); it.loot.push({ id: state.nextId++, type: 'cell', ...p }); }
+  // Vaults sometimes hold a star chart or a spare slot. A station vault always has a chart if one is missing.
+  const missing = state.sectors ? currentSector(state).links.filter((l) => !state.charts.includes(l)).sort((a, b) => b - a) : [];
+  if (missing.length && (wreck.kind === 'station' || rand(state) < 0.35)) { const p = spot(rooms[vault]); it.loot.push({ id: state.nextId++, type: 'chart', sector: missing[0], ...p }); }
+  if (rand(state) < 0.2) { const p = spot(rooms[vault]); it.loot.push({ id: state.nextId++, type: 'part', slot: rand(state) < 0.5 ? 'hard' : 'system', ...p }); }
+  // A hostile station is taken over from the terminal in its vault.
+  if (wreck.kind === 'station') { it.terminal = spot(rooms[vault]); for (let i = 0; i < 2; i++) { const p = spot(pick(), 8 * TILE); it.guards.push({ id: state.nextId++, x: p.x, y: p.y, hp: B.GUARD_HP, heading: 0, mode: 'idle', cool: 1, home: { ...p }, goal: { ...p }, wait: 1, lost: 0 }); } }
   return it;
 }
 
@@ -85,8 +93,10 @@ export const anyoneInside = (state, wreckId) => state.players.some((p) => (wreck
 export function tryBoard(state, playerId) {
   const player = playerById(state, playerId), ship = state.ship;
   if (!player || player.inside !== null || !ship.docked) return false;
-  const wreck = state.wrecks.find((w) => w.id === ship.docked);
+  const wreck = findDock(state, ship.docked);
   if (!wreck) return false;
+  // Friendly and neutral stations are not boarded. Their services open instead.
+  if (wreck.kind === 'station' && wreck.align !== 'hostile') { state.events.push({ type: 'stationMenu', player: playerId, station: wreck.id }); return false; }
   if (wreck.lock !== 'open') {
     // The docking lock has to be bypassed first. Opening the panel starts the clock.
     if (!wreck.breakin) wreck.breakin = createBreakin(state, wreck);
@@ -98,7 +108,8 @@ export function tryBoard(state, playerId) {
   if (player.lockedOut === wreck.id) { state.events.push({ type: 'lockedOut', player: playerId }); return false; }
   if (!wreck.interior) wreck.interior = createInterior(state, wreck);
   const it = wreck.interior;
-  if (it.timer === null) it.timer = B.REACTOR_TIME[wreck.difficulty];
+  if (wreck.kind === 'wreck' && it.timer === null) it.timer = B.REACTOR_TIME[wreck.difficulty];
+  it.live = true;
   player.inside = wreck.id;
   it.avatars.push({ player: playerId, x: it.entry.x + 6, y: it.entry.y - 6 + it.avatars.length * 8, heading: Math.PI / 2, carry: [], cool: 0, grenades: B.GRENADES });
   state.events.push({ type: 'boarded', player: playerId, wreck: wreck.id });
@@ -123,7 +134,12 @@ function leave(state, it, av, teleported) {
 function deposit(state, av) {
   if (!av.carry.length) return;
   let fuel = 0, credits = 0;
-  for (const item of av.carry) { if (item.type === 'cell') fuel += B.CELL_FUEL; else credits += item.value; }
+  for (const item of av.carry) {
+    if (item.type === 'cell') fuel += B.CELL_FUEL;
+    else if (item.type === 'chart') { if (state.charts.includes(item.sector)) credits += 60; else { state.charts.push(item.sector); state.events.push({ type: 'chart', sector: item.sector }); } }
+    else if (item.type === 'part') { state.ship.slots[item.slot]++; state.events.push({ type: 'slotFound', slot: item.slot }); }
+    else credits += item.value;
+  }
   state.ship.fuel = Math.min(B.FUEL_MAX, state.ship.fuel + fuel); state.credits += credits;
   state.events.push({ type: 'deposit', player: av.player, fuel, credits, count: av.carry.length });
   av.carry = [];
@@ -185,6 +201,10 @@ function stepAvatar(state, it, av, cmd, dt) {
       if (it.doorCut >= 1) { it.doorOpen = true; it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c)); state.events.push({ type: 'doorOpen' }); }
     }
   }
+  if (it.terminal && it.doorOpen && cmd.use && dist(av.x, av.y, it.terminal.x, it.terminal.y) < 16) {
+    it.takeover += dt / B.TAKEOVER_TIME; it.hacking = true;
+    if (it.takeover >= 1) { const st = state.stations.find((x) => x.interior === it); if (st) takeOver(state, st); it.terminal = null; }
+  }
   if (player.hp <= 0) leave(state, it, av, true);
 }
 
@@ -236,7 +256,7 @@ function stepTurret(state, it, t, dt) {
 
 function stepInterior(state, wreck, cmds, dt) {
   const it = wreck.interior;
-  it.cutting = false;
+  it.cutting = false; it.hacking = false;
   for (const f of it.fx) f.t += dt;
   it.fx = it.fx.filter((f) => f.t < f.dur);
   for (const av of [...it.avatars]) stepAvatar(state, it, av, cmds && cmds.away ? cmds.away[av.player] : null, dt);
@@ -280,15 +300,22 @@ function blowUp(state, wreck) {
   }
   // A new wreck drifts in somewhere else so there is always something to find.
   const a = rand(state) * TAU, d = randRange(state, 1300, 2200);
-  state.wrecks.push(createWreck(state, ship.x + Math.sin(a) * d, ship.y - Math.cos(a) * d, 1 + Math.floor(rand(state) * 3)));
+  if (state.wrecks.length < 3) state.wrecks.push(createWreck(state, ship.x + Math.sin(a) * d, ship.y - Math.cos(a) * d, 1 + Math.floor(rand(state) * 3)));
 }
 
 export function stepBoarding(state, cmds, dt) {
   for (const id of (cmds && cmds.system && cmds.system.board) || []) tryBoard(state, id);
   for (const p of state.players) p.tele = Math.max(0, p.tele - dt);
-  for (const w of [...state.wrecks]) {
-    if (stepBreakin(state, w, cmds, dt) === 'failed') { blowUp(state, w); continue; }
-    if (w.interior && w.interior.timer !== null) stepInterior(state, w, cmds, dt);
+  for (const w of dockTargets(state)) {
+    if (stepBreakin(state, w, cmds, dt) === 'failed') {
+      if (w.kind === 'wreck') { blowUp(state, w); continue; }
+      // A station does not blow up. It fights back: fighters scramble and the lock resets.
+      w.breakin = null;
+      for (let i = 0; i < 2; i++) state.pirates.push({ id: state.nextId++, kind: 'fighter', x: w.x + (i ? 60 : -60), y: w.y - 60, vx: 0, vy: 0, heading: 0, hp: B.FIGHTER_HP, hpMax: B.FIGHTER_HP, mode: 'approach', timer: 0, burst: 0, burstTimer: 0, cool: 1, side: i ? 1 : -1 });
+      state.events.push({ type: 'stationFightsBack', name: w.name });
+      continue;
+    }
+    if (w.interior && w.interior.live) stepInterior(state, w, cmds, dt);
   }
   // Everyone gets their health back once the whole crew is on the ship again.
   if (!anyoneInside(state)) for (const p of state.players) p.hp = B.CREW_HP;

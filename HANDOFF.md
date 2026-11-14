@@ -6,11 +6,13 @@ Project language: English (all text in the game and README)
 
 ## Nuläge
 
-Spelet går att spela ensam: flyga fregatten, skjuta pirater, sköta energi och reparationer, byta fritt mellan de tre posterna, docka med vrak och borda dem uppifrån för att hämta bränsle och krediter. Vraken har ett inbrottsspel på tid som måste klaras före bordning. Det finns en gemensam karta med dimma, och Engineer har scannerpuls, sonder och radarbojar. Stationer, uppgraderingar, fler vapen och sektorer saknas än. Ingen människa har provspelat än, så balansen är otestad.
+Spelet går att spela ensam från start till mål. Du flyger fregatten, skjuter pirater, sköter energi och reparationer, byter fritt mellan de tre posterna, dockar med vrak och stationer, bryter dig in, bordar uppifrån och hämtar bränsle, krediter, stjärnkartor och slots. Vid stationer med shipyard köps uppgraderingar som syns på skeppet. Det finns fem sektorer som nås med stjärnkartor, och i den sista väntar en Cruiser som boss.
+
+Ingen människa har provspelat än, så känsla och balans är otestade. Onlineläget saknas och väntar på användarens motor.
 
 ## Nästa steg
 
-1. Användaren slår på GitHub Pages (se Engångsåtgärder).
+1. Användaren provspelar och ger synpunkter.
 2. Fortsätt enligt "Proposed runs" i BACKLOG.md.
 3. Onlineläget (F-040) väntar på användarens motor.
 
@@ -26,7 +28,9 @@ Idéer spånas i chatten och samlas i designskissen. Det som ska byggas läggs i
 
 GitHub Pages direkt från main, rotmappen. Spelet har inget byggsteg, så det som ligger på main är det som publiceras. Adress: https://badbagel47.github.io/critical/
 
-Pages var inte påslaget 2026-11-14, så inget är publicerat än. Flytt till Cloudflare sker när nätverksmotorn byggs in.
+Pages slogs på 2026-11-14. Flytt till Cloudflare sker när nätverksmotorn byggs in.
+
+Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.github.io/critical/`.
 
 ## Dokumentkarta
 
@@ -92,6 +96,18 @@ Bordning, agentens val som användaren inte har sett än (2026-11-14)
 - Skeppet kan inte lägga ut medan någon är kvar inne.
 - Bränsle förbrukas av gasen. Tom tank ger ett skepp som nästan står still.
 
+Stationer, vapen och sektorer, agentens val som användaren inte har sett än (2026-11-14)
+- Det går att hoppa tillbaka till sektorer man varit i, och de är som de lämnades (se D-031).
+- Fem fasta sektorer: Kestrel Drift, Ash Belt, Hollow Reach, The Narrows och The Maw. Stationer säljer kartan till nästa sektor, och kartor kan ligga i valv.
+- En neutral station blir fientlig efter sex träffar från skeppet. Den varnar först.
+- En fientlig station tas över från en terminal i dess valv. Misslyckas inbrottet slår stationen tillbaka med två Fighters, och låset får ett nytt pussel.
+- En övertagen station får shipyard.
+- Den tunga lasern skjuter rakt fram längs skeppet, så Captain siktar med skeppet och Gunner laddar och avfyrar.
+- Pirater ger en liten belöning i krediter. En nedskjuten Gunboat blir ett vrak som går att borda.
+- Från andra sektorn kommer Gunboats, och pirater tål mer i senare sektorer.
+- Reparation vid station lagar allt på en gång. Priser och uppgraderingar finns i `src/sim/balance.js` och `src/sim/upgrades.js`.
+- Spelet är vunnet när Cruisern i The Maw är förstörd. Det går att flyga vidare efteråt.
+
 Balans, agentens val (2026-11-14)
 - Piratvågorna kommer glesare ju färre som är ombord, så att en ensam spelare hinner lämna skeppet. Ensam är det drygt en minut mellan vågorna.
 - Provat med en simulerad spelare, inte av en människa: den som stannar vid vapnen klarar sig, och ett obevakat skepp går förlorat på drygt två minuter.
@@ -120,7 +136,7 @@ Grafik
 ## Engångsåtgärder
 
 - Klar 2026-11-14: `badbagel47.github.io` är tillåten i användarens molnmiljö, så att agenten kan kontrollera den publicerade sidan.
-- Väntar: användaren slår på GitHub Pages för repot på https://github.com/BadBagel47/critical/settings/pages (Deploy from a branch, main, rot).
+- Klar 2026-11-14: användaren slog på GitHub Pages för repot (Deploy from a branch, main, rot).
 
 ## Lagar och regler
 

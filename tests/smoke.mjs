@@ -6,8 +6,10 @@ const { chromium } = createRequire(import.meta.url)('playwright');
 
 const url = process.argv[2] || 'http://localhost:8080/';
 const shots = process.argv[3] || null;
-const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+// A published site is reached through the environment's proxy, when there is one.
+const remote = !/localhost|127\.0\.0\.1/.test(url) && process.env.HTTPS_PROXY;
+const browser = await chromium.launch(remote ? { proxy: { server: process.env.HTTPS_PROXY } } : {});
+const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, ignoreHTTPSErrors: !!remote });
 const errors = [];
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 page.on('pageerror', (e) => errors.push(String(e)));
@@ -106,7 +108,76 @@ await page.evaluate(() => { const it = window.__critical.state.wrecks[0].interio
 await page.waitForTimeout(100); await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
 check(await get('s.players[0].inside') === null, 'F at the airlock returns to the ship');
 await shot('09-docked');
-await page.evaluate(() => { const s = window.__critical.state; s.ship.docked = null; s.spawn.timer = 5; });
+await page.evaluate(() => { const s = window.__critical.state; s.ship.docked = null; });
+
+// Station: dock at the friendly yard, open the panel, refuel and buy upgrades.
+await page.evaluate(() => { const s = window.__critical.state, st = s.stations.find((x) => x.align === 'friendly'); s.spawn.timer = 1e9; s.pirates = []; s.ship.x = st.x; s.ship.y = st.y + 90; s.ship.heading = 0; s.ship.docked = st.id; s.ship.fuel = 30; s.credits = 2000; window.__critical.view.cam = { x: s.ship.x, y: s.ship.y }; });
+await page.keyboard.press('Digit1'); await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
+check(await get('v.station') === true, 'F opens the station panel at a friendly station');
+await click(70 + 12 + 40, 46 + 58 + 8); await page.waitForTimeout(150);
+check(await get('s.ship.fuel') === 100, 'refuelling is free at a friendly station');
+for (const row of [0, 1, 2, 4, 5, 6, 7]) { await click(70 + 216 + 60, 46 + 58 + row * 15 + 7); await page.waitForTimeout(80); }
+check(await get('Object.keys(s.ship.mods).length') >= 4, 'clicking shipyard rows installs upgrades');
+check(await get('s.credits') < 2000, 'upgrades cost credits');
+await shot('12-station');
+await page.keyboard.press('KeyF'); await page.waitForTimeout(100);
+check(await get('v.station') === false, 'F closes the station panel');
+await page.evaluate(() => { const s = window.__critical.state; s.ship.mods = { twin: 1, heavy: 1, rockets: 1, bay: 1, armor: 1, emit: 1, alarm: 3, tscan: 1 }; s.ship.slots = { hard: 6, system: 4 }; s.ship.rockets = 8; s.ship.dartStock = 3; });
+
+// A hostile station: break in, board it and find the terminal.
+await page.evaluate(() => { const s = window.__critical.state, st = s.stations.find((x) => x.align === 'neutral'); st.align = 'hostile'; st.lock = 'open'; st.guns = [{ x: -27, y: -27, hp: 45, heading: 0, cool: 9 }, { x: 27, y: 27, hp: 45, heading: 0, cool: 9 }]; s.ship.x = st.x; s.ship.y = st.y + 100; s.ship.docked = st.id; window.__critical.view.cam = { x: s.ship.x, y: s.ship.y - 60 }; });
+await page.waitForTimeout(200); await shot('12b-hostile-station');
+await page.keyboard.press('KeyF'); await page.waitForTimeout(250);
+check(await get('s.players[0].inside') !== null, 'a hostile station with an open lock can be boarded');
+await page.evaluate(() => { const s = window.__critical.state, it = s.stations.find((x) => x.interior).interior, a = it.avatars[0]; it.guards = []; it.turrets = []; it.doorOpen = true; it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c)); a.x = it.terminal.x; a.y = it.terminal.y + 10; });
+await page.waitForTimeout(200); await shot('12c-station-inside');
+await page.keyboard.down('KeyF'); await page.waitForTimeout(4600); await page.keyboard.up('KeyF');
+check(await get("s.stations.filter((x) => x.align === 'friendly').length") === 2, 'holding F at the terminal takes the station over');
+await page.evaluate(() => { const s = window.__critical.state, it = s.stations.find((x) => x.interior).interior, a = it.avatars[0]; a.x = it.entry.x; a.y = it.entry.y; });
+await page.waitForTimeout(100); await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
+check(await get('s.players[0].inside') === null, 'the boarder returns from the station');
+await page.keyboard.press('Digit1');
+
+// Darts and weapons.
+await page.evaluate(() => { const s = window.__critical.state; s.ship.docked = null; s.ship.x = 4000; s.ship.y = 4000; s.ship.vx = s.ship.vy = 0; window.__critical.view.cam = { x: 4000, y: 4000 }; });
+await page.keyboard.press('KeyR'); await page.waitForTimeout(1800);
+check(await get('s.darts.length') === 3, 'R launches the Darts');
+await page.evaluate(() => { const s = window.__critical.state; for (const [dx, dy, kind, hp] of [[180, -120, 'fighter', 28], [-160, -150, 'gunboat', 100]]) s.pirates.push({ id: s.nextId++, kind, x: s.ship.x + dx, y: s.ship.y + dy, vx: 0, vy: 0, heading: 3, hp, hpMax: hp, mode: 'approach', timer: 0, burst: 0, burstTimer: 0, cool: 2, side: 1 }); });
+await page.keyboard.press('Digit2'); await page.waitForTimeout(80); await page.keyboard.press('KeyE'); await page.waitForTimeout(80); await page.keyboard.press('KeyE'); await page.waitForTimeout(100);
+check(await get('s.ship.weapon') === 'rockets', 'E cycles the gunner weapon');
+await page.mouse.move(box.x + 440 * k, box.y + 90 * k); await page.mouse.down(); await page.waitForTimeout(500);
+check(await get('s.ship.rockets') < 8, 'rockets fire');
+await shot('13-weapons'); await page.mouse.up();
+await page.evaluate(() => { const s = window.__critical.state; s.pirates = []; });
+await page.keyboard.press('Digit1'); await page.keyboard.press('KeyR'); await page.waitForTimeout(100);
+
+// Star charts and the jump.
+await page.evaluate(() => { const s = window.__critical.state; s.charts.push(1); s.ship.fuel = 90; });
+await page.keyboard.press('KeyM'); await page.waitForTimeout(150);
+await shot('14-starcharts');
+await click(364 + 10 + 40, 126 + 10); await page.waitForTimeout(200);
+check(await get('s.jump !== null && s.jump.to') === 1, 'the captain starts a jump by clicking a star chart');
+await page.evaluate(() => window.__critical.advance(9)); await page.waitForTimeout(300);
+check(await get('s.sector') === 1, 'the ship arrives in the next sector');
+check(await get('v.map') === false, 'the map closes after a jump');
+await shot('15-new-sector');
+await page.evaluate(() => { const s = window.__critical.state; s.sectors[1].links.push(4); s.charts.push(4); s.ship.fuel = 90; s.spawn.timer = 1e9; });
+await page.keyboard.press('KeyM'); await page.waitForTimeout(100);
+await click(364 + 10 + 40, 126 + 2 * 30 + 10); await page.waitForTimeout(100);
+await page.evaluate(() => window.__critical.advance(9)); await page.waitForTimeout(300);
+check(await get('s.sector') === 4 && await get("s.pirates.some((p) => p.kind === 'cruiser')"), 'the last sector holds the cruiser');
+await page.evaluate(() => { const s = window.__critical.state, c = s.pirates.find((p) => p.kind === 'cruiser'); s.ship.x = c.x + 150; s.ship.y = c.y + 210; s.ship.heading = 5.6; window.__critical.view.cam = { x: s.ship.x - 60, y: s.ship.y - 80 }; });
+await page.keyboard.press('Digit2'); await page.waitForTimeout(700);
+await shot('16-cruiser');
+await page.evaluate(() => { const s = window.__critical.state; s.pirates.find((p) => p.kind === 'cruiser').hp = 1; });
+await page.evaluate(() => { window.__critical.state.ship.weapon = 'pulse'; });
+await page.evaluate(() => { const s = window.__critical.state, c = s.pirates.find((p) => p.kind === 'cruiser'); window.__critical.input.mouse.x = 320 + (c.x - window.__critical.view.cam.x); window.__critical.input.mouse.y = 180 + (c.y - window.__critical.view.cam.y); window.__critical.input.mouse.down = true; });
+await page.waitForTimeout(1500);
+await page.evaluate(() => { window.__critical.input.mouse.down = false; });
+check(await get('s.won') === true, 'destroying the cruiser wins');
+await shot('17-won');
+await page.keyboard.press('Enter'); await page.waitForTimeout(100);
+await page.evaluate(() => { const s = window.__critical.state; s.spawn.timer = 5; s.ship.mods = {}; s.ship.x = 5000; s.ship.y = 5000; });
 
 // Let the world run: pirates arrive and attack, and an idle ship is eventually lost.
 await page.evaluate(() => window.__critical.advance(45));

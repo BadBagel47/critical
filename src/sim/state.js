@@ -1,6 +1,7 @@
 import { B, SHIP_GEOM } from './balance.js';
-import { rand, randRange, TAU, dist } from './util.js';
-import { createMap } from './map.js';
+import { createSectors, generateSector, createWreck } from './sectors.js';
+
+export { createWreck };
 
 export function nodeStatus(hp) {
   return hp >= 70 ? 'ok' : hp >= 30 ? 'damaged' : 'critical';
@@ -16,34 +17,23 @@ export function createShip() {
     crew: { at: 2, moving: null, queue: [] },
     docked: null,
     pulse: null, pulseCool: 0, probeStock: B.PROBE_STOCK, probeRegen: 0, buoyStock: B.BUOY_STOCK,
+    // Upgrades: id -> level. Slots say how many the hull and the systems can take.
+    mods: {}, slots: { hard: 2, system: 2 },
+    weapon: 'pulse', charge: 0, heavyCool: 0, rockets: 0, rocketCool: 0,
+    dartStock: 0, dartsOut: false, dartGap: 0, dartRegen: 0, dartQuiet: 0,
   };
-}
-
-export function createWreck(s, x, y, difficulty) {
-  return { id: s.nextId++, x, y, heading: randRange(s, 0, TAU), difficulty, interior: null, lock: 'locked', breakin: null };
 }
 
 export function createState(seed = 1) {
   const s = {
-    seed, rng: seed >>> 0, time: 0, paused: false, pausedBy: null, over: false,
-    ship: createShip(), pirates: [], bolts: [], fx: [], wrecks: [], rocks: [],
-    spawn: { timer: B.FIRST_WAVE_DELAY * B.PIRATE_PACE[1], wave: 0 }, kills: 0, credits: 0, nextId: 1, events: [],
-    // People on board. `inside` is the id of the wreck a player is boarding, or null when on the ship.
+    seed, rng: seed >>> 0, time: 0, paused: false, pausedBy: null, over: false, won: false,
+    ship: createShip(), pirates: [], bolts: [], rockets: [], beams: [], darts: [], fx: [],
+    wrecks: [], rocks: [], stations: [], map: null, known: [], probes: [], buoys: [],
+    spawn: { timer: 0, wave: 0 }, kills: 0, credits: 0, nextId: 1, events: [],
+    // People on board. `inside` is the id of the wreck or station a player is boarding, or null when on the ship.
     players: [{ id: 0, name: 'PLAYER 1', hp: B.CREW_HP, inside: null, lockedOut: null, tele: 0 }],
-    map: createMap(), known: [], probes: [], buoys: [],
+    sectors: createSectors(), sector: 0, charts: [0], jump: null, alarm: { count: 0, eta: null },
   };
-  // A first wreck close to the start, two more further out.
-  const base = rand(s) * TAU;
-  [[560, 0], [1250, 2.1], [1700, 4.0]].forEach(([d, off], i) => {
-    const a = base + off + randRange(s, -0.3, 0.3);
-    s.wrecks.push(createWreck(s, Math.sin(a) * d, -Math.cos(a) * d, i + 1));
-  });
-  for (let i = 0; i < 46; i++) {
-    const a = rand(s) * TAU, d = randRange(s, 260, 2400);
-    const rock = { id: s.nextId++, x: Math.sin(a) * d, y: -Math.cos(a) * d, kind: Math.floor(rand(s) * 3), spin: randRange(s, 0, TAU) };
-    rock.r = [13, 8, 19][rock.kind];
-    if (s.wrecks.some((w) => dist(w.x, w.y, rock.x, rock.y) < 170)) continue;
-    s.rocks.push(rock);
-  }
+  generateSector(s, 0);
   return s;
 }

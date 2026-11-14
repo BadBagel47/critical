@@ -17,6 +17,8 @@ export function visionSources(state) {
   if (ship.pulse) out.push({ x: ship.pulse.x, y: ship.pulse.y, r: B.PULSE_RADIUS * Math.min(1, ship.pulse.t / 0.8), kind: 'pulse' });
   for (const p of state.probes) out.push({ x: p.x, y: p.y, r: B.PROBE_RADIUS, kind: 'probe' });
   for (const b of state.buoys) out.push({ x: b.x, y: b.y, r: B.BUOY_RADIUS, kind: 'buoy' });
+  // Friendly stations have radar of their own.
+  for (const st of state.stations) if (st.align === 'friendly') out.push({ x: st.x, y: st.y, r: B.STATION_VISION, kind: 'station' });
   return out;
 }
 export function isVisible(state, x, y, sources = visionSources(state)) {
@@ -40,7 +42,12 @@ function reveal(state, sources) {
     const k = state.known.find((e) => e.id === w.id);
     if (k) { k.x = w.x; k.y = w.y; } else { state.known.push({ id: w.id, kind: 'wreck', x: w.x, y: w.y }); state.events.push({ type: 'found', kind: 'wreck' }); }
   }
-  state.known = state.known.filter((k) => state.wrecks.some((w) => w.id === k.id) || !isVisible(state, k.x, k.y, sources));
+  for (const st of state.stations) {
+    if (!isVisible(state, st.x, st.y, sources)) continue;
+    const k = state.known.find((e) => e.id === st.id), info = { id: st.id, kind: 'station', x: st.x, y: st.y, align: st.align, shipyard: st.shipyard, name: st.name };
+    if (k) Object.assign(k, info); else { state.known.push(info); state.events.push({ type: 'found', kind: 'station', align: st.align }); }
+  }
+  state.known = state.known.filter((k) => k.kind === 'station' || state.wrecks.some((w) => w.id === k.id) || !isVisible(state, k.x, k.y, sources));
 }
 
 export function useTool(state, tool) {

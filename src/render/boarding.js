@@ -5,6 +5,9 @@ import { TILE, IW, IH, tileAt } from '../sim/boarding.js';
 import { dist } from '../sim/util.js';
 import { sprite, rect, label, bar } from './draw.js';
 import { drawStars } from './space.js';
+import { findDock } from '../sim/dock.js';
+import { hullMax, shieldMax, level } from '../sim/upgrades.js';
+import { alarmText } from './hud.js';
 
 export const OX = 112, OY = 38;
 const WALL = ['#2a2c3a', '#44475a', '#666a7e'];
@@ -69,7 +72,7 @@ function effect(ctx, f) {
 
 export function drawBoarding(ctx, state, view, assets) {
   const { img, font } = assets, player = state.players[0];
-  const wreck = state.wrecks.find((w) => w.id === player.inside), it = wreck.interior;
+  const wreck = findDock(state, player.inside), it = wreck.interior, isStation = wreck.kind === 'station';
   const me = it.avatars.find((a) => a.player === player.id);
   drawStars(ctx, { x: wreck.x * 0.2, y: wreck.y * 0.2 });
   // The docked ship and the tunnel into the wreck.
@@ -78,7 +81,12 @@ export function drawBoarding(ctx, state, view, assets) {
   for (let x = 68; x < OX; x += 10) { ctx.fillStyle = WALL[0]; ctx.fillRect(x, OY + 8 * TILE + 2, 1, 28); }
   ctx.save(); ctx.translate(OX, OY);
   drawTiles(ctx, it, state.time);
-  for (const l of it.loot) { glow(ctx, l.x, l.y, 9, l.type === 'cell' ? COL.ion[2] : COL.ochre[2], 0.14); sprite(ctx, img[l.type], l.x, l.y); }
+  for (const l of it.loot) { glow(ctx, l.x, l.y, 9, l.type === 'crate' ? COL.ochre[2] : COL.ion[2], 0.14); sprite(ctx, img[l.type], l.x, l.y); }
+  if (it.terminal) {
+    const t = it.terminal; glow(ctx, t.x, t.y, 12, COL.ember[1], 0.16);
+    rect(ctx, t.x - 7, t.y - 6, 14, 12, '#1c1c28', COL.out); rect(ctx, t.x - 5, t.y - 4, 10, 5, Math.floor(state.time * 3) % 2 ? COL.ember[1] : COL.ember[0]); rect(ctx, t.x - 5, t.y + 3, 3, 1, COL.ochre[2]);
+    if (it.takeover > 0) { ctx.fillStyle = COL.acid[2]; ctx.fillRect(t.x - 7, t.y + 8, Math.round(14 * Math.min(1, it.takeover)), 2); }
+  }
   for (const t of it.turrets) sprite(ctx, img.turret_guard, t.x, t.y, t.heading);
   for (const g of it.guards) {
     sprite(ctx, img.guard, g.x, g.y, g.heading);
@@ -86,7 +94,7 @@ export function drawBoarding(ctx, state, view, assets) {
   }
   for (const a of it.avatars) {
     sprite(ctx, img.boarder, a.x, a.y, a.heading);
-    a.carry.forEach((c, i) => rect(ctx, a.x - 5 + i * 4, a.y - 13, 3, 3, c.type === 'cell' ? COL.ion[2] : COL.ochre[2], COL.out));
+    a.carry.forEach((c, i) => rect(ctx, a.x - 5 + i * 4, a.y - 13, 3, 3, c.type === 'crate' ? COL.ochre[2] : COL.ion[2], COL.out));
   }
   for (const b of it.bolts) {
     const a = Math.atan2(b.vy, b.vx); ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(a);
@@ -104,9 +112,11 @@ export function drawBoarding(ctx, state, view, assets) {
 
   // ---- HUD ----
   let x = label(ctx, font, 8, 8, 'BOARDING', { fg: COL.out, bg: COL.white, border: null }) + 4;
-  label(ctx, font, x, 8, 'RETURN TO THE AIRLOCK TO TAKE A POST', { fg: COL.faint });
-  const low = it.timer < 30;
-  label(ctx, font, VIEW_W / 2 + 60, 8, 'REACTOR UNSTABLE   ' + fmt(Math.max(0, it.timer)), { anchor: 'c', fg: low ? COL.ember[2] : COL.ochre[2], border: low ? COL.ember[0] : COL.ochre[0] });
+  label(ctx, font, x, 8, 'AWAY FROM YOUR POST', { fg: COL.faint });
+  if (isStation) label(ctx, font, VIEW_W / 2 + 60, 8, it.terminal ? `${wreck.name}  ·  FIND THE TERMINAL IN THE VAULT` : `${wreck.name} IS YOURS`, { anchor: 'c', fg: it.terminal ? COL.ember[2] : COL.acid[2], border: it.terminal ? COL.ember[0] : COL.acid[0] });
+  else { const low = it.timer < 30; label(ctx, font, VIEW_W / 2 + 60, 8, 'REACTOR UNSTABLE   ' + fmt(Math.max(0, it.timer)), { anchor: 'c', fg: low ? COL.ember[2] : COL.ochre[2], border: low ? COL.ember[0] : COL.ochre[0] }); }
+  // Only the best enemy alarm reaches the people inside.
+  if (level(state.ship, 'alarm') >= 3 && alarmText(state)) label(ctx, font, VIEW_W / 2 + 60, 24, alarmText(state), { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
   label(ctx, font, VIEW_W - 8, 8, `CARRY  ${me ? me.carry.length : 0} / ${B.CARRY_MAX}`, { anchor: 'r', fg: COL.ochre[2] });
   label(ctx, font, VIEW_W - 8, 22, `CREDITS  ${state.credits}`, { anchor: 'r', fg: COL.dim });
   rect(ctx, 8, 332, 100, 22, COL.panel, COL.line);
@@ -114,12 +124,13 @@ export function drawBoarding(ctx, state, view, assets) {
   x = label(ctx, font, 114, 336, 'TELEPORT READY', { fg: COL.ion[2], border: COL.ion[0] }) + 6;
   x = label(ctx, font, x, 336, 'RIFLE', { fg: COL.out, bg: COL.gunner, border: null, pad: 6 }) + 4;
   x = label(ctx, font, x, 336, 'GRENADES  ' + (me ? me.grenades : 0), { fg: me && me.grenades ? COL.text : COL.faint }) + 10;
-  font.draw(ctx, 'SHIP', x, 334, COL.dim); bar(ctx, x + 26, 333, 50, state.ship.shield / B.SHIELD_MAX, COL.ion[1], 5); bar(ctx, x + 26, 340, 50, state.ship.hull / B.HULL_MAX, COL.steel[2], 5);
+  font.draw(ctx, 'SHIP', x, 334, COL.dim); bar(ctx, x + 26, 333, 50, state.ship.shield / shieldMax(state.ship), COL.ion[1], 5); bar(ctx, x + 26, 340, 50, state.ship.hull / hullMax(state.ship), COL.steel[2], 5);
   if (state.time - state.ship.lastHit < 1.5) font.draw(ctx, 'UNDER FIRE', x, 346, COL.ember[2]);
   font.draw(ctx, 'W A S D MOVE  ·  CLICK FIRE  ·  G GRENADE  ·  F USE', VIEW_W - 8, 346, COL.faint, { align: 'r' });
   if (me) {
     const door = it.rooms[it.vault].door;
     if (me.x < TILE * 2.2 && Math.abs(me.y - it.entry.y) < TILE * 1.5) label(ctx, font, OX + me.x + 14, OY + me.y - 26, 'F  BACK TO THE SHIP', { fg: COL.acid[2], border: COL.acid[0] });
+    else if (it.terminal && it.doorOpen && dist(me.x, me.y, it.terminal.x, it.terminal.y) < 16) label(ctx, font, OX + it.terminal.x, OY + it.terminal.y - 30, it.hacking ? 'TAKING OVER THE STATION' : 'HOLD F TO TAKE OVER THE STATION', { anchor: 'c', fg: COL.acid[2], border: COL.acid[0] });
     else if (!it.doorOpen && dist(me.x, me.y, door.x, door.y) < 22) label(ctx, font, OX + door.x, OY + door.y + (door.y < 9 * TILE ? 22 : -34), it.cutting ? 'CUTTING THE LOCK' : 'HOLD F TO CUT THE LOCK', { anchor: 'c', fg: COL.ochre[2], border: COL.ochre[0] });
   }
   const m = view.mouse; ctx.fillStyle = COL.ochre[3];

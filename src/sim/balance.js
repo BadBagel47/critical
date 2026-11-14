@@ -39,7 +39,34 @@ export const B = {
   PULSE_RADIUS: 1100, PULSE_TIME: 4, PULSE_COOLDOWN: 25,
   PROBE_STOCK: 3, PROBE_REGEN: 50, PROBE_RADIUS: 380, PROBE_SPEED: 260, PROBE_RANGE: 2600, PROBE_LINGER: 12,
   BUOY_STOCK: 2, BUOY_RADIUS: 520, BUOY_HP: 20, BUOY_DANGER: 150, BUOY_DRAIN: 10,
+  // stations
+  STATION_RADIUS: 38, STATION_RANGE: 460, STATION_GUN_HP: 45, STATION_GUN_COOLDOWN: 1.1, STATION_GUN_DMG: 7, STATION_VISION: 700, STATION_ANGER: 6,
+  FUEL_PRICE: { friendly: 0, neutral: 1 }, REPAIR_PRICE: { friendly: 0.25, neutral: 0.5 }, ROCKET_PRICE: { friendly: 2, neutral: 4 }, CHART_PRICE: { friendly: 100, neutral: 150 },
+  TAKEOVER_TIME: 4,
+  // more weapons
+  WING_BOLT_DMG: 4, HEAVY_CHARGE: 1.3, HEAVY_DMG: 70, HEAVY_RANGE: 620, HEAVY_WIDTH: 12, HEAVY_COOLDOWN: 0.6,
+  ROCKET_LOAD: 8, ROCKET_INTERVAL: 0.6, ROCKET_SPEED: 240, ROCKET_TURN: 3.5, ROCKET_TTL: 3, ROCKET_DMG: 34, ROCKET_RADIUS: 36, ROCKET_LOCK: 130,
+  // more pirates
+  GUNBOAT_HP: 90, GUNBOAT_SPEED: 85, GUNBOAT_TURN: 1.2, GUNBOAT_RADIUS: 20, GUNBOAT_COOLDOWN: 1.0, GUNBOAT_DMG: 9, GUNBOAT_RANGE: 380,
+  CRUISER_HP: 1400, CRUISER_SPEED: 38, CRUISER_TURN: 0.5, CRUISER_RADIUS: 44, CRUISER_COOLDOWN: 1.2, CRUISER_DMG: 8, CRUISER_RANGE: 520, CRUISER_SPAWN: 22,
+  BOUNTY: { fighter: 5, gunboat: 25, cruiser: 500 }, TIER_HP: 0.15, MAX_WRECKS: 5,
+  // darts
+  DART_COUNT: 3, DART_HP: 18, DART_SPEED: 175, DART_TURN: 3.6, DART_DMG: 3, DART_COOLDOWN: 0.35, DART_RANGE: 430, DART_REGEN: 40, DART_LAUNCH_GAP: 0.4,
+  // sectors
+  JUMP_FUEL: 25, JUMP_CHARGE: 8,
+  // enemy alarm range per level
+  ALARM_RANGE: [0, 900, 1400, 1400],
 };
+
+// Station geometry in station-local pixels (sprite is 96 x 96).
+export const STATION_GEOM = {
+  ports: [{ x: 0, y: -46 }, { x: 0, y: 46 }, { x: -46, y: 0 }, { x: 46, y: 0 }],
+  guns: [{ x: -27, y: -27 }, { x: 27, y: 27 }],
+};
+// Cruiser gun mounts in cruiser-local pixels (sprite is 96 x 168).
+export const CRUISER_GEOM = { guns: [{ x: -28, y: 6 }, { x: 28, y: 6 }, { x: 0, y: -58 }] };
+// Wing mounts on the frigate, used by the twin turrets and the rocket pods.
+export const WING_MOUNTS = [{ x: -20, y: 17 }, { x: 20, y: 17 }];
 
 // Frigate geometry in ship-local pixels: x right, y back (the nose is at negative y).
 export const SHIP_GEOM = {

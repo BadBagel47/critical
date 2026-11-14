@@ -6,6 +6,7 @@ import { powerAvailable, powerUsed } from '../sim/step.js';
 import { rect, label, dashed } from './draw.js';
 import { drawTabs, drawBars } from './hud.js';
 import { drawTools } from './map.js';
+import { powerTotal } from '../sim/upgrades.js';
 
 const BX = 150, BY = 72, PANEL_X = 440;
 const SYS = [
@@ -93,7 +94,7 @@ export function drawEngineer(ctx, state, view, assets) {
     for (let k = 0; k < B.POWER_MAX_PER_SYSTEM; k++) { const r = pipRect(i, k); rect(ctx, r.x, r.y, r.w, r.h, k < v ? s.color : '#1c1c28', COL.out); }
     font.draw(ctx, s.notes[v], PANEL_X + 16, y + 14, v === 0 ? COL.ember[1] : COL.dim);
   });
-  if (avail < B.POWER_TOTAL) font.draw(ctx, 'REACTOR DAMAGED  ·  LESS POWER', PANEL_X + 12, 218, COL.ember[2]);
+  if (avail < powerTotal(ship)) font.draw(ctx, 'REACTOR DAMAGED  ·  LESS POWER', PANEL_X + 12, 218, COL.ember[2]);
   else if (used < avail) font.draw(ctx, (avail - used) + ' FREE', PANEL_X + 12, 218, COL.ochre[3]);
   else font.draw(ctx, 'LOWER ONE TO RAISE ANOTHER', PANEL_X + 12, 218, COL.faint);
   font.draw(ctx, 'TOOLS', PANEL_X + 12, 244, COL.text); rect(ctx, PANEL_X + 12, 256, VIEW_W - PANEL_X - 24, 1, COL.line);
