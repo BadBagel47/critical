@@ -1,13 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createState } from '../src/sim/state.js';
-import { step, setPower, powerUsed, powerAvailable, damageShip, wreckPort, dockCandidate, fireInterval, speedOf } from '../src/sim/step.js';
+import {
+  step,
+  setPower,
+  powerUsed,
+  powerAvailable,
+  damageShip,
+  wreckPort,
+  dockCandidate,
+  fireInterval,
+  speedOf,
+} from '../src/sim/step.js';
 import { B, SHIP_GEOM } from '../src/sim/balance.js';
 import { headingTo } from '../src/sim/util.js';
 
 const DT = 1 / 60;
-const run = (s, cmds, seconds) => { for (let i = 0; i < Math.round(seconds / DT); i++) step(s, typeof cmds === 'function' ? cmds(s) : cmds, DT); return s; };
-const quiet = (s) => { s.spawn.timer = 1e9; return s; };
+const run = (s, cmds, seconds) => {
+  for (let i = 0; i < Math.round(seconds / DT); i++) step(s, typeof cmds === 'function' ? cmds(s) : cmds, DT);
+  return s;
+};
+const quiet = (s) => {
+  s.spawn.timer = 1e9;
+  return s;
+};
 
 test('same seed and commands give the same world', () => {
   const a = run(createState(7), { captain: { throttle: 1, turn: 0.3 } }, 5);
@@ -27,10 +43,13 @@ test('throttle persists when the captain post is left', () => {
 });
 
 test('more engine power means more speed', () => {
-  const fast = quiet(createState(1)), slow = quiet(createState(1));
+  const fast = quiet(createState(1)),
+    slow = quiet(createState(1));
   setPower(slow, 'engines', -2);
-  setPower(fast, 'repair', -2); setPower(fast, 'engines', 2);
-  run(fast, { captain: { throttle: 1 } }, 6); run(slow, { captain: { throttle: 1 } }, 6);
+  setPower(fast, 'repair', -2);
+  setPower(fast, 'engines', 2);
+  run(fast, { captain: { throttle: 1 } }, 6);
+  run(slow, { captain: { throttle: 1 } }, 6);
   assert.ok(speedOf(fast.ship) > speedOf(slow.ship) * 2);
 });
 
@@ -48,7 +67,22 @@ test('power cannot exceed what the reactor gives', () => {
 
 test('gunner shoots only with weapon power, and bolts kill a pirate', () => {
   const s = quiet(createState(1));
-  s.pirates.push({ id: 99, kind: 'fighter', x: 0, y: -200, vx: 0, vy: 0, heading: 0, hp: B.FIGHTER_HP, mode: 'breakoff', timer: 1e9, burst: 0, burstTimer: 0, cool: 1e9, side: 1 });
+  s.pirates.push({
+    id: 99,
+    kind: 'fighter',
+    x: 0,
+    y: -200,
+    vx: 0,
+    vy: 0,
+    heading: 0,
+    hp: B.FIGHTER_HP,
+    mode: 'breakoff',
+    timer: 1e9,
+    burst: 0,
+    burstTimer: 0,
+    cool: 1e9,
+    side: 1,
+  });
   // Aim ahead of the target, the way a player has to.
   const aim = (st) => {
     const p = st.pirates[0];
@@ -87,7 +121,8 @@ test('shield recharges after a pause, faster with more power', () => {
 
 test('repair crew walks to the node, repairs it, then takes the next in the queue', () => {
   const s = quiet(createState(1));
-  s.ship.nodes[5].hp = 40; s.ship.nodes[0].hp = 80;
+  s.ship.nodes[5].hp = 40;
+  s.ship.nodes[0].hp = 80;
   step(s, { engineer: { repair: { node: 5, queue: false } } }, DT);
   step(s, { engineer: { repair: { node: 0, queue: true } } }, DT);
   assert.deepEqual(s.ship.crew.queue, [5, 0]);
@@ -102,7 +137,8 @@ test('repair crew walks to the node, repairs it, then takes the next in the queu
 
 test('no repair power means no repairs', () => {
   const s = quiet(createState(1));
-  s.ship.power.repair = 0; s.ship.nodes[2].hp = 50;
+  s.ship.power.repair = 0;
+  s.ship.nodes[2].hp = 50;
   step(s, { engineer: { repair: { node: 2, queue: false } } }, DT);
   run(s, {}, 10);
   assert.equal(s.ship.nodes[2].hp, 50);
@@ -110,11 +146,13 @@ test('no repair power means no repairs', () => {
 
 test('docking needs the nose at the port and low speed', () => {
   const s = quiet(createState(1));
-  const w = s.wrecks[0], port = wreckPort(w);
+  const w = s.wrecks[0],
+    port = wreckPort(w);
   // Put the ship so that its nose sits on the port, pointing at the wreck.
   const h = headingTo(w.x - port.x, w.y - port.y);
   s.ship.heading = h;
-  s.ship.x = port.x + Math.sin(h) * SHIP_GEOM.nose.y; s.ship.y = port.y - Math.cos(h) * SHIP_GEOM.nose.y;
+  s.ship.x = port.x + Math.sin(h) * SHIP_GEOM.nose.y;
+  s.ship.y = port.y - Math.cos(h) * SHIP_GEOM.nose.y;
   s.ship.vx = 100;
   assert.equal(dockCandidate(s), null, 'too fast');
   s.ship.vx = 0;
@@ -149,8 +187,13 @@ test('pirates arrive, attack and can destroy an idle ship', () => {
 test('the ship cannot fly through a wreck, and ramming hurts', () => {
   const s = quiet(createState(1));
   const w = s.wrecks[0];
-  s.ship.x = w.x; s.ship.y = w.y + 400; s.ship.heading = 0; s.ship.vy = -150;
-  s.ship.shield = 0; s.ship.power.shields = 0; s.ship.power.repair = 0;
+  s.ship.x = w.x;
+  s.ship.y = w.y + 400;
+  s.ship.heading = 0;
+  s.ship.vy = -150;
+  s.ship.shield = 0;
+  s.ship.power.shields = 0;
+  s.ship.power.repair = 0;
   run(s, { captain: { throttle: 1 } }, 6);
   assert.ok(Math.hypot(s.ship.x - w.x, s.ship.y - w.y) > 40, 'the ship stays outside the wreck');
   assert.ok(s.ship.hull < B.HULL_MAX, 'ramming damages the hull');
@@ -159,24 +202,41 @@ test('the ship cannot fly through a wreck, and ramming hurts', () => {
 // ---------- boarding ----------
 import { createInterior, tryBoard, tileAt, TILE, IW, IH, blocked } from '../src/sim/boarding.js';
 
-function dockAt(s, w = s.wrecks[0]) { s.ship.docked = w.id; s.ship.vx = s.ship.vy = 0; w.lock = 'open'; return w; }
+function dockAt(s, w = s.wrecks[0]) {
+  s.ship.docked = w.id;
+  s.ship.vx = s.ship.vy = 0;
+  w.lock = 'open';
+  return w;
+}
 function boarded(seed = 1) {
-  const s = quiet(createState(seed)), w = dockAt(s);
+  const s = quiet(createState(seed)),
+    w = dockAt(s);
   step(s, { system: { board: [0] } }, DT);
   return { s, w, it: w.interior, av: w.interior.avatars[0] };
 }
 
 test('every interior lets the crew reach all loot and enemies', () => {
   for (let seed = 1; seed <= 25; seed++) {
-    const s = createState(seed), it = createInterior(s, { difficulty: 1 + (seed % 3) });
-    const seen = new Set(), key = (x, y) => y * IW + x, start = [Math.floor(it.entry.x / TILE), Math.floor(it.entry.y / TILE)];
-    const queue = [start]; seen.add(key(...start));
+    const s = createState(seed),
+      it = createInterior(s, { difficulty: 1 + (seed % 3) });
+    const seen = new Set(),
+      key = (x, y) => y * IW + x,
+      start = [Math.floor(it.entry.x / TILE), Math.floor(it.entry.y / TILE)];
+    const queue = [start];
+    seen.add(key(...start));
     while (queue.length) {
       const [x, y] = queue.shift();
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const nx = x + dx, ny = y + dy;
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ]) {
+        const nx = x + dx,
+          ny = y + dy;
         if (tileAt(it, nx, ny) === '#' || seen.has(key(nx, ny))) continue;
-        seen.add(key(nx, ny)); queue.push([nx, ny]);
+        seen.add(key(nx, ny));
+        queue.push([nx, ny]);
       }
     }
     for (const e of [...it.loot, ...it.guards, ...it.turrets]) {
@@ -192,13 +252,21 @@ test('boarding needs a docked ship, and loot carried to the airlock becomes fuel
   assert.equal(tryBoard(free, 0), false, 'not docked');
   const { s, it, av } = boarded();
   assert.equal(s.players[0].inside, s.ship.docked);
-  it.guards = []; it.turrets = [];
-  const cell = it.loot.find((l) => l.type === 'cell'), crate = it.loot.find((l) => l.type === 'crate');
-  av.x = cell.x; av.y = cell.y; step(s, { away: { 0: {} } }, DT);
-  av.x = crate.x; av.y = crate.y; step(s, { away: { 0: {} } }, DT);
+  it.guards = [];
+  it.turrets = [];
+  const cell = it.loot.find((l) => l.type === 'cell'),
+    crate = it.loot.find((l) => l.type === 'crate');
+  av.x = cell.x;
+  av.y = cell.y;
+  step(s, { away: { 0: {} } }, DT);
+  av.x = crate.x;
+  av.y = crate.y;
+  step(s, { away: { 0: {} } }, DT);
   assert.equal(av.carry.length, 2);
   const fuel = s.ship.fuel;
-  av.x = it.entry.x - 8; av.y = it.entry.y; step(s, { away: { 0: {} } }, DT);
+  av.x = it.entry.x - 8;
+  av.y = it.entry.y;
+  step(s, { away: { 0: {} } }, DT);
   assert.equal(av.carry.length, 0);
   assert.equal(s.ship.fuel, Math.min(B.FUEL_MAX, fuel + B.CELL_FUEL));
   assert.equal(s.credits, crate.value);
@@ -208,14 +276,22 @@ test('boarding needs a docked ship, and loot carried to the airlock becomes fuel
 
 test('a player can carry three things at most', () => {
   const { s, it, av } = boarded();
-  it.guards = []; it.turrets = [];
-  for (const item of it.loot.slice(0, 5)) { av.x = item.x; av.y = item.y; step(s, { away: { 0: {} } }, DT); }
+  it.guards = [];
+  it.turrets = [];
+  for (const item of it.loot.slice(0, 5)) {
+    av.x = item.x;
+    av.y = item.y;
+    step(s, { away: { 0: {} } }, DT);
+  }
   assert.equal(av.carry.length, B.CARRY_MAX);
 });
 
 test('near death the player is teleported home, drops the loot and cannot go back in', () => {
   const { s, w, it, av } = boarded();
-  const item = it.loot[0]; av.x = item.x; av.y = item.y; step(s, { away: { 0: {} } }, DT);
+  const item = it.loot[0];
+  av.x = item.x;
+  av.y = item.y;
+  step(s, { away: { 0: {} } }, DT);
   const before = it.loot.length;
   s.players[0].hp = B.TELEPORT_HP + 5;
   it.bolts.push({ x: av.x, y: av.y, vx: 0, vy: 0, ttl: 1, owner: 'enemy', dmg: 8 });
@@ -235,7 +311,10 @@ test('near death the player is teleported home, drops the loot and cannot go bac
 
 test('undocking with someone inside teleports them home at the usual cost', () => {
   const { s, it, av } = boarded();
-  const item = it.loot[0]; av.x = item.x; av.y = item.y; step(s, { away: { 0: {} } }, DT);
+  const item = it.loot[0];
+  av.x = item.x;
+  av.y = item.y;
+  step(s, { away: { 0: {} } }, DT);
   const before = it.loot.length;
   step(s, { captain: { dock: true } }, DT);
   assert.equal(s.ship.docked, null, 'the ship is free');
@@ -246,10 +325,15 @@ test('undocking with someone inside teleports them home at the usual cost', () =
 
 test('guards shoot at a player they can see, and the rifle kills them', () => {
   const { s, it, av } = boarded(4);
-  it.turrets = []; it.guards = it.guards.slice(0, 1);
-  const g = it.guards[0]; g.x = av.x + 90; g.y = av.y; g.home = { x: g.x, y: g.y };
+  it.turrets = [];
+  it.guards = it.guards.slice(0, 1);
+  const g = it.guards[0];
+  g.x = av.x + 90;
+  g.y = av.y;
+  g.home = { x: g.x, y: g.y };
   // Guards do not hit with every shot, so give this one a little time.
-  for (let i = 0; i < 20 && s.players[0].hp === B.CREW_HP && s.players[0].inside !== null; i++) run(s, { away: { 0: {} } }, 1);
+  for (let i = 0; i < 20 && s.players[0].hp === B.CREW_HP && s.players[0].inside !== null; i++)
+    run(s, { away: { 0: {} } }, 1);
   assert.ok(s.players[0].hp < B.CREW_HP || s.players[0].inside === null, 'the guard hurt the player');
   if (s.players[0].inside !== null) {
     run(s, (st) => ({ away: { 0: { aim: { x: g.x, y: g.y }, fire: true } } }), 3);
@@ -259,8 +343,13 @@ test('guards shoot at a player they can see, and the rifle kills them', () => {
 
 test('a grenade clears a group of guards', () => {
   const { s, it, av } = boarded();
-  it.turrets = []; it.guards = it.guards.slice(0, 2);
-  it.guards.forEach((g, i) => { g.x = av.x + 100; g.y = av.y + i * 10; g.hp = 30; });
+  it.turrets = [];
+  it.guards = it.guards.slice(0, 2);
+  it.guards.forEach((g, i) => {
+    g.x = av.x + 100;
+    g.y = av.y + i * 10;
+    g.hp = 30;
+  });
   step(s, { away: { 0: { grenade: { x: av.x + 100, y: av.y + 5 } } } }, DT);
   assert.equal(av.grenades, B.GRENADES - 1);
   run(s, { away: { 0: {} } }, 2);
@@ -269,9 +358,11 @@ test('a grenade clears a group of guards', () => {
 
 test('the vault door opens when a player holds the use key next to it', () => {
   const { s, it, av } = boarded();
-  it.guards = []; it.turrets = [];
+  it.guards = [];
+  it.turrets = [];
   const door = it.rooms[it.vault].door;
-  av.x = door.x; av.y = door.y + (door.y < 9 * TILE ? 14 : -14);
+  av.x = door.x;
+  av.y = door.y + (door.y < 9 * TILE ? 14 : -14);
   run(s, { away: { 0: { use: true } } }, B.DOOR_CUT_TIME + 0.2);
   assert.equal(it.doorOpen, true);
   assert.ok(!it.tiles.includes('L'));
@@ -279,7 +370,8 @@ test('the vault door opens when a player holds the use key next to it', () => {
 
 test('when the reactor timer runs out the wreck explodes and everyone is teleported home', () => {
   const { s, w, it } = boarded();
-  it.guards = []; it.turrets = [];
+  it.guards = [];
+  it.turrets = [];
   it.timer = 0.5;
   const hull = s.ship.hull + s.ship.shield;
   run(s, { away: { 0: {} } }, 1);
@@ -305,16 +397,20 @@ import { createBreakin, flow, GW, GH } from '../src/sim/breakin.js';
 
 test('every break-in puzzle starts unsolved and can be solved', () => {
   for (let seed = 1; seed <= 40; seed++) {
-    const s = createState(seed), bk = createBreakin(s, { difficulty: 1 + (seed % 3) });
+    const s = createState(seed),
+      bk = createBreakin(s, { difficulty: 1 + (seed % 3) });
     assert.equal(bk.tiles.length, GW * GH);
     assert.equal(flow(bk).solved, false, `seed ${seed} starts unsolved`);
-    bk.tiles.forEach((t, i) => { t.rot = bk.solution[i]; });
+    bk.tiles.forEach((t, i) => {
+      t.rot = bk.solution[i];
+    });
     assert.equal(flow(bk).solved, true, `seed ${seed} has a solution`);
   }
 });
 
 test('boarding a locked wreck opens the break-in game, and solving it opens the lock', () => {
-  const s = quiet(createState(1)), w = s.wrecks[0];
+  const s = quiet(createState(1)),
+    w = s.wrecks[0];
   s.ship.docked = w.id;
   step(s, { system: { board: [0] } }, DT);
   assert.equal(s.players[0].inside, null, 'still locked out');
@@ -324,7 +420,10 @@ test('boarding a locked wreck opens the break-in game, and solving it opens the 
   assert.ok(w.breakin.time < t0, 'the clock runs');
   // Turn every tile to its solution with rotate commands.
   const turns = [];
-  w.breakin.tiles.forEach((t, i) => { for (let r = t.rot; r !== w.breakin.solution[i]; r = (r + 1) % 4) turns.push({ wreck: w.id, x: i % GW, y: Math.floor(i / GW), dir: 1 }); });
+  w.breakin.tiles.forEach((t, i) => {
+    for (let r = t.rot; r !== w.breakin.solution[i]; r = (r + 1) % 4)
+      turns.push({ wreck: w.id, x: i % GW, y: Math.floor(i / GW), dir: 1 });
+  });
   step(s, { hack: { 0: turns } }, DT);
   assert.equal(w.lock, 'open');
   step(s, { system: { board: [0] } }, DT);
@@ -332,7 +431,8 @@ test('boarding a locked wreck opens the break-in game, and solving it opens the 
 });
 
 test('running out of time blows the wreck up and hurts the docked ship', () => {
-  const s = quiet(createState(1)), w = s.wrecks[0];
+  const s = quiet(createState(1)),
+    w = s.wrecks[0];
   s.ship.docked = w.id;
   step(s, { system: { board: [0] } }, DT);
   const before = s.ship.hull + s.ship.shield;
@@ -351,24 +451,29 @@ test('the map starts dark and the ship lifts the fog around itself', () => {
   run(s, {}, 0.5);
   assert.equal(isSeen(s, 0, 0), true);
   assert.equal(isSeen(s, 2400, 2400), false, 'far corners are still dark');
-  s.ship.x = 2300; s.ship.y = 2300;
+  s.ship.x = 2300;
+  s.ship.y = 2300;
   run(s, {}, 0.5);
   assert.equal(isSeen(s, 2400, 2400), true, 'going there reveals it');
 });
 
 test('a wreck stays on the map as last seen, and pirates show only while in sight', () => {
-  const s = quiet(createState(1)), w = s.wrecks[0];
+  const s = quiet(createState(1)),
+    w = s.wrecks[0];
   run(s, {}, 0.5);
   const wrecksKnown = () => s.known.filter((k) => k.kind === 'wreck').length;
   assert.equal(wrecksKnown(), 0, 'the first wreck is out of sight at the start');
-  s.ship.x = w.x + 300; s.ship.y = w.y;
+  s.ship.x = w.x + 300;
+  s.ship.y = w.y;
   run(s, {}, 0.5);
   assert.equal(wrecksKnown(), 1);
-  s.ship.x = 0; s.ship.y = 0;
+  s.ship.x = 0;
+  s.ship.y = 0;
   s.wrecks = s.wrecks.filter((x) => x !== w);
   run(s, {}, 0.5);
   assert.equal(wrecksKnown(), 1, 'still shown where it was last seen');
-  s.ship.x = w.x + 300; s.ship.y = w.y;
+  s.ship.x = w.x + 300;
+  s.ship.y = w.y;
   run(s, {}, 0.5);
   assert.equal(wrecksKnown(), 0, 'gone once someone looks again');
   assert.equal(isVisible(s, s.ship.x + 100, s.ship.y), true);
@@ -380,7 +485,10 @@ test('the scanner pulse sees far for a moment and then needs to recharge', () =>
   step(s, { engineer: { tool: { type: 'pulse' } } }, DT);
   run(s, {}, 1.5);
   assert.equal(isSeen(s, B.PULSE_RADIUS - 150, 0), true);
-  assert.ok(s.known.some((k) => k.kind === 'wreck'), 'the pulse finds the nearest wreck');
+  assert.ok(
+    s.known.some((k) => k.kind === 'wreck'),
+    'the pulse finds the nearest wreck',
+  );
   run(s, {}, B.PULSE_TIME);
   assert.equal(s.ship.pulse, null);
   step(s, { engineer: { tool: { type: 'pulse' } } }, DT);
@@ -408,11 +516,27 @@ test('a buoy keeps watching until pirates shoot it down', () => {
   const s = quiet(createState(1));
   step(s, { engineer: { tool: { type: 'buoy' } } }, DT);
   assert.equal(s.ship.buoyStock, B.BUOY_STOCK - 1);
-  s.ship.x = 2000; s.ship.y = 2000;
+  s.ship.x = 2000;
+  s.ship.y = 2000;
   run(s, {}, 1);
   assert.equal(visionSources(s).filter((v) => v.kind === 'buoy').length, 1);
   assert.equal(isVisible(s, 100, 0), true, 'the buoy still sees its area');
-  s.pirates.push({ id: 99, kind: 'fighter', x: 40, y: 0, vx: 0, vy: 0, heading: 0, hp: 24, mode: 'breakoff', timer: 0.5, burst: 0, burstTimer: 0, cool: 1e9, side: 1 });
+  s.pirates.push({
+    id: 99,
+    kind: 'fighter',
+    x: 40,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    heading: 0,
+    hp: 24,
+    mode: 'breakoff',
+    timer: 0.5,
+    burst: 0,
+    burstTimer: 0,
+    cool: 1e9,
+    side: 1,
+  });
   run(s, {}, 1.5);
   assert.ok(s.buoys.length === 0 || s.buoys[0].hp < B.BUOY_HP);
 });
@@ -424,14 +548,21 @@ import { jumpBlocked } from '../src/sim/sectors.js';
 import { weaponsOf, hurtPirate } from '../src/sim/step.js';
 
 const station = (s, align) => s.stations.find((x) => x.align === align);
-function atStation(s, st) { s.ship.docked = st.id; s.ship.vx = s.ship.vy = 0; return st; }
+function atStation(s, st) {
+  s.ship.docked = st.id;
+  s.ship.vx = s.ship.vy = 0;
+  return st;
+}
 
 test('the first sector has a friendly shipyard in sight and a neutral station further out', () => {
   const s = quiet(createState(1));
   run(s, {}, 0.5);
   const yard = station(s, 'friendly');
   assert.ok(yard && yard.shipyard);
-  assert.ok(s.known.some((k) => k.kind === 'station' && k.align === 'friendly'), 'the yard is on the map from the start');
+  assert.ok(
+    s.known.some((k) => k.kind === 'station' && k.align === 'friendly'),
+    'the yard is on the map from the start',
+  );
   assert.ok(station(s, 'neutral'));
 });
 
@@ -442,7 +573,8 @@ test('fuel is free at a friendly station and costs credits at a neutral one', ()
   step(s, { shop: [{ action: 'refuel' }] }, DT);
   assert.equal(s.ship.fuel, B.FUEL_MAX);
   assert.equal(s.credits, 0);
-  s.ship.fuel = 40; s.credits = 30;
+  s.ship.fuel = 40;
+  s.credits = 30;
   atStation(s, station(s, 'neutral'));
   assert.equal(servicePrices(s, station(s, 'neutral')).refuel.price, 60);
   step(s, { shop: [{ action: 'refuel' }] }, DT);
@@ -474,15 +606,18 @@ test('upgrades need a shipyard, credits and a free slot', () => {
 test('shield emitters and the power core raise the ship limits', () => {
   const s = quiet(createState(1));
   s.credits = 1000;
-  buyUpgrade(s, 'emit'); buyUpgrade(s, 'core');
+  buyUpgrade(s, 'emit');
+  buyUpgrade(s, 'core');
   assert.equal(shieldMax(s.ship), B.SHIELD_MAX + 50);
   assert.equal(powerTotal(s.ship), B.POWER_TOTAL + 2);
   assert.equal(setPower(s, 'weapons', 1), true, 'the extra power can be used');
 });
 
 test('shooting a neutral station turns it hostile, and its guns open fire', () => {
-  const s = quiet(createState(1)), st = station(s, 'neutral');
-  s.ship.x = st.x; s.ship.y = st.y + 200;
+  const s = quiet(createState(1)),
+    st = station(s, 'neutral');
+  s.ship.x = st.x;
+  s.ship.y = st.y + 200;
   run(s, (x) => ({ gunner: { aim: { x: st.x, y: st.y }, fire: true } }), 4);
   assert.equal(st.align, 'hostile');
   const before = s.ship.shield + s.ship.hull;
@@ -491,9 +626,11 @@ test('shooting a neutral station turns it hostile, and its guns open fire', () =
 });
 
 test('a hostile station is broken into, boarded and taken over from its terminal', () => {
-  const s = quiet(createState(1)), st = station(s, 'neutral');
+  const s = quiet(createState(1)),
+    st = station(s, 'neutral');
   turnHostile(s, st);
-  s.ship.x = st.x; s.ship.y = st.y + 2000;
+  s.ship.x = st.x;
+  s.ship.y = st.y + 2000;
   atStation(s, st);
   step(s, { system: { board: [0] } }, DT);
   assert.ok(st.breakin, 'the lock must be bypassed first');
@@ -504,10 +641,14 @@ test('a hostile station is broken into, boarded and taken over from its terminal
   s.pirates = [];
   st.lock = 'open';
   step(s, { system: { board: [0] } }, DT);
-  const it = st.interior, av = it.avatars[0];
+  const it = st.interior,
+    av = it.avatars[0];
   assert.ok(it.terminal && it.timer === null, 'no reactor countdown in a station');
-  it.guards = []; it.turrets = []; it.doorOpen = true;
-  av.x = it.terminal.x; av.y = it.terminal.y;
+  it.guards = [];
+  it.turrets = [];
+  it.doorOpen = true;
+  av.x = it.terminal.x;
+  av.y = it.terminal.y;
   run(s, { away: { 0: { use: true } } }, B.TAKEOVER_TIME + 0.2);
   assert.equal(st.align, 'friendly');
   assert.equal(st.shipyard, true);
@@ -515,23 +656,60 @@ test('a hostile station is broken into, boarded and taken over from its terminal
 });
 
 // ---------- weapons and darts ----------
-const target = (s, x, y, kind = 'fighter', hp = 24) => { const p = { id: s.nextId++, kind, x, y, vx: 0, vy: 0, heading: 0, hp, hpMax: hp, mode: 'breakoff', timer: 1e9, burst: 0, burstTimer: 0, cool: 1e9, side: 1, guns: [9, 9, 9], spawn: 1e9 }; s.pirates.push(p); return p; };
+const target = (s, x, y, kind = 'fighter', hp = 24) => {
+  const p = {
+    id: s.nextId++,
+    kind,
+    x,
+    y,
+    vx: 0,
+    vy: 0,
+    heading: 0,
+    hp,
+    hpMax: hp,
+    mode: 'breakoff',
+    timer: 1e9,
+    burst: 0,
+    burstTimer: 0,
+    cool: 1e9,
+    side: 1,
+    guns: [9, 9, 9],
+    spawn: 1e9,
+  };
+  s.pirates.push(p);
+  return p;
+};
 
 test('the heavy laser charges while held and hits everything straight ahead', () => {
   const s = quiet(createState(1));
-  s.ship.x = 5000; s.ship.y = 5000;
+  s.ship.x = 5000;
+  s.ship.y = 5000;
   s.ship.mods.heavy = 1;
   assert.deepEqual(weaponsOf(s.ship), ['pulse', 'heavy']);
-  const a = target(s, 5000, 4800, 'gunboat', 60), b = target(s, 5000, 4600, 'gunboat', 60), side = target(s, 5300, 4800, 'gunboat', 60);
+  const a = target(s, 5000, 4800, 'gunboat', 60),
+    b = target(s, 5000, 4600, 'gunboat', 60),
+    side = target(s, 5300, 4800, 'gunboat', 60);
   for (const p of s.pirates) p.mode = 'still';
   step(s, { gunner: { weapon: 'heavy' } }, DT);
-  s.pirates.forEach((p) => { p.x0 = p.x; p.y0 = p.y; });
-  const hold = (st) => { st.pirates.forEach((p) => { p.x = p.x0; p.y = p.y0; }); return { gunner: { fire: true } }; };
+  s.pirates.forEach((p) => {
+    p.x0 = p.x;
+    p.y0 = p.y;
+  });
+  const hold = (st) => {
+    st.pirates.forEach((p) => {
+      p.x = p.x0;
+      p.y = p.y0;
+    });
+    return { gunner: { fire: true } };
+  };
   run(s, hold, 0.4);
   step(s, { gunner: { fire: false } }, DT);
   assert.equal(s.kills, 0, 'letting go early wastes the charge');
   run(s, hold, B.HEAVY_CHARGE + 0.3);
-  s.pirates.forEach((p) => { p.x = p.x0; p.y = p.y0; });
+  s.pirates.forEach((p) => {
+    p.x = p.x0;
+    p.y = p.y0;
+  });
   step(s, { gunner: { fire: false } }, DT);
   assert.equal(s.kills, 2, 'both ships in line are destroyed');
   assert.ok(s.pirates.includes(side), 'the one off to the side is untouched');
@@ -539,8 +717,10 @@ test('the heavy laser charges while held and hits everything straight ahead', ()
 
 test('rockets home in on a pirate and run out', () => {
   const s = quiet(createState(1));
-  s.ship.x = 5000; s.ship.y = 5000;
-  s.credits = 500; buyUpgrade(s, 'rockets');
+  s.ship.x = 5000;
+  s.ship.y = 5000;
+  s.credits = 500;
+  buyUpgrade(s, 'rockets');
   assert.equal(s.ship.rockets, B.ROCKET_LOAD);
   const p = target(s, 5150, 4800, 'fighter', 24);
   step(s, { gunner: { weapon: 'rockets' } }, DT);
@@ -556,17 +736,21 @@ test('twin turrets add two more bolts to every pulse shot', () => {
   const s = quiet(createState(1));
   step(s, { gunner: { aim: { x: 0, y: -300 }, fire: true } }, DT);
   assert.equal(s.bolts.length, 1);
-  s.bolts = []; s.ship.fireCooldown = 0; s.ship.mods.twin = 1;
+  s.bolts = [];
+  s.ship.fireCooldown = 0;
+  s.ship.mods.twin = 1;
   step(s, { gunner: { aim: { x: 0, y: -300 }, fire: true } }, DT);
   assert.equal(s.bolts.length, 3);
 });
 
-test('darts launch on the captain\'s order, fight pirates and come home again', () => {
+test("darts launch on the captain's order, fight pirates and come home again", () => {
   const s = quiet(createState(1));
-  s.ship.x = 5000; s.ship.y = 5000;
+  s.ship.x = 5000;
+  s.ship.y = 5000;
   step(s, { captain: { darts: true } }, DT);
   assert.equal(s.darts.length, 0, 'no fighter bay yet');
-  s.credits = 1000; buyUpgrade(s, 'bay');
+  s.credits = 1000;
+  buyUpgrade(s, 'bay');
   step(s, { captain: { darts: true } }, DT);
   run(s, {}, 2);
   assert.equal(s.darts.length, B.DART_COUNT);
@@ -582,8 +766,11 @@ test('darts launch on the captain\'s order, fight pirates and come home again', 
 
 test('with autolaunch the darts go out by themselves when pirates show up', () => {
   const s = quiet(createState(1));
-  s.ship.x = 5000; s.ship.y = 5000;
-  s.credits = 1000; buyUpgrade(s, 'bay'); buyUpgrade(s, 'auto');
+  s.ship.x = 5000;
+  s.ship.y = 5000;
+  s.credits = 1000;
+  buyUpgrade(s, 'bay');
+  buyUpgrade(s, 'auto');
   run(s, {}, 1);
   assert.equal(s.darts.length, 0);
   target(s, 5300, 5000, 'fighter', 500);
@@ -599,7 +786,8 @@ test('a jump needs a chart, a route, fuel and everyone on board', () => {
   assert.equal(jumpBlocked(s, 4), 'NO ROUTE FROM HERE');
   s.ship.fuel = 5;
   assert.equal(jumpBlocked(s, 1), 'NOT ENOUGH FUEL');
-  s.ship.fuel = 80; s.ship.docked = s.wrecks[0].id;
+  s.ship.fuel = 80;
+  s.ship.docked = s.wrecks[0].id;
   assert.equal(jumpBlocked(s, 1), 'UNDOCK FIRST');
   s.ship.docked = null;
   assert.equal(jumpBlocked(s, 1), null);
@@ -607,9 +795,11 @@ test('a jump needs a chart, a route, fuel and everyone on board', () => {
 
 test('jumping takes time and fuel, changes the sector, and the old sector is remembered', () => {
   const s = quiet(createState(1));
-  s.charts.push(1); s.ship.fuel = 80;
+  s.charts.push(1);
+  s.ship.fuel = 80;
   run(s, {}, 0.5);
-  const oldWrecks = s.wrecks.map((w) => w.id), seenBefore = s.map.seen.filter(Boolean).length;
+  const oldWrecks = s.wrecks.map((w) => w.id),
+    seenBefore = s.map.seen.filter(Boolean).length;
   step(s, { captain: { jump: 1 } }, DT);
   assert.ok(s.jump);
   run(s, {}, B.JUMP_CHARGE / 2);
@@ -618,18 +808,27 @@ test('jumping takes time and fuel, changes the sector, and the old sector is rem
   assert.equal(s.sector, 1);
   assert.equal(s.ship.fuel < 80 - B.JUMP_FUEL + 0.01, true);
   assert.ok(!s.wrecks.some((w) => oldWrecks.includes(w.id)), 'a new sector has its own wrecks');
-  assert.ok(s.stations.some((x) => x.align === 'hostile'), 'the second sector has a hostile station');
+  assert.ok(
+    s.stations.some((x) => x.align === 'hostile'),
+    'the second sector has a hostile station',
+  );
   s.spawn.timer = 1e9;
   step(s, { captain: { jump: 0 } }, DT);
   run(s, {}, B.JUMP_CHARGE + 0.2);
   assert.equal(s.sector, 0);
-  assert.deepEqual(s.wrecks.map((w) => w.id), oldWrecks, 'the first sector is as it was left');
+  assert.deepEqual(
+    s.wrecks.map((w) => w.id),
+    oldWrecks,
+    'the first sector is as it was left',
+  );
   assert.ok(s.map.seen.filter(Boolean).length >= seenBefore);
 });
 
 test('a star chart can be bought at a station or carried out of a vault', () => {
-  const s = quiet(createState(1)), yard = station(s, 'friendly');
-  atStation(s, yard); s.credits = 500;
+  const s = quiet(createState(1)),
+    yard = station(s, 'friendly');
+  atStation(s, yard);
+  s.credits = 500;
   assert.ok(yard.chart !== null);
   step(s, { shop: [{ action: 'chart' }] }, DT);
   assert.ok(s.charts.includes(yard.chart));
@@ -638,7 +837,9 @@ test('a star chart can be bought at a station or carried out of a vault', () => 
 
 test('destroying the cruiser in the last sector wins the game, and gunboats leave wrecks', () => {
   const s = quiet(createState(1));
-  s.sector = 3; s.charts.push(4); s.ship.fuel = 80;
+  s.sector = 3;
+  s.charts.push(4);
+  s.ship.fuel = 80;
   step(s, { captain: { jump: 4 } }, DT);
   run(s, {}, B.JUMP_CHARGE + 0.2);
   assert.equal(s.sector, 4);
@@ -656,14 +857,17 @@ test('destroying the cruiser in the last sector wins the game, and gunboats leav
 // ---------- enemy alarm ----------
 test('the enemy alarm counts pirates far out, and a higher level reaches further', () => {
   const s = quiet(createState(1));
-  s.ship.x = 5000; s.ship.y = 5000;
+  s.ship.x = 5000;
+  s.ship.y = 5000;
   target(s, 5000, 5000 - 1200, 'fighter', 500);
   run(s, {}, 0.1);
   assert.equal(s.alarm.count, 0, 'no alarm installed');
-  s.ship.mods.alarm = 1; s.pirates[0].y = 5000 - 1200;
+  s.ship.mods.alarm = 1;
+  s.pirates[0].y = 5000 - 1200;
   run(s, {}, 0.1);
   assert.equal(s.alarm.count, 0, 'level 1 does not reach that far');
-  s.ship.mods.alarm = 2; s.pirates[0].y = 5000 - 1200;
+  s.ship.mods.alarm = 2;
+  s.pirates[0].y = 5000 - 1200;
   run(s, {}, 0.1);
   assert.equal(s.alarm.count, 1);
   assert.ok(s.alarm.eta > 0);
@@ -671,13 +875,18 @@ test('the enemy alarm counts pirates far out, and a higher level reaches further
 
 // ---------- cargo pods, more break-in games and distress calls ----------
 test('a station lock wants the code the engineer can see, and the code changes', () => {
-  const s = quiet(createState(1)), st = station(s, 'neutral');
-  turnHostile(s, st); s.ship.x = st.x; s.ship.y = st.y + 3000; atStation(s, st);
+  const s = quiet(createState(1)),
+    st = station(s, 'neutral');
+  turnHostile(s, st);
+  s.ship.x = st.x;
+  s.ship.y = st.y + 3000;
+  atStation(s, st);
   step(s, { system: { board: [0] } }, DT);
   const bk = st.breakin;
   assert.equal(bk.kind, 'code');
   assert.equal(bk.code.length, B.CODE_LEN);
-  const wrong = bk.code.map((d) => (d % B.CODE_DIGITS) + 1), t0 = bk.time;
+  const wrong = bk.code.map((d) => (d % B.CODE_DIGITS) + 1),
+    t0 = bk.time;
   step(s, { hack: { 0: wrong.map((digit) => ({ wreck: st.id, digit })) } }, DT);
   assert.equal(st.lock, 'locked');
   assert.ok(bk.time < t0 - B.CODE_PENALTY + 0.1, 'a wrong code costs time');
@@ -689,13 +898,19 @@ test('a station lock wants the code the engineer can see, and the code changes',
 });
 
 test('a cargo pod opens after three good stops of the needle and gives its cargo', () => {
-  const s = quiet(createState(1)), pod = s.pods[0];
+  const s = quiet(createState(1)),
+    pod = s.pods[0];
   s.ship.docked = pod.id;
   step(s, { system: { board: [0] } }, DT);
   const bk = pod.breakin;
   assert.equal(bk.kind, 'dial');
   for (let stage = 0; stage < B.DIAL_STAGES; stage++) {
-    for (let i = 0; i < 2000 && Math.abs(((bk.angle - bk.mark + Math.PI * 3) % (Math.PI * 2)) - Math.PI) > bk.width / 4; i++) step(s, {}, DT);
+    for (
+      let i = 0;
+      i < 2000 && Math.abs(((bk.angle - bk.mark + Math.PI * 3) % (Math.PI * 2)) - Math.PI) > bk.width / 4;
+      i++
+    )
+      step(s, {}, DT);
     step(s, { hack: { 0: [{ wreck: pod.id, stop: true }] } }, DT);
   }
   assert.ok(!s.pods.includes(pod), 'the pod is emptied and gone');
@@ -704,12 +919,18 @@ test('a cargo pod opens after three good stops of the needle and gives its cargo
 });
 
 test('three misses on a cargo pod set off an alarm that brings pirates', () => {
-  const s = quiet(createState(1)), pod = s.pods[0];
+  const s = quiet(createState(1)),
+    pod = s.pods[0];
   s.ship.docked = pod.id;
   step(s, { system: { board: [0] } }, DT);
   const bk = pod.breakin;
   for (let n = 0; n < B.DIAL_MISSES; n++) {
-    for (let i = 0; i < 2000 && Math.abs(((bk.angle - bk.mark + Math.PI * 3) % (Math.PI * 2)) - Math.PI) < bk.width; i++) step(s, {}, DT);
+    for (
+      let i = 0;
+      i < 2000 && Math.abs(((bk.angle - bk.mark + Math.PI * 3) % (Math.PI * 2)) - Math.PI) < bk.width;
+      i++
+    )
+      step(s, {}, DT);
     step(s, { hack: { 0: [{ wreck: pod.id, stop: true }] } }, DT);
   }
   run(s, {}, 0.1);
@@ -720,22 +941,32 @@ test('three misses on a cargo pod set off an alarm that brings pirates', () => {
 
 test('a station under attack calls for help, and a neutral one repays it with a discount and its shipyard', () => {
   const s = quiet(createState(1));
-  s.sector = 0; s.charts.push(1); s.ship.fuel = 90;
-  step(s, { captain: { jump: 1 } }, DT); run(s, {}, B.JUMP_CHARGE + 0.2);
+  s.sector = 0;
+  s.charts.push(1);
+  s.ship.fuel = 90;
+  step(s, { captain: { jump: 1 } }, DT);
+  run(s, {}, B.JUMP_CHARGE + 0.2);
   s.spawn.timer = 1e9;
   const st = station(s, 'neutral');
   assert.ok(st.shipyard, 'this neutral station has a shipyard');
-  atStation(s, st); s.credits = 1000;
+  atStation(s, st);
+  s.credits = 1000;
   step(s, { shop: [{ action: 'buy', item: 'armor' }] }, DT);
   assert.equal(s.ship.mods.armor, undefined, 'closed to strangers');
-  s.ship.docked = null; s.ship.x = st.x + 2500; s.ship.y = st.y;
-  s.stations = [st]; s.raidTimer = 0.1;
+  s.ship.docked = null;
+  s.ship.x = st.x + 2500;
+  s.ship.y = st.y;
+  s.stations = [st];
+  s.raidTimer = 0.1;
   run(s, {}, 0.5);
   assert.ok(s.raid && s.raid.station === st.id);
   const raiders = s.pirates.filter((p) => p.raid === s.raid.id);
   assert.ok(raiders.length >= 2);
   run(s, {}, 5);
-  assert.ok(raiders.every((p) => Math.hypot(p.x - st.x, p.y - st.y) < 500), 'the raiders stay at the station');
+  assert.ok(
+    raiders.every((p) => Math.hypot(p.x - st.x, p.y - st.y) < 500),
+    'the raiders stay at the station',
+  );
   for (const p of raiders) hurtPirate(s, p, 999);
   run(s, {}, 0.2);
   assert.equal(s.raid, null);
@@ -752,7 +983,9 @@ test('a station under attack calls for help, and a neutral one repays it with a 
 
 test('a distress call that nobody answers just ends', () => {
   const s = quiet(createState(1));
-  s.raidTimer = 0.1; s.ship.x = 9000; s.ship.y = 9000;
+  s.raidTimer = 0.1;
+  s.ship.x = 9000;
+  s.ship.y = 9000;
   run(s, {}, 0.5);
   assert.ok(s.raid);
   run(s, {}, B.RAID_TIME + 1);
@@ -762,13 +995,23 @@ test('a distress call that nobody answers just ends', () => {
 });
 
 // ---------- more upgrades and boarding gear ----------
-import { fuelMax, jumpCharge, jumpFuel, crewHpMax, carryMax, rifleDmg, teleCooldown, itemsOf } from '../src/sim/upgrades.js';
+import {
+  fuelMax,
+  jumpCharge,
+  jumpFuel,
+  crewHpMax,
+  carryMax,
+  rifleDmg,
+  teleCooldown,
+  itemsOf,
+} from '../src/sim/upgrades.js';
 
 test('every catalog item belongs to a tab, and boarding gear is sold without a shipyard', () => {
   for (const id of Object.keys(CATALOG)) assert.ok(['hull', 'system', 'armory'].includes(CATALOG[id].tab), id);
   assert.ok(itemsOf('armory').length >= 6);
   const s = quiet(createState(1));
-  atStation(s, station(s, 'neutral')); s.credits = 1000;
+  atStation(s, station(s, 'neutral'));
+  s.credits = 1000;
   step(s, { shop: [{ action: 'buy', item: 'pack' }] }, DT);
   assert.equal(s.ship.mods.pack, 1);
   step(s, { shop: [{ action: 'buy', item: 'tank' }] }, DT);
@@ -777,20 +1020,26 @@ test('every catalog item belongs to a tab, and boarding gear is sold without a s
 
 test('fuel tank, jump coils and the afterburner change how the ship travels', () => {
   const s = quiet(createState(1));
-  s.credits = 2000; buyUpgrade(s, 'tank'); buyUpgrade(s, 'jumpcoil'); buyUpgrade(s, 'boost');
+  s.credits = 2000;
+  buyUpgrade(s, 'tank');
+  buyUpgrade(s, 'jumpcoil');
+  buyUpgrade(s, 'boost');
   assert.equal(fuelMax(s.ship), B.FUEL_MAX + B.TANK_FUEL);
   assert.equal(jumpCharge(s.ship), B.COIL_CHARGE);
   assert.equal(jumpFuel(s.ship), B.COIL_FUEL);
   const plain = quiet(createState(1));
-  s.ship.x = plain.ship.x = 6000; s.ship.fuel = plain.ship.fuel = 100;
-  run(s, { captain: { throttle: 1, boost: true } }, 6); run(plain, { captain: { throttle: 1, boost: true } }, 6);
+  s.ship.x = plain.ship.x = 6000;
+  s.ship.fuel = plain.ship.fuel = 100;
+  run(s, { captain: { throttle: 1, boost: true } }, 6);
+  run(plain, { captain: { throttle: 1, boost: true } }, 6);
   assert.ok(speedOf(s.ship) > speedOf(plain.ship) * 1.5, 'the afterburner is much faster');
   assert.ok(100 - s.ship.fuel > (100 - plain.ship.fuel) * 3, 'and burns much more fuel');
 });
 
 test('destroyed pirates leave salvage, and the tractor beam pulls it in', () => {
   const s = quiet(createState(1));
-  s.ship.x = 6000; s.ship.y = 6000;
+  s.ship.x = 6000;
+  s.ship.y = 6000;
   const gb = target(s, 6200, 6000, 'gunboat', 10);
   hurtPirate(s, gb, 99);
   assert.equal(s.salvage.length, 2);
@@ -806,16 +1055,25 @@ test('destroyed pirates leave salvage, and the tractor beam pulls it in', () => 
 test('point defense stops some incoming fire, and repair drones mend the ship', () => {
   const hits = (pd) => {
     const s = quiet(createState(1));
-    s.ship.x = 6000; s.ship.y = 6000; s.ship.power.shields = 0;
+    s.ship.x = 6000;
+    s.ship.y = 6000;
+    s.ship.power.shields = 0;
     if (pd) s.ship.mods.pd = 1;
-    for (let i = 0; i < 200; i++) { s.bolts.push({ x: 6000, y: 5800, vx: 0, vy: 290, ttl: 1.5, owner: 'pirate', dmg: 1 }); run(s, {}, 0.1); }
+    for (let i = 0; i < 200; i++) {
+      s.bolts.push({ x: 6000, y: 5800, vx: 0, vy: 290, ttl: 1.5, owner: 'pirate', dmg: 1 });
+      run(s, {}, 0.1);
+    }
     run(s, {}, 2);
     return B.SHIELD_MAX + B.HULL_MAX - s.ship.shield - s.ship.hull;
   };
-  const without = hits(false), withPd = hits(true);
+  const without = hits(false),
+    withPd = hits(true);
   assert.ok(withPd < without * 0.85, `point defense lets less through (${withPd} against ${without})`);
   const s = quiet(createState(1));
-  s.ship.power.repair = 0; s.ship.hull = 100; s.ship.nodes[1].hp = 40; s.ship.mods.drones = 1;
+  s.ship.power.repair = 0;
+  s.ship.hull = 100;
+  s.ship.nodes[1].hp = 40;
+  s.ship.mods.drones = 1;
   run(s, {}, 10);
   assert.ok(s.ship.hull > 110 && s.ship.nodes[1].hp > 60);
 });
@@ -823,7 +1081,8 @@ test('point defense stops some incoming fire, and repair drones mend the ship', 
 test('boarding gear changes what a boarder can do', () => {
   const plain = quiet(createState(1));
   assert.equal(carryMax(plain.ship), B.CARRY_MAX);
-  const s = quiet(createState(1)), w = dockAt(s);
+  const s = quiet(createState(1)),
+    w = dockAt(s);
   s.credits = 3000;
   for (const id of ['rifle', 'rifle', 'pack', 'suit', 'coils', 'charge', 'sentry', 'hack']) buyUpgrade(s, id);
   assert.equal(rifleDmg(s.ship), B.RIFLE_DMG + 2 * B.RIFLE_STEP);
@@ -833,28 +1092,42 @@ test('boarding gear changes what a boarder can do', () => {
   run(s, {}, 0.1);
   assert.equal(s.players[0].hp, B.CREW_HP + B.SUIT_HP);
   step(s, { system: { board: [0] } }, DT);
-  const it = w.interior, av = it.avatars[0];
-  assert.equal(av.charges, B.CHARGES); assert.equal(av.sentries, 1);
+  const it = w.interior,
+    av = it.avatars[0];
+  assert.equal(av.charges, B.CHARGES);
+  assert.equal(av.sentries, 1);
   // The breaching charge opens the vault at once and alerts the guards.
   const door = it.rooms[it.vault].door;
-  av.x = door.x; av.y = door.y + (door.y < 9 * TILE ? 14 : -14);
+  av.x = door.x;
+  av.y = door.y + (door.y < 9 * TILE ? 14 : -14);
   step(s, { away: { 0: { charge: true } } }, DT);
   assert.equal(it.doorOpen, true);
   assert.ok(it.guards.every((g) => g.mode === 'alert'));
   // The deployable turret shoots a guard on its own.
-  it.turrets = []; it.guards = it.guards.slice(0, 1);
-  const g = it.guards[0]; av.x = it.entry.x + 40; av.y = it.entry.y; g.x = av.x + 80; g.y = av.y; g.hp = 12;
+  it.turrets = [];
+  it.guards = it.guards.slice(0, 1);
+  const g = it.guards[0];
+  av.x = it.entry.x + 40;
+  av.y = it.entry.y;
+  g.x = av.x + 80;
+  g.y = av.y;
+  g.hp = 12;
   step(s, { away: { 0: { deploy: true } } }, DT);
   assert.equal(it.sentries.length, 1);
-  av.x = it.entry.x; av.y = it.entry.y - 20;
+  av.x = it.entry.x;
+  av.y = it.entry.y - 20;
   run(s, { away: { 0: {} } }, 4);
   assert.equal(it.guards.length, 0, 'the sentry dealt with the guard');
 });
 
 test('a hacking kit gives more time in a break-in', () => {
-  const a = quiet(createState(1)), b = quiet(createState(1));
+  const a = quiet(createState(1)),
+    b = quiet(createState(1));
   b.ship.mods.hack = 1;
-  for (const s of [a, b]) { s.ship.docked = s.wrecks[0].id; step(s, { system: { board: [0] } }, DT); }
+  for (const s of [a, b]) {
+    s.ship.docked = s.wrecks[0].id;
+    step(s, { system: { board: [0] } }, DT);
+  }
   assert.ok(b.wrecks[0].breakin.total > a.wrecks[0].breakin.total * 1.3);
 });
 
@@ -862,10 +1135,13 @@ test('a hacking kit gives more time in a break-in', () => {
 test('test mode starts with everything installed, room for it, credits and all charts', () => {
   const s = createState(1, { test: true });
   assert.equal(s.test, true);
-  for (const id of Object.keys(CATALOG)) assert.ok(['INSTALLED', 'MAXED', 'OWNED'].includes(blockedReason(s, id)), id + ' is in place');
+  for (const id of Object.keys(CATALOG))
+    assert.ok(['INSTALLED', 'MAXED', 'OWNED'].includes(blockedReason(s, id)), id + ' is in place');
   assert.ok(slotsUsed(s.ship, 'hard') <= s.ship.slots.hard && slotsUsed(s.ship, 'system') <= s.ship.slots.system);
-  assert.equal(s.ship.hull, hullMax(s.ship)); assert.equal(s.ship.fuel, fuelMax(s.ship));
-  assert.equal(s.ship.rockets, B.ROCKET_LOAD); assert.equal(s.ship.dartStock, B.DART_COUNT);
+  assert.equal(s.ship.hull, hullMax(s.ship));
+  assert.equal(s.ship.fuel, fuelMax(s.ship));
+  assert.equal(s.ship.rockets, B.ROCKET_LOAD);
+  assert.equal(s.ship.dartStock, B.DART_COUNT);
   assert.equal(s.charts.length, s.sectors.length);
   assert.deepEqual(weaponsOf(s.ship), ['pulse', 'heavy', 'rockets']);
   assert.equal(createState(1).test, false, 'a normal game is unchanged');
@@ -874,32 +1150,40 @@ test('test mode starts with everything installed, room for it, credits and all c
 
 // ---------- walking around on friendly and neutral stations ----------
 test('a friendly station is walked into without a lock, and its desks open the shop', () => {
-  const s = quiet(createState(1)), st = atStation(s, station(s, 'friendly'));
+  const s = quiet(createState(1)),
+    st = atStation(s, station(s, 'friendly'));
   s.players[0].tele = 30;
   step(s, { system: { board: [0] } }, DT);
   assert.equal(s.players[0].inside, st.id, 'no lock and no teleporter needed');
-  const it = st.interior, av = it.avatars[0];
+  const it = st.interior,
+    av = it.avatars[0];
   assert.equal(it.trade, true);
   assert.equal(it.guards.length + it.turrets.length, 0);
-  assert.deepEqual(it.desks.map((d) => d.type), ['services', 'shipyard', 'armory']);
+  assert.deepEqual(
+    it.desks.map((d) => d.type),
+    ['services', 'shipyard', 'armory'],
+  );
   for (const d of it.desks) assert.ok(!blocked(it, d.x, d.y, 4), d.type + ' desk stands on the floor');
   step(s, { away: { 0: { fire: true, aim: { x: av.x + 50, y: av.y } } } }, DT);
   assert.equal(it.bolts.length, 0, 'weapons stay holstered');
   s.events.length = 0;
-  av.x = it.desks[2].x; av.y = it.desks[2].y - 10;
+  av.x = it.desks[2].x;
+  av.y = it.desks[2].y - 10;
   step(s, { away: { 0: { usePressed: true } } }, DT);
   assert.ok(s.events.some((e) => e.type === 'deskUsed' && e.desk === 'armory'));
   s.credits = 500;
   step(s, { shop: [{ action: 'buy', item: 'pack' }] }, DT);
   assert.equal(s.ship.mods.pack, 1, 'buying works while standing inside');
-  av.x = it.entry.x; av.y = it.entry.y;
+  av.x = it.entry.x;
+  av.y = it.entry.y;
   step(s, { away: { 0: { usePressed: true } } }, DT);
   assert.equal(s.players[0].inside, null);
   assert.equal(s.players[0].tele < 30.1 && s.players[0].lockedOut === null, true, 'walking out is not a teleport');
 });
 
 test('undocking calls people back from a trading station without a teleport, and a station that turns hostile throws them out', () => {
-  const s = quiet(createState(1)), st = atStation(s, station(s, 'neutral'));
+  const s = quiet(createState(1)),
+    st = atStation(s, station(s, 'neutral'));
   step(s, { system: { board: [0] } }, DT);
   step(s, { captain: { dock: true } }, DT);
   assert.equal(s.players[0].inside, null);
@@ -912,15 +1196,24 @@ test('undocking calls people back from a trading station without a teleport, and
 });
 
 test('a station that is taken over becomes a trading floor', () => {
-  const s = quiet(createState(1)), st = station(s, 'neutral');
-  turnHostile(s, st); atStation(s, st); st.lock = 'open';
+  const s = quiet(createState(1)),
+    st = station(s, 'neutral');
+  turnHostile(s, st);
+  atStation(s, st);
+  st.lock = 'open';
   step(s, { system: { board: [0] } }, DT);
-  const it = st.interior, av = it.avatars[0];
-  it.guards = []; it.turrets = []; it.doorOpen = true; it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
-  av.x = it.terminal.x; av.y = it.terminal.y;
+  const it = st.interior,
+    av = it.avatars[0];
+  it.guards = [];
+  it.turrets = [];
+  it.doorOpen = true;
+  it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
+  av.x = it.terminal.x;
+  av.y = it.terminal.y;
   run(s, { away: { 0: { use: true } } }, B.TAKEOVER_TIME + 0.2);
   assert.equal(st.align, 'friendly');
-  av.x = it.entry.x; av.y = it.entry.y;
+  av.x = it.entry.x;
+  av.y = it.entry.y;
   step(s, { away: { 0: { usePressed: true } } }, DT);
   step(s, { system: { board: [0] } }, DT);
   assert.equal(st.interior.trade, true);

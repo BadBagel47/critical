@@ -15,7 +15,8 @@ export function turnToward(current, target, maxStep) {
 }
 // Rotate a body-local point by heading h and add the body position.
 export function toWorld(body, p) {
-  const c = Math.cos(body.heading), s = Math.sin(body.heading);
+  const c = Math.cos(body.heading),
+    s = Math.sin(body.heading);
   return { x: body.x + p.x * c - p.y * s, y: body.y + p.x * s + p.y * c };
 }
 export const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);

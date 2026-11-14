@@ -2,14 +2,41 @@
 import { VIEW_W, VIEW_H } from './config.js';
 
 // Standard gamepad layout: button index -> name.
-const PAD_BUTTONS = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'BACK', 'START', 'L3', 'R3', 'UP', 'DOWN', 'LEFT', 'RIGHT'];
+const PAD_BUTTONS = [
+  'A',
+  'B',
+  'X',
+  'Y',
+  'LB',
+  'RB',
+  'LT',
+  'RT',
+  'BACK',
+  'START',
+  'L3',
+  'R3',
+  'UP',
+  'DOWN',
+  'LEFT',
+  'RIGHT',
+];
 // What each button means in each situation, as the keyboard key it stands in for. CLICK presses the cursor.
 const PAD_KEYS = {
   all: { START: 'KeyP', BACK: 'KeyM', B: 'KeyF' },
   title: { A: 'Enter', START: 'Enter', Y: 'KeyT' },
   captain: { A: 'KeyE', X: 'KeyX', Y: 'KeyR', L3: 'ShiftLeft', RB: 'Tab', LB: 'PadPrevPost' },
   gunner: { RIGHT: 'KeyE', LEFT: 'KeyQ', RB: 'Tab', LB: 'PadPrevPost' },
-  engineer: { UP: 'ArrowUp', DOWN: 'ArrowDown', LEFT: 'ArrowLeft', RIGHT: 'ArrowRight', X: 'KeyQ', Y: 'KeyB', A: 'CLICK', RB: 'Tab', LB: 'PadPrevPost' },
+  engineer: {
+    UP: 'ArrowUp',
+    DOWN: 'ArrowDown',
+    LEFT: 'ArrowLeft',
+    RIGHT: 'ArrowRight',
+    X: 'KeyQ',
+    Y: 'KeyB',
+    A: 'CLICK',
+    RB: 'Tab',
+    LB: 'PadPrevPost',
+  },
   map: { X: 'KeyQ', Y: 'KeyB', A: 'CLICK', RB: 'Tab', LB: 'PadPrevPost' },
   panel: { A: 'CLICK' },
   away: { A: 'KeyF', X: 'KeyC', Y: 'KeyT', RB: 'KeyG' },
@@ -18,33 +45,58 @@ const dead = (v) => (Math.abs(v) < 0.2 ? 0 : v);
 
 export function createInput(canvas) {
   const input = {
-    keys: new Set(), padKeys: new Set(), pressed: new Set(),
+    keys: new Set(),
+    padKeys: new Set(),
+    pressed: new Set(),
     mouse: { x: VIEW_W / 2, y: VIEW_H / 2, down: false, clicked: false, rightClicked: false, shift: false },
     pad: { connected: false, used: false, lx: 0, ly: 0, rx: 0, ry: 0, lt: 0, rt: 0, held: new Set() },
     onGesture: null,
   };
   const block = new Set(['Tab', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
-  const gesture = () => { if (input.onGesture) input.onGesture(); };
+  const gesture = () => {
+    if (input.onGesture) input.onGesture();
+  };
   window.addEventListener('keydown', (e) => {
     if (block.has(e.code)) e.preventDefault();
     if (!e.repeat) input.pressed.add(e.code);
-    input.keys.add(e.code); input.pad.used = false; gesture();
+    input.keys.add(e.code);
+    input.pad.used = false;
+    gesture();
   });
   window.addEventListener('keyup', (e) => input.keys.delete(e.code));
-  window.addEventListener('blur', () => { input.keys.clear(); input.mouse.down = false; });
+  window.addEventListener('blur', () => {
+    input.keys.clear();
+    input.mouse.down = false;
+  });
   const place = (e) => {
     const r = canvas.getBoundingClientRect();
     input.mouse.x = ((e.clientX - r.left) / r.width) * VIEW_W;
     input.mouse.y = ((e.clientY - r.top) / r.height) * VIEW_H;
-    input.mouse.shift = e.shiftKey; input.pad.used = false;
+    input.mouse.shift = e.shiftKey;
+    input.pad.used = false;
   };
   canvas.addEventListener('mousemove', place);
-  canvas.addEventListener('mousedown', (e) => { place(e); if (e.button === 0) { input.mouse.down = true; input.mouse.clicked = true; } if (e.button === 2) input.mouse.rightClicked = true; canvas.focus(); gesture(); });
-  window.addEventListener('mouseup', (e) => { if (e.button === 0) input.mouse.down = false; });
+  canvas.addEventListener('mousedown', (e) => {
+    place(e);
+    if (e.button === 0) {
+      input.mouse.down = true;
+      input.mouse.clicked = true;
+    }
+    if (e.button === 2) input.mouse.rightClicked = true;
+    canvas.focus();
+    gesture();
+  });
+  window.addEventListener('mouseup', (e) => {
+    if (e.button === 0) input.mouse.down = false;
+  });
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   input.down = (...codes) => codes.some((c) => input.keys.has(c) || input.padKeys.has(c));
   input.hit = (...codes) => codes.some((c) => input.pressed.has(c));
-  input.endFrame = () => { input.pressed.clear(); input.mouse.clicked = false; input.mouse.rightClicked = false; };
+  input.endFrame = () => {
+    input.pressed.clear();
+    input.mouse.clicked = false;
+    input.mouse.rightClicked = false;
+  };
 
   // Read the gamepad. `mode` says what the buttons should mean right now, and `cursor` whether the
   // left stick moves the pointer (on screens that are worked with clicks).
@@ -53,19 +105,36 @@ export function createInput(canvas) {
     const gp = [...pads].find((p) => p && p.connected);
     const pad = input.pad;
     input.padKeys.clear();
-    if (!gp) { pad.connected = false; pad.lx = pad.ly = pad.rx = pad.ry = pad.lt = pad.rt = 0; pad.held.clear(); return; }
+    if (!gp) {
+      pad.connected = false;
+      pad.lx = pad.ly = pad.rx = pad.ry = pad.lt = pad.rt = 0;
+      pad.held.clear();
+      return;
+    }
     pad.connected = true;
-    pad.lx = dead(gp.axes[0] || 0); pad.ly = dead(gp.axes[1] || 0); pad.rx = dead(gp.axes[2] || 0); pad.ry = dead(gp.axes[3] || 0);
-    pad.lt = gp.buttons[6] ? gp.buttons[6].value : 0; pad.rt = gp.buttons[7] ? gp.buttons[7].value : 0;
+    pad.lx = dead(gp.axes[0] || 0);
+    pad.ly = dead(gp.axes[1] || 0);
+    pad.rx = dead(gp.axes[2] || 0);
+    pad.ry = dead(gp.axes[3] || 0);
+    pad.lt = gp.buttons[6] ? gp.buttons[6].value : 0;
+    pad.rt = gp.buttons[7] ? gp.buttons[7].value : 0;
     const now = new Set();
-    PAD_BUTTONS.forEach((name, i) => { if (gp.buttons[i] && gp.buttons[i].pressed && name !== 'LT' && name !== 'RT') now.add(name); });
-    if (now.size || pad.lx || pad.ly || pad.rx || pad.ry || pad.lt > 0.1 || pad.rt > 0.1) { pad.used = true; if (now.size) gesture(); }
+    PAD_BUTTONS.forEach((name, i) => {
+      if (gp.buttons[i] && gp.buttons[i].pressed && name !== 'LT' && name !== 'RT') now.add(name);
+    });
+    if (now.size || pad.lx || pad.ly || pad.rx || pad.ry || pad.lt > 0.1 || pad.rt > 0.1) {
+      pad.used = true;
+      if (now.size) gesture();
+    }
     const map = { ...PAD_KEYS.all, ...(PAD_KEYS[mode] || {}) };
     for (const name of now) {
       const key = map[name];
       if (!key) continue;
       const fresh = !pad.held.has(name);
-      if (key === 'CLICK') { if (fresh) input.mouse.clicked = true; continue; }
+      if (key === 'CLICK') {
+        if (fresh) input.mouse.clicked = true;
+        continue;
+      }
       input.padKeys.add(key);
       if (fresh) input.pressed.add(key);
     }
