@@ -11,7 +11,8 @@ Prioritet: Hög, Medel, Låg.
 **B** – strong model, high level – Skepp som reagerar på strider
 - F-129 – Skepp med intresse av en strid vid en bas ger sig in i den, och de andra håller sig undan eller lämnar platsen
 
-**C** – strong model, high level – Förslag: inomhusmiljöer som ser olika ut
+**C** – strong model, high level – Färg efter sida, och förslag på inomhusstilar
+- F-130 – Stationer och vrak får färg efter vems de är, så att man ser det utifrån
 - D-128 – Ta fram design på inomhusstilar för vrak, stationer och varje sida, med exempel på genererade planlösningar, och visa den innan något byggs
 
 **D** – strong model, high level – Större och genererade inomhusmiljöer (när designen i D-128 är godkänd)
@@ -127,7 +128,8 @@ Väntar på användaren: D-117 (förslaget om bordning av stationer i docs/stati
 | F-125 | En lite mer avancerad logik även för attackerande vakter: att de kan gömma sig bakom saker och ta skydd, men inte heller bara vara defensiva. En mix som gör det mer levande. Agentens förslag: vakter går från skydd till skydd, kikar fram och skjuter, kringgår genom en annan dörr när de är flera, drar sig undan när de är skadade, och har olika läggning (försiktig eller framfusig) | Ej påbörjad |
 | F-126 | Flera typer av vakter. Kanske så att de är lättare i början och svårare ju längre man kommer. Agentens förslag på typer: väktare (lätt, slår larm), soldat (tar skydd), tung vakt (pansrad och långsam), tekniker (slår på utslagna turrets igen) och drönare (snabb, går nära). Vilka som finns beror på sektor, på hur farligt stället är och på vems det är | Ej påbörjad |
 | F-127 | Större invändiga baser och skepp, för en mer varierad miljö. Det blir tråkigt att alltid se samma innehåll. Formen på inomhusmiljön bör matcha formen på objektet man bordat, och planlösningen slumpas för varje spelomgång så att alla objekt har olika vägar och rum. I dag är alla insidor samma planlösning, en skärm stor. Agentens förslag: bygg insidan av färdiga rumsbitar längs ett skelett som följer objektets form (ett vrak är långt och smalt, en station är en ring med nav och armar), med tester som vaktar att allt går att nå. Kameran följer då spelaren | Ej påbörjad |
-| D-128 | Skepp och stationer borde se olika ut designmässigt. Ta fram design på inomhusstilar för vrak, stationer och varje sida (pirater och faktioner) och visa den för användaren innan den läggs in, tillsammans med exempel på genererade planlösningar. Oklart om användaren också menar utsidan | Ej påbörjad |
+| D-128 | Skepp och stationer borde se olika ut designmässigt. Ta fram design på inomhusstilar för vrak, stationer och varje sida (pirater och faktioner) och visa den för användaren innan den läggs in, tillsammans med exempel på genererade planlösningar. Oklart om användaren också menar utsidan. Besked 2026-11-14: utsidan får bara färg efter sida tills vidare (F-130). Designförslaget gäller insidan | Ej påbörjad |
+| F-130 | Stationer och vrak får färg efter vems de är, på samma sätt som faktionernas skepp har i dag. Användaren valde 2026-11-14 den enklaste av tre nivåer för utsidan tills vidare. Att lösa: stationens färg visar i dag hur den behandlar besättningen, så det behöver visas på annat sätt, till exempel med ljusen på dockningsarmarna | Ej påbörjad |
 | F-129 | Användarens anteckning 2026-11-14, meningen är inte avslutad: "när det blir strid vid en bas så borde skepp som inte är involverade eller har intresse av striden (det jag kan komma på är att man anfaller en faktion, och ett faktionskepp är i närheten, som då ger sig in i striden)". Agentens tolkning: skepp som har ett intresse av striden ger sig in i den, till exempel ett faktionsskepp i närheten när dess faktion anfalls, och skepp som inte har det håller sig undan eller lämnar platsen. I dag fortsätter fraktskepp med sitt, och patruller slåss bara mot den som redan är deras fiende. Besked 2026-11-14: tolkningen stämmer | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
 | F-068 | Handelssystem för goods. Att man kan köpa och sälja varor mellan olika stationer med olika priser. Det är inget som man själv kan använda, utan det är bara för att kunna tjäna pengar. Agentens förslag som användaren inte invänt mot: lastrum med begränsad plats som går att bygga ut, och priser som rör sig långsamt. Från D-075: prisnivåer per vara och station, och en kartvy som visar var det lönar sig | Ej påbörjad |
@@ -178,6 +180,8 @@ Väntar på användaren: D-117 (förslaget om bordning av stationer i docs/stati
 
 | ID | Vad | Status |
 |---|---|---|
+| F-131 | Utsidan, nivå två: samma grundform men egna märken, antenner, ljus och påbyggnader per sida på stationer, och olika skador på vrak. Sparad 2026-11-14 för att tas upp senare | Ej påbörjad |
+| F-132 | Utsidan, nivå tre: egna former. Ett vrak per skeppsklass (Gunboat, fraktskepp, senare Juggernaut) och stationer som är byggda på olika sätt, så att insidan kan följa olika former. Varje ny form visas för användaren först. Sparad 2026-11-14 för att tas upp senare | Ej påbörjad |
 | F-086 | Från D-075: namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma | Ej påbörjad |
 | F-087 | Från D-075: händelser som ändrar världen. En station byter ägare, priser rör sig, en sektor blir farligare | Ej påbörjad |
 | F-088 | Från D-075: tribut från övertagna stationer som ger inkomst över tid | Ej påbörjad |
