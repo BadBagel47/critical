@@ -49,6 +49,15 @@ Att tänka på:
 - Spelet kan vara pausat. Då är det rimligt att musiken dämpas eller filtreras, men det är ett förslag.
 - När sista bossen är förstörd sätts `won`. Det kan få en egen markering.
 
+## På väg in
+
+Bordningen kommer att få två lägen (F-102 och F-107 i BACKLOG.md, inte byggda än). Användarens ord: "När man går in för att loota på ett fientligt ställe så ska vi ha roterande röda ljus och hela stället är mörkare än normalt. Detta är för att stället är i lockdown mode", och "först är stealth som gäller tills man blir upptäckt av patrullerande vakter".
+
+- Smygande: stället är i lockdown, mörkt med röda ljus, och spelaren är inte upptäckt.
+- Larm: spelaren är upptäckt och vakterna jagar.
+
+I dag finns bara scenen `boarding`. När lägena byggs får scenen troligen ett syskon, till exempel `alarm`. Bygg därför så att en ny scen är lätt att lägga till, och låt `boarding` passa för smygande: spänt och dämpat snarare än strid.
+
 ## Hur musiken kopplas in
 
 Kopplingen är redan gjord. Det enda som saknas är innehållet i en fil.

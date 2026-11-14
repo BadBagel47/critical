@@ -5,66 +5,77 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – strong model, high level – Pekskärm
+**A** – strong model, high level – Enklare dockning och knappar som visar vad man kan göra
+- F-111 – Öka avståndet som krävs för att docka, så att dockning blir enklare
+- F-112 – En knapp dyker upp när det finns något att göra (docka, handla, ansluta), med tangenten för tangentbord och en symbol med text för touch
+
+**B** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**B** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
+**C** – strong model, high level – Lockdown och smygande
+- F-102 – Lockdown på fientliga ställen: mörkare, roterande röda ljus och stängda dörrar tills spelarna slår av det vid en kontrollpanel längst in
+- F-107 – Smygande tills man blir upptäckt av patrullerande vakter, och en tranq gun som söver vakter
+- F-108 – Kameror som sveper och utlöser larmet om man blir sedd
+
+**D** – strong model, high level – Laga övertagna stationer
+- F-110 – En panel på övertagna stationer där stationen lagas, med ett system som liknar skeppets
+
+**E** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
 
-**C** – strong model, high level – Förslag: ekonomi och belöningar
+**F** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**D** – strong model, high level – Baser i två storlekar
+**G** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 - D-101 – Gör inomhusmiljöerna mer utarbetade, så att stationer och vrak känns som platser
-- F-102 – Lockdown: en fientlig station håller dörrarna till shop och armory stängda tills spelarna tagit över
 
-**E** – strong model, high level – Sällsynta skepp
+**H** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**F** – strong model, high level – Handel
+**I** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**G** – strong model, medium level – Butik med bilder
+**J** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**H** – strong model, high level – Värme
+**K** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**I** – strong model, high level – Slå ut och borda
+**L** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**J** – strong model, high level – Missiler och raketer
+**M** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**K** – strong model, high level – Kontakt med andra skepp
+**N** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**L** – strong model, high level – Asteroider och anomalier
+**O** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**M** – strong model, high level – En värld som förändras
+**P** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 
-**N** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**Q** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**O** – strong model, high level – Ljudeffekter
+**R** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
 Hos en annan agent: F-048 (musik) görs skilt från körningarna här, enligt docs/music-brief.md.
 
-Väntar på användaren: D-095 (faktionernas riktiga namn), D-074 (smuggelgods) och D-093 (nya eller fler minigames) behöver ett samtal först. F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
+Väntar på användaren: F-109 (mainframe-panel på stationer, vad man ska kunna göra där), D-095 (faktionernas riktiga namn), D-074 (smuggelgods) och D-093 (nya eller fler minigames) behöver ett samtal först. F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
 
 ## Hög
 
@@ -90,7 +101,13 @@ Väntar på användaren: D-095 (faktionernas riktiga namn), D-074 (smuggelgods) 
 | D-097 | Plan över droprates och hur de påverkas av olika skepp | Ej påbörjad |
 | D-100 | Vi måste reda ut så att man inte kan hamna i en softlock och inte göra progress för att man har slut på pengar eller bränsle etc | Ej påbörjad |
 | D-101 | Jobba fram mer utstuderade inomhusmiljöer | Ej påbörjad |
-| F-102 | Lockdown mode, så att en fientlig station stänger dörrar till shop och armory tills spelarna tagit över kontrollen | Ej påbörjad |
+| F-102 | Lockdown mode, så att en fientlig station stänger dörrar till shop och armory tills spelarna tagit över kontrollen Tillägg 2026-11-14: när man går in för att loota på ett fientligt ställe ska det vara roterande röda ljus och hela stället mörkare än normalt, eftersom stället är i lockdown mode. Spelarna kan avbryta detta vid en kontrollpanel längst in. Den ligger på den högsta våningen på ställen med flera våningar. Påverkar musiken | Ej påbörjad |
+| F-107 | Stealth vid bordning: först är det smygande som gäller, tills man blir upptäckt av patrullerande vakter. Man kan växla till en tranq gun (som man kan köpa) och söva vakter för att undvika att bli upptäckt. Om en annan vakt upptäcker en sövd vakt går larmet direkt. Musiken behöver då skilja på smygande och larm | Ej påbörjad |
+| F-108 | Stationer har kameror som sveper, och som man måste undvika för att larmet inte ska gå | Ej påbörjad |
+| F-109 | Alla stationer har en panel där man kan ansluta till stationens mainframe. Vad man ska kunna göra där är inte bestämt. Agentens förslag: se stationens planritning, stänga av kameror och turrets en stund, öppna låsta dörrar, och hos vänliga stationer se priser och uppdrag | Ej påbörjad |
+| F-110 | Stationer man tagit över har en panel där man kan laga stationen, med ett system som liknar skeppets | Ej påbörjad |
+| F-111 | Gör dockning enklare: öka avståndet som krävs för att docka. I dag måste nosen vara 20 punkter från dockningsarmen | Ej påbörjad |
+| F-112 | Tydligare knappar som är context aware. När man kan docka, prata med en shop eller ansluta till en mainframe dyker en knapp upp som visar kortkommandot för enheter som har tangentbord, och en bra lösning för touch (symbol med text?). Viktigt för touchskärmar, hänger ihop med F-090 | Ej påbörjad |
 | F-103 | Stora baser med två våningar: 1,5 gånger större än dagens stationer, med annan design, mer vapen och starkare sköld till försvar. Dagens storlek är bra för små stationer. Design visas först | Ej påbörjad |
 | D-104 | Utredning om hur rewards, priser, ekonomi, händelser, reputation etc hänger ihop och påverkar världen och skeppet | Ej påbörjad |
 | D-071 | Vi behöver en lösning för eskortskepp. Från D-075, godkänt av användaren: eskorter som hyrs mot lön och tar enkla order (följ, anfall mitt mål, håll avstånd). Hyrs på stationer, och i baren när den finns (D-072) | Ej påbörjad |
