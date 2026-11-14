@@ -50,6 +50,11 @@ function liftFog(state, sources) {
   }
 }
 
+// Lift the fog over a round area at once, as if it had been seen.
+export function reveal(state, x, y, r) {
+  liftFog(state, [{ x, y, r }]);
+}
+
 // Things that stand still stay on the map as they were last seen.
 function remember(state, sources) {
   for (const t of state.things) {

@@ -74,6 +74,7 @@ check(
   'the arrow keys still set the power while the panel is folded away',
 );
 await page.keyboard.press('ArrowUp');
+await page.waitForTimeout(80);
 await page.keyboard.press('ArrowRight');
 await page.waitForTimeout(80);
 check((await get('v.engRow')) === 1, 'and left and right pick the system');

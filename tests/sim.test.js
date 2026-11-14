@@ -1366,6 +1366,9 @@ test('a test game has one of everything that can be docked with close to the sta
     s.things.every((t) => t.kind !== 'rock' || near(t) > 1500),
     'and no rocks are in the way',
   );
+  assert.equal(s.known.length, all.length, 'all of it is on the map from the start');
+  assert.ok(s.known.some((k) => k.id === pirate.id));
+  assert.equal(isSeen(s, pirate.x, pirate.y), true, 'and the fog is lifted over it');
   const usual = createState(4);
   assert.equal(stations(usual).length, 2, 'an ordinary game is laid out as before');
   assert.ok(stations(usual).some((st) => near(st) > 1200));

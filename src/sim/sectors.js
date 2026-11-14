@@ -2,9 +2,9 @@
 // Only the sector the ship is in is simulated. The others are stored as they were left.
 import { B } from './balance.js';
 import { THINGS, HULLS } from './kinds.js';
-import { addThing, dockTargets } from './things.js';
+import { addThing, dockTargets, mapInfo } from './things.js';
 import { makeVessel, firstWaveDelay } from './vessels.js';
-import { createMap } from './map.js';
+import { createMap, reveal } from './map.js';
 import { createStation } from './stations.js';
 import { jumpCharge, jumpFuel } from './upgrades.js';
 import { rand, randRange, TAU, dist } from './util.js';
@@ -227,6 +227,9 @@ export function gatherForTesting(s) {
     const p = at(turn(deg), 250);
     addThing(s, createPod(s, p.x, p.y));
   }
+  // All of it is on the map from the start, with the fog lifted, so that nothing has to be looked for.
+  reveal(s, 0, 0, 1600);
+  s.known = dockTargets(s).map(mapInfo);
 }
 
 // Why the ship cannot jump to a sector right now, or null when it can.
