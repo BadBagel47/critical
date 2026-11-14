@@ -102,6 +102,14 @@ export function drawEngineer(ctx, state, view, assets) {
   font.draw(ctx, 'M  OPEN THE MAP TO SEND PROBES', PANEL_X + 12, 316, COL.faint);
   drawTabs(ctx, font, view);
   if (state.time - ship.lastHit < 1.5) label(ctx, font, 222, 30, 'UNDER FIRE', { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
+  // While a station lock is being worked on, this screen is the only place that shows its code.
+  const locked = state.stations.find((st) => st.breakin && st.breakin.kind === 'code' && st.breakin.started && st.lock !== 'open');
+  if (locked) {
+    rect(ctx, 8, 28, 132, 58, COL.panel, COL.ochre[1]);
+    font.draw(ctx, 'STATION LOCK CODE', 14, 34, COL.ochre[2]);
+    font.draw(ctx, locked.breakin.code.join('  '), 74, 48, COL.white, { align: 'c', scale: 2 });
+    font.draw(ctx, `CHANGES IN ${Math.ceil(locked.breakin.shift)} S`, 14, 72, locked.breakin.shift < 5 ? COL.ember[2] : COL.dim);
+  }
   drawBars(ctx, font, state);
   font.draw(ctx, 'CLICK PIPS AND NODES  ·  SHIFT CLICK QUEUES', PANEL_X - 8, 346, COL.faint, { align: 'r' });
 }

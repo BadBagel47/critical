@@ -1,8 +1,9 @@
 // Boarding: the top-down interior of a wreck, with guards, turrets, loot and the teleporter.
 import { B } from './balance.js';
-import { createWreck, currentSector } from './sectors.js';
+import { createWreck, currentSector, makePirate } from './sectors.js';
 import { dockTargets, findDock } from './dock.js';
 import { takeOver } from './stations.js';
+import { has, fuelMax, crewHpMax, carryMax, rifleDmg, teleCooldown, breakinBonus } from './upgrades.js';
 import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
 import { clamp, forward, headingTo, angleDiff, turnToward, dist, rand, randRange, TAU } from './util.js';
@@ -49,7 +50,7 @@ export function createInterior(state, wreck) {
   set(0, 8, 'A'); set(0, 9, 'A');
   const it = {
     tiles, rooms, vault, entry: { x: 1.5 * TILE, y: 9 * TILE }, timer: null, live: false, doorCut: 0, doorOpen: false, terminal: null, takeover: 0,
-    avatars: [], guards: [], turrets: [], loot: [], bolts: [], grenades: [], fx: [],
+    avatars: [], guards: [], turrets: [], sentries: [], loot: [], bolts: [], grenades: [], fx: [],
   };
   const taken = [];
   const spot = (rm, minX = 0) => {
@@ -99,7 +100,7 @@ export function tryBoard(state, playerId) {
   if (wreck.kind === 'station' && wreck.align !== 'hostile') { state.events.push({ type: 'stationMenu', player: playerId, station: wreck.id }); return false; }
   if (wreck.lock !== 'open') {
     // The docking lock has to be bypassed first. Opening the panel starts the clock.
-    if (!wreck.breakin) wreck.breakin = createBreakin(state, wreck);
+    if (!wreck.breakin) wreck.breakin = createBreakin(state, wreck, breakinBonus(ship));
     wreck.breakin.started = true;
     state.events.push({ type: 'breakinOpened', player: playerId, wreck: wreck.id });
     return false;
@@ -111,7 +112,7 @@ export function tryBoard(state, playerId) {
   if (wreck.kind === 'wreck' && it.timer === null) it.timer = B.REACTOR_TIME[wreck.difficulty];
   it.live = true;
   player.inside = wreck.id;
-  it.avatars.push({ player: playerId, x: it.entry.x + 6, y: it.entry.y - 6 + it.avatars.length * 8, heading: Math.PI / 2, carry: [], cool: 0, grenades: B.GRENADES });
+  it.avatars.push({ player: playerId, x: it.entry.x + 6, y: it.entry.y - 6 + it.avatars.length * 8, heading: Math.PI / 2, carry: [], cool: 0, grenades: B.GRENADES, charges: has(ship, 'charge') ? B.CHARGES : 0, sentries: has(ship, 'sentry') ? 1 : 0 });
   state.events.push({ type: 'boarded', player: playerId, wreck: wreck.id });
   return true;
 }
@@ -122,7 +123,7 @@ function leave(state, it, av, teleported) {
   if (teleported) {
     // What was carried stays where the player stood.
     for (const item of av.carry) it.loot.push({ ...item, x: av.x + randRange(state, -6, 6), y: av.y + randRange(state, -6, 6) });
-    player.lockedOut = player.inside; player.tele = B.TELEPORT_COOLDOWN; player.hp = Math.max(1, player.hp);
+    player.lockedOut = player.inside; player.tele = teleCooldown(state.ship); player.hp = Math.max(1, player.hp);
     it.fx.push({ type: 'teleport', x: av.x, y: av.y, t: 0, dur: 0.6 });
     state.events.push({ type: 'teleported', player: av.player });
   } else {
@@ -149,7 +150,7 @@ function deposit(state, av) {
     else if (item.type === 'part') { state.ship.slots[item.slot]++; state.events.push({ type: 'slotFound', slot: item.slot }); }
     else credits += item.value;
   }
-  state.ship.fuel = Math.min(B.FUEL_MAX, state.ship.fuel + fuel); state.credits += credits;
+  state.ship.fuel = Math.min(fuelMax(state.ship), state.ship.fuel + fuel); state.credits += credits;
   state.events.push({ type: 'deposit', player: av.player, fuel, credits, count: av.carry.length });
   av.carry = [];
 }
@@ -182,7 +183,7 @@ function stepAvatar(state, it, av, cmd, dt) {
   }
   if (cmd.fire && av.cool <= 0) {
     const f = forward(av.heading + randRange(state, -0.02, 0.02));
-    it.bolts.push({ x: av.x + f.x * 7, y: av.y + f.y * 7, vx: f.x * B.RIFLE_SPEED, vy: f.y * B.RIFLE_SPEED, ttl: B.RIFLE_TTL, owner: 'crew', dmg: B.RIFLE_DMG });
+    it.bolts.push({ x: av.x + f.x * 7, y: av.y + f.y * 7, vx: f.x * B.RIFLE_SPEED, vy: f.y * B.RIFLE_SPEED, ttl: B.RIFLE_TTL, owner: 'crew', dmg: rifleDmg(state.ship) });
     av.cool = B.RIFLE_INTERVAL; state.events.push({ type: 'rifle' });
   }
   if (cmd.grenade && av.grenades > 0) {
@@ -196,15 +197,27 @@ function stepAvatar(state, it, av, cmd, dt) {
   }
   // Loot is picked up by walking over it.
   for (const item of [...it.loot]) {
-    if (av.carry.length >= B.CARRY_MAX) break;
+    if (av.carry.length >= carryMax(state.ship)) break;
     if (dist(item.x, item.y, av.x, av.y) < 9) { av.carry.push(item); it.loot = it.loot.filter((l) => l !== item); state.events.push({ type: 'pickup', item: item.type }); }
   }
   const atAirlock = tileAt(it, Math.floor(av.x / TILE), Math.floor(av.y / TILE)) === 'A' || av.x < TILE * 1.2;
   if (atAirlock) deposit(state, av);
   if (cmd.usePressed && av.x < TILE * 2.2 && Math.abs(av.y - it.entry.y) < TILE * 1.5) { deposit(state, av); leave(state, it, av, false); return; }
+  if (cmd.deploy && av.sentries > 0) {
+    av.sentries--;
+    it.sentries.push({ id: state.nextId++, x: av.x, y: av.y, hp: B.SENTRY_HP, heading: av.heading, cool: 0.3 });
+    state.events.push({ type: 'sentryDown' });
+  }
   // Hold the use key next to the locked door to cut it open.
   if (!it.doorOpen) {
     const door = it.rooms[it.vault].door, near = dist(av.x, av.y, door.x, door.y) < 22;
+    if (cmd.charge && av.charges > 0 && dist(av.x, av.y, door.x, door.y) < 28) {
+      // A breaching charge opens the door at once, and every guard comes running.
+      av.charges--; it.doorOpen = true; it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
+      it.fx.push({ type: 'boom', x: door.x, y: door.y, t: 0, dur: 0.45, size: 24 });
+      for (const g of it.guards) { g.mode = 'alert'; g.lost = 0; g.seen = { x: door.x, y: door.y }; }
+      state.events.push({ type: 'breached' });
+    }
     if (cmd.use && near) {
       it.doorCut += dt / B.DOOR_CUT_TIME; it.cutting = true;
       if (it.doorCut >= 1) { it.doorOpen = true; it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c)); state.events.push({ type: 'doorOpen' }); }
@@ -249,6 +262,21 @@ function stepGuard(state, it, g, dt) {
   }
 }
 
+// A turret set down by a boarder. It shoots at guards and turrets it can see.
+function stepSentry(state, it, s, dt) {
+  s.cool -= dt;
+  let target = null, best = B.SENTRY_RANGE;
+  for (const e of [...it.guards, ...it.turrets]) { const d = dist(s.x, s.y, e.x, e.y); if (d < best && los(it, s.x, s.y, e.x, e.y)) { best = d; target = e; } }
+  if (!target) return;
+  const want = headingTo(target.x - s.x, target.y - s.y);
+  s.heading = turnToward(s.heading, want, 4 * dt);
+  if (s.cool <= 0 && Math.abs(angleDiff(want, s.heading)) < 0.12) {
+    const f = forward(s.heading);
+    it.bolts.push({ x: s.x + f.x * 8, y: s.y + f.y * 8, vx: f.x * B.RIFLE_SPEED, vy: f.y * B.RIFLE_SPEED, ttl: B.RIFLE_TTL, owner: 'crew', dmg: B.SENTRY_DMG });
+    s.cool = B.SENTRY_COOLDOWN;
+  }
+}
+
 function stepTurret(state, it, t, dt) {
   t.cool -= dt;
   let target = null, best = B.TURRET_SIGHT;
@@ -271,6 +299,7 @@ function stepInterior(state, wreck, cmds, dt) {
   for (const av of [...it.avatars]) stepAvatar(state, it, av, cmds && cmds.away ? cmds.away[av.player] : null, dt);
   for (const g of it.guards) stepGuard(state, it, g, dt);
   for (const t of it.turrets) stepTurret(state, it, t, dt);
+  for (const s of it.sentries) stepSentry(state, it, s, dt);
   for (const b of it.bolts) {
     b.x += b.vx * dt; b.y += b.vy * dt; b.ttl -= dt;
     if (b.ttl <= 0) continue;
@@ -279,8 +308,9 @@ function stepInterior(state, wreck, cmds, dt) {
       const e = it.guards.find((g) => dist(g.x, g.y, b.x, b.y) < 6.5) || it.turrets.find((t) => dist(t.x, t.y, b.x, b.y) < 7.5);
       if (e) { e.hp -= b.dmg; b.ttl = 0; it.fx.push({ type: 'hit', x: b.x, y: b.y, t: 0, dur: 0.15 }); if (e.mode) { e.mode = 'alert'; e.lost = 0; e.seen = e.seen || { x: b.x - b.vx * 0.2, y: b.y - b.vy * 0.2 }; } }
     } else {
-      const av = it.avatars.find((a) => dist(a.x, a.y, b.x, b.y) < 6);
+      const av = it.avatars.find((a) => dist(a.x, a.y, b.x, b.y) < 6), sentry = it.sentries.find((x) => dist(x.x, x.y, b.x, b.y) < 7);
       if (av) { b.ttl = 0; hurtAvatar(state, it, av, b.dmg); }
+      else if (sentry) { b.ttl = 0; sentry.hp -= b.dmg; it.fx.push({ type: 'hit', x: b.x, y: b.y, t: 0, dur: 0.15 }); }
     }
   }
   it.bolts = it.bolts.filter((b) => b.ttl > 0);
@@ -290,7 +320,7 @@ function stepInterior(state, wreck, cmds, dt) {
   }
   it.grenades = it.grenades.filter((g) => !g.done);
   for (const e of [...it.guards, ...it.turrets]) if (e.hp <= 0) { it.fx.push({ type: 'boom', x: e.x, y: e.y, t: 0, dur: 0.4, size: 14 }); state.events.push({ type: 'guardDown' }); }
-  it.guards = it.guards.filter((g) => g.hp > 0); it.turrets = it.turrets.filter((t) => t.hp > 0);
+  it.guards = it.guards.filter((g) => g.hp > 0); it.turrets = it.turrets.filter((t) => t.hp > 0); it.sentries = it.sentries.filter((x) => x.hp > 0);
   if (it.timer !== null) { it.timer -= dt; if (it.timer <= 0) blowUp(state, wreck); }
 }
 
@@ -316,16 +346,35 @@ export function stepBoarding(state, cmds, dt) {
   for (const id of (cmds && cmds.system && cmds.system.board) || []) tryBoard(state, id);
   for (const p of state.players) p.tele = Math.max(0, p.tele - dt);
   for (const w of dockTargets(state)) {
-    if (stepBreakin(state, w, cmds, dt) === 'failed') {
+    const result = stepBreakin(state, w, cmds, dt);
+    if (result === 'failed') {
       if (w.kind === 'wreck') { blowUp(state, w); continue; }
-      // A station does not blow up. It fights back: fighters scramble and the lock resets.
       w.breakin = null;
-      for (let i = 0; i < 2; i++) state.pirates.push({ id: state.nextId++, kind: 'fighter', x: w.x + (i ? 60 : -60), y: w.y - 60, vx: 0, vy: 0, heading: 0, hp: B.FIGHTER_HP, hpMax: B.FIGHTER_HP, mode: 'approach', timer: 0, burst: 0, burstTimer: 0, cool: 1, side: i ? 1 : -1 });
-      state.events.push({ type: 'stationFightsBack', name: w.name });
+      if (w.kind === 'station') {
+        // A station does not blow up. It fights back: fighters scramble and the lock resets.
+        for (let i = 0; i < 2; i++) state.pirates.push(makePirate(state, 'fighter', w.x + (i ? 60 : -60), w.y - 60));
+        state.events.push({ type: 'stationFightsBack', name: w.name });
+      } else {
+        // A cargo pod sounds an alarm that brings the next pirate wave at once.
+        state.spawn.timer = 0;
+        state.events.push({ type: 'podAlarm' });
+      }
+      continue;
+    }
+    if (result === 'solved' && w.kind === 'pod') {
+      // A pod has no inside. Its cargo is taken straight on board.
+      const credits = Math.round(randRange(state, B.POD_CREDITS[0], B.POD_CREDITS[1]) / 5) * 5, fuel = rand(state) < 0.5 ? B.CELL_FUEL : 0;
+      state.credits += credits; state.ship.fuel = Math.min(fuelMax(state.ship), state.ship.fuel + fuel);
+      const part = rand(state) < 0.15 ? (rand(state) < 0.5 ? 'hard' : 'system') : null;
+      if (part) state.ship.slots[part]++;
+      state.pods = state.pods.filter((x) => x !== w); state.known = state.known.filter((k) => k.id !== w.id);
+      if (state.ship.docked === w.id) state.ship.docked = null;
+      state.fx.push({ type: 'hit', x: w.x, y: w.y, t: 0, dur: 0.4 });
+      state.events.push({ type: 'podLooted', credits, fuel, part });
       continue;
     }
     if (w.interior && w.interior.live) stepInterior(state, w, cmds, dt);
   }
   // Everyone gets their health back once the whole crew is on the ship again.
-  if (!anyoneInside(state)) for (const p of state.players) p.hp = B.CREW_HP;
+  if (!anyoneInside(state)) for (const p of state.players) p.hp = crewHpMax(state.ship);
 }

@@ -56,6 +56,20 @@ export const B = {
   JUMP_FUEL: 25, JUMP_CHARGE: 8,
   // enemy alarm range per level
   ALARM_RANGE: [0, 900, 1400, 1400],
+  // break-in game for stations: a code that the Engineer screen shows and that changes now and then
+  CODE_TIME: 50, CODE_LEN: 4, CODE_DIGITS: 6, CODE_SHIFT: 16, CODE_PENALTY: 6,
+  // break-in game for cargo pods: stop the needle inside the mark three times
+  DIAL_TIME: 25, DIAL_SPEED: 3.0, DIAL_WIDTH: 0.95, DIAL_STAGES: 3, DIAL_MISSES: 3,
+  POD_RADIUS: 12, POD_CREDITS: [60, 140],
+  // distress calls
+  RAID_FIRST: [110, 180], RAID_GAP: [150, 250], RAID_TIME: 150, FAVOR_TIME: 180, FAVOR_DISCOUNT: 0.6, RAID_REWARD: 100,
+  // more ship upgrades
+  BOOST_POWER: 2, BOOST_BURN: 4, TANK_FUEL: 60, COIL_CHARGE: 4, COIL_FUEL: 15,
+  SALVAGE_TTL: 90, SALVAGE_PICKUP: 36, TRACTOR_RANGE: 230, TRACTOR_PULL: 130,
+  PD_RANGE: 90, PD_CHANCE: 0.35, DRONE_HULL: 1.5, DRONE_NODE: 2.5,
+  // boarding gear
+  RIFLE_STEP: 4, PACK_EXTRA: 2, SUIT_HP: 50, COIL_TELEPORT: 25, HACK_BONUS: 1.4, CHARGES: 2,
+  SENTRY_HP: 40, SENTRY_RANGE: 190, SENTRY_DMG: 6, SENTRY_COOLDOWN: 0.45,
 };
 
 // Station geometry in station-local pixels (sprite is 96 x 96).
@@ -88,3 +102,5 @@ export const WRECK_GEOM = {
   port: { x: -33, y: 10 }, portNormal: { x: -1, y: 0 },
   circles: [{ x: 0, y: -40, r: 22 }, { x: 0, y: 0, r: 28 }, { x: 0, y: 40, r: 26 }],
 };
+// Cargo pod geometry in pod-local pixels (sprite is 24 x 34).
+export const POD_GEOM = { ports: [{ x: 0, y: -19 }, { x: 0, y: 19 }] };

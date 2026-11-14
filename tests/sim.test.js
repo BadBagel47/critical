@@ -248,7 +248,8 @@ test('guards shoot at a player they can see, and the rifle kills them', () => {
   const { s, it, av } = boarded(4);
   it.turrets = []; it.guards = it.guards.slice(0, 1);
   const g = it.guards[0]; g.x = av.x + 90; g.y = av.y; g.home = { x: g.x, y: g.y };
-  run(s, { away: { 0: {} } }, 2.5);
+  // Guards do not hit with every shot, so give this one a little time.
+  for (let i = 0; i < 20 && s.players[0].hp === B.CREW_HP && s.players[0].inside !== null; i++) run(s, { away: { 0: {} } }, 1);
   assert.ok(s.players[0].hp < B.CREW_HP || s.players[0].inside === null, 'the guard hurt the player');
   if (s.players[0].inside !== null) {
     run(s, (st) => ({ away: { 0: { aim: { x: g.x, y: g.y }, fire: true } } }), 3);
@@ -666,4 +667,193 @@ test('the enemy alarm counts pirates far out, and a higher level reaches further
   run(s, {}, 0.1);
   assert.equal(s.alarm.count, 1);
   assert.ok(s.alarm.eta > 0);
+});
+
+// ---------- cargo pods, more break-in games and distress calls ----------
+test('a station lock wants the code the engineer can see, and the code changes', () => {
+  const s = quiet(createState(1)), st = station(s, 'neutral');
+  turnHostile(s, st); s.ship.x = st.x; s.ship.y = st.y + 3000; atStation(s, st);
+  step(s, { system: { board: [0] } }, DT);
+  const bk = st.breakin;
+  assert.equal(bk.kind, 'code');
+  assert.equal(bk.code.length, B.CODE_LEN);
+  const wrong = bk.code.map((d) => (d % B.CODE_DIGITS) + 1), t0 = bk.time;
+  step(s, { hack: { 0: wrong.map((digit) => ({ wreck: st.id, digit })) } }, DT);
+  assert.equal(st.lock, 'locked');
+  assert.ok(bk.time < t0 - B.CODE_PENALTY + 0.1, 'a wrong code costs time');
+  const first = bk.code.join('');
+  run(s, {}, B.CODE_SHIFT + 0.5);
+  assert.notEqual(bk.code.join(''), first, 'the code has changed');
+  step(s, { hack: { 0: bk.code.map((digit) => ({ wreck: st.id, digit })) } }, DT);
+  assert.equal(st.lock, 'open');
+});
+
+test('a cargo pod opens after three good stops of the needle and gives its cargo', () => {
+  const s = quiet(createState(1)), pod = s.pods[0];
+  s.ship.docked = pod.id;
+  step(s, { system: { board: [0] } }, DT);
+  const bk = pod.breakin;
+  assert.equal(bk.kind, 'dial');
+  for (let stage = 0; stage < B.DIAL_STAGES; stage++) {
+    for (let i = 0; i < 2000 && Math.abs(((bk.angle - bk.mark + Math.PI * 3) % (Math.PI * 2)) - Math.PI) > bk.width / 4; i++) step(s, {}, DT);
+    step(s, { hack: { 0: [{ wreck: pod.id, stop: true }] } }, DT);
+  }
+  assert.ok(!s.pods.includes(pod), 'the pod is emptied and gone');
+  assert.ok(s.credits >= B.POD_CREDITS[0]);
+  assert.equal(s.ship.docked, null);
+});
+
+test('three misses on a cargo pod set off an alarm that brings pirates', () => {
+  const s = quiet(createState(1)), pod = s.pods[0];
+  s.ship.docked = pod.id;
+  step(s, { system: { board: [0] } }, DT);
+  const bk = pod.breakin;
+  for (let n = 0; n < B.DIAL_MISSES; n++) {
+    for (let i = 0; i < 2000 && Math.abs(((bk.angle - bk.mark + Math.PI * 3) % (Math.PI * 2)) - Math.PI) < bk.width; i++) step(s, {}, DT);
+    step(s, { hack: { 0: [{ wreck: pod.id, stop: true }] } }, DT);
+  }
+  run(s, {}, 0.1);
+  assert.ok(s.pods.includes(pod), 'the pod is still there');
+  assert.equal(pod.breakin, null, 'with a fresh lock');
+  assert.ok(s.pirates.length > 0, 'and pirates are on their way');
+});
+
+test('a station under attack calls for help, and a neutral one repays it with a discount and its shipyard', () => {
+  const s = quiet(createState(1));
+  s.sector = 0; s.charts.push(1); s.ship.fuel = 90;
+  step(s, { captain: { jump: 1 } }, DT); run(s, {}, B.JUMP_CHARGE + 0.2);
+  s.spawn.timer = 1e9;
+  const st = station(s, 'neutral');
+  assert.ok(st.shipyard, 'this neutral station has a shipyard');
+  atStation(s, st); s.credits = 1000;
+  step(s, { shop: [{ action: 'buy', item: 'armor' }] }, DT);
+  assert.equal(s.ship.mods.armor, undefined, 'closed to strangers');
+  s.ship.docked = null; s.ship.x = st.x + 2500; s.ship.y = st.y;
+  s.stations = [st]; s.raidTimer = 0.1;
+  run(s, {}, 0.5);
+  assert.ok(s.raid && s.raid.station === st.id);
+  const raiders = s.pirates.filter((p) => p.raid === s.raid.id);
+  assert.ok(raiders.length >= 2);
+  run(s, {}, 5);
+  assert.ok(raiders.every((p) => Math.hypot(p.x - st.x, p.y - st.y) < 500), 'the raiders stay at the station');
+  for (const p of raiders) hurtPirate(s, p, 999);
+  run(s, {}, 0.2);
+  assert.equal(s.raid, null);
+  assert.ok(st.favor > 0);
+  assert.equal(st.align, 'neutral', 'it stays neutral');
+  atStation(s, st);
+  const before = s.credits;
+  step(s, { shop: [{ action: 'buy', item: 'armor' }] }, DT);
+  assert.equal(s.ship.mods.armor, 1, 'the shipyard is open now');
+  assert.equal(before - s.credits, Math.round(CATALOG.armor.price * B.FAVOR_DISCOUNT), 'at a discount');
+  run(s, {}, B.FAVOR_TIME + 1);
+  assert.equal(st.favor, 0, 'the favour runs out');
+});
+
+test('a distress call that nobody answers just ends', () => {
+  const s = quiet(createState(1));
+  s.raidTimer = 0.1; s.ship.x = 9000; s.ship.y = 9000;
+  run(s, {}, 0.5);
+  assert.ok(s.raid);
+  run(s, {}, B.RAID_TIME + 1);
+  assert.equal(s.raid, null);
+  assert.equal(s.pirates.length, 0, 'the raiders are gone');
+  assert.ok(s.stations.every((st) => st.favor === 0));
+});
+
+// ---------- more upgrades and boarding gear ----------
+import { fuelMax, jumpCharge, jumpFuel, crewHpMax, carryMax, rifleDmg, teleCooldown, itemsOf } from '../src/sim/upgrades.js';
+
+test('every catalog item belongs to a tab, and boarding gear is sold without a shipyard', () => {
+  for (const id of Object.keys(CATALOG)) assert.ok(['hull', 'system', 'armory'].includes(CATALOG[id].tab), id);
+  assert.ok(itemsOf('armory').length >= 6);
+  const s = quiet(createState(1));
+  atStation(s, station(s, 'neutral')); s.credits = 1000;
+  step(s, { shop: [{ action: 'buy', item: 'pack' }] }, DT);
+  assert.equal(s.ship.mods.pack, 1);
+  step(s, { shop: [{ action: 'buy', item: 'tank' }] }, DT);
+  assert.equal(s.ship.mods.tank, undefined, 'a hull upgrade still needs a shipyard');
+});
+
+test('fuel tank, jump coils and the afterburner change how the ship travels', () => {
+  const s = quiet(createState(1));
+  s.credits = 2000; buyUpgrade(s, 'tank'); buyUpgrade(s, 'jumpcoil'); buyUpgrade(s, 'boost');
+  assert.equal(fuelMax(s.ship), B.FUEL_MAX + B.TANK_FUEL);
+  assert.equal(jumpCharge(s.ship), B.COIL_CHARGE);
+  assert.equal(jumpFuel(s.ship), B.COIL_FUEL);
+  const plain = quiet(createState(1));
+  s.ship.x = plain.ship.x = 6000; s.ship.fuel = plain.ship.fuel = 100;
+  run(s, { captain: { throttle: 1, boost: true } }, 6); run(plain, { captain: { throttle: 1, boost: true } }, 6);
+  assert.ok(speedOf(s.ship) > speedOf(plain.ship) * 1.5, 'the afterburner is much faster');
+  assert.ok(100 - s.ship.fuel > (100 - plain.ship.fuel) * 3, 'and burns much more fuel');
+});
+
+test('destroyed pirates leave salvage, and the tractor beam pulls it in', () => {
+  const s = quiet(createState(1));
+  s.ship.x = 6000; s.ship.y = 6000;
+  const gb = target(s, 6200, 6000, 'gunboat', 10);
+  hurtPirate(s, gb, 99);
+  assert.equal(s.salvage.length, 2);
+  const credits = s.credits;
+  run(s, {}, 3);
+  assert.equal(s.credits, credits, 'too far away to collect');
+  s.ship.mods.tractor = 1;
+  run(s, {}, 4);
+  assert.equal(s.salvage.length, 0);
+  assert.ok(s.credits > credits);
+});
+
+test('point defense stops some incoming fire, and repair drones mend the ship', () => {
+  const hits = (pd) => {
+    const s = quiet(createState(1));
+    s.ship.x = 6000; s.ship.y = 6000; s.ship.power.shields = 0;
+    if (pd) s.ship.mods.pd = 1;
+    for (let i = 0; i < 200; i++) { s.bolts.push({ x: 6000, y: 5800, vx: 0, vy: 290, ttl: 1.5, owner: 'pirate', dmg: 1 }); run(s, {}, 0.1); }
+    run(s, {}, 2);
+    return B.SHIELD_MAX + B.HULL_MAX - s.ship.shield - s.ship.hull;
+  };
+  const without = hits(false), withPd = hits(true);
+  assert.ok(withPd < without * 0.85, `point defense lets less through (${withPd} against ${without})`);
+  const s = quiet(createState(1));
+  s.ship.power.repair = 0; s.ship.hull = 100; s.ship.nodes[1].hp = 40; s.ship.mods.drones = 1;
+  run(s, {}, 10);
+  assert.ok(s.ship.hull > 110 && s.ship.nodes[1].hp > 60);
+});
+
+test('boarding gear changes what a boarder can do', () => {
+  const plain = quiet(createState(1));
+  assert.equal(carryMax(plain.ship), B.CARRY_MAX);
+  const s = quiet(createState(1)), w = dockAt(s);
+  s.credits = 3000;
+  for (const id of ['rifle', 'rifle', 'pack', 'suit', 'coils', 'charge', 'sentry', 'hack']) buyUpgrade(s, id);
+  assert.equal(rifleDmg(s.ship), B.RIFLE_DMG + 2 * B.RIFLE_STEP);
+  assert.equal(carryMax(s.ship), B.CARRY_MAX + B.PACK_EXTRA);
+  assert.equal(crewHpMax(s.ship), B.CREW_HP + B.SUIT_HP);
+  assert.equal(teleCooldown(s.ship), B.COIL_TELEPORT);
+  run(s, {}, 0.1);
+  assert.equal(s.players[0].hp, B.CREW_HP + B.SUIT_HP);
+  step(s, { system: { board: [0] } }, DT);
+  const it = w.interior, av = it.avatars[0];
+  assert.equal(av.charges, B.CHARGES); assert.equal(av.sentries, 1);
+  // The breaching charge opens the vault at once and alerts the guards.
+  const door = it.rooms[it.vault].door;
+  av.x = door.x; av.y = door.y + (door.y < 9 * TILE ? 14 : -14);
+  step(s, { away: { 0: { charge: true } } }, DT);
+  assert.equal(it.doorOpen, true);
+  assert.ok(it.guards.every((g) => g.mode === 'alert'));
+  // The deployable turret shoots a guard on its own.
+  it.turrets = []; it.guards = it.guards.slice(0, 1);
+  const g = it.guards[0]; av.x = it.entry.x + 40; av.y = it.entry.y; g.x = av.x + 80; g.y = av.y; g.hp = 12;
+  step(s, { away: { 0: { deploy: true } } }, DT);
+  assert.equal(it.sentries.length, 1);
+  av.x = it.entry.x; av.y = it.entry.y - 20;
+  run(s, { away: { 0: {} } }, 4);
+  assert.equal(it.guards.length, 0, 'the sentry dealt with the guard');
+});
+
+test('a hacking kit gives more time in a break-in', () => {
+  const a = quiet(createState(1)), b = quiet(createState(1));
+  b.ship.mods.hack = 1;
+  for (const s of [a, b]) { s.ship.docked = s.wrecks[0].id; step(s, { system: { board: [0] } }, DT); }
+  assert.ok(b.wrecks[0].breakin.total > a.wrecks[0].breakin.total * 1.3);
 });

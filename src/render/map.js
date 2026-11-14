@@ -3,7 +3,7 @@ import { VIEW_W, VIEW_H, COL } from '../config.js';
 import { B } from '../sim/balance.js';
 import { MAP_N, visionSources, isVisible } from '../sim/map.js';
 import { currentSector, jumpBlocked } from '../sim/sectors.js';
-import { has } from '../sim/upgrades.js';
+import { has, jumpCharge, jumpFuel } from '../sim/upgrades.js';
 import { rect, label } from './draw.js';
 import { ALIGN_COL } from './space.js';
 
@@ -51,6 +51,8 @@ export function drawMap(ctx, state, view, assets) {
   for (const s of sources) { const p = toMap(s.x, s.y); ring(ctx, p.x, p.y, s.r * K, SOURCE_COL[s.kind]); }
   for (const k of state.known) {
     const p = toMap(k.x, k.y);
+    if (k.kind === 'pod') { rect(ctx, Math.round(p.x) - 2, Math.round(p.y) - 2, 4, 4, COL.ochre[1], COL.out); font.draw(ctx, 'CARGO POD', p.x + 5, p.y - 3, COL.ochre[1]); continue; }
+    if (state.raid && state.raid.station === k.id) { const pulse = 8 + ((state.time * 12) % 12); ctx.strokeStyle = COL.ochre[3]; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p.x, p.y, pulse, 0, 7); ctx.stroke(); font.draw(ctx, 'DISTRESS CALL', p.x + 8, p.y + 12, COL.ochre[3]); }
     if (k.kind === 'station') {
       stationIcon(ctx, Math.round(p.x), Math.round(p.y), ALIGN_COL[k.align]);
       font.draw(ctx, k.name, p.x + 8, p.y - 8, ALIGN_COL[k.align]);
@@ -82,7 +84,7 @@ export function drawMap(ctx, state, view, assets) {
   const legend = [[COL.captain, 'YOU'], [COL.ochre[2], 'WRECK'], [COL.ember[1], 'PIRATE'], [COL.engineer, 'FRIENDLY'], [COL.steel[3], 'NEUTRAL'], [COL.ember[1], 'HOSTILE']];
   legend.forEach(([c, t], i) => { const x = PX + 12 + (i % 3) * 88, y = 52 + Math.floor(i / 3) * 13; rect(ctx, x, y, 6, 6, c, COL.out); font.draw(ctx, t, x + 10, y, COL.dim); });
   font.draw(ctx, 'THINGS THAT STAND STILL STAY AS LAST SEEN.', PX + 12, 82, COL.faint);
-  font.draw(ctx, 'STAR CHARTS', PX + 12, 104, COL.text); font.draw(ctx, `JUMP COSTS ${B.JUMP_FUEL} FUEL`, VIEW_W - 12, 104, COL.dim, { align: 'r' });
+  font.draw(ctx, 'STAR CHARTS', PX + 12, 104, COL.text); font.draw(ctx, `JUMP COSTS ${jumpFuel(ship)} FUEL`, VIEW_W - 12, 104, COL.dim, { align: 'r' });
   rect(ctx, PX + 12, 116, VIEW_W - PX - 24, 1, COL.line);
   const m = view.mouse;
   for (const r of chartRows(state)) {
@@ -90,7 +92,7 @@ export function drawMap(ctx, state, view, assets) {
     const over = m.x >= r.x && m.x < r.x + r.w && m.y >= r.y && m.y < r.y + r.h;
     rect(ctx, r.x, r.y, r.w, r.h, over && charted ? '#1c2140' : '#141420', jumping ? COL.ion[2] : over && charted ? COL.ion[0] : COL.line);
     font.draw(ctx, charted ? to.name : 'UNKNOWN SECTOR', r.x + 6, r.y + 4, charted ? COL.ion[2] : COL.dim);
-    font.draw(ctx, jumping ? `JUMP IN ${Math.ceil(B.JUMP_CHARGE - state.jump.t)} S` : charted ? (why || 'CLICK TO JUMP') : 'NO CHART', r.x + r.w - 6, r.y + 4, jumping ? COL.ion[3] : charted && !why ? COL.ochre[2] : COL.faint, { align: 'r' });
+    font.draw(ctx, jumping ? `JUMP IN ${Math.ceil(jumpCharge(ship) - state.jump.t)} S` : charted ? (why || 'CLICK TO JUMP') : 'NO CHART', r.x + r.w - 6, r.y + 4, jumping ? COL.ion[3] : charted && !why ? COL.ochre[2] : COL.faint, { align: 'r' });
     font.draw(ctx, charted ? to.hint : 'FIND OR BUY THE CHART', r.x + 6, r.y + 16, COL.dim);
   }
   font.draw(ctx, view.post === 'captain' ? 'THE CAPTAIN STARTS AND STOPS A JUMP HERE' : 'ONLY THE CAPTAIN (1) CAN START A JUMP', PX + 12, 222, view.post === 'captain' ? COL.captain : COL.faint);
@@ -131,7 +133,7 @@ export function drawMiniMap(ctx, state, x, y) {
   }
   const at = (wx, wy) => ({ x: x + (wx - ship.x + range) * k, y: y + (wy - ship.y + range) * k });
   ring(ctx, x + size / 2, y + size / 2, B.VISION_SHIP * k, COL.ion[0]);
-  for (const kn of state.known) { const p = at(kn.x, kn.y); rect(ctx, Math.round(p.x) - 1, Math.round(p.y) - 1, kn.kind === 'station' ? 4 : 3, kn.kind === 'station' ? 4 : 3, kn.kind === 'station' ? ALIGN_COL[kn.align] : COL.ochre[2]); }
+  for (const kn of state.known) { const p = at(kn.x, kn.y); rect(ctx, Math.round(p.x) - 1, Math.round(p.y) - 1, kn.kind === 'station' ? 4 : kn.kind === 'pod' ? 2 : 3, kn.kind === 'station' ? 4 : kn.kind === 'pod' ? 2 : 3, kn.kind === 'station' ? ALIGN_COL[kn.align] : COL.ochre[2]); }
   for (const b of state.buoys) { const p = at(b.x, b.y); rect(ctx, Math.round(p.x) - 1, Math.round(p.y) - 1, 2, 3, COL.engineer); }
   for (const p of state.pirates) if (isVisible(state, p.x, p.y, sources)) { const mm = at(p.x, p.y); rect(ctx, Math.round(mm.x) - 1, Math.round(mm.y) - 1, 2, 2, COL.ember[1]); }
   ctx.restore();

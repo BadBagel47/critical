@@ -1,9 +1,10 @@
 // Sectors: the world is split into sectors, and a star chart unlocks the jump to the next one.
 // Only the sector the ship is in is simulated. The others are stored as they were left.
 import { B } from './balance.js';
-import { rand, randRange, TAU, dist } from './util.js';
+import { rand, randRange, TAU, dist, headingTo } from './util.js';
 import { createMap } from './map.js';
 import { createStation } from './stations.js';
+import { jumpCharge, jumpFuel } from './upgrades.js';
 
 const SPEC = [
   { name: 'KESTREL DRIFT', tier: 0, links: [1, 2], hint: 'QUIET  ·  A FRIENDLY SHIPYARD' },
@@ -19,12 +20,23 @@ export function createWreck(s, x, y, difficulty) {
   return { id: s.nextId++, kind: 'wreck', x, y, heading: randRange(s, 0, TAU), difficulty, interior: null, lock: 'locked', breakin: null };
 }
 
+export function createPod(s, x, y) {
+  return { id: s.nextId++, kind: 'pod', x, y, heading: randRange(s, 0, TAU), difficulty: 1, interior: null, lock: 'locked', breakin: null };
+}
+
+// A new pirate of the given kind, facing the ship. Later sectors make them tougher.
+export function makePirate(state, kind, x, y) {
+  const ship = state.ship, scale = 1 + B.TIER_HP * currentSector(state).tier;
+  const hp = Math.round((kind === 'gunboat' ? B.GUNBOAT_HP : B.FIGHTER_HP) * scale);
+  return { id: state.nextId++, kind, x, y, vx: 0, vy: 0, heading: headingTo(ship.x - x, ship.y - y), hp, hpMax: hp, mode: 'approach', timer: 0, burst: 0, burstTimer: 0, cool: randRange(state, 0.3, 1.2), side: rand(state) < 0.5 ? -1 : 1, raid: null };
+}
+
 const at = (a, d) => ({ x: Math.sin(a) * d, y: -Math.cos(a) * d });
 
 // Fill the world with a fresh sector around the origin.
 export function generateSector(s, id) {
   const sec = s.sectors[id], tier = sec.tier;
-  s.wrecks = []; s.rocks = []; s.stations = []; s.map = createMap(); s.known = []; s.buoys = [];
+  s.wrecks = []; s.rocks = []; s.stations = []; s.pods = []; s.map = createMap(); s.known = []; s.buoys = [];
   const base = rand(s) * TAU;
   const wreckCount = id === 2 ? 5 : 3;
   for (let i = 0; i < wreckCount; i++) {
@@ -45,14 +57,15 @@ export function generateSector(s, id) {
     if (align !== 'hostile') st.chart = sec.links.filter((l) => l !== 0)[i % Math.max(1, sec.links.filter((l) => l !== 0).length)] ?? null;
     s.stations.push(st);
   });
+  for (let i = 0; i < 3; i++) { const p = at(base + 0.5 + i * 2.1 + randRange(s, -0.4, 0.4), randRange(s, 700, 2000)); s.pods.push(createPod(s, p.x, p.y)); }
   for (let i = 0; i < 46; i++) {
     const p = at(rand(s) * TAU, randRange(s, 260, 2400));
     const rock = { id: s.nextId++, x: p.x, y: p.y, kind: Math.floor(rand(s) * 3), spin: randRange(s, 0, TAU) };
     rock.r = [13, 8, 19][rock.kind];
-    if ([...s.wrecks, ...s.stations].some((w) => dist(w.x, w.y, rock.x, rock.y) < 190)) continue;
+    if ([...s.wrecks, ...s.stations, ...s.pods].some((w) => dist(w.x, w.y, rock.x, rock.y) < 190)) continue;
     s.rocks.push(rock);
   }
-  s.pirates = []; s.bolts = []; s.rockets = []; s.probes = []; s.beams = [];
+  s.pirates = []; s.bolts = []; s.rockets = []; s.probes = []; s.beams = []; s.salvage = []; s.raid = null; s.raidTimer = randRange(s, B.RAID_FIRST[0], B.RAID_FIRST[1]);
   if (sec.boss) {
     const p = at(base + 3.3, 1000);
     s.pirates.push({ id: s.nextId++, kind: 'cruiser', x: p.x, y: p.y, vx: 0, vy: 0, heading: 0, hp: B.CRUISER_HP, hpMax: B.CRUISER_HP, mode: 'approach', timer: 0, cool: 1, spawn: 10, guns: [0, 0.4, 0.8] });
@@ -61,7 +74,7 @@ export function generateSector(s, id) {
   sec.visited = true;
 }
 
-const KEEP = ['wrecks', 'rocks', 'stations', 'map', 'known', 'buoys'];
+const KEEP = ['wrecks', 'rocks', 'stations', 'pods', 'map', 'known', 'buoys'];
 
 // Why the ship cannot jump to a sector right now, or null when it can.
 export function jumpBlocked(state, to) {
@@ -71,7 +84,7 @@ export function jumpBlocked(state, to) {
   if (!state.charts.includes(to)) return 'NO STAR CHART';
   if (ship.docked) return 'UNDOCK FIRST';
   if (state.players.some((p) => p.inside !== null)) return 'CREW STILL AWAY';
-  if (ship.fuel < B.JUMP_FUEL) return 'NOT ENOUGH FUEL';
+  if (ship.fuel < jumpFuel(ship)) return 'NOT ENOUGH FUEL';
   return null;
 }
 
@@ -88,18 +101,18 @@ export function stepJump(state, cmd, dt) {
   if (!state.jump) return;
   if (jumpBlocked(state, state.jump.to)) { state.jump = null; state.events.push({ type: 'jumpCancelled' }); return; }
   state.jump.t += dt;
-  if (state.jump.t < B.JUMP_CHARGE) return;
+  if (state.jump.t < jumpCharge(ship)) return;
   // Jump: store this sector as it is, then load or create the next one.
   const from = currentSector(state), to = state.jump.to;
   from.saved = {}; for (const k of KEEP) from.saved[k] = state[k];
-  ship.fuel -= B.JUMP_FUEL;
+  ship.fuel -= jumpFuel(ship);
   ship.dartStock += state.darts.length; state.darts = []; ship.dartsOut = false;
   state.sector = to; state.jump = null;
   const next = state.sectors[to];
   if (next.saved) {
     for (const k of KEEP) state[k] = next.saved[k];
     next.saved = null;
-    state.pirates = []; state.bolts = []; state.rockets = []; state.probes = []; state.beams = [];
+    state.pirates = []; state.bolts = []; state.rockets = []; state.probes = []; state.beams = []; state.salvage = []; state.raid = null; state.raidTimer = randRange(state, B.RAID_GAP[0], B.RAID_GAP[1]);
     state.spawn = { timer: B.FIRST_WAVE_DELAY * (B.PIRATE_PACE[Math.min(3, state.players.length)] || 1), wave: Math.floor(state.spawn.wave / 2) };
   } else generateSector(state, to);
   ship.x = 0; ship.y = 0; ship.vx = 0; ship.vy = 0; ship.throttle = 0; ship.pulse = null;

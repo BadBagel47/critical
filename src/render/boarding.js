@@ -6,7 +6,7 @@ import { dist } from '../sim/util.js';
 import { sprite, rect, label, bar } from './draw.js';
 import { drawStars } from './space.js';
 import { findDock } from '../sim/dock.js';
-import { hullMax, shieldMax, level } from '../sim/upgrades.js';
+import { hullMax, shieldMax, level, carryMax, crewHpMax } from '../sim/upgrades.js';
 import { alarmText } from './hud.js';
 
 export const OX = 112, OY = 38;
@@ -88,6 +88,7 @@ export function drawBoarding(ctx, state, view, assets) {
     if (it.takeover > 0) { ctx.fillStyle = COL.acid[2]; ctx.fillRect(t.x - 7, t.y + 8, Math.round(14 * Math.min(1, it.takeover)), 2); }
   }
   for (const t of it.turrets) sprite(ctx, img.turret_guard, t.x, t.y, t.heading);
+  for (const s of it.sentries) { glow(ctx, s.x, s.y, 9, COL.ion[2], 0.12); sprite(ctx, img.turret_pulse, s.x, s.y, s.heading, 6, 10.5); }
   for (const g of it.guards) {
     sprite(ctx, img.guard, g.x, g.y, g.heading);
     if (g.mode === 'alert') { ctx.fillStyle = COL.ember[2]; ctx.fillRect(g.x - 1, g.y - 14, 2, 4); ctx.fillRect(g.x - 1, g.y - 9, 2, 2); }
@@ -117,16 +118,19 @@ export function drawBoarding(ctx, state, view, assets) {
   else { const low = it.timer < 30; label(ctx, font, VIEW_W / 2 + 60, 8, 'REACTOR UNSTABLE   ' + fmt(Math.max(0, it.timer)), { anchor: 'c', fg: low ? COL.ember[2] : COL.ochre[2], border: low ? COL.ember[0] : COL.ochre[0] }); }
   // Only the best enemy alarm reaches the people inside.
   if (level(state.ship, 'alarm') >= 3 && alarmText(state)) label(ctx, font, VIEW_W / 2 + 60, 24, alarmText(state), { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
-  label(ctx, font, VIEW_W - 8, 8, `CARRY  ${me ? me.carry.length : 0} / ${B.CARRY_MAX}`, { anchor: 'r', fg: COL.ochre[2] });
+  label(ctx, font, VIEW_W - 8, 8, `CARRY  ${me ? me.carry.length : 0} / ${carryMax(state.ship)}`, { anchor: 'r', fg: COL.ochre[2] });
   label(ctx, font, VIEW_W - 8, 22, `CREDITS  ${state.credits}`, { anchor: 'r', fg: COL.dim });
   rect(ctx, 8, 332, 100, 22, COL.panel, COL.line);
-  font.draw(ctx, 'HP', 12, 340, COL.dim); bar(ctx, 28, 340, 74, player.hp / B.CREW_HP, player.hp < 40 ? COL.ember[1] : COL.engineer);
+  font.draw(ctx, 'HP', 12, 340, COL.dim); bar(ctx, 28, 340, 74, player.hp / crewHpMax(state.ship), player.hp < 40 ? COL.ember[1] : COL.engineer);
   x = label(ctx, font, 114, 336, 'TELEPORT READY', { fg: COL.ion[2], border: COL.ion[0] }) + 6;
   x = label(ctx, font, x, 336, 'RIFLE', { fg: COL.out, bg: COL.gunner, border: null, pad: 6 }) + 4;
-  x = label(ctx, font, x, 336, 'GRENADES  ' + (me ? me.grenades : 0), { fg: me && me.grenades ? COL.text : COL.faint }) + 10;
+  x = label(ctx, font, x, 336, 'GRENADES  ' + (me ? me.grenades : 0), { fg: me && me.grenades ? COL.text : COL.faint }) + 4;
+  if (me && me.charges) x = label(ctx, font, x, 336, 'C  CHARGES  ' + me.charges) + 4;
+  if (me && me.sentries) x = label(ctx, font, x, 336, 'T  TURRET') + 4;
+  x += 6;
   font.draw(ctx, 'SHIP', x, 334, COL.dim); bar(ctx, x + 26, 333, 50, state.ship.shield / shieldMax(state.ship), COL.ion[1], 5); bar(ctx, x + 26, 340, 50, state.ship.hull / hullMax(state.ship), COL.steel[2], 5);
   if (state.time - state.ship.lastHit < 1.5) font.draw(ctx, 'UNDER FIRE', x, 346, COL.ember[2]);
-  font.draw(ctx, 'W A S D MOVE  ·  CLICK FIRE  ·  G GRENADE  ·  F USE', VIEW_W - 8, 346, COL.faint, { align: 'r' });
+  if (x < 470) font.draw(ctx, x < 400 ? 'W A S D MOVE  ·  CLICK FIRE  ·  G GRENADE  ·  F USE' : 'G GRENADE  ·  F USE', VIEW_W - 8, 346, COL.faint, { align: 'r' });
   if (me) {
     const door = it.rooms[it.vault].door;
     if (me.x < TILE * 2.2 && Math.abs(me.y - it.entry.y) < TILE * 1.5) label(ctx, font, OX + me.x + 14, OY + me.y - 26, 'F  BACK TO THE SHIP', { fg: COL.acid[2], border: COL.acid[0] });

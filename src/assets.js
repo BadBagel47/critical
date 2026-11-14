@@ -1,7 +1,7 @@
 import { BitmapFont } from './font.js';
 
 const SPRITES = ['frigate', 'frigate_blueprint', 'turret_pulse', 'fighter', 'gunboat', 'dart', 'interceptor', 'wreck', 'rock0', 'rock1', 'rock2', 'boarder', 'guard', 'turret_guard', 'crate', 'cell',
-  'station_friendly', 'station_neutral', 'station_hostile', 'cruiser', 'mod_rockets', 'mod_emit', 'mod_heavy', 'mod_bay', 'mod_armor', 'chart', 'part', 'rocket'];
+  'station_friendly', 'station_neutral', 'station_hostile', 'cruiser', 'mod_rockets', 'mod_emit', 'mod_heavy', 'mod_bay', 'mod_armor', 'chart', 'part', 'rocket', 'pod'];
 
 function loadImage(url) {
   return new Promise((resolve, reject) => {

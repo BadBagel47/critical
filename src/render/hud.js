@@ -4,7 +4,8 @@ import { B } from '../sim/balance.js';
 import { nodeStatus } from '../sim/state.js';
 import { speedOf, weaponPower, weaponsOf } from '../sim/step.js';
 import { findDock } from '../sim/dock.js';
-import { has, level, hullMax, shieldMax } from '../sim/upgrades.js';
+import { has, level, hullMax, shieldMax, fuelMax, jumpCharge } from '../sim/upgrades.js';
+import { dist } from '../sim/util.js';
 import { currentSector } from '../sim/sectors.js';
 import { rect, label, bar } from './draw.js';
 import { drawMiniMap } from './map.js';
@@ -41,7 +42,7 @@ export function alarmText(state) {
 export function drawBars(ctx, font, state, x = 8, y = 314) {
   const ship = state.ship;
   rect(ctx, x, y, 136, 40, COL.panel, COL.line);
-  font.draw(ctx, 'FUEL', x + 4, y + 5, COL.dim); bar(ctx, x + 46, y + 5, 84, ship.fuel / B.FUEL_MAX, ship.fuel < B.FUEL_MAX * 0.2 ? COL.ember[1] : COL.ochre[2]);
+  font.draw(ctx, 'FUEL', x + 4, y + 5, COL.dim); bar(ctx, x + 46, y + 5, 84, ship.fuel / fuelMax(ship), ship.fuel < fuelMax(ship) * 0.2 ? COL.ember[1] : COL.ochre[2]);
   font.draw(ctx, 'SHIELD', x + 4, y + 17, COL.dim); bar(ctx, x + 46, y + 17, 84, ship.shield / shieldMax(ship), COL.ion[1]);
   font.draw(ctx, 'HULL', x + 4, y + 29, COL.dim); bar(ctx, x + 46, y + 29, 84, ship.hull / hullMax(ship), ship.hull < hullMax(ship) * 0.3 ? COL.ember[1] : COL.steel[2]);
 }
@@ -67,10 +68,10 @@ function dockedLine(state) {
   const inside = state.players.filter((p) => p.inside === t.id).length;
   if (inside) return { text: `${inside} INSIDE  ·  E UNDOCKS AND TELEPORTS ${inside === 1 ? 'THEM' : 'THEM ALL'} HOME`, ...warm };
   if (t.kind === 'station' && t.align !== 'hostile') return { text: `DOCKED AT ${t.name}  ·  F SERVICES  ·  E UNDOCK`, ...calm };
-  const what = t.kind === 'station' ? t.name : 'WRECK';
+  const what = t.kind === 'station' ? t.name : t.kind === 'pod' ? 'CARGO POD' : 'WRECK';
   if (t.lock !== 'open') {
     if (t.breakin && t.breakin.started) return { text: `${what}  ·  F BACK TO THE LOCK  ·  0:${String(Math.max(0, Math.ceil(t.breakin.time))).padStart(2, '0')}`, ...warm };
-    return { text: `DOCKED AT ${what}  ·  F BYPASS THE LOCK  ·  E UNDOCK` + (has(ship, 'tscan') ? `  ·  RISK ${RISK[t.difficulty]}` : ''), ...calm };
+    return { text: `DOCKED AT ${what}  ·  F ${t.kind === 'pod' ? 'PICK' : 'BYPASS'} THE LOCK  ·  E UNDOCK` + (has(ship, 'tscan') && t.kind !== 'pod' ? `  ·  RISK ${RISK[t.difficulty]}` : ''), ...calm };
   }
   return { text: tele > 0 ? `DOCKED  ·  TELEPORTER CHARGING  ${Math.ceil(tele)} S  ·  E UNDOCK` : `DOCKED AT ${what}  ·  F BOARD  ·  E UNDOCK`, ...calm };
 }
@@ -82,12 +83,13 @@ export function drawHud(ctx, state, view, assets, dock) {
   label(ctx, font, VIEW_W - 8, 24, `${currentSector(state).name}   KILLS  ${state.kills}   ${fmtTime(state.time)}`, { anchor: 'r', fg: COL.dim });
   // Status lines at the top centre, most urgent first.
   const lines = [];
-  if (state.jump) lines.push({ text: `JUMPING TO ${state.sectors[state.jump.to].name} IN ${Math.ceil(B.JUMP_CHARGE - state.jump.t)} S`, color: COL.ion[3], border: COL.ion[1] });
+  if (state.jump) lines.push({ text: `JUMPING TO ${state.sectors[state.jump.to].name} IN ${Math.ceil(jumpCharge(ship) - state.jump.t)} S`, color: COL.ion[3], border: COL.ion[1] });
   if (dock && dock.docked) { const d = dockedLine(state); if (d) lines.push(d); }
   else if (dock && dock.ready) lines.push({ text: view.post === 'captain' ? 'PRESS E TO DOCK' : 'IN POSITION TO DOCK', color: COL.ion[3], border: COL.ion[1] });
   else if (dock && dock.tooFast) lines.push({ text: 'TOO FAST TO DOCK', color: COL.ochre[2], border: COL.ochre[0] });
   else if (dock && view.post === 'captain') lines.push({ text: 'DOCKING  ·  HOLD COURSE', color: COL.ion[2], border: COL.ion[0] });
   const alert = shipAlert(state); if (alert) lines.push(alert);
+  if (state.raid) { const st = state.stations.find((x) => x.id === state.raid.station); if (st) lines.push({ text: `DISTRESS CALL  ·  ${st.name}  ·  ${Math.round(dist(ship.x, ship.y, st.x, st.y) / 10)} M  ·  ${fmtTime(state.raid.timer)}`, color: COL.ochre[3], border: COL.ochre[1] }); }
   const alarm = alarmText(state); if (alarm) lines.push({ text: alarm, color: COL.ember[2], border: COL.ember[0] });
   lines.slice(0, 2).forEach((l, i) => label(ctx, font, VIEW_W / 2, 8 + i * 16, l.text, { anchor: 'c', fg: l.color, border: l.border }));
   drawBars(ctx, font, state);
@@ -102,7 +104,7 @@ export function drawHud(ctx, state, view, assets, dock) {
     rect(ctx, zero, 330, 1, 8, COL.text);
     font.draw(ctx, 'SPEED', 154, 343, COL.dim); font.draw(ctx, String(Math.round(speedOf(ship))), 208, 343, COL.text);
     if (has(ship, 'bay')) label(ctx, font, 306, 333, ship.dartsOut ? `DARTS OUT  ${state.darts.length}  ·  R RECALL` : `DARTS  ${ship.dartStock}  ·  R LAUNCH`, { fg: ship.dartsOut ? COL.ion[2] : COL.text, border: ship.dartsOut ? COL.ion[0] : COL.line });
-    font.draw(ctx, 'W S THROTTLE  ·  A D TURN  ·  X STOP  ·  E DOCK', VIEW_W - 8, 346, COL.faint, { align: 'r' });
+    font.draw(ctx, has(ship, 'boost') ? 'W S THROTTLE  ·  A D TURN  ·  SHIFT BOOST  ·  E DOCK' : 'W S THROTTLE  ·  A D TURN  ·  X STOP  ·  E DOCK', VIEW_W - 8, 346, ship.boosting ? COL.ion[2] : COL.faint, { align: 'r' });
   } else if (view.post === 'gunner') {
     const off = weaponPower(ship) <= 0, names = { pulse: 'PULSE', heavy: 'HEAVY', rockets: 'ROCKETS  ' + ship.rockets };
     let x = 150;
@@ -129,28 +131,29 @@ export function drawOverlay(ctx, font, title, lines, color = COL.text) {
 
 const HELP = [
   ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     F  USE WHAT YOU ARE DOCKED AT'],
-  ['CAPTAIN', 'W S  THROTTLE     A D  TURN     X  FULL STOP     E  DOCK AND UNDOCK     R  DARTS'],
+  ['CAPTAIN', 'W S  THROTTLE     A D  TURN     X  FULL STOP     E  DOCK AND UNDOCK     R  DARTS     SHIFT  BOOST'],
   ['', 'ON THE MAP  CLICK A STAR CHART TO JUMP TO THAT SECTOR'],
   ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE     Q E  CHANGE WEAPON'],
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW     SHIFT CLICK  QUEUE'],
   ['', 'Q  SCANNER PULSE     B  DROP A BUOY     ON THE MAP  CLICK TO SEND A PROBE'],
-  ['BOARDING', 'W A S D  MOVE     MOUSE  AIM     CLICK  FIRE     G  GRENADE     F  USE'],
+  ['BOARDING', 'W A S D  MOVE     MOUSE  AIM     CLICK  FIRE     G  GRENADE     F  USE     C  CHARGE     T  TURRET'],
+  ['', 'N  SOUND ON AND OFF     A GAMEPAD WORKS TOO'],
 ];
 export function drawHelp(ctx, font, y0 = 96) {
-  rect(ctx, 30, y0 - 18, 580, 172, COL.panel, COL.line);
+  rect(ctx, 30, y0 - 18, 580, 186, COL.panel, COL.line);
   font.draw(ctx, 'CONTROLS', 42, y0 - 6, COL.text);
   HELP.forEach(([who, text], i) => {
     const y = y0 + 14 + i * 16;
     if (who) font.draw(ctx, who, 42, y, COL[who.toLowerCase()] || COL.text);
     font.draw(ctx, text, 110, y, COL.dim);
   });
-  font.draw(ctx, 'A POST YOU LEAVE KEEPS DOING WHAT YOU SET IT TO.', 42, y0 + 136, COL.faint);
+  font.draw(ctx, 'A POST YOU LEAVE KEEPS DOING WHAT YOU SET IT TO.', 42, y0 + 150, COL.faint);
 }
 
 export function drawTitle(ctx, font, assets, t) {
   font.draw(ctx, 'CRITICAL ST8', VIEW_W / 2, 30, COL.text, { align: 'c', scale: 5 });
   font.draw(ctx, 'ONE SHIP  ·  THREE POSTS  ·  FIVE SECTORS  ·  SOLO BUILD', VIEW_W / 2, 72, COL.ion[1], { align: 'c' });
-  drawHelp(ctx, font, 112);
-  if (Math.floor(t * 2) % 2 === 0) font.draw(ctx, 'PRESS ENTER TO LAUNCH', VIEW_W / 2, 302, COL.ochre[2], { align: 'c', scale: 2 });
+  drawHelp(ctx, font, 106);
+  if (Math.floor(t * 2) % 2 === 0) font.draw(ctx, 'PRESS ENTER TO LAUNCH', VIEW_W / 2, 306, COL.ochre[2], { align: 'c', scale: 2 });
   font.draw(ctx, 'EARLY VERSION  ·  ONLINE PLAY COMES LATER', VIEW_W / 2, 340, COL.faint, { align: 'c' });
 }

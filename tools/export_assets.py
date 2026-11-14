@@ -97,6 +97,12 @@ def rocket(d):
     d.rectangle([0, 1, 3, 8], fill=S.OUT); d.rectangle([1, 2, 2, 7], fill=S.STEEL[3]); d.rectangle([1, 0, 2, 1], fill=S.EMBER[1]); d.rectangle([1, 6, 2, 7], fill=S.OCHRE[1])
 save(small(16, 16, chart), 'chart'); save(small(16, 16, part), 'part'); save(small(4, 9, rocket), 'rocket')
 
+# ---- cargo pod: a small locked container drifting in space ----
+def pod():
+    parts = [(2, 'r', [4, 4, 12, 29]), (1, 'r', [3, 8, 12, 11]), (1, 'r', [3, 22, 12, 25]), (5, 'r', [7, 1, 12, 3]), (5, 'r', [7, 30, 12, 32]), (3, 'r', [10, 1, 12, 1]), (3, 'r', [10, 32, 12, 32]), (3, 'r', [5, 15, 6, 18])]
+    return S.sprite(24, 34, parts, {1: S.STEEL, 2: S.STEEL2, 3: S.OCHRE, 5: S.DARK, 'glassy': (), 'glow': (3,)}, lambda px, ln: (ln((8, 12), (8, 21), S.STEEL2[0]), px([(10, 14), (10, 19)], S.STEEL2[3])))
+save(pod(), 'pod')
+
 # ---- bitmap font: white glyphs on transparent, one row ----
 chars = ''.join(chr(c) for c in range(33, 127)) + '·×°'
 glyphs = {c: S.glyph(c) for c in chars}

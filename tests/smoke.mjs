@@ -114,10 +114,17 @@ await page.evaluate(() => { const s = window.__critical.state; s.ship.docked = n
 await page.evaluate(() => { const s = window.__critical.state, st = s.stations.find((x) => x.align === 'friendly'); s.spawn.timer = 1e9; s.pirates = []; s.ship.x = st.x; s.ship.y = st.y + 90; s.ship.heading = 0; s.ship.docked = st.id; s.ship.fuel = 30; s.credits = 2000; window.__critical.view.cam = { x: s.ship.x, y: s.ship.y }; });
 await page.keyboard.press('Digit1'); await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
 check(await get('v.station') === true, 'F opens the station panel at a friendly station');
-await click(70 + 12 + 40, 46 + 58 + 8); await page.waitForTimeout(150);
+await click(60 + 12 + 40, 38 + 64 + 8); await page.waitForTimeout(150);
 check(await get('s.ship.fuel') === 100, 'refuelling is free at a friendly station');
-for (const row of [0, 1, 2, 4, 5, 6, 7]) { await click(70 + 216 + 60, 46 + 58 + row * 15 + 7); await page.waitForTimeout(80); }
-check(await get('Object.keys(s.ship.mods).length') >= 4, 'clicking shipyard rows installs upgrades');
+for (const row of [0, 1]) { await click(276 + 60, 38 + 66 + row * 15 + 7); await page.waitForTimeout(80); }
+check(await get('s.ship.mods.twin === 1 && s.ship.mods.heavy === 1'), 'clicking shipyard rows installs upgrades');
+await click(276 + 100 + 48, 38 + 44 + 7); await page.waitForTimeout(100);
+check(await get('v.stationTab') === 'system', 'the tabs switch what is for sale');
+await click(276 + 60, 38 + 66 + 0 * 15 + 7); await page.waitForTimeout(80);
+check(await get('s.ship.mods.emit') === 1, 'systems can be bought from the second tab');
+await click(276 + 200 + 48, 38 + 44 + 7); await page.waitForTimeout(100);
+await click(276 + 60, 38 + 66 + 1 * 15 + 7); await page.waitForTimeout(80);
+check(await get('s.ship.mods.pack') === 1, 'boarding gear is in the armory tab');
 check(await get('s.credits') < 2000, 'upgrades cost credits');
 await shot('12-station');
 await page.keyboard.press('KeyF'); await page.waitForTimeout(100);
@@ -125,8 +132,19 @@ check(await get('v.station') === false, 'F closes the station panel');
 await page.evaluate(() => { const s = window.__critical.state; s.ship.mods = { twin: 1, heavy: 1, rockets: 1, bay: 1, armor: 1, emit: 1, alarm: 3, tscan: 1 }; s.ship.slots = { hard: 6, system: 4 }; s.ship.rockets = 8; s.ship.dartStock = 3; });
 
 // A hostile station: break in, board it and find the terminal.
-await page.evaluate(() => { const s = window.__critical.state, st = s.stations.find((x) => x.align === 'neutral'); st.align = 'hostile'; st.lock = 'open'; st.guns = [{ x: -27, y: -27, hp: 45, heading: 0, cool: 9 }, { x: 27, y: 27, hp: 45, heading: 0, cool: 9 }]; s.ship.x = st.x; s.ship.y = st.y + 100; s.ship.docked = st.id; window.__critical.view.cam = { x: s.ship.x, y: s.ship.y - 60 }; });
+await page.evaluate(() => { const s = window.__critical.state, st = s.stations.find((x) => x.align === 'neutral'); st.align = 'hostile'; st.lock = 'locked'; st.guns = [{ x: -27, y: -27, hp: 45, heading: 0, cool: 9 }, { x: 27, y: 27, hp: 45, heading: 0, cool: 9 }]; s.ship.x = st.x; s.ship.y = st.y + 100; s.ship.docked = st.id; s.raidTimer = 1e9; window.__critical.view.cam = { x: s.ship.x, y: s.ship.y - 60 }; });
 await page.waitForTimeout(200); await shot('12b-hostile-station');
+// The station lock wants a code that only the Engineer screen shows.
+await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
+check(await get("v.hacking === true && s.stations.find((x) => x.align === 'hostile').breakin.kind") === 'code', 'a hostile station asks for a code');
+await shot('12d-code-panel');
+await page.keyboard.press('KeyF'); await page.waitForTimeout(80); await page.keyboard.press('Digit3'); await page.waitForTimeout(150);
+await shot('12e-engineer-code');
+const code = await get("s.stations.find((x) => x.align === 'hostile').breakin.code");
+await page.keyboard.press('KeyF'); await page.waitForTimeout(150);
+for (const d of code) { await click(198 + (d - 1) * 42 + 17, 182 + 17); await page.waitForTimeout(90); }
+check(await get("s.stations.find((x) => x.align === 'hostile').lock") === 'open', 'entering the code from the Engineer screen opens the station');
+await page.keyboard.press('Digit1'); await page.waitForTimeout(80);
 await page.keyboard.press('KeyF'); await page.waitForTimeout(250);
 check(await get('s.players[0].inside') !== null, 'a hostile station with an open lock can be boarded');
 await page.evaluate(() => { const s = window.__critical.state, it = s.stations.find((x) => x.interior).interior, a = it.avatars[0]; it.guards = []; it.turrets = []; it.doorOpen = true; it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c)); a.x = it.terminal.x; a.y = it.terminal.y + 10; });
@@ -137,6 +155,15 @@ await page.evaluate(() => { const s = window.__critical.state, it = s.stations.f
 await page.waitForTimeout(100); await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
 check(await get('s.players[0].inside') === null, 'the boarder returns from the station');
 await page.keyboard.press('Digit1');
+
+// A cargo pod: stop the needle in the mark three times.
+await page.evaluate(() => { const s = window.__critical.state, pod = s.pods[0]; s.ship.x = pod.x; s.ship.y = pod.y + 70; s.ship.docked = pod.id; window.__critical.view.cam = { x: s.ship.x, y: s.ship.y - 40 }; });
+await page.waitForTimeout(150); await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
+check(await get('s.pods[0].breakin.kind') === 'dial', 'a cargo pod has a dial lock');
+await shot('12f-pod-dial');
+const podsBefore = await get('s.pods.length'), creditsBefore = await get('s.credits');
+for (let i = 0; i < 3; i++) { await page.evaluate(() => { const b = window.__critical.state.pods[0].breakin; if (b) { b.speed = 0; b.angle = b.mark; } }); await page.keyboard.press('Space'); await page.waitForTimeout(120); }
+check(await get('s.pods.length') === podsBefore - 1 && await get('s.credits') > creditsBefore, 'three good stops open the pod and give its cargo');
 
 // Darts and weapons.
 await page.evaluate(() => { const s = window.__critical.state; s.ship.docked = null; s.ship.x = 4000; s.ship.y = 4000; s.ship.vx = s.ship.vy = 0; window.__critical.view.cam = { x: 4000, y: 4000 }; });

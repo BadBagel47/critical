@@ -5,15 +5,7 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – strong model, high level – Nödanrop och fler inbrottsspel
-- F-025 – Stationer som anfalls kallar på hjälp, med rabatt och shipyard som belöning
-- F-028 – Egna inbrottsspel för stationer och fraktcontainrar, så att målen känns olika
-
-**B** – strong model, high level – Mer att köpa
-- F-027 – Utrustning för bordarna: bättre vapen, cargo pack, breaching charge, hacking kit, deployable turret och suit armor
-- F-029 – Fler skeppsuppgraderingar: afterburner, jump drive, tractor beam, point defense, targeting computer, repair drones och fuel tank
-
-**C** – standard model, medium level – Ljud och handkontroll
+**A** – standard model, medium level – Ljud och handkontroll
 - F-041 – Ljud för skott, träffar, larm och motor
 - F-042 – Stöd för handkontroll
 
@@ -25,14 +17,12 @@ Inget just nu.
 
 | ID | Vad | Status |
 |---|---|---|
-| F-025 | Nödanrop från stationer, med rabatt och shipyard som belöning | Ej påbörjad |
-| F-027 | Bordarnas utrustning: vapen, granater, cargo pack, breaching charge, hacking kit, deployable turret, suit armor | Ej påbörjad |
-| F-028 | Fler inbrottsspel: kod för stationer och lås för fraktcontainrar | Ej påbörjad |
-| F-029 | Övriga skeppsuppgraderingar: afterburner, jump drive, tractor beam, point defense, targeting computer, power core, repair drones, fuel tank | Ej påbörjad |
 | F-030 | Automatisk paus när någon varit frånkopplad en stund | Ej påbörjad |
 | F-040 | Onlinespel för upp till tre spelare via användarens motor, som bygger på Cloudflares realtidstjänster. Målet är att gratiskontot ska räcka | Väntar på motorn |
 | D-031 | Hoppa tillbaka till gamla sektorer. Beslut tills vidare: det går, och sektorn är som den lämnades | Beslutat tills vidare |
 | D-043 | Lägga ut medan någon är kvar inne. Beslut tills vidare: det går, och alla som är inne teleporteras hem på vanligt sätt | Beslutat tills vidare |
+| D-044 | Neutrala shipyards. Beslut tills vidare: bara öppna en stund efter ett besvarat nödanrop. Det är agentens läsning av användarens ord och bör bekräftas | Väntar på användaren |
+| D-045 | Nödanrop som ingen svarar på. Beslut tills vidare: inga följder. Alternativet är att stationen faller och blir fientlig | Väntar på användaren |
 
 ## Låg
 
@@ -83,3 +73,7 @@ Inget just nu.
 | F-023 | Fighter bay och Darts, med manuell start och autostart som uppgradering | 2026-11-14 |
 | F-024 | Fem sektorer, stjärnkartor och hopp. Gunboats i senare sektorer och en Cruiser som boss i den sista | 2026-11-14 |
 | F-026 | Enemy alarm i tre nivåer och target scanner som visar liv och bordningsrisk | 2026-11-14 |
+| F-025 | Nödanrop: stationer som anfalls kallar på hjälp. En neutral station ger rabatt och öppet shipyard en stund som tack | 2026-11-14 |
+| F-028 | Fler inbrottsspel: kod för stationer som bara Engineer-skärmen visar, och visarlås för fraktcontainrar | 2026-11-14 |
+| F-027 | Bordarnas utrustning i en egen flik: bättre gevär, cargo pack, suit armor, breaching charges, deployable turret, hacking kit och teleporter coils | 2026-11-14 |
+| F-029 | Fler skeppsuppgraderingar: afterburner, jump coils, tractor beam, point defense, targeting computer, repair drones och fuel tank | 2026-11-14 |

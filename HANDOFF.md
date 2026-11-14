@@ -6,7 +6,7 @@ Project language: English (all text in the game and README)
 
 ## Nuläge
 
-Spelet går att spela ensam från start till mål. Du flyger fregatten, skjuter pirater, sköter energi och reparationer, byter fritt mellan de tre posterna, dockar med vrak och stationer, bryter dig in, bordar uppifrån och hämtar bränsle, krediter, stjärnkartor och slots. Vid stationer med shipyard köps uppgraderingar som syns på skeppet. Det finns fem sektorer som nås med stjärnkartor, och i den sista väntar en Cruiser som boss.
+Spelet går att spela ensam från start till mål. Du flyger fregatten, skjuter pirater, sköter energi och reparationer, byter fritt mellan de tre posterna, dockar med vrak och stationer, bryter dig in, bordar uppifrån och hämtar bränsle, krediter, stjärnkartor och slots. Vid stationer köps uppgraderingar som syns på skeppet och utrustning för bordarna. Stationer som anfalls sänder nödanrop, och varje sorts mål har sitt eget inbrottsspel. Det finns fem sektorer som nås med stjärnkartor, och i den sista väntar en Cruiser som boss.
 
 Ingen människa har provspelat än, så känsla och balans är otestade. Onlineläget saknas och väntar på användarens motor.
 
@@ -107,6 +107,17 @@ Stationer, vapen och sektorer, agentens val som användaren inte har sett än (2
 - Från andra sektorn kommer Gunboats, och pirater tål mer i senare sektorer.
 - Reparation vid station lagar allt på en gång. Priser och uppgraderingar finns i `src/sim/balance.js` och `src/sim/upgrades.js`.
 - Spelet är vunnet när Cruisern i The Maw är förstörd. Det går att flyga vidare efteråt.
+
+Nödanrop, lås och utrustning, agentens val som användaren inte har sett än (2026-11-14)
+- Ett neutralt shipyard är bara öppet för den som stationen står i skuld till, alltså en stund efter ett besvarat nödanrop. Det är agentens läsning av användarens ord "får nyttja shipyard under denna tid om en sådan finns" (se D-044). Vänliga och övertagna stationer har alltid öppet.
+- Ett besvarat nödanrop ger 40 procent rabatt och öppet shipyard i tre minuter hos en neutral station. En vänlig station betalar 100 krediter.
+- Ett nödanrop som ingen svarar på får inga följder. Piraterna ger sig av (se D-045).
+- Nödanropet visar var stationen ligger, även om den inte är hittad.
+- Stationslåset är en kod som bara syns på Engineer-skärmen och som byts var sextonde sekund. Ensam får man växla mellan låset och Engineer-posten.
+- Fraktcontainrar (cargo pods) har ingen insida. När låset är uppe tas lasten direkt ombord och containern försvinner.
+- Bordarnas utrustning säljs i en egen flik, Armory, hos alla stationer som handlar. Den kräver inget shipyard och tar inga slots.
+- Pirater lämnar ibland bärgningsgods som plockas upp genom att flyga över det. Tractor beam drar in det på avstånd.
+- Point defense stoppar ungefär en tredjedel av skotten som kommer nära. Pirater har inga raketer än.
 
 Balans, agentens val (2026-11-14)
 - Piratvågorna kommer glesare ju färre som är ombord, så att en ensam spelare hinner lämna skeppet. Ensam är det drygt en minut mellan vågorna.

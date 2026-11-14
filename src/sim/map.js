@@ -47,7 +47,12 @@ function reveal(state, sources) {
     const k = state.known.find((e) => e.id === st.id), info = { id: st.id, kind: 'station', x: st.x, y: st.y, align: st.align, shipyard: st.shipyard, name: st.name };
     if (k) Object.assign(k, info); else { state.known.push(info); state.events.push({ type: 'found', kind: 'station', align: st.align }); }
   }
-  state.known = state.known.filter((k) => k.kind === 'station' || state.wrecks.some((w) => w.id === k.id) || !isVisible(state, k.x, k.y, sources));
+  for (const pod of state.pods) {
+    if (!isVisible(state, pod.x, pod.y, sources) || state.known.some((e) => e.id === pod.id)) continue;
+    state.known.push({ id: pod.id, kind: 'pod', x: pod.x, y: pod.y }); state.events.push({ type: 'found', kind: 'pod' });
+  }
+  const exists = (k) => k.kind === 'station' || state.wrecks.some((w) => w.id === k.id) || state.pods.some((w) => w.id === k.id);
+  state.known = state.known.filter((k) => exists(k) || !isVisible(state, k.x, k.y, sources));
 }
 
 export function useTool(state, tool) {

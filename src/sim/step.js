@@ -10,7 +10,7 @@ import { dockTargets, findDock, portsOf } from './dock.js';
 import { has, level, hullMax, shieldMax, powerTotal } from './upgrades.js';
 import { stepStations, boltHitsStation } from './stations.js';
 import { stepDarts } from './darts.js';
-import { stepJump, currentSector, createWreck } from './sectors.js';
+import { stepJump, currentSector, createWreck, makePirate } from './sectors.js';
 export { damageShip };
 
 // ---------- derived values ----------
@@ -72,7 +72,10 @@ function stepCaptain(state, cmd, dt) {
   }
   if (ship.docked) return;
   let eng = B.ENGINE_POWER[ship.power.engines] * nodeFactor(ship, 'engines');
-  ship.fuel = Math.max(0, ship.fuel - B.FUEL_BURN * Math.abs(ship.throttle) * B.ENGINE_POWER[ship.power.engines] * dt);
+  // The afterburner trades fuel for speed while it is held.
+  ship.boosting = !!(cmd && cmd.boost && has(ship, 'boost') && ship.fuel > 0 && ship.throttle > 0);
+  if (ship.boosting) eng *= B.BOOST_POWER;
+  ship.fuel = Math.max(0, ship.fuel - B.FUEL_BURN * Math.abs(ship.throttle) * B.ENGINE_POWER[ship.power.engines] * (ship.boosting ? B.BOOST_BURN : 1) * dt);
   if (ship.fuel <= 0) eng *= B.ADRIFT_FACTOR;
   ship.turn += (turnInput - ship.turn) * Math.min(1, B.TURN_SMOOTH * dt);
   ship.heading = (ship.heading + ship.turn * B.TURN_RATE * nodeFactor(ship, 'bridge') * dt + TAU) % TAU;
@@ -96,6 +99,25 @@ export function hurtPirate(state, p, dmg) {
     const w = createWreck(state, p.x, p.y, Math.min(3, 1 + currentSector(state).tier)); w.heading = p.heading; state.wrecks.push(w);
   }
   if (p.kind === 'cruiser') { state.won = true; state.events.push({ type: 'won' }); }
+  // Destroyed pirates sometimes leave salvage drifting where they died.
+  const drops = p.kind === 'cruiser' ? 6 : p.kind === 'gunboat' ? 2 : rand(state) < 0.35 ? 1 : 0;
+  for (let i = 0; i < drops; i++) {
+    const value = Math.round(randRange(state, p.kind === 'fighter' ? 10 : 20, p.kind === 'cruiser' ? 80 : p.kind === 'gunboat' ? 40 : 25) / 5) * 5;
+    state.salvage.push({ id: state.nextId++, x: p.x + randRange(state, -16, 16), y: p.y + randRange(state, -16, 16), value, ttl: B.SALVAGE_TTL });
+  }
+}
+
+// Salvage is collected by flying over it. A tractor beam pulls it in from a distance.
+function stepSalvage(state, dt) {
+  const ship = state.ship, tractor = has(ship, 'tractor');
+  for (const c of state.salvage) {
+    c.ttl -= dt;
+    const d = dist(c.x, c.y, ship.x, ship.y);
+    c.pulled = tractor && d < B.TRACTOR_RANGE;
+    if (c.pulled && d > 1) { c.x += ((ship.x - c.x) / d) * B.TRACTOR_PULL * dt; c.y += ((ship.y - c.y) / d) * B.TRACTOR_PULL * dt; }
+    if (d < B.SALVAGE_PICKUP) { c.ttl = 0; state.credits += c.value; state.events.push({ type: 'salvage', value: c.value }); }
+  }
+  state.salvage = state.salvage.filter((c) => c.ttl > 0);
 }
 
 function fireHeavy(state) {
@@ -218,13 +240,16 @@ function stepEngineer(state, cmd, dt) {
   }
 }
 
-// ---------- pirates ----------
-function makePirate(state, kind, x, y) {
-  const ship = state.ship, tier = currentSector(state).tier, scale = 1 + B.TIER_HP * tier;
-  const hp = Math.round((kind === 'gunboat' ? B.GUNBOAT_HP : B.FIGHTER_HP) * scale);
-  return { id: state.nextId++, kind, x, y, vx: 0, vy: 0, heading: headingTo(ship.x - x, ship.y - y), hp, hpMax: hp, mode: 'approach', timer: 0, burst: 0, burstTimer: 0, cool: randRange(state, 0.3, 1.2), side: rand(state) < 0.5 ? -1 : 1 };
+// Repair drones work on their own, whatever the crew is doing.
+function stepDrones(state, dt) {
+  const ship = state.ship;
+  if (!has(ship, 'drones')) return;
+  ship.hull = Math.min(hullMax(ship), ship.hull + B.DRONE_HULL * dt);
+  const worst = ship.nodes.reduce((b, n) => (n.hp < b.hp ? n : b), ship.nodes[0]);
+  if (worst.hp < 100) worst.hp = Math.min(100, worst.hp + B.DRONE_NODE * dt);
 }
 
+// ---------- pirates ----------
 function spawnWave(state) {
   const ship = state.ship, tier = currentSector(state).tier;
   state.spawn.wave++;
@@ -254,9 +279,15 @@ function stepPirates(state, dt) {
     state.spawn.timer = Math.max(B.WAVE_INTERVAL_MIN, B.WAVE_INTERVAL - state.spawn.wave * 1.2) * pace;
   }
   for (const p of state.pirates) {
-    const dx = ship.x - p.x, dy = ship.y - p.y, d = Math.hypot(dx, dy);
+    // Raiders go for the station they are raiding, unless the ship gets close.
+    let tx = ship.x, ty = ship.y, tvx = ship.vx, tvy = ship.vy;
+    if (p.raid && state.raid && state.raid.id === p.raid && dist(p.x, p.y, ship.x, ship.y) > 380) {
+      const st = state.stations.find((x) => x.id === state.raid.station);
+      if (st) { tx = st.x; ty = st.y; tvx = 0; tvy = 0; }
+    }
+    const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy);
     const lead = Math.min(1.2, d / B.PIRATE_BOLT_SPEED) * 0.8;
-    const aimAt = headingTo(dx + ship.vx * lead, dy + ship.vy * lead);
+    const aimAt = headingTo(dx + tvx * lead, dy + tvy * lead);
     let want = aimAt, speed = B.FIGHTER_SPEED, turn = B.FIGHTER_TURN;
     p.cool -= dt;
     if (p.kind === 'gunboat') {
@@ -326,6 +357,7 @@ function solidCircles(state) {
   for (const r of state.rocks) out.push({ x: r.x, y: r.y, r: r.r });
   for (const w of state.wrecks) for (const c of WRECK_GEOM.circles) { const p = toWorld(w, c); out.push({ x: p.x, y: p.y, r: c.r, wreck: w.id }); }
   for (const st of state.stations) out.push({ x: st.x, y: st.y, r: B.STATION_RADIUS, station: st });
+  for (const pod of state.pods) out.push({ x: pod.x, y: pod.y, r: B.POD_RADIUS });
   return out;
 }
 
@@ -344,6 +376,11 @@ function stepBolts(state, dt, solids) {
         }
       }
     } else {
+      // Point defense gets one try at each shot that comes close.
+      if (has(ship, 'pd') && !b.pd && dist(b.x, b.y, ship.x, ship.y) < B.PD_RANGE) {
+        b.pd = true;
+        if (rand(state) < B.PD_CHANCE) { b.ttl = 0; state.fx.push({ type: 'shield', x: b.x, y: b.y, t: 0, dur: 0.2 }); state.events.push({ type: 'pdHit' }); continue; }
+      }
       if (!state.over && dist(b.x, b.y, ship.x, ship.y) < B.SHIP_RADIUS) { b.ttl = 0; damageShip(state, b.dmg, { x: b.x, y: b.y }); }
       else for (const d of state.darts) if (dist(b.x, b.y, d.x, d.y) < 8) { b.ttl = 0; d.hp -= b.dmg; state.fx.push({ type: 'hit', x: b.x, y: b.y, t: 0, dur: 0.15 }); break; }
     }
@@ -443,6 +480,7 @@ export function step(state, cmds, dt) {
   stepCaptain(state, cmds && cmds.captain, dt);
   stepJump(state, cmds && cmds.captain, dt);
   stepEngineer(state, cmds && cmds.engineer, dt);
+  stepDrones(state, dt);
   stepGunner(state, cmds && cmds.gunner, dt);
   stepPirates(state, dt);
   stepStations(state, cmds, dt);
@@ -451,6 +489,7 @@ export function step(state, cmds, dt) {
   stepBolts(state, dt, solids);
   stepRockets(state, dt, solids);
   state.pirates = state.pirates.filter((p) => p.hp > 0);
+  stepSalvage(state, dt);
   stepAlarm(state);
   stepDarts(state, cmds && cmds.captain, dt, state.alarm.count > 0 || state.pirates.some((p) => dist(p.x, p.y, ship.x, ship.y) < B.VISION_SHIP));
   stepBoarding(state, cmds, dt);

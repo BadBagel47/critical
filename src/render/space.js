@@ -8,6 +8,7 @@ import { sprite, dashed, brackets, bar } from './draw.js';
 import { isVisible, visionSources } from '../sim/map.js';
 import { dockTargets, portsOf } from '../sim/dock.js';
 import { has, level, shieldMax } from '../sim/upgrades.js';
+import { rect } from './draw.js';
 
 const STARS = (() => {
   let seed = 12345; const r = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
@@ -60,7 +61,7 @@ function drawShip(ctx, state, img) {
   ctx.save(); ctx.translate(ship.x, ship.y); ctx.rotate(ship.heading);
   const th = Math.max(0, ship.throttle);
   if (th > 0.02 && !ship.docked) {
-    const len = 3 + th * 9 + Math.random() * 2;
+    const len = (3 + th * 9 + Math.random() * 2) * (ship.boosting ? 2.2 : 1);
     ctx.globalAlpha = 0.35; ctx.fillStyle = COL.ion[1]; ctx.beginPath(); ctx.arc(0, 52, 5 + th * 7, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
     for (const x of [-8, 4]) { ctx.fillStyle = COL.ion[1]; ctx.fillRect(x, 50, 4, len); ctx.fillStyle = COL.ion[3]; ctx.fillRect(x + 1, 50, 2, len * 0.6); }
   }
@@ -68,7 +69,7 @@ function drawShip(ctx, state, img) {
   // Bought upgrades are drawn on top of the bare hull.
   for (const m of ['armor', 'emit', 'bay', 'rockets', 'heavy']) if (has(ship, m)) ctx.drawImage(img['mod_' + m], -36, -54);
   if (ship.charge > 0) { ctx.globalAlpha = 0.3 + ship.charge * 0.6; ctx.fillStyle = COL.ion[2]; ctx.beginPath(); ctx.arc(0, -52, 2 + ship.charge * 6, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
-  if (state.jump) { const u = state.jump.t / B.JUMP_CHARGE; ctx.globalAlpha = 0.25 + u * 0.5; ctx.strokeStyle = COL.ion[2]; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 0, 60 - u * 14, 78 - u * 14, 0, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+  if (state.jump) { const u = state.jump.t / (has(ship, 'jumpcoil') ? B.COIL_CHARGE : B.JUMP_CHARGE); ctx.globalAlpha = 0.25 + u * 0.5; ctx.strokeStyle = COL.ion[2]; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 0, 60 - u * 14, 78 - u * 14, 0, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
   ctx.restore();
   const mount = toWorld(ship, SHIP_GEOM.turret);
   sprite(ctx, img.turret_pulse, mount.x, mount.y, ship.turretAngle, 6, 10.5);
@@ -124,6 +125,12 @@ export function drawSpace(ctx, state, view, assets) {
   const near = (o, m) => Math.abs(o.x - cam.x) < VIEW_W / 2 + m && Math.abs(o.y - cam.y) < VIEW_H / 2 + m;
   for (const r of state.rocks) if (near(r, 30)) sprite(ctx, img['rock' + r.kind], r.x, r.y, r.spin);
   for (const w of state.wrecks) if (near(w, 100)) sprite(ctx, img.wreck, w.x, w.y, w.heading);
+  for (const pod of state.pods) if (near(pod, 40)) sprite(ctx, img.pod, pod.x, pod.y, pod.heading);
+  for (const c of state.salvage) {
+    if (!near(c, 20)) continue;
+    if (c.pulled) { ctx.globalAlpha = 0.35; ctx.strokeStyle = COL.ion[2]; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(ship.x, ship.y); ctx.lineTo(c.x, c.y); ctx.stroke(); ctx.globalAlpha = 1; }
+    rect(ctx, c.x - 3, c.y - 3, 6, 6, COL.ochre[1], COL.out); rect(ctx, c.x - 1, c.y - 1, 2, 2, Math.floor(state.time * 3 + c.id) % 2 ? COL.ochre[3] : COL.ochre[2]);
+  }
   for (const st of state.stations) {
     if (!near(st, 80)) continue;
     sprite(ctx, img['station_' + st.align], st.x, st.y, st.heading);
@@ -156,6 +163,8 @@ export function drawSpace(ctx, state, view, assets) {
       sprite(ctx, img[p.kind], p.x, p.y, p.heading);
     }
     if (scan || p.kind === 'cruiser') hpBar(ctx, p.x, p.y - pirateRadius(p) - 12, p.kind === 'cruiser' ? 70 : 22, p.hp / p.hpMax);
+    // The targeting computer marks where a shot fired now would meet the pirate.
+    if (view.post === 'gunner' && has(ship, 'tcomp')) { const t = dist(p.x, p.y, ship.x, ship.y) / B.BOLT_SPEED, lx = p.x + (p.vx - ship.vx) * t, ly = p.y + (p.vy - ship.vy) * t; ctx.strokeStyle = COL.ochre[2]; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(lx, ly, 4, 0, 7); ctx.stroke(); ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(lx, ly); ctx.stroke(); ctx.globalAlpha = 1; }
   }
   for (const d of state.darts) { ctx.globalAlpha = 0.5; ctx.fillStyle = COL.ion[1]; const e = toWorld(d, { x: 0, y: 9 }); ctx.beginPath(); ctx.arc(e.x, e.y, 2.5, 0, 7); ctx.fill(); ctx.globalAlpha = 1; sprite(ctx, img.dart, d.x, d.y, d.heading); }
   if (!state.over) drawShip(ctx, state, img);
@@ -165,6 +174,12 @@ export function drawSpace(ctx, state, view, assets) {
   // and wrecks and stations already found.
   const sources = visionSources(state), alarm = B.ALARM_RANGE[level(ship, 'alarm')];
   for (const p of state.pirates) if (isVisible(state, p.x, p.y, sources) || dist(p.x, p.y, ship.x, ship.y) < alarm) edgeMarker(ctx, font, cam, p.x, p.y, COL.ember[1]);
-  for (const k of state.known) edgeMarker(ctx, font, cam, k.x, k.y, k.kind === 'station' ? ALIGN_COL[k.align] : COL.ochre[2], Math.round(dist(ship.x, ship.y, k.x, k.y) / 10) + ' M');
+  const raided = state.raid ? state.raid.station : null;
+  for (const k of state.known) {
+    if (k.kind === 'pod') continue;
+    const far = Math.round(dist(ship.x, ship.y, k.x, k.y) / 10) + ' M';
+    if (k.id === raided) edgeMarker(ctx, font, cam, k.x, k.y, Math.floor(state.time * 3) % 2 ? COL.ochre[3] : COL.ember[2], 'DISTRESS  ' + far);
+    else edgeMarker(ctx, font, cam, k.x, k.y, k.kind === 'station' ? ALIGN_COL[k.align] : COL.ochre[2], far);
+  }
   return dock;
 }

@@ -1,6 +1,9 @@
-// The break-in game for wrecks: turn pipe tiles until power flows from the source to the lock.
+// Break-in games. Each kind of target has its own:
+//   wreck   - 'pipes': turn pipe tiles until power flows from the source to the lock
+//   station - 'code':  enter the code that the Engineer screen shows, before it changes
+//   pod     - 'dial':  stop the needle inside the mark three times in a row
 import { B } from './balance.js';
-import { rand } from './util.js';
+import { rand, randRange, angleDiff, TAU } from './util.js';
 
 export const GW = 7, GH = 4;
 const N = 1, E = 2, S = 4, W = 8;
@@ -26,7 +29,7 @@ export function flow(bk) {
   return { lit, solved: lit.has(end) && !!(mask(bk.tiles[end]) & E) };
 }
 
-export function createBreakin(state, wreck) {
+function createPipes(state) {
   const source = Math.floor(rand(state) * GH), sink = Math.floor(rand(state) * GH);
   // A random path from the source on the left edge to the lock on the right edge.
   const path = [[0, source]], seen = new Set([source * GW]);
@@ -59,21 +62,67 @@ export function createBreakin(state, wreck) {
   });
   const solution = tiles.map((t) => t.rot);
   for (const [x, y] of path) if (rand(state) < 0.75) tiles[y * GW + x].rot = (tiles[y * GW + x].rot + 1 + Math.floor(rand(state) * 3)) % 4;
-  const bk = { tiles, solution, source, sink, time: B.BREAKIN_TIME[wreck.difficulty], total: B.BREAKIN_TIME[wreck.difficulty], started: false };
+  const bk = { tiles, solution, source, sink };
   if (flow(bk).solved) tiles[source * GW].rot = (tiles[source * GW].rot + 1) % 4;
   return bk;
 }
 
+const newCode = (state) => Array.from({ length: B.CODE_LEN }, () => 1 + Math.floor(rand(state) * B.CODE_DIGITS));
+const newMark = (state, bk) => { bk.mark = (bk.angle + Math.PI * randRange(state, 0.6, 1.4)) % TAU; };
+
+// `bonus` stretches the time, for crews that bought a hacking kit.
+export function createBreakin(state, target, bonus = 1) {
+  const kind = target.kind === 'station' ? 'code' : target.kind === 'pod' ? 'dial' : 'pipes';
+  const seconds = (kind === 'code' ? B.CODE_TIME : kind === 'dial' ? B.DIAL_TIME : B.BREAKIN_TIME[target.difficulty]) * bonus;
+  const bk = { kind, time: seconds, total: seconds, started: false };
+  if (kind === 'pipes') Object.assign(bk, createPipes(state));
+  if (kind === 'code') Object.assign(bk, { code: newCode(state), entered: [], shift: B.CODE_SHIFT, wrong: 0 });
+  if (kind === 'dial') { Object.assign(bk, { angle: 0, speed: B.DIAL_SPEED, width: B.DIAL_WIDTH, stage: 0, misses: 0, mark: 0 }); newMark(state, bk); }
+  return bk;
+}
+
 // Returns 'solved', 'failed' or null.
-export function stepBreakin(state, wreck, cmds, dt) {
-  const bk = wreck.breakin;
-  if (!bk || wreck.lock === 'open') return null;
-  for (const byPlayer of Object.values((cmds && cmds.hack) || {})) for (const c of byPlayer) {
-    if (c.wreck !== wreck.id) continue;
-    const t = bk.tiles[c.y * GW + c.x];
-    if (t) { t.rot = (t.rot + (c.dir < 0 ? 3 : 1)) % 4; state.events.push({ type: 'tileTurned' }); }
+export function stepBreakin(state, target, cmds, dt) {
+  const bk = target.breakin;
+  if (!bk || target.lock === 'open') return null;
+  const orders = [];
+  for (const byPlayer of Object.values((cmds && cmds.hack) || {})) for (const c of byPlayer) if (c.wreck === target.id) orders.push(c);
+  let solved = false, failed = false;
+  if (bk.kind === 'pipes') {
+    for (const c of orders) {
+      const t = bk.tiles[c.y * GW + c.x];
+      if (t) { t.rot = (t.rot + (c.dir < 0 ? 3 : 1)) % 4; state.events.push({ type: 'tileTurned' }); }
+    }
+    solved = flow(bk).solved;
+  } else if (bk.kind === 'code') {
+    if (bk.started) {
+      // The code changes now and then, so it has to be read and entered quickly.
+      bk.shift -= dt;
+      if (bk.shift <= 0) { bk.code = newCode(state); bk.entered = []; bk.shift = B.CODE_SHIFT; state.events.push({ type: 'codeChanged' }); }
+    }
+    for (const c of orders) {
+      if (!(c.digit >= 1 && c.digit <= B.CODE_DIGITS)) continue;
+      bk.entered.push(c.digit); state.events.push({ type: 'tileTurned' });
+      if (bk.entered.length < B.CODE_LEN) continue;
+      if (bk.entered.every((d, i) => d === bk.code[i])) solved = true;
+      else { bk.entered = []; bk.time -= B.CODE_PENALTY; bk.wrong++; state.events.push({ type: 'codeWrong' }); }
+    }
+  } else {
+    if (bk.started) bk.angle = (bk.angle + bk.speed * dt) % TAU;
+    for (const c of orders) {
+      if (!c.stop) continue;
+      if (Math.abs(angleDiff(bk.angle, bk.mark)) <= bk.width / 2) {
+        bk.stage++; state.events.push({ type: 'dialHit' });
+        if (bk.stage >= B.DIAL_STAGES) solved = true;
+        else { bk.width *= 0.78; bk.speed *= 1.22; newMark(state, bk); }
+      } else {
+        bk.misses++; state.events.push({ type: 'dialMiss' });
+        if (bk.misses >= B.DIAL_MISSES) failed = true;
+      }
+    }
   }
-  if (flow(bk).solved) { wreck.lock = 'open'; state.events.push({ type: 'lockOpen', wreck: wreck.id }); return 'solved'; }
-  if (bk.started) { bk.time -= dt; if (bk.time <= 0) { state.events.push({ type: 'lockFailed', wreck: wreck.id }); return 'failed'; } }
+  if (solved) { target.lock = 'open'; state.events.push({ type: 'lockOpen', wreck: target.id, kind: target.kind }); return 'solved'; }
+  if (bk.started && !failed) { bk.time -= dt; if (bk.time <= 0) failed = true; }
+  if (failed) { state.events.push({ type: 'lockFailed', wreck: target.id, kind: target.kind }); return 'failed'; }
   return null;
 }

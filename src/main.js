@@ -7,7 +7,7 @@ import { step } from './sim/step.js';
 import { drawSpace, drawStars } from './render/space.js';
 import { drawHud, drawOverlay, drawHelp, drawTitle, drawToasts } from './render/hud.js';
 import { drawBoarding, OX, OY } from './render/boarding.js';
-import { drawBreakin, breakinTile } from './render/breakin.js';
+import { drawBreakin, breakinAction } from './render/breakin.js';
 import { drawMap, mapPoint, chartClick } from './render/map.js';
 import { drawStation, stationClick } from './render/station.js';
 import { findDock } from './sim/dock.js';
@@ -26,7 +26,7 @@ window.addEventListener('resize', resize);
 resize();
 
 const input = createInput(canvas);
-const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [], hacking: false, map: false, station: false, wonSeen: false };
+const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [], hacking: false, map: false, station: false, stationTab: 'hull', wonSeen: false };
 let state = createState(Date.now() % 100000);
 let assets = null;
 
@@ -52,7 +52,7 @@ function commands() {
       mx: (input.down('KeyD', 'ArrowRight') ? 1 : 0) - (input.down('KeyA', 'ArrowLeft') ? 1 : 0),
       my: (input.down('KeyS', 'ArrowDown') ? 1 : 0) - (input.down('KeyW', 'ArrowUp') ? 1 : 0),
       aim: at, fire: m.down || input.down('Space'), grenade: input.hit('KeyG') || m.rightClicked ? at : null,
-      use: input.down('KeyF'), usePressed: input.hit('KeyF'),
+      use: input.down('KeyF'), usePressed: input.hit('KeyF'), charge: input.hit('KeyC'), deploy: input.hit('KeyT'),
     } };
     return cmds;
   }
@@ -61,16 +61,17 @@ function commands() {
   if (view.hacking) {
     // At the break-in panel: clicks turn tiles, and the player's post is left alone.
     if (input.hit('KeyF')) { view.hacking = false; return cmds; }
-    const m = input.mouse, t = m.clicked || m.rightClicked ? breakinTile(m.x, m.y) : null;
-    if (t) cmds.hack = { [me.id]: [{ wreck: wreck.id, x: t.x, y: t.y, dir: m.rightClicked ? -1 : 1 }] };
+    const m = input.mouse, order = wreck.breakin ? breakinAction(wreck, m.x, m.y, m.clicked, m.rightClicked, input.hit('Space')) : null;
+    if (order) cmds.hack = { [me.id]: [order] };
     return cmds;
   }
   if (view.station && !isShop(wreck)) view.station = false;
   if (view.station) {
     // At the station panel: clicks buy things, and the player's post is left alone.
     if (input.hit('KeyF')) { view.station = false; return cmds; }
-    const order = input.mouse.clicked ? stationClick(state, wreck, input.mouse.x, input.mouse.y) : null;
-    if (order) cmds.shop = [order];
+    const hit = input.mouse.clicked ? stationClick(state, wreck, view.stationTab, input.mouse.x, input.mouse.y) : null;
+    if (hit && hit.tab) view.stationTab = hit.tab;
+    if (hit && hit.order) cmds.shop = [hit.order];
     return cmds;
   }
   if (input.hit('KeyF') && wreck) cmds.system.board = [me.id];
@@ -90,7 +91,7 @@ function commands() {
     cmds.captain = {
       throttle: (input.down('KeyW', 'ArrowUp') ? 1 : 0) - (input.down('KeyS', 'ArrowDown') ? 1 : 0),
       turn: (input.down('KeyD', 'ArrowRight') ? 1 : 0) - (input.down('KeyA', 'ArrowLeft') ? 1 : 0),
-      stop: input.hit('KeyX'), dock: input.hit('KeyE'), darts: input.hit('KeyR'),
+      stop: input.hit('KeyX'), dock: input.hit('KeyE'), darts: input.hit('KeyR'), boost: input.down('ShiftLeft', 'ShiftRight'),
     };
   } else if (view.post === 'gunner') {
     const m = input.mouse;
@@ -143,7 +144,7 @@ function render(t) {
   else { const dock = drawSpace(ctx, state, view, assets); drawHud(ctx, state, view, assets, dock); }
   const dw = dockedWreck();
   if (view.hacking && dw && dw.breakin && dw.lock !== 'open' && !state.over) drawBreakin(ctx, font, dw, input.mouse);
-  if (view.station && isShop(dw) && !state.over) drawStation(ctx, font, state, dw, input.mouse);
+  if (view.station && isShop(dw) && !state.over) drawStation(ctx, font, state, dw, view.stationTab, input.mouse);
   // Messages go where they do not cover what the player is working with.
   const away = state.players[view.playerId].inside !== null;
   if (view.station || view.hacking) drawToasts(ctx, font, view, state.time, 312);
@@ -196,13 +197,23 @@ const TOAST = {
   recalled: (e) => [`UNDOCKED  ·  ${e.count} TELEPORTED HOME`, COL.ember[2]],
   doorOpen: () => ['VAULT OPEN', COL.ochre[3]],
   wreckExploded: () => ['THE WRECK BLEW UP', COL.ember[2]],
-  lockOpen: () => ['LOCK BYPASSED  ·  F TO BOARD', COL.acid[2]],
-  lockFailed: () => ['BYPASS FAILED', COL.ember[2]],
+  lockOpen: (e) => (e.kind === 'pod' ? null : ['LOCK BYPASSED  ·  F TO BOARD', COL.acid[2]]),
+  lockFailed: (e) => (e.kind === 'wreck' ? ['BYPASS FAILED', COL.ember[2]] : null),
+  podLooted: (e) => [`POD OPEN  ·  +${e.credits} CREDITS` + (e.fuel ? `  ·  +${e.fuel} FUEL` : '') + (e.part ? '  ·  A SPARE SLOT' : ''), COL.ochre[3]],
+  podAlarm: () => ['THE POD ALARM IS RINGING  ·  PIRATES INCOMING', COL.ember[2]],
+  codeWrong: () => ['WRONG CODE', COL.ember[2]],
+  codeChanged: () => ['THE STATION CODE CHANGED', COL.ochre[2]],
+  distress: (e) => [`DISTRESS CALL FROM ${e.name}`, COL.ochre[3]],
+  distressSaved: (e) => [e.favor ? `${e.name} OWES YOU  ·  DISCOUNT AND SHIPYARD FOR A WHILE` : `${e.name} IS SAFE  ·  +${e.reward} CREDITS`, COL.acid[2]],
+  distressOver: (e) => [`${e.name} WAS RAIDED`, COL.dim],
+  salvage: (e) => [`SALVAGE  ·  +${e.value} CREDITS`, COL.ochre[3]],
+  breached: () => ['DOOR BREACHED  ·  EVERY GUARD HEARD THAT', COL.ember[2]],
+  sentryDown: () => ['TURRET DEPLOYED', COL.ion[2]],
   pulse: () => ['SCANNER PULSE', COL.ion[2]],
   probe: () => ['PROBE AWAY', COL.ion[2]],
   buoy: () => ['RADAR BUOY DROPPED', COL.engineer],
   buoyLost: () => ['A RADAR BUOY WAS SHOT DOWN', COL.ember[2]],
-  found: (e) => [e.kind === 'station' ? `${e.align.toUpperCase()} STATION FOUND  ·  MARKED ON THE MAP` : 'WRECK FOUND  ·  MARKED ON THE MAP', COL.ochre[2]],
+  found: (e) => [e.kind === 'station' ? `${e.align.toUpperCase()} STATION FOUND  ·  MARKED ON THE MAP` : e.kind === 'pod' ? 'CARGO POD FOUND  ·  MARKED ON THE MAP' : 'WRECK FOUND  ·  MARKED ON THE MAP', COL.ochre[2]],
   bought: (e) => [`INSTALLED  ·  ${e.name}`, COL.acid[2]],
   cannotBuy: (e) => [e.reason, COL.ochre[2]],
   refuelled: (e) => [`REFUELLED  ·  +${Math.round(e.amount)} FUEL`, COL.ochre[3]],
