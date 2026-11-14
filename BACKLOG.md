@@ -86,6 +86,9 @@ Prioritet: Hög, Medel, Låg.
 **T** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
+**U** – strong model, high level – Visuella effekter och feedback
+- F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
+
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md och väntar på att användaren lyssnar på docs/music/ och väljer introtema.
 
 Väntar på användaren: D-117 (förslaget om bordning av stationer i docs/station-boarding.md väntar på ja eller ändringar), D-095 (faktionernas riktiga namn), D-074 (smuggelgods) och D-093 (nya eller fler minigames) behöver ett samtal först. F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
@@ -107,6 +110,7 @@ Väntar på användaren: D-117 (förslaget om bordning av stationer i docs/stati
 | F-064 | Homing missiles (nytt vapen) och rockets som uppgraderingar. De ska söka sig mot mål. Missiler är mer rörliga medan raketer kan justera sin bana något, men missar den sitt mål så släpper den målet helt. Missar dessa vapen sitt mål så ska de kunna träffa andra som är i vägen för deras bana. I dag finns bara raketer, och de är för rörliga jämfört med det här. Från D-075: ammunition som köps på stationer | Ej påbörjad |
 | F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer. Musiken skapas med kod, det passar spelstilen. Görs av en annan agent enligt docs/music-brief.md. Byggd 2026-11-14, se besked i docs/music-brief.md. Väntar på att användaren lyssnar på docs/music/ och väljer introtema | Byggd, ej lyssnad |
 | F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
+| F-124 | Se över hur de visuella effekterna och den visuella feedbacken kan förbättras. Från en fråga av användaren 2026-11-14. Agentens tolkning av vad som ingår: gå igenom varje sak som händer i spelet och se om skärmen svarar tydligt på den (träffar på skeppet och på fiender, sköld som går ner, skador, upplock, knapptryck, dockning, larm, anseende som ändras, låg bränslenivå), och förbättra där svaret är svagt eller saknas | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
 | F-068 | Handelssystem för goods. Att man kan köpa och sälja varor mellan olika stationer med olika priser. Det är inget som man själv kan använda, utan det är bara för att kunna tjäna pengar. Agentens förslag som användaren inte invänt mot: lastrum med begränsad plats som går att bygga ut, och priser som rör sig långsamt. Från D-075: prisnivåer per vara och station, och en kartvy som visar var det lönar sig | Ej påbörjad |
 | F-070 | Skeppstyp Juggernaut. Ett ovanligt krigsskepp som är långsamt och tungt bestyckat. Patrullerar hos faktioner och dyker i väldigt sällsynta fall upp som pirat. Kräver F-035. Design vald 2026-11-14: förslag E, ett kantigt ägg med smala änden fram, pansarplåtar och monterade kanontorn, mindre än Cruisern | Ej påbörjad |
