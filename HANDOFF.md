@@ -82,7 +82,8 @@ Grafik
 
 ## Engångsåtgärder
 
-Inga än.
+- Klar 2026-11-14: `badbagel47.github.io` är tillåten i användarens molnmiljö, så att agenten kan kontrollera den publicerade sidan.
+- Väntar: användaren slår på GitHub Pages för repot (Deploy from a branch, main, rot), om det blir valet i D-004.
 
 ## Lagar och regler
 
