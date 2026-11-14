@@ -16,6 +16,8 @@ Dockningen är enklare, och en knapp dyker upp nere till höger när det finns n
 
 Den som besättningen skjuter på försvarar sig nu, skepp från samma sida kommer till hjälp och oinblandade skepp lämnar platsen. Ett designförslag för hur vrak, stationer och insidor ska se ut ligger på designsidan under "Utseende utanpå och inuti" och är godkänt av användaren.
 
+Engineer ser rymden som de andra, med en remsa för energi och skador. Stationerna har varje sidas eget utseende, dockningsarmar som fälls ut och ljus som visar hur de behandlar besättningen. Vrak har formen av skeppet de var. Insidorna av vrak och stationer är större än skärmen, följer formen på det man bordat och görs nya för varje omgång.
+
 Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-089 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
 ## Nästa steg
@@ -67,6 +69,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
   - `sides.js`: vem som står på vems sida, vad varje sida tycker om besättningen (anseendet i `state.standing`), och vilka sidor besättningen har retat upp just här (`state.strife`). Allt som kan skjuta eller bli skjutet har en `side`: besättningen, piraterna, en faktion, eller en station som står för sig själv.
   - `stations.js`: stationerna. Hur en station behandlar besättningen (`align`, `closed`) räknas fram ur dess sida och anseendet i varje steg, så ändra sidan eller anseendet och aldrig `align` direkt. Här finns också försvaret och piratanfallen.
   - `traffic.js`: faktionernas skepp som hoppar in, gör sitt ärende och hoppar ut.
+  - `layout.js`: planlösningarna för vrak och stationer. Varje plats får en egen, gjord av spelets styrda slump, och `planHolds()` kontrollerar att den går att ta sig igenom. `boarding.js` fyller planlösningen med vakter, turrets och loot.
   - `weapons.js`: fregattens vapen som data. Ett nytt vapen är en ny rad i `WEAPONS`.
   - `posts.js`, `ship.js`, `shots.js`: de tre posterna, fregatten och skotten.
   - `balance.js`: siffror för spelets regler. Siffror för varje skeppsklass står i `kinds.js`.
@@ -218,7 +221,7 @@ Faktioner, stationsförsvar och trafik, agentens val som användaren inte har se
 - Dockningsskölden är 40, och 90 med uppgraderingen Docking Field (150 krediter, en system slot). Den laddas på fyra sekunder och försvinner när skeppet lägger ut.
 - Trafik: ett nytt skepp eller en patrull var tjugonde till fyrtiofemte sekund, högst fem samtidigt, två av tre är fraktskepp. Fraktskepp besöker en eller två stationer i 12 till 25 sekunder var. Patruller är två skepp som går en runda förbi stationerna. Ingen trafik kommer till en sektor där piraterna har alla stationer.
 - Pirater jagar närmaste fiende inom sikt och annars fregatten. Darts skjuter bara på fiender.
-- Sparningar gjorda före den senaste ändringen av spelets tillstånd går inte att läsa in (`SAVE_VERSION` är 4).
+- Sparningar gjorda före den senaste ändringen av spelets tillstånd går inte att läsa in (`SAVE_VERSION` är 5).
 - Strider som andra har del i (F-129, byggt 2026-11-14, agentens siffror):
   - Den första träffen på någon som inte är fiende ger en varning. En träff till inom en halv minut startar en strid: sidans skepp och stationens kanoner här behandlar besättningen som fiende, och stationen släpper inte in någon. Skott som redan var på väg när varningen kom räknas inte.
   - Striden lägger sig 25 sekunder efter besättningens sista skott. Den gäller bara i sektorn och är skild från anseendet, som fortsätter sjunka för varje träff.
@@ -247,6 +250,13 @@ Bordning av stationer, besked från användaren (2026-11-14, inget av det är by
 - Ljus ska inte göras som halvgenomskinliga färgytor, eftersom det gör bilden mjölkig. Användaren vill ha mer realistiskt ljus där svärtan finns kvar: ett filter i ljusets färg och sedan ljus ovanpå (F-135). Ljus och skuggor för mer djup ska provas (F-136). Båda 2026-11-14, inte byggda.
 - Spelarens lampa vid bordning: vi provar en lampa som går att tända och släcka så att man inte syns. Den lyser bara framåt, som en ficklampa (2026-11-14, byggs med smygandet, F-107).
 - Utsidan på stationer och vrak är byggd enligt designen (F-130 till F-133, 2026-11-14). Agentens val: ett vrak med lägre risk är oftare ett litet skrov, ett fraktskepp som förstörs lämnar nu också ett vrak, Wardens extra plattor på ringen är bara utseende och har inga kanoner, och armen fälls ut när ett skepp är inom 150 punkter och rör sig långsamt.
+- Genererade inomhusmiljöer är byggda (F-127, D-101, 2026-11-14). Agentens val:
+  - Storlekar i rutor: Gunboat 38 gånger 21, okänt skrov 54 gånger 25, fraktskepp 80 gånger 21 och station 73 gånger 73. Skärmen visar 40 gånger 22.
+  - Vrak har ibland rum som är uppslitna mot rymden och inte går att gå in i. Valvet är rummet längst från luftslussen.
+  - En station har tills vidare en enda väg in till navet, som är valvet, genom en låst dörr. Fler vägar, personaldörrar och kameror kommer med lockdown och smygande.
+  - Diskarna på en handelsstation står i de tre största rummen.
+  - En liten planritning i hörnet visar hela platsen, var man är och var luftslussen är. Den visar allt från början.
+  - Vakterna är lika enkla som förut och kan fastna mot väggar i de större platserna. Det rättas i gruppen om smartare vakter.
 - Designförslaget D-128 är godkänt av användaren (2026-11-14): vraken, stationerna, att luftslussen ligger i vrakets sida, och det starkare larmet där lamporna blinkar och ljuskäglor snurrar. Mörkret ska ha mer kontrast så att detaljer syns, och vi provar oss fram (F-135). Agentens val i det: vrak är skeppet det var, grått och trasigt, i samma skala. Stationer har dagens ring med färg, märken och påbyggnader per sida. Dockningsarmarna är infällda tills ett skepp dockar, och ljusen på deras spetsar visar hållningen: grönt vänlig, vitt neutral, gult avvaktande, släckt stängd, rött fientlig. Insidorna byggs av samma bitar i varje sidas färger. Ett vrak har en korridor längs mitten med luftslussen i sidan, och en station är en ring runt ett nav med luftsluss i varje arm.
 - Användaren har godkänt hela förslaget i docs/station-boarding.md (2026-11-14). Sista beskeden: större och genererade insidor och smartare vakter görs före lockdown och smygande, anfall på egna stationer sker i tre steg och byggs i två omgångar (först uträkningen, sedan att själv gå in och försvara), och en station som faller behåller halva försvaret.
 - Det som var kvar att bestämma när förslaget skrevs, och som nu är avgjort i dokumentet: hur en attack inifrån börjar på en neutral bas (agentens förslag: en öppen del och en del bara för personal), att ingen längre kastas ut när stationen blir fientlig, hur larm skiljer sig från lockdown i bild, hur oförstörbara turrets aldrig kan låsa spelet, hur hårt bounty hunters slår, och vad panelen på en ägd station ska kunna när stationer i dag lagar sig själva.

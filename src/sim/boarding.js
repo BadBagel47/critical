@@ -1,7 +1,9 @@
 // Boarding: the top-down interior of a wreck, with guards, turrets, loot and the teleporter.
 import { B } from './balance.js';
 import { createWreck, currentSector } from './sectors.js';
-import { addThing, removeThing, thingsOf, dockTargets, findDock } from './things.js';
+import { addThing, removeThing, thingsOf, dockTargets, findDock, portsOf } from './things.js';
+import { shipNose } from './ship.js';
+import { layOut, TILE } from './layout.js';
 import { makeVessel } from './vessels.js';
 import { playerById, leavePost, returnToPost } from './players.js';
 import { takeOver, isTrading } from './stations.js';
@@ -10,11 +12,10 @@ import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
 import { clamp, forward, headingTo, angleDiff, turnToward, dist, rand, randRange, TAU } from './util.js';
 
-export const TILE = 16,
-  IW = 32,
-  IH = 18;
-const SOLID = new Set(['#', 'L']);
-export const tileAt = (it, tx, ty) => (tx < 0 || ty < 0 || tx >= IW || ty >= IH ? '#' : it.tiles[ty * IW + tx]);
+export { TILE };
+// Walls, the locked vault door, space outside the hull and rooms that are torn open to it.
+const SOLID = new Set(['#', 'L', ' ', 'X']);
+export const tileAt = (it, tx, ty) => (tx < 0 || ty < 0 || tx >= it.w || ty >= it.h ? ' ' : it.tiles[ty * it.w + tx]);
 const solidAt = (it, x, y) => SOLID.has(tileAt(it, Math.floor(x / TILE), Math.floor(y / TILE)));
 
 export function blocked(it, x, y, r) {
@@ -43,45 +44,7 @@ export function los(it, x0, y0, x1, y1) {
 }
 
 // ---------- generation ----------
-// The floor plan: three rooms above and three below a corridor, each with a door onto it.
-// One of the rooms is the vault, behind a locked door. The airlock is at the left end of the corridor.
-function layOut(state) {
-  const tiles = new Array(IW * IH).fill('#');
-  const set = (tx, ty, c) => {
-    tiles[ty * IW + tx] = c;
-  };
-  const s1 = 9 + Math.floor(rand(state) * 4);
-  const s2 = 19 + Math.floor(rand(state) * 5);
-  const rows = [
-    [0, 6],
-    [11, 17],
-  ];
-  const columns = [
-    [0, s1],
-    [s1, s2],
-    [s2, IW - 1],
-  ];
-  const rooms = [];
-  for (const [r0, r1] of rows) for (const [c0, c1] of columns) rooms.push({ c0, c1, r0, r1, door: null });
-  for (const rm of rooms) {
-    for (let ty = rm.r0 + 1; ty < rm.r1; ty++) for (let tx = rm.c0 + 1; tx < rm.c1; tx++) set(tx, ty, '.');
-  }
-  for (let ty = 7; ty <= 10; ty++) for (let tx = 1; tx < IW - 1; tx++) set(tx, ty, '.');
-  const vault = [2, 5, 1, 4][Math.floor(rand(state) * 4)];
-  rooms.forEach((rm, i) => {
-    const dc = rm.c0 + 2 + Math.floor(rand(state) * Math.max(1, rm.c1 - rm.c0 - 4));
-    const row = rm.r0 === 0 ? 6 : 11;
-    const door = i === vault ? 'L' : '.';
-    set(dc, row, door);
-    set(dc + 1, row, door);
-    rm.door = { x: (dc + 1) * TILE, y: row * TILE + TILE / 2 };
-  });
-  set(0, 8, 'A');
-  set(0, 9, 'A');
-  return { tiles, rooms, vault };
-}
-
-const CORRIDOR = { c0: 0, c1: IW - 1, r0: 6, r1: 11 };
+// The floor plan itself is made in layout.js. Here it is filled with guards, turrets and loot.
 const newGuard = (state, p, heading) => ({
   id: state.nextId++,
   x: p.x,
@@ -96,13 +59,36 @@ const newGuard = (state, p, heading) => ({
   lost: 0,
 });
 
+// A free spot on the floor inside a box of walls (a room or a corridor): not too close to anything in `taken`,
+// and at least `away` from the way in.
+function spotIn(state, it, box, taken, away = 0) {
+  for (let n = 0; n < 60; n++) {
+    const x = (box.c0 + 1.5 + rand(state) * (box.c1 - box.c0 - 2)) * TILE;
+    const y = (box.r0 + 1.5 + rand(state) * (box.r1 - box.r0 - 2)) * TILE;
+    if (blocked(it, x, y, 7) || taken.some((t) => dist(t.x, t.y, x, y) < 18)) continue;
+    if (away && dist(x, y, it.entry.x, it.entry.y) < away) continue;
+    taken.push({ x, y });
+    return { x, y };
+  }
+  const p = box.mid ? { ...box.mid } : { x: ((box.c0 + box.c1 + 1) / 2) * TILE, y: ((box.r0 + box.r1 + 1) / 2) * TILE };
+  taken.push(p);
+  return p;
+}
+
 export function createInterior(state, wreck) {
-  const { tiles, rooms, vault } = layOut(state);
+  const plan = layOut(state, wreck);
+  const { rooms, vault } = plan;
   const it = {
-    tiles,
+    w: plan.w,
+    h: plan.h,
+    tiles: plan.tiles,
     rooms,
     vault,
-    entry: { x: 1.5 * TILE, y: 9 * TILE },
+    halls: plan.halls,
+    airlocks: plan.airlocks,
+    far: plan.far,
+    // The airlock the crew comes in through. tryBoard sets it to the one at the arm the frigate is docked at.
+    entry: plan.airlocks[0],
     timer: null,
     live: false,
     doorCut: 0,
@@ -126,20 +112,8 @@ export function createInterior(state, wreck) {
     makeTrade(state, it);
     return it;
   }
-  // A free spot in a room, not too close to anything placed before it.
   const taken = [];
-  const spot = (rm, minX = 0) => {
-    for (let n = 0; n < 40; n++) {
-      const x = (rm.c0 + 1.5 + rand(state) * (rm.c1 - rm.c0 - 2)) * TILE;
-      const y = (rm.r0 + 1.5 + rand(state) * (rm.r1 - rm.r0 - 2)) * TILE;
-      if (x < minX || taken.some((t) => dist(t.x, t.y, x, y) < 18)) continue;
-      taken.push({ x, y });
-      return { x, y };
-    }
-    const p = { x: ((rm.c0 + rm.c1 + 1) / 2) * TILE, y: ((rm.r0 + rm.r1 + 1) / 2) * TILE };
-    taken.push(p);
-    return p;
-  };
+  const spot = (box, away = 0) => spotIn(state, it, box, taken, away);
   const difficulty = wreck.difficulty;
   const vaultRoom = rooms[vault];
   const open = rooms.map((_, i) => i).filter((i) => i !== vault);
@@ -153,12 +127,13 @@ export function createInterior(state, wreck) {
 
   // Guards: the first one in the corridor, the rest in the rooms. More of them where it is more dangerous.
   for (let i = 0; i < difficulty + 1; i++) {
-    const p = i === 0 ? spot(CORRIDOR, 13 * TILE) : spot(anyRoom(), 6 * TILE);
+    const hall = it.halls[Math.floor(rand(state) * it.halls.length)];
+    const p = i === 0 ? spot(hall, 12 * TILE) : spot(anyRoom(), 7 * TILE);
     it.guards.push(newGuard(state, p, rand(state) * TAU));
   }
   // Turrets: the first one at the far end of the corridor.
   for (let i = 0; i < difficulty - 1; i++) {
-    const p = i === 0 ? { x: (IW - 2.5) * TILE, y: (8 + rand(state) * 2) * TILE } : spot(anyRoom(), 8 * TILE);
+    const p = i === 0 ? { x: it.far.x, y: it.far.y + (rand(state) - 0.5) * TILE } : spot(anyRoom(), 8 * TILE);
     taken.push(p);
     it.turrets.push({ id: state.nextId++, x: p.x, y: p.y, hp: B.TURRET_HP, heading: Math.PI * 1.5, cool: 1 });
   }
@@ -196,17 +171,16 @@ export function makeTrade(state, it) {
   it.turrets = [];
   it.bolts = [];
   it.grenades = [];
-  const mid = (rm) => ((rm.c0 + rm.c1 + 1) / 2) * TILE;
-  it.desks = [
-    { type: 'services', x: 5.5 * TILE, y: 7.5 * TILE },
-    { type: 'shipyard', x: mid(it.rooms[1]), y: 2.5 * TILE },
-    { type: 'armory', x: mid(it.rooms[4]), y: 15.5 * TILE },
-  ];
+  // A desk in each of the three largest rooms.
+  const open = it.rooms.filter((_, i) => i !== it.vault);
+  const area = (rm) => (rm.c1 - rm.c0) * (rm.r1 - rm.r0);
+  const largest = [...open].sort((a, b) => area(b) - area(a) || a.c0 - b.c0 || a.r0 - b.r0);
+  it.desks = ['services', 'shipyard', 'armory'].map((type, k) => ({ type, ...largest[k % largest.length].mid }));
   it.civilians = [];
-  for (let i = 0; i < 5; i++) {
-    const rm = i < 2 ? { c0: 8, c1: IW - 2, r0: 6, r1: 11 } : it.rooms[(i * 2) % it.rooms.length];
-    const x = (rm.c0 + 2 + rand(state) * (rm.c1 - rm.c0 - 3)) * TILE,
-      y = (rm.r0 + 2 + rand(state) * (rm.r1 - rm.r0 - 3)) * TILE;
+  const taken = it.desks.map((d) => ({ x: d.x, y: d.y }));
+  for (let i = 0; i < 6; i++) {
+    const box = i < 3 ? it.halls[i % it.halls.length] : open[(i * 2) % open.length];
+    const { x, y } = spotIn(state, it, box, taken);
     it.civilians.push({
       id: state.nextId++,
       x,
@@ -217,6 +191,23 @@ export function makeTrade(state, it) {
       wait: rand(state) * 3,
     });
   }
+}
+
+// Where a boarder stands when they have just come in: a step inside the airlock, side by side.
+function comeIn(it, k) {
+  const e = it.entry;
+  const side = k * 8 - 6;
+  return { x: e.x + e.nx * 14 - e.ny * side, y: e.y + e.ny * 14 + e.nx * side, heading: Math.atan2(e.nx, -e.ny) };
+}
+// The crew comes in through the airlock at the port the frigate is docked at.
+function useAirlock(state, place, it) {
+  const nose = shipNose(state.ship);
+  const ports = portsOf(place);
+  let best = 0;
+  ports.forEach((p, i) => {
+    if (dist(p.x, p.y, nose.x, nose.y) < dist(ports[best].x, ports[best].y, nose.x, nose.y)) best = i;
+  });
+  it.entry = it.airlocks[best] || it.airlocks[0];
 }
 
 // ---------- players ----------
@@ -240,13 +231,12 @@ export function tryBoard(state, playerId) {
     const floor = wreck.interior;
     if (!floor.trade) makeTrade(state, floor);
     floor.live = true;
+    if (!floor.avatars.length) useAirlock(state, wreck, floor);
     player.inside = wreck.id;
     leavePost(player);
     floor.avatars.push({
       player: playerId,
-      x: floor.entry.x + 6,
-      y: floor.entry.y - 6 + floor.avatars.length * 8,
-      heading: Math.PI / 2,
+      ...comeIn(floor, floor.avatars.length),
       carry: [],
       cool: 0,
       grenades: 0,
@@ -275,13 +265,12 @@ export function tryBoard(state, playerId) {
   const it = wreck.interior;
   if (wreck.kind === 'wreck' && it.timer === null) it.timer = B.REACTOR_TIME[wreck.difficulty];
   it.live = true;
+  if (!it.avatars.length) useAirlock(state, wreck, it);
   player.inside = wreck.id;
   leavePost(player);
   it.avatars.push({
     player: playerId,
-    x: it.entry.x + 6,
-    y: it.entry.y - 6 + it.avatars.length * 8,
-    heading: Math.PI / 2,
+    ...comeIn(it, it.avatars.length),
     carry: [],
     cool: 0,
     grenades: B.GRENADES,
@@ -361,7 +350,7 @@ function explode(state, it, g) {
 }
 
 // ---------- what a boarder does ----------
-const atAirlockDoor = (it, av) => av.x < TILE * 2.2 && Math.abs(av.y - it.entry.y) < TILE * 1.5;
+const atAirlockDoor = (it, av) => dist(av.x, av.y, it.entry.x, it.entry.y) < TILE * 1.8;
 // What there is to work with where a boarder stands, for the screen to show: the airlock, a desk,
 // the terminal, or the vault door (`cut` when they are near enough to cut it and not only to blow it).
 export function useTarget(it, av) {
@@ -515,7 +504,7 @@ function stepAvatar(state, it, av, cmd, dt) {
   if (cmd.grenade && av.grenades > 0) throwGrenade(it, av, cmd.grenade);
   pickUpLoot(state, it, av);
   // What is carried is stowed on the ship at the airlock.
-  const atAirlock = tileAt(it, Math.floor(av.x / TILE), Math.floor(av.y / TILE)) === 'A' || av.x < TILE * 1.2;
+  const atAirlock = tileAt(it, Math.floor(av.x / TILE), Math.floor(av.y / TILE)) === 'A' || atAirlockDoor(it, av);
   if (atAirlock) deposit(state, av);
   if (cmd.usePressed && atAirlockDoor(it, av)) {
     deposit(state, av);

@@ -12,7 +12,7 @@ import { turretMount } from './sim/weapons.js';
 import { createEffects, drawFlash } from './render/effects.js';
 import { drawSpace, drawStars } from './render/space.js';
 import { drawHud, drawOverlay, drawHelp, drawToasts } from './render/hud.js';
-import { drawBoarding, OX, OY } from './render/boarding.js';
+import { drawBoarding, insideOrigin } from './render/boarding.js';
 import { drawBreakin, breakinAction, breakinButtons } from './render/breakin.js';
 import { drawMap, mapPoint, chartClick, mapButtons } from './render/map.js';
 import { drawShop, shopClick, shopButtons } from './render/shop.js';
@@ -177,13 +177,15 @@ function shopInput(game, out) {
 function awayInput(game, out) {
   const { keys, state, view, me } = game;
   const m = keys.mouse;
-  let aim = { x: m.x - OX, y: m.y - OY };
+  const place = findDock(state, me.inside);
+  const av = place && place.interior.avatars.find((a) => a.player === me.id);
+  // The pointer is on the screen. Where that is inside the place depends on where the camera is.
+  const origin = place ? insideOrigin(place.interior, av) : { x: 0, y: 0 };
+  let aim = { x: m.x - origin.x, y: m.y - origin.y };
   let lob = aim;
   if (keys.pad.used) {
     // With a gamepad the right stick aims, from where the boarder stands.
     const dir = stickAim(view, keys.pad);
-    const place = findDock(state, me.inside);
-    const av = place && place.interior.avatars.find((a) => a.player === me.id);
     if (av) {
       aim = { x: av.x + dir.x * 60, y: av.y + dir.y * 60 };
       lob = { x: av.x + dir.x * 95, y: av.y + dir.y * 95 };

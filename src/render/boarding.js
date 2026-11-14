@@ -1,7 +1,8 @@
 // The boarding view: the inside of a wreck seen from above.
-import { VIEW_W, COL } from '../config.js';
+import { VIEW_W, VIEW_H, COL } from '../config.js';
 import { B } from '../sim/balance.js';
-import { TILE, IW, IH, tileAt, useTarget } from '../sim/boarding.js';
+import { TILE, tileAt, useTarget } from '../sim/boarding.js';
+import { FACTIONS } from '../sim/sides.js';
 import { sprite, rect, label, bar } from './draw.js';
 import { drawStars } from './space.js';
 import { findDock } from '../sim/things.js';
@@ -9,57 +10,145 @@ import { playerById } from '../sim/players.js';
 import { hullMax, shieldMax, level, carryMax, crewHpMax } from '../sim/upgrades.js';
 import { alarmText } from './hud.js';
 
-export const OX = 112,
-  OY = 38;
+// Where on the screen the inside of a place is drawn. The camera follows the player's own figure. A place
+// that is smaller than the screen is kept still in the middle of it, and at the edges of a larger one the
+// camera goes a little way outside, so that the frigate at the airlock can be seen.
+export function insideOrigin(it, me) {
+  const at = me || it.entry;
+  const along = (view, size, pos, lo, hi) => {
+    const room = view - lo - hi;
+    if (size + 2 * OUTSIDE <= room) return lo + (room - size) / 2;
+    return Math.round(Math.max(view - hi - size - OUTSIDE, Math.min(lo + OUTSIDE, view / 2 - pos)));
+  };
+  return { x: along(VIEW_W, it.w * TILE, at.x, 0, 0), y: along(VIEW_H, it.h * TILE, at.y, 28, 30) };
+}
+const OUTSIDE = 96;
+const FLOOR = new Set(['.', ',', 'A']);
 const WALL = ['#2a2c3a', '#44475a', '#666a7e'];
+// How the inside of each side's places looks. The pieces are the same everywhere, in the side's own colours.
+//   wall     the face of a wall, its top and the edge of the top
+//   floor    two tones for the tiles of a room, two for a corridor, and the line between tiles
+//   lamp     the strip lights on the walls: dark, lit and bright
+//   dead     how large a share of the lamps are out
+//   marks    what is drawn on the floor, see drawMarks
+const STYLES = {
+  plain: { wall: WALL, floor: ['#1a1b26', '#1d1e2a', '#1e2029', '#21232d', '#13131c'], lamp: COL.ochre, dead: 0 },
+  wreck: {
+    wall: ['#201f25', '#34323a', '#4c4a54'],
+    floor: ['#131318', '#16161c', '#17171d', '#1a1a21', '#0d0d12'],
+    lamp: COL.ember,
+    dead: 0.65,
+    marks: 'debris',
+  },
+  charter: {
+    wall: ['#3a3d4e', '#5d6174', '#8a8ea0'],
+    floor: ['#23242f', '#272833', '#262733', '#2a2b37', '#1a1b24'],
+    lamp: COL.ochre,
+    dead: 0,
+    marks: 'runner',
+  },
+  wardens: {
+    wall: ['#222838', '#3a4358', '#58647e'],
+    floor: ['#161b28', '#19202e', '#1a2030', '#1d2434', '#10141e'],
+    lamp: ['#1c3566', '#2c5fae', '#5a9be0', '#cfe9ff'],
+    dead: 0,
+    marks: 'stripes',
+  },
+  drifters: {
+    wall: ['#4a2f26', '#6e4434', '#8f5d44'],
+    floor: ['#1f1a18', '#231d1a', '#231e1c', '#27211e', '#161211'],
+    lamp: ['#2e6b5f', '#3f8f80', '#58b0a0', '#a0e0d0'],
+    dead: 0.2,
+    marks: 'patches',
+  },
+  pirate: {
+    wall: ['#231629', '#3d2640', '#5a3a5a'],
+    floor: ['#1b1620', '#1f1925', '#1e1924', '#221c29', '#130f17'],
+    lamp: COL.ember,
+    dead: 0.1,
+    marks: 'grates',
+  },
+};
+const styleOf = (place) =>
+  STYLES[
+    place.kind !== 'station'
+      ? 'wreck'
+      : place.side === 'pirate'
+        ? 'pirate'
+        : FACTIONS[place.side]
+          ? place.side
+          : 'plain'
+  ];
+// A number that is always the same for a tile, to scatter things over the floor without them moving about.
+const scatter = (tx, ty) => ((tx * 73856093) ^ (ty * 19349663)) >>> 0;
+
+// What a side leaves on its floors.
+function drawMarks(ctx, style, c, tx, ty, x, y) {
+  const n = scatter(tx, ty);
+  if (style.marks === 'grates') {
+    ctx.fillStyle = style.floor[4];
+    for (let k = 3; k < TILE - 2; k += 4) ctx.fillRect(x + 3, y + k, TILE - 7, 1);
+  } else if (style.marks === 'patches' && n % 5 === 0) {
+    rect(ctx, x + 2, y + 2, TILE - 5, TILE - 5, ['#2a211d', '#1a2422', '#24242c'][n % 3]);
+    ctx.fillStyle = '#6b6658';
+    ctx.fillRect(x + 3, y + 3, 1, 1);
+    ctx.fillRect(x + TILE - 5, y + TILE - 5, 1, 1);
+  } else if (style.marks === 'debris' && n % 7 === 0) {
+    ctx.fillStyle = ['#2b2a30', '#45434c', '#0a0a0e'][n % 3];
+    ctx.fillRect(x + 2 + (n % 9), y + 3 + ((n >> 4) % 8), 2 + (n % 3), 1 + ((n >> 2) % 2));
+  } else if (style.marks === 'stripes' && c === ',' && (tx + ty) % 2 === 0) {
+    ctx.fillStyle = '#2c5fae';
+    ctx.fillRect(x + 6, y + 7, 4, 2);
+  } else if (style.marks === 'runner' && c === ',') {
+    ctx.fillStyle = '#3a2a1c';
+    ctx.fillRect(x + 6, y + 6, 4, 4);
+  }
+}
 const solid = (c) => c === '#' || c === 'L';
 const fmt = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 
-function drawTiles(ctx, it) {
-  for (let ty = 0; ty < IH; ty++)
-    for (let tx = 0; tx < IW; tx++) {
+// The tiles that are on the screen, given where the place is drawn.
+function drawTiles(ctx, it, origin, style) {
+  const wall = style.wall;
+  const tx0 = Math.max(0, Math.floor(-origin.x / TILE) - 1);
+  const ty0 = Math.max(0, Math.floor(-origin.y / TILE) - 1);
+  const tx1 = Math.min(it.w, Math.ceil((VIEW_W - origin.x) / TILE) + 1);
+  const ty1 = Math.min(it.h, Math.ceil((VIEW_H - origin.y) / TILE) + 1);
+  for (let ty = ty0; ty < ty1; ty++)
+    for (let tx = tx0; tx < tx1; tx++) {
       const c = tileAt(it, tx, ty),
         x = tx * TILE,
         y = ty * TILE;
-      if (c === '.' || c === 'A') {
-        const corridor = ty >= 7 && ty <= 10;
-        rect(
-          ctx,
-          x,
-          y,
-          TILE,
-          TILE,
-          corridor ? ((tx + ty) % 2 ? '#1e2029' : '#21232d') : (tx + ty) % 2 ? '#1a1b26' : '#1d1e2a',
-        );
-        ctx.fillStyle = '#13131c';
-        ctx.fillRect(x, y + TILE - 1, TILE, 1);
-        ctx.fillRect(x + TILE - 1, y, 1, TILE);
-        ctx.fillStyle = '#2c2d3b';
-        ctx.fillRect(x + 2, y + 2, 1, 1);
-        ctx.fillRect(x + TILE - 4, y + 2, 1, 1);
-        if (c === 'A') {
-          ctx.fillStyle = COL.acid[1];
-          ctx.fillRect(x + 12, y + 1, 2, TILE - 2);
-        }
-        if (corridor && ty === 9) {
-          ctx.fillStyle = '#2c3d40';
-          ctx.fillRect(x + 5, y - 1, 6, 2);
-        }
+      if (c === 'X') {
+        // A room torn open to space: only a plate of the floor here and there is left.
+        if ((tx * 3 + ty * 5) % 4 === 0) rect(ctx, x + 2, y + 3, TILE - 5, TILE - 6, '#14141c', '#22232d');
+        continue;
+      }
+      if (!FLOOR.has(c)) continue;
+      rect(ctx, x, y, TILE, TILE, style.floor[(c === ',' ? 2 : 0) + ((tx + ty) % 2)]);
+      ctx.fillStyle = style.floor[4];
+      ctx.fillRect(x, y + TILE - 1, TILE, 1);
+      ctx.fillRect(x + TILE - 1, y, 1, TILE);
+      drawMarks(ctx, style, c, tx, ty, x, y);
+      if (c === 'A') {
+        ctx.fillStyle = COL.acid[1];
+        ctx.fillRect(x + 2, y + 2, TILE - 4, 1);
+        ctx.fillRect(x + 2, y + TILE - 3, TILE - 4, 1);
+        ctx.fillRect(x + 6, y + 6, 4, 4);
       }
     }
-  for (let ty = 0; ty < IH; ty++)
-    for (let tx = 0; tx < IW; tx++) {
+  for (let ty = ty0; ty < ty1; ty++)
+    for (let tx = tx0; tx < tx1; tx++) {
       const c = tileAt(it, tx, ty),
         x = tx * TILE,
         y = ty * TILE;
       if (!solid(c)) continue;
       const below = tileAt(it, tx, ty + 1),
-        open = (dx, dy) =>
-          !solid(tileAt(it, tx + dx, ty + dy)) && tx + dx >= 0 && tx + dx < IW && ty + dy >= 0 && ty + dy < IH;
-      rect(ctx, x, y, TILE, TILE, WALL[1]);
+        open = (dx, dy) => !solid(tileAt(it, tx + dx, ty + dy));
+      rect(ctx, x, y, TILE, TILE, wall[1]);
       if (c === 'L') {
-        rect(ctx, x, y + 3, TILE, 10, '#1c1c28', COL.out);
-        for (let k = 0; k < TILE; k += 6) {
+        rect(ctx, x + 1, y + 3, TILE - 2, 10, '#1c1c28', COL.out);
+        for (let k = 2; k < TILE - 2; k += 6) {
           ctx.fillStyle = COL.ochre[1];
           ctx.fillRect(x + k, y + 6, 3, 4);
         }
@@ -70,16 +159,23 @@ function drawTiles(ctx, it) {
         continue;
       }
       if (open(0, -1)) {
-        ctx.fillStyle = WALL[2];
+        ctx.fillStyle = wall[2];
         ctx.fillRect(x, y, TILE, 1);
       }
-      if (below === '.' || below === 'A') {
-        rect(ctx, x, y + 7, TILE, 9, WALL[0]);
+      if (FLOOR.has(below)) {
+        rect(ctx, x, y + 7, TILE, 9, wall[0]);
         ctx.fillStyle = COL.out;
         ctx.fillRect(x, y + 7, TILE, 1);
-        rect(ctx, x + 3, y + 10, 10, 3, '#1c1c28');
-        ctx.fillStyle = (tx * 7 + ty) % 5 === 0 ? COL.ochre[1] : '#2c2d3b';
-        ctx.fillRect(x + 5, y + 11, 1, 1);
+        // Every other stretch of wall has a strip light in the side's colour. Some of them are out.
+        const n = scatter(tx, ty);
+        const lamp = tx % 2 === 0;
+        const lit = lamp && (n % 100) / 100 >= style.dead;
+        rect(ctx, x + 3, y + 10, 10, 3, lit ? style.lamp[1] : '#1c1c28');
+        if (lit) {
+          ctx.fillStyle = style.lamp[3];
+          ctx.fillRect(x + 4, y + 11, 8, 1);
+          glow(ctx, x + 8, y + TILE + 4, 13, style.lamp[2], 0.05);
+        }
       }
       ctx.fillStyle = COL.out;
       if (open(0, -1)) ctx.fillRect(x, y, TILE, 1);
@@ -87,6 +183,46 @@ function drawTiles(ctx, it) {
       if (open(-1, 0)) ctx.fillRect(x, y, 1, TILE);
       if (open(1, 0)) ctx.fillRect(x + TILE - 1, y, 1, TILE);
     }
+}
+
+// A small plan of the whole place in the corner, since it no longer fits on the screen. It is drawn once and
+// kept, and drawn again when a door has opened.
+const plans = new WeakMap();
+function drawPlan(ctx, it, me, x, y) {
+  let kept = plans.get(it);
+  if (!kept || kept.tiles !== it.tiles) {
+    const canvas = document.createElement('canvas');
+    canvas.width = it.w;
+    canvas.height = it.h;
+    const g = canvas.getContext('2d');
+    for (let ty = 0; ty < it.h; ty++)
+      for (let tx = 0; tx < it.w; tx++) {
+        const c = tileAt(it, tx, ty);
+        if (c === ' ') continue;
+        g.fillStyle =
+          c === '#'
+            ? '#3a3d4e'
+            : c === 'L'
+              ? COL.ochre[2]
+              : c === 'A'
+                ? COL.acid[2]
+                : c === 'X'
+                  ? '#0d0d14'
+                  : '#1d1f2b';
+        g.fillRect(tx, ty, 1, 1);
+      }
+    kept = { canvas, tiles: it.tiles };
+    plans.set(it, kept);
+  }
+  rect(ctx, x - 3, y - 3, it.w + 6, it.h + 6, COL.panel, COL.line);
+  ctx.globalAlpha = 0.9;
+  ctx.drawImage(kept.canvas, x, y);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = COL.acid[2];
+  ctx.fillRect(x + Math.floor(it.entry.x / TILE) - 1, y + Math.floor(it.entry.y / TILE) - 1, 2, 2);
+  if (!me) return;
+  ctx.fillStyle = COL.white;
+  ctx.fillRect(x + Math.floor(me.x / TILE) - 1, y + Math.floor(me.y / TILE) - 1, 3, 3);
 }
 
 function glow(ctx, x, y, r, color, a) {
@@ -141,7 +277,6 @@ const DESK = {
   shipyard: (place) => (place.shipyard ? ['SHIPYARD', COL.captain] : ['NO SHIPYARD', COL.faint]),
   armory: () => ['ARMORY', COL.ember[1]],
 };
-const upper = (o) => o.y < 9 * TILE;
 const CROSSHAIR = [
   [-6, 0, 3, 1],
   [4, 0, 3, 1],
@@ -149,19 +284,25 @@ const CROSSHAIR = [
   [0, 4, 1, 3],
 ];
 
-// The docked frigate and the tunnel from it into the airlock.
-function drawTunnel(ctx, img) {
-  sprite(ctx, img.frigate, 16, OY + 9 * TILE, Math.PI / 2);
-  rect(ctx, 60, OY + 8 * TILE - 2, OX - 60, 36, WALL[0], COL.out);
-  rect(ctx, 61, OY + 8 * TILE + 2, OX - 61, 28, '#191a25');
+// The docked frigate and the tunnel from it into the airlock, outside the hull at the way in.
+function drawTunnel(ctx, img, it) {
+  const e = it.entry;
+  ctx.save();
+  ctx.translate(e.x, e.y);
+  // Turned so that up is the way in.
+  ctx.rotate(Math.atan2(e.nx, -e.ny));
+  rect(ctx, -18, 8, 36, 50, WALL[0], COL.out);
+  rect(ctx, -14, 8, 28, 50, '#191a25');
   ctx.fillStyle = WALL[0];
-  for (let x = 68; x < OX; x += 10) ctx.fillRect(x, OY + 8 * TILE + 2, 1, 28);
+  for (let y = 14; y < 58; y += 10) ctx.fillRect(-14, y, 28, 1);
+  sprite(ctx, img.frigate, 0, 58 + 44);
+  ctx.restore();
 }
 
 // A trading desk with someone behind it.
 function drawDesk(ctx, img, font, place, desk) {
   const [name, color] = DESK[desk.type](place);
-  const up = upper(desk);
+  const up = true;
   glow(ctx, desk.x, desk.y, 16, color, 0.1);
   rect(ctx, desk.x - 18, desk.y - 5, 36, 10, '#2a2c3a', COL.out);
   rect(ctx, desk.x - 17, desk.y - 4, 34, 2, '#44475a');
@@ -216,10 +357,11 @@ function drawGrenade(ctx, g, time) {
 }
 
 // Everything on the floor, in the interior's own pixels.
-function drawFloor(ctx, state, place, me, assets, fx) {
+function drawFloor(ctx, state, place, me, assets, fx, origin) {
   const { img, font } = assets;
   const it = place.interior;
-  drawTiles(ctx, it);
+  drawTunnel(ctx, img, it);
+  drawTiles(ctx, it, origin, styleOf(place));
   for (const desk of it.desks) drawDesk(ctx, img, font, place, desk);
   for (const c of it.civilians) sprite(ctx, img.boarder, c.x, c.y, c.heading);
   for (const l of it.loot) {
@@ -286,7 +428,7 @@ function drawVisitorHud(ctx, font) {
 }
 
 // While boarding: health, weapons, how the ship is doing, and a prompt for what the use key does here.
-function drawBoarderHud(ctx, font, state, view, player, place, me) {
+function drawBoarderHud(ctx, font, state, view, player, place, me, origin) {
   const it = place.interior;
   const ship = state.ship;
   rect(ctx, 8, 332, 100, 22, COL.panel, COL.line);
@@ -311,10 +453,10 @@ function drawBoarderHud(ctx, font, state, view, player, place, me) {
   const at = me && useTarget(it, me);
   if (at && at.type === 'terminal' && it.hacking) {
     const look = { anchor: 'c', fg: COL.acid[2], border: COL.acid[0] };
-    label(ctx, font, OX + it.terminal.x, OY + it.terminal.y - 30, 'TAKING OVER THE STATION', look);
+    label(ctx, font, origin.x + it.terminal.x, origin.y + it.terminal.y - 30, 'TAKING OVER THE STATION', look);
   } else if (at && at.type === 'door' && it.cutting) {
     const look = { anchor: 'c', fg: COL.ochre[2], border: COL.ochre[0] };
-    label(ctx, font, OX + at.door.x, OY + at.door.y + (upper(at.door) ? 22 : -34), 'CUTTING THE LOCK', look);
+    label(ctx, font, origin.x + at.door.x, origin.y + at.door.y + 22, 'CUTTING THE LOCK', look);
   }
   ctx.fillStyle = COL.ochre[3];
   for (const [dx, dy, w, h] of CROSSHAIR)
@@ -322,17 +464,17 @@ function drawBoarderHud(ctx, font, state, view, player, place, me) {
 }
 
 export function drawBoarding(ctx, state, view, assets) {
-  const { img, font } = assets;
+  const { font } = assets;
   const player = playerById(state, view.playerId);
   const place = findDock(state, player.inside);
   const it = place.interior;
   const me = it.avatars.find((a) => a.player === player.id);
   const fx = view.fx;
-  drawStars(ctx, { x: place.x * 0.2, y: place.y * 0.2 }, fx, state.sector);
-  drawTunnel(ctx, img);
+  const origin = insideOrigin(it, me);
+  drawStars(ctx, { x: place.x * 0.2 - origin.x * 0.3, y: place.y * 0.2 - origin.y * 0.3 }, fx, state.sector);
   ctx.save();
-  ctx.translate(OX + (fx ? fx.offset.x : 0), OY + (fx ? fx.offset.y : 0));
-  drawFloor(ctx, state, place, me, assets, fx);
+  ctx.translate(origin.x + (fx ? fx.offset.x : 0), origin.y + (fx ? fx.offset.y : 0));
+  drawFloor(ctx, state, place, me, assets, fx, origin);
   ctx.restore();
 
   const where = label(ctx, font, 8, 8, it.trade ? 'ON THE STATION' : 'BOARDING', {
@@ -351,6 +493,8 @@ export function drawBoarding(ctx, state, view, assets) {
   }
   const credits = { anchor: 'r', fg: it.trade ? COL.ochre[2] : COL.dim };
   label(ctx, font, VIEW_W - 8, it.trade ? 8 : 22, `CREDITS  ${state.credits}`, credits);
+  // The plan of the place sits under the lines in the corner.
+  drawPlan(ctx, it, me, VIEW_W - 11 - it.w, it.trade ? 28 : 42);
   if (it.trade) drawVisitorHud(ctx, font);
-  else drawBoarderHud(ctx, font, state, view, player, place, me);
+  else drawBoarderHud(ctx, font, state, view, player, place, me, origin);
 }

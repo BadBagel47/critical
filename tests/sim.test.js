@@ -215,7 +215,7 @@ test('the ship cannot fly through a wreck, and ramming hurts', () => {
 });
 
 // ---------- boarding ----------
-import { createInterior, tryBoard, tileAt, TILE, IW, blocked } from '../src/sim/boarding.js';
+import { createInterior, tryBoard, tileAt, TILE, blocked } from '../src/sim/boarding.js';
 
 test('docking works from a little way off, and the ship is pulled in until its nose rests at the port', () => {
   const s = quiet(createState(1));
@@ -314,12 +314,28 @@ function boarded(seed = 1) {
   return { s, w, it: w.interior, av: w.interior.avatars[0] };
 }
 
+// The middle of the first corridor of a place, and two spots in it with nothing between them.
+const hallY = (it) => ((it.halls[0].r0 + it.halls[0].r1 + 1) / 2) * TILE;
+function stretch(it, far = 90) {
+  const x = ((it.halls[0].c0 + it.halls[0].c1 + 1) / 2) * TILE;
+  return [
+    { x: x - far / 2, y: hallY(it) },
+    { x: x + far / 2, y: hallY(it) },
+  ];
+}
+
 test('every interior lets the crew reach all loot and enemies', () => {
-  for (let seed = 1; seed <= 25; seed++) {
+  const places = [
+    { kind: 'wreck', hull: 'gunboat' },
+    { kind: 'wreck', hull: 'hull' },
+    { kind: 'wreck', hull: 'freighter' },
+    { kind: 'station', align: 'hostile', side: 'pirate' },
+  ];
+  for (let seed = 1; seed <= 40; seed++) {
     const s = createState(seed),
-      it = createInterior(s, { difficulty: 1 + (seed % 3) });
+      it = createInterior(s, { ...places[seed % places.length], difficulty: 1 + (seed % 3) });
     const seen = new Set(),
-      key = (x, y) => y * IW + x,
+      key = (x, y) => y * it.w + x,
       start = [Math.floor(it.entry.x / TILE), Math.floor(it.entry.y / TILE)];
     const queue = [start];
     seen.add(key(...start));
@@ -333,7 +349,7 @@ test('every interior lets the crew reach all loot and enemies', () => {
       ]) {
         const nx = x + dx,
           ny = y + dy;
-        if (tileAt(it, nx, ny) === '#' || seen.has(key(nx, ny))) continue;
+        if ('# X'.includes(tileAt(it, nx, ny)) || seen.has(key(nx, ny))) continue;
         seen.add(key(nx, ny));
         queue.push([nx, ny]);
       }
@@ -427,8 +443,9 @@ test('guards shoot at a player they can see, and the rifle kills them', () => {
   it.turrets = [];
   it.guards = it.guards.slice(0, 1);
   const g = it.guards[0];
-  g.x = av.x + 90;
-  g.y = av.y;
+  const [here, there] = stretch(it);
+  Object.assign(av, here);
+  Object.assign(g, there);
   g.home = { x: g.x, y: g.y };
   // Guards do not hit with every shot, so give this one a little time.
   for (let i = 0; i < 20 && s.players[0].hp === B.CREW_HP && s.players[0].inside !== null; i++)
@@ -444,12 +461,14 @@ test('a grenade clears a group of guards', () => {
   const { s, it, av } = boarded();
   it.turrets = [];
   it.guards = it.guards.slice(0, 2);
+  const [here, there] = stretch(it, 100);
+  Object.assign(av, here);
   it.guards.forEach((g, i) => {
-    g.x = av.x + 100;
-    g.y = av.y + i * 10;
+    g.x = there.x;
+    g.y = there.y + i * 10;
     g.hp = 30;
   });
-  step(s, { away: { 0: { grenade: { x: av.x + 100, y: av.y + 5 } } } }, DT);
+  step(s, { away: { 0: { grenade: { x: there.x, y: there.y + 5 } } } }, DT);
   assert.equal(av.grenades, B.GRENADES - 1);
   run(s, { away: { 0: {} } }, 2);
   assert.equal(it.guards.length, 0);
@@ -461,7 +480,7 @@ test('the vault door opens when a player holds the use key next to it', () => {
   it.turrets = [];
   const door = it.rooms[it.vault].door;
   av.x = door.x;
-  av.y = door.y + (door.y < 9 * TILE ? 14 : -14);
+  av.y = door.y + (door.y < hallY(it) ? 14 : -14);
   run(s, { away: { 0: { use: true } } }, B.DOOR_CUT_TIME + 0.2);
   assert.equal(it.doorOpen, true);
   assert.ok(!it.tiles.includes('L'));
@@ -1282,7 +1301,7 @@ test('boarding gear changes what a boarder can do', () => {
   // The breaching charge opens the vault at once and alerts the guards.
   const door = it.rooms[it.vault].door;
   av.x = door.x;
-  av.y = door.y + (door.y < 9 * TILE ? 14 : -14);
+  av.y = door.y + (door.y < hallY(it) ? 14 : -14);
   step(s, { away: { 0: { charge: true } } }, DT);
   assert.equal(it.doorOpen, true);
   assert.ok(it.guards.every((g) => g.mode === 'alert'));
@@ -1290,10 +1309,9 @@ test('boarding gear changes what a boarder can do', () => {
   it.turrets = [];
   it.guards = it.guards.slice(0, 1);
   const g = it.guards[0];
-  av.x = it.entry.x + 40;
-  av.y = it.entry.y;
-  g.x = av.x + 80;
-  g.y = av.y;
+  const [here, there] = stretch(it, 80);
+  Object.assign(av, here);
+  Object.assign(g, there);
   g.hp = 12;
   step(s, { away: { 0: { deploy: true } } }, DT);
   assert.equal(it.sentries.length, 1);
