@@ -108,8 +108,10 @@ Nytt
 - Fler och mindre system i ett nät av hoppvägar i stället för fem sektorer i rad
 - Skepp, vapen och varor beskrivna som data i stället för kod, så att nytt innehåll blir billigt att lägga till (D-056)
 
+Flyttat till egna punkter
+- Köpa nya skepp och bygga flotta: F-076, parkerad
+
 Passar sämre
-- Köpa nya skepp och bygga en egen flotta. Beslutet är att spelarskeppet alltid är samma fregatt
 - Banklån och dagar som går när man landar. Spelet går i realtid utan paus
 
 ## Låg
@@ -128,6 +130,7 @@ Passar sämre
 | F-037 | Paus och start som kräver allas godkännande | Parkerad |
 | F-038 | Hoppa in mitt i ett pågående spel | Parkerad |
 | F-039 | Fler skeppsklasser som fungerar olika, till exempel Interceptorn | Parkerad |
+| F-076 | Köpa nya skepp och bygga flotta. Tittas på i framtiden. Går emot beslutet att spelarskeppet alltid är samma fregatt, så det beslutet behöver prövas om då. Kommer från D-075 | Parkerad |
 
 ## Klart
 
