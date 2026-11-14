@@ -130,22 +130,32 @@ def room(im, ox, oy, st, seed=1):
 
 
 def mood(im, ox, oy, kind, t):
-    """The same room in lockdown (dark, with a red light that sweeps round) and with the alarm on."""
+    """The same room in lockdown (dark, with a red light that sweeps round), with the alarm on, and with a
+    louder alarm where every lamp flashes. `t` is the time in seconds, for the pictures that move."""
     w, h = COLS * T, ROWS * T
+    cx, cy = ox + 5 * T, oy + T + 6
+    beat = t * 2 % 1 < 0.5
     ov = Image.new('RGBA', im.size, (0, 0, 0, 0))
     o = ImageDraw.Draw(ov)
     o.rectangle([ox, oy, ox + w - 1, oy + h - 1], fill=(4, 3, 8, 150 if kind == 'lockdown' else 120))
     im = Image.alpha_composite(im, ov)
     ov = Image.new('RGBA', im.size, (0, 0, 0, 0))
     o = ImageDraw.Draw(ov)
-    cx, cy = ox + 5 * T, oy + T + 6
+
+    def beam(angle, strength):
+        pts = [(cx, cy)] + [(cx + math.cos(angle + k * 0.12) * 190, cy + math.sin(angle + k * 0.12) * 190) for k in range(-3, 4)]
+        o.polygon(pts, fill=S.rgb(S.EMBER[1]) + (strength,))
     if kind == 'lockdown':
-        # A beacon on the wall throws a red beam that turns.
-        a0 = t
-        pts = [(cx, cy)] + [(cx + math.cos(a0 + k * 0.12) * 150, cy + math.sin(a0 + k * 0.12) * 150) for k in range(-3, 4)]
-        o.polygon(pts, fill=S.rgb(S.EMBER[1]) + (70,))
+        # A beacon on the wall throws a red beam that turns slowly.
+        beam(0.9 + t * math.tau / 3, 70)
+    elif kind == 'alarm':
+        # The whole room glows red, and the glow swells and fades.
+        o.rectangle([ox, oy, ox + w - 1, oy + h - 1], fill=S.rgb(S.EMBER[0]) + (round(75 + 35 * math.sin(t * math.tau)),))
     else:
-        o.rectangle([ox, oy, ox + w - 1, oy + h - 1], fill=S.rgb(S.EMBER[0]) + (90,))
+        # Louder: the room flashes, and two beams spin fast.
+        o.rectangle([ox, oy, ox + w - 1, oy + h - 1], fill=S.rgb(S.EMBER[0]) + (120 if beat else 40,))
+        beam(t * math.tau, 90)
+        beam(t * math.tau + math.pi, 90)
     clip = Image.new('L', im.size, 0)
     ImageDraw.Draw(clip).rectangle([ox, oy, ox + w - 1, oy + h - 1], fill=255)
     ov.putalpha(Image.composite(ov.getchannel('A'), Image.new('L', im.size, 0), clip))
@@ -155,7 +165,54 @@ def mood(im, ox, oy, kind, t):
     if kind == 'alarm':
         d.rectangle([ox, oy, ox + w - 1, oy + h - 1], outline=S.EMBER[1])
         d.rectangle([ox + 1, oy + 1, ox + w - 2, oy + h - 2], outline=S.EMBER[0])
+    if kind == 'alarm2':
+        # Every strip light flashes red, every other one in turn, and the frame round the picture blinks.
+        for k in range(1, COLS - 1):
+            if k == 6:
+                continue
+            on = (k % 2 == 0) == beat
+            x, y = ox + k * T + 3, oy + T + 3
+            d.rectangle([x, y, x + 9, y + 3], fill=S.EMBER[2] if on else S.DARK[0])
+            if on:
+                d.line([(x + 1, y + 1), (x + 8, y + 1)], fill=S.EMBER[3])
+        for k in range(3 if beat else 1):
+            d.rectangle([ox + k, oy + k, ox + w - 1 - k, oy + h - 1 - k], outline=S.EMBER[2 if beat else 0])
     return im
+
+
+def mood_gif():
+    """Lockdown and the two alarms side by side, moving, since the difference between them is in how the light moves."""
+    gap = 14
+    cw = COLS * T + gap
+    W, H = 8 + cw * 3, 20 + ROWS * T + 34
+    base = Image.new('RGBA', (W, H), S.rgb(S.BG) + (255,))
+    d = ImageDraw.Draw(base)
+    S.txt(d, 8, 6, 'LOCKDOWN AND ALARM  ·  THE SAME ROOM, AND HOW THE LIGHT MOVES', S.STEEL[3])
+    views = (('LOCKDOWN', 'DARK, ONE SLOW RED LIGHT', 'lockdown'),
+             ('ALARM  ·  AS FIRST PROPOSED', 'A RED GLOW AND A RED FRAME', 'alarm'),
+             ('ALARM  ·  LOUDER', 'LAMPS FLASH, FAST BEAMS', 'alarm2'))
+    for i, (name, note, kind) in enumerate(views):
+        x = 8 + i * cw
+        base = room(base, x, 20, STYLES['PIRATES'], seed=8)
+        d = ImageDraw.Draw(base)
+        S.txt(d, x + COLS * T // 2, 20 + ROWS * T + 5, name, S.EMBER[2], 'c')
+        S.txt(d, x + COLS * T // 2, 20 + ROWS * T + 17, note, S.STEEL[1], 'c')
+    frames = []
+    count, step = 24, 0.125
+    for f in range(count):
+        im = base.copy()
+        for i, (_, _, kind) in enumerate(views):
+            im = mood(im, 8 + i * cw, 20, kind, f * step)
+        frames.append(im.convert('RGB').resize((W * 2, H * 2), Image.NEAREST))
+    # One palette for all frames, so that the colours do not flicker from frame to frame.
+    strip = Image.new('RGB', (W * 2, H * 2 * 6))
+    for k in range(6):
+        strip.paste(frames[k * 4 + 1], (0, H * 2 * k))
+    palette = strip.quantize(255, dither=Image.Dither.NONE)
+    out = [fr.quantize(palette=palette, dither=Image.Dither.NONE) for fr in frames]
+    path = os.path.join(S.OUT_DIR, 'lockdown-alarm.gif')
+    out[0].save(path, save_all=True, append_images=out[1:], duration=round(step * 1000), loop=0, optimize=False)
+    return (W * 2, H * 2), count
 
 
 def style_sheet():
@@ -558,3 +615,4 @@ def plan_sheet():
 if __name__ == '__main__':
     print('wrote interior-styles.png', style_sheet())
     print('wrote floor-plans.png', plan_sheet())
+    print('wrote lockdown-alarm.gif', mood_gif())
