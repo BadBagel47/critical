@@ -4,7 +4,7 @@
 import { VIEW_W, VIEW_H, COL } from './config.js';
 import { toast } from './events.js';
 import { toggleMute } from './audio.js';
-import { createMenu, openPage, drawMenu } from './menu.js';
+import { createMenu, openPage, drawMenu, menuButtons } from './menu.js';
 import { POSTS, playerById } from './sim/players.js';
 import { findDock } from './sim/things.js';
 import { isTrading } from './sim/stations.js';
@@ -13,10 +13,10 @@ import { createEffects, drawFlash } from './render/effects.js';
 import { drawSpace, drawStars } from './render/space.js';
 import { drawHud, drawOverlay, drawHelp, drawToasts } from './render/hud.js';
 import { drawBoarding, OX, OY } from './render/boarding.js';
-import { drawBreakin, breakinAction } from './render/breakin.js';
-import { drawMap, mapPoint, chartClick } from './render/map.js';
-import { drawShop, shopClick } from './render/shop.js';
-import { drawEngineer, engineerClick, SYSTEM_KEYS } from './render/engineer.js';
+import { drawBreakin, breakinAction, breakinButtons } from './render/breakin.js';
+import { drawMap, mapPoint, chartClick, mapButtons } from './render/map.js';
+import { drawShop, shopClick, shopButtons } from './render/shop.js';
+import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS } from './render/engineer.js';
 
 // What is kept about the screen. None of it is part of the game: two players look at the same game differently.
 //   panel  what the player has opened on top of their place in the game: 'map', 'lock', 'shop', 'menu' or null
@@ -232,14 +232,24 @@ function drawShopScreen(game) {
   if (!state.over) drawShop(ctx, assets.font, state, findDock(state, state.ship.docked), view.shopTab, keys.mouse);
 }
 
+const docked = (game) => findDock(game.state, game.state.ship.docked);
+
 // pad: which gamepad layout applies (see input.js). cursor: the left stick moves a pointer.
 // toasts: where messages go so that they do not cover what the player is working with, as [y, x].
+// buttons: what can be clicked, as a list of { name, x, y, w, h }, for the modes that are worked with clicks.
 export const SCREENS = {
-  title: { pad: 'menu', draw: drawTitleScreen },
-  menu: { pad: 'menu', draw: drawGameMenu, toasts: [20] },
+  title: { pad: 'menu', draw: drawTitleScreen, buttons: menuButtons },
+  menu: { pad: 'menu', draw: drawGameMenu, toasts: [20], buttons: menuButtons },
   captain: { pad: 'captain', input: captainInput, draw: drawOnBoard, toasts: [44] },
   gunner: { pad: 'gunner', input: gunnerInput, draw: drawOnBoard, toasts: [44] },
-  engineer: { pad: 'engineer', cursor: true, input: engineerInput, draw: drawOnBoard, toasts: [44] },
+  engineer: {
+    pad: 'engineer',
+    cursor: true,
+    input: engineerInput,
+    draw: drawOnBoard,
+    toasts: [44],
+    buttons: (game) => engineerButtons(game.state),
+  },
   crew: { pad: 'captain', input: onBoard, draw: drawOnBoard, toasts: [44] },
   map: {
     pad: 'map',
@@ -247,11 +257,31 @@ export const SCREENS = {
     input: mapInput,
     draw: (game) => drawMap(game.ctx, game.state, game.view, game.assets),
     toasts: [296, 180],
+    buttons: (game) => mapButtons(game.state),
   },
-  lock: { pad: 'panel', cursor: true, input: lockInput, draw: drawLock, toasts: [312] },
-  shop: { pad: 'panel', cursor: true, input: shopInput, draw: drawShopScreen, toasts: [312] },
+  lock: {
+    pad: 'panel',
+    cursor: true,
+    input: lockInput,
+    draw: drawLock,
+    toasts: [312],
+    buttons: (game) => breakinButtons(docked(game)),
+  },
+  shop: {
+    pad: 'panel',
+    cursor: true,
+    input: shopInput,
+    draw: drawShopScreen,
+    toasts: [312],
+    buttons: (game) => shopButtons(game.state, docked(game), game.view.shopTab),
+  },
   away: { pad: 'away', input: awayInput, draw: drawAway, toasts: [42] },
 };
+// What can be clicked right now, by name.
+export function buttonsOf(game) {
+  const screen = SCREENS[settle(game)];
+  return screen.buttons ? screen.buttons(game) : [];
+}
 
 // What this player asks the game for in one step. See crewCommands in sim/players.js.
 export function playerInput(game) {

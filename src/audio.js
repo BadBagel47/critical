@@ -42,7 +42,7 @@ export function initAudio() {
     if (ac.state === 'suspended') ac.resume();
     return;
   }
-  const AC = window.AudioContext || window.webkitAudioContext;
+  const AC = window.AudioContext || window['webkitAudioContext'];
   if (!AC) return;
   ac = new AC();
   master = ac.createGain();

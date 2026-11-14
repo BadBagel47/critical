@@ -1,0 +1,38 @@
+name: Tests
+
+# Runs every check on each push from an agent branch, and on pushes straight to main.
+on:
+  push:
+    branches:
+      - 'main'
+      - 'claude/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Game logic, saves and style
+        run: npm test
+
+      - name: Slips and misspelt names
+        run: npm run lint
+
+      - name: Types
+        run: npm run types
+
+      - name: Try the game in a browser
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+          python3 -m http.server 8080 > /dev/null 2>&1 &
+          sleep 2
+          node tests/smoke.mjs

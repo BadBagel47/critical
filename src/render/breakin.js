@@ -51,6 +51,23 @@ const digitAt = (mx, my) => {
   return null;
 };
 
+// Everything that can be clicked on the lock panel, by name. Used by the browser test.
+export function breakinButtons(target) {
+  const bk = target.breakin;
+  if (bk.kind === 'dial') return [{ name: 'dial', x: PX, y: PY, w: PW, h: PH }];
+  if (bk.kind === 'code') {
+    return Array.from({ length: B.CODE_DIGITS }, (_, i) => {
+      return { name: 'digit.' + (i + 1), x: DX + i * (DIGIT.w + DIGIT.gap), y: DY, w: DIGIT.w, h: DIGIT.w };
+    });
+  }
+  const g = gridAt(bk);
+  return bk.tiles.map((_, i) => {
+    const x = i % bk.w;
+    const y = Math.floor(i / bk.w);
+    return { name: `tile.${x}.${y}`, x: g.x + x * T, y: g.y + y * T, w: T, h: T };
+  });
+}
+
 // Turn a click (or the space bar) into an order for the break-in game, or null.
 export function breakinAction(target, mx, my, click, right, space) {
   const kind = target.breakin.kind,

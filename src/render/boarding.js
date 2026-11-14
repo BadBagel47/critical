@@ -1,5 +1,5 @@
 // The boarding view: the inside of a wreck seen from above.
-import { VIEW_W, VIEW_H, COL } from '../config.js';
+import { VIEW_W, COL } from '../config.js';
 import { B } from '../sim/balance.js';
 import { TILE, IW, IH, tileAt } from '../sim/boarding.js';
 import { dist } from '../sim/util.js';
@@ -16,7 +16,7 @@ const WALL = ['#2a2c3a', '#44475a', '#666a7e'];
 const solid = (c) => c === '#' || c === 'L';
 const fmt = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 
-function drawTiles(ctx, it, time) {
+function drawTiles(ctx, it) {
   for (let ty = 0; ty < IH; ty++)
     for (let tx = 0; tx < IW; tx++) {
       const c = tileAt(it, tx, ty),
@@ -221,7 +221,7 @@ function drawGrenade(ctx, g, time) {
 function drawFloor(ctx, state, place, me, assets, fx) {
   const { img, font } = assets;
   const it = place.interior;
-  drawTiles(ctx, it, state.time);
+  drawTiles(ctx, it);
   for (const desk of it.desks) drawDesk(ctx, img, font, place, desk);
   for (const c of it.civilians) sprite(ctx, img.boarder, c.x, c.y, c.heading);
   for (const l of it.loot) {

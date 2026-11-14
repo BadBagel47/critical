@@ -52,6 +52,12 @@ export function chartClick(state, mx, my) {
   return row ? row.id : null;
 }
 
+// Everything that can be clicked on the map screen, by name. Used by the browser test.
+export function mapButtons(state) {
+  const charts = chartRows(state).map((r) => ({ name: 'chart.' + r.id, x: r.x, y: r.y, w: r.w, h: r.h }));
+  return [{ name: 'map', x: MAP.x, y: MAP.y, w: MAP.size, h: MAP.size }, ...charts];
+}
+
 function ring(ctx, x, y, r, color) {
   ctx.strokeStyle = color;
   ctx.lineWidth = 1;

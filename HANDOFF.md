@@ -74,7 +74,9 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - `npm test`: tester av spellogiken, besättningen, sakerna som data och förutsägbarheten.
   - `tests/determinism.test.js` kör en lång inspelad omgång med tre spelare (`tests/tour.js`) och kontrollerar att samma start och samma kommandon ger exakt samma spel, även efter att spelet sparats som text och lästs in igen. Varje ny funktion måste klara det (D-063).
   - `tests/style.test.js` vaktar radlängd och att spellogiken inte beror på något utanför `src/sim/`.
-- `npm run serve` och sedan `npm run smoke`: provkör spelet i en webbläsare. Kräver Playwright installerat globalt.
+- `npm run lint`: letar efter stavfel i namn, sådant som aldrig används och liknande. `npm run types`: kontrollerar typer utan byggsteg. `npm run check` kör tester, lint och typer i ett svep.
+- `npm run serve` och sedan `npm run smoke`: provkör spelet i en webbläsare. Kräver Playwright installerat globalt. Provkörningen klickar på namngivna knappar: varje skärm som styrs med klick listar sina knappar i `SCREENS` i `src/screens.js`, och de går att se med `window.__critical.buttons()`. En ny klickbar skärm ska lista sina knappar där.
+- GitHub kör alla kontroller, också provkörningen i webbläsare, vid varje push (`.github/workflows/test.yml`). Den automatiska sammanslagningen till main väntar inte på dem, så ett rött kryss betyder att main redan kan vara trasig och ska lagas direkt.
 - `node tests/outside.mjs`: kontrollerar att spelet och designsidan inte laddar något från andra tjänster, och visar vad som sparas i webbläsaren.
 - I webbläsarens konsol finns `window.__critical` med spelets tillstånd, aktuellt läge (`mode`) och genvägar till vrak, stationer och containrar.
 - När ett test i `tests/saves.test.js` säger att tillståndet bytt form: höj `SAVE_VERSION` i `src/saves.js` och skriv in de nya värdena i testet.
@@ -222,6 +224,7 @@ Grafik
 - Klar 2026-11-14: `badbagel47.github.io` är tillåten i användarens molnmiljö, så att agenten kan kontrollera den publicerade sidan.
 - Klar 2026-11-14: användaren slog på GitHub Pages för repot (Deploy from a branch, main, rot).
 - Klar 2026-11-14: automatisk merge enligt agentreglernas mall (`.github/workflows/auto-merge.yml`), vald av användaren. Grenar som börjar med claude/ slås ihop med main av sig själva.
+- Klar 2026-11-14: tester körs automatiskt på GitHub vid varje push. Det krävde ingen åtgärd från användaren.
 
 ## Teknisk bedömning
 

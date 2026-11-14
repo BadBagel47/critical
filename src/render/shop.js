@@ -74,6 +74,18 @@ export function shopRows(state, st, tab) {
   });
   return rows;
 }
+// Everything that can be clicked in the shop, by name. Used by the browser test.
+export function shopButtons(state, st, tab) {
+  return shopRows(state, st, tab).map((r) => {
+    const name = r.tab
+      ? 'tab.' + r.tab
+      : r.order.action === 'buy'
+        ? 'buy.' + r.order.item
+        : 'service.' + r.order.action;
+    return { name, x: r.x, y: r.y, w: r.w, h: r.h };
+  });
+}
+
 // Returns { tab } when a tab was clicked, { order } for something to buy, or null.
 export function shopClick(state, st, tab, mx, my) {
   const row = shopRows(state, st, tab).find((r) => mx >= r.x && mx < r.x + r.w && my >= r.y && my < r.y + r.h);

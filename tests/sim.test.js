@@ -202,7 +202,7 @@ test('the ship cannot fly through a wreck, and ramming hurts', () => {
 });
 
 // ---------- boarding ----------
-import { createInterior, tryBoard, tileAt, TILE, IW, IH, blocked } from '../src/sim/boarding.js';
+import { createInterior, tryBoard, tileAt, TILE, IW, blocked } from '../src/sim/boarding.js';
 
 function dockAt(s, w = wrecks(s)[0]) {
   s.ship.docked = w.id;
@@ -338,7 +338,7 @@ test('guards shoot at a player they can see, and the rifle kills them', () => {
     run(s, { away: { 0: {} } }, 1);
   assert.ok(s.players[0].hp < B.CREW_HP || s.players[0].inside === null, 'the guard hurt the player');
   if (s.players[0].inside !== null) {
-    run(s, (st) => ({ away: { 0: { aim: { x: g.x, y: g.y }, fire: true } } }), 3);
+    run(s, { away: { 0: { aim: { x: g.x, y: g.y }, fire: true } } }, 3);
     assert.equal(it.guards.length, 0);
   }
 });
@@ -568,7 +568,23 @@ test('a buoy keeps watching until pirates shoot it down', () => {
 });
 
 // ---------- stations, shop and upgrades ----------
-import { CATALOG, blockedReason, buyUpgrade, hullMax, shieldMax, powerTotal, slotsUsed } from '../src/sim/upgrades.js';
+import {
+  CATALOG,
+  blockedReason,
+  buyUpgrade,
+  hullMax,
+  shieldMax,
+  powerTotal,
+  slotsUsed,
+  fuelMax,
+  jumpCharge,
+  jumpFuel,
+  crewHpMax,
+  carryMax,
+  rifleDmg,
+  teleCooldown,
+  itemsOf,
+} from '../src/sim/upgrades.js';
 import { servicePrices, turnHostile } from '../src/sim/stations.js';
 import { jumpBlocked } from '../src/sim/sectors.js';
 
@@ -643,7 +659,7 @@ test('shooting a neutral station turns it hostile, and its guns open fire', () =
     st = station(s, 'neutral');
   s.ship.x = st.x;
   s.ship.y = st.y + 200;
-  run(s, (x) => ({ gunner: { aim: { x: st.x, y: st.y }, fire: true } }), 4);
+  run(s, { gunner: { aim: { x: st.x, y: st.y }, fire: true } }, 4);
   assert.equal(st.align, 'hostile');
   const before = s.ship.shield + s.ship.hull;
   run(s, {}, 5);
@@ -711,9 +727,9 @@ test('the heavy laser charges while held and hits everything straight ahead', ()
   s.ship.y = 5000;
   s.ship.mods.heavy = 1;
   assert.deepEqual(weaponsOf(s.ship), ['pulse', 'heavy']);
-  const a = target(s, 5000, 4800, 'gunboat', 60),
-    b = target(s, 5000, 4600, 'gunboat', 60),
-    side = target(s, 5300, 4800, 'gunboat', 60);
+  target(s, 5000, 4800, 'gunboat', 60);
+  target(s, 5000, 4600, 'gunboat', 60);
+  const side = target(s, 5300, 4800, 'gunboat', 60);
   for (const p of s.vessels) p.mode = 'still';
   step(s, { gunner: { weapon: 'heavy' } }, DT);
   s.vessels.forEach((p) => {
@@ -1021,16 +1037,6 @@ test('a distress call that nobody answers just ends', () => {
 });
 
 // ---------- more upgrades and boarding gear ----------
-import {
-  fuelMax,
-  jumpCharge,
-  jumpFuel,
-  crewHpMax,
-  carryMax,
-  rifleDmg,
-  teleCooldown,
-  itemsOf,
-} from '../src/sim/upgrades.js';
 
 test('every catalog item belongs to a tab, and boarding gear is sold without a shipyard', () => {
   for (const id of Object.keys(CATALOG)) assert.ok(['hull', 'system', 'armory'].includes(CATALOG[id].tab), id);

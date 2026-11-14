@@ -8,14 +8,14 @@ import { openPage, menuInput } from './menu.js';
 import { AUTO, listSaves, latestSlot, readSlot, writeSlot, packSave, parseSave, clearRun } from './saves.js';
 import { sceneOf } from './scene.js';
 import { updateMusic } from './music.js';
-import { createView, settle, playerInput, viewKeys, drawScreen, SCREENS } from './screens.js';
+import { createView, settle, playerInput, viewKeys, drawScreen, buttonsOf, SCREENS } from './screens.js';
 import { createState } from './sim/state.js';
 import { step, stepPlayers } from './sim/step.js';
 import { findThing, thingsOf } from './sim/things.js';
 import { playerById } from './sim/players.js';
 import { resetEffects, updateEffects, updateInside } from './render/effects.js';
 
-const canvas = document.getElementById('game');
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('game'));
 const ctx = canvas.getContext('2d');
 let scale = 2;
 
@@ -223,13 +223,14 @@ loadAssets()
     // Adding ?test to the address starts straight in test mode.
     if (/[?&]test\b/.test(window.location.search)) game.actions.newGame({ test: true });
     // A handle for the browser smoke test and for trying things out in the console.
-    window.__critical = {
+    window['__critical'] = {
       get state() {
         return game.state;
       },
       get mode() {
         return settle(game);
       },
+      buttons: () => buttonsOf(game),
       get wrecks() {
         return thingsOf(game.state, 'wreck');
       },

@@ -66,6 +66,18 @@ export function engineerClick(state, mx, my, shift) {
 }
 export const SYSTEM_KEYS = SYS.map((s) => s.key);
 
+// Everything that can be clicked on this screen, by name. Used by the browser test.
+export function engineerButtons(state) {
+  const pips = SYS.flatMap((s, i) =>
+    Array.from({ length: B.POWER_MAX_PER_SYSTEM }, (_, k) => ({ name: `power.${s.key}.${k + 1}`, ...pipRect(i, k) })),
+  );
+  const nodes = state.ship.nodes.map((n) => {
+    const p = nodePos(n);
+    return { name: 'node.' + n.id, x: p.x - 6, y: p.y - 6, w: 12, h: 12 };
+  });
+  return [...pips, ...nodes];
+}
+
 export function drawEngineer(ctx, state, view, assets) {
   const { img, font } = assets,
     ship = state.ship,

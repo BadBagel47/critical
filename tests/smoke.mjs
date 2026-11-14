@@ -64,18 +64,27 @@ const box = await page.evaluate(() => {
   const r = document.getElementById('game').getBoundingClientRect();
   return { x: r.left, y: r.top };
 });
-const click = (gx, gy, opts) => page.mouse.click(box.x + gx * k, box.y + gy * k, opts);
-await click(440 + 100 + 20 + 8, 54 + 3 * 40 + 3); // repair: second pip is lit, click lowers to 1
+// Click something on the screen by its name. The game says where it is, so the test does not break when
+// a screen is laid out differently. `fx` and `fy` say where inside it to click, from 0 to 1.
+const clickOn = async (name, fx = 0.5, fy = 0.5) => {
+  const b = await page.evaluate((wanted) => window.__critical.buttons().find((x) => x.name === wanted), name);
+  if (!b) {
+    check(false, `something on the screen is called ${name}`);
+    return;
+  }
+  await page.mouse.click(box.x + (b.x + b.w * fx) * k, box.y + (b.y + b.h * fy) * k);
+};
+await clickOn('power.repair.2'); // the second pip is lit, so a click lowers repair to 1
 await page.waitForTimeout(100);
 check((await get('s.ship.power.repair')) === 1, 'clicking a lit pip lowers the system');
-await click(440 + 100 + 40 + 8, 54 + 0 * 40 + 3); // weapons: third pip
+await clickOn('power.weapons.3');
 await page.waitForTimeout(100);
 check((await get('s.ship.power.weapons')) === 3, 'clicking a dark pip raises the system');
 await page.evaluate(() => {
   window.__critical.state.ship.nodes[5].hp = 20;
   window.__critical.state.ship.nodes[3].hp = 55;
 });
-await click(150 + 36 * 2, 72 + 98 * 2); // engines node
+await clickOn('node.engines');
 await page.waitForTimeout(150);
 check(JSON.stringify(await get('s.ship.crew.queue')) === '[5]', 'clicking a node sends the repair crew');
 await page.waitForTimeout(700);
@@ -101,7 +110,7 @@ await page.keyboard.press('Digit3');
 await page.keyboard.press('KeyM');
 await page.waitForTimeout(150);
 check((await get("v.panel === 'map'")) === true, 'M opens the map');
-await click(12 + 280, 12 + 60);
+await clickOn('map', 0.83, 0.18);
 await page.waitForTimeout(150);
 check((await get('s.probes.length')) === 1 && (await get('s.ship.probeStock')) === 2, 'clicking the map sends a probe');
 await page.keyboard.press('KeyQ');
@@ -136,9 +145,7 @@ check(
   'F opens the break-in panel',
 );
 const rot0 = await get('window.__critical.wrecks[0].breakin.tiles[0].rot');
-// The grid is centred in the panel, so where its first tile is depends on its size.
-const grid = await get('({ w: window.__critical.wrecks[0].breakin.w, h: window.__critical.wrecks[0].breakin.h })');
-await click(155 + (330 - grid.w * 28) / 2 + 14, 130 + (4 - grid.h) * 14 + 14);
+await clickOn('tile.0.0');
 await page.waitForTimeout(150);
 check((await get('window.__critical.wrecks[0].breakin.tiles[0].rot')) === (rot0 + 1) % 4, 'clicking a tile turns it');
 await shot('07-breakin');
@@ -230,23 +237,23 @@ await page.waitForTimeout(100);
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
 check((await get("v.panel === 'shop'")) === true, 'F at a desk opens the station panel');
-await click(60 + 12 + 40, 38 + 64 + 8);
+await clickOn('service.refuel');
 await page.waitForTimeout(150);
 check((await get('s.ship.fuel')) === 100, 'refuelling is free at a friendly station');
-for (const row of [0, 1]) {
-  await click(276 + 60, 38 + 66 + row * 15 + 7);
+for (const item of ['twin', 'heavy']) {
+  await clickOn('buy.' + item);
   await page.waitForTimeout(80);
 }
 check(await get('s.ship.mods.twin === 1 && s.ship.mods.heavy === 1'), 'clicking shipyard rows installs upgrades');
-await click(276 + 100 + 48, 38 + 44 + 7);
+await clickOn('tab.system');
 await page.waitForTimeout(100);
 check((await get('v.shopTab')) === 'system', 'the tabs switch what is for sale');
-await click(276 + 60, 38 + 66 + 0 * 15 + 7);
+await clickOn('buy.emit');
 await page.waitForTimeout(80);
 check((await get('s.ship.mods.emit')) === 1, 'systems can be bought from the second tab');
-await click(276 + 200 + 48, 38 + 44 + 7);
+await clickOn('tab.armory');
 await page.waitForTimeout(100);
-await click(276 + 60, 38 + 66 + 1 * 15 + 7);
+await clickOn('buy.pack');
 await page.waitForTimeout(80);
 check((await get('s.ship.mods.pack')) === 1, 'boarding gear is in the armory tab');
 check((await get('s.credits')) < 2000, 'upgrades cost credits');
@@ -308,7 +315,7 @@ const code = await get("window.__critical.stations.find((x) => x.align === 'host
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(150);
 for (const d of code) {
-  await click(198 + (d - 1) * 42 + 17, 182 + 17);
+  await clickOn('digit.' + d);
   await page.waitForTimeout(90);
 }
 check(
@@ -321,8 +328,7 @@ await page.keyboard.press('KeyF');
 await page.waitForTimeout(250);
 check((await get('s.players[0].inside')) !== null, 'a hostile station with an open lock can be boarded');
 await page.evaluate(() => {
-  const s = window.__critical.state,
-    it = window.__critical.stations.find((x) => x.name === 'DRIFT POST').interior,
+  const it = window.__critical.stations.find((x) => x.name === 'DRIFT POST').interior,
     a = it.avatars[0];
   it.guards = [];
   it.turrets = [];
@@ -341,8 +347,7 @@ check(
   'holding F at the terminal takes the station over',
 );
 await page.evaluate(() => {
-  const s = window.__critical.state,
-    it = window.__critical.stations.find((x) => x.name === 'DRIFT POST').interior,
+  const it = window.__critical.stations.find((x) => x.name === 'DRIFT POST').interior,
     a = it.avatars[0];
   a.x = it.entry.x;
   a.y = it.entry.y;
@@ -451,7 +456,7 @@ await page.evaluate(() => {
 await page.keyboard.press('KeyM');
 await page.waitForTimeout(150);
 await shot('14-starcharts');
-await click(364 + 10 + 40, 126 + 10);
+await clickOn('chart.1');
 await page.waitForTimeout(200);
 check((await get('s.jump !== null && s.jump.to')) === 1, 'the captain starts a jump by clicking a star chart');
 await page.evaluate(() => window.__critical.advance(9));
@@ -468,7 +473,7 @@ await page.evaluate(() => {
 });
 await page.keyboard.press('KeyM');
 await page.waitForTimeout(100);
-await click(364 + 10 + 40, 126 + 2 * 30 + 10);
+await clickOn('chart.4');
 await page.waitForTimeout(100);
 await page.evaluate(() => window.__critical.advance(9));
 await page.waitForTimeout(300);

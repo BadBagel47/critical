@@ -303,13 +303,14 @@ function drawDart(ctx, d, img) {
 // Docking help is returned so the HUD can show the matching prompt.
 export function dockingInfo(state) {
   const ship = state.ship;
-  if (ship.docked) return { docked: true };
+  const none = { docked: false, w: null, p: null, d: 0, nose: null, ready: false, tooFast: false };
+  if (ship.docked) return { ...none, docked: true };
   const nose = shipNose(ship);
   let best = null;
   for (const t of dockTargets(state)) {
     for (const p of portsOf(t)) {
       const d = dist(nose.x, nose.y, p.x, p.y);
-      if (d < B.DOCK_GUIDE_RANGE && (!best || d < best.d)) best = { w: t, p, d, nose };
+      if (d < B.DOCK_GUIDE_RANGE && (!best || d < best.d)) best = { ...none, w: t, p, d, nose };
     }
   }
   if (!best) return null;

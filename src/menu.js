@@ -122,6 +122,9 @@ export function menuRows(game) {
   const y0 = game.view.started ? (VIEW_H - rows.length * STEP_Y) / 2 + 8 : 108;
   return rows.map((row, i) => ({ ...row, x: X, y: y0 + i * STEP_Y, w: W, h: ROW_H }));
 }
+// Every row of the current page by name. Used by the browser test.
+export const menuButtons = (game) =>
+  menuRows(game).map((r) => ({ name: 'menu.' + r.id, x: r.x, y: r.y, w: r.w, h: r.h }));
 const over = (m, r) => m.x >= r.x && m.x < r.x + r.w && m.y >= r.y && m.y < r.y + r.h;
 
 function choose(game, row) {

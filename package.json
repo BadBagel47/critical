@@ -8,6 +8,9 @@
     "serve": "python3 -m http.server 8080",
     "smoke": "node tests/smoke.mjs",
     "assets": "python3 tools/export_assets.py",
-    "format": "npx --yes prettier@3.3.3 --write \"src/**/*.js\" \"tests/*.{js,mjs}\""
+    "format": "npx --yes prettier@3.3.3 --write \"src/**/*.js\" \"tests/*.{js,mjs}\"",
+    "lint": "npx --yes eslint@9 src tests eslint.config.js",
+    "types": "npx --yes -p typescript@5.6 tsc -p tsconfig.json",
+    "check": "npm test && npm run lint && npm run types"
   }
 }

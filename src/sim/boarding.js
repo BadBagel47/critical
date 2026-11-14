@@ -62,7 +62,7 @@ function layOut(state) {
     [s2, IW - 1],
   ];
   const rooms = [];
-  for (const [r0, r1] of rows) for (const [c0, c1] of columns) rooms.push({ c0, c1, r0, r1 });
+  for (const [r0, r1] of rows) for (const [c0, c1] of columns) rooms.push({ c0, c1, r0, r1, door: null });
   for (const rm of rooms) {
     for (let ty = rm.r0 + 1; ty < rm.r1; ty++) for (let tx = rm.c0 + 1; tx < rm.c1; tx++) set(tx, ty, '.');
   }
