@@ -98,7 +98,15 @@ Flera agenter arbetar i repot samtidigt. För att det inte ska krocka:
 - En agent kan inte lyssna. Säg därför tydligt i rapporten att musiken är byggd och provkörd utan fel men inte lyssnad på, och be användaren lyssna. Det som går att kontrollera utan öron är att det inte blir fel i konsolen, att ljudnivån håller sig under en rimlig gräns och att antalet ljudkällor inte växer över tid.
 - Gör det lätt för användaren att lyssna på varje scen för sig. I webbläsarens konsol finns `window.__critical` med spelets tillstånd. Testläget (T på startskärmen, eller `?test` sist i adressen) ger alla uppgraderingar och stjärnkartor från start.
 
+## Besked från användaren (2026-11-14)
+
+- Startskärmen ska ha en melodi som fastnar och ger spelet en identitet. Tre förslag finns att välja mellan på lyssningssidan. Valet sätts i `THEME` i `src/music.js`.
+- Introtemat återkommer sparsamt och i förklädnad, som ett tema i en film: långsamt och dovt i rymden, varmt på stationer, fullt ut i dur vid vinst och långsamt i moll vid förlust, där det bryts av. Inte i strid, smyg eller larm.
+- Rymden är mest stämning.
+- Bordning har två lägen: smyg med spänning, där man väntar på att allt ska braka loss, och larm som höjer pulsen. Spelet skiljer inte på dem än, se F-120.
+- Varje sektor har en egen färg: ljusare och lugnare i början, mörkare, råare och lite snabbare längre in.
+- Vinsten har ett eget stycke som knyter an till introt. Förlusten har den korta mollvarianten.
+
 ## Öppna frågor till användaren
 
-- Hur mycket melodi, och hur mycket stämning?
-- Ska förlusten av skeppet (`lost`) och segern (`won`) ha egna stycken?
+- Vilket av de tre förslagen ska bli introtemat?

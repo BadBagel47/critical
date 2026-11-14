@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lyssna på musiken – Critical ST8</title>
+<style>
+/* The page loads nothing from other services: system fonts, and the game's own music code. */
+:root{--bg:#0e1020;--panel:#181b34;--ink:#e9ebf7;--muted:#a4aac8;--rule:#2b3054;--accent:#7db4ff;--on:#f2b84b;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.5}
+main{max-width:760px;margin:0 auto;padding:28px 16px 64px;display:flex;flex-direction:column;gap:28px}
+h1{margin:0;font-size:1.7rem;line-height:1.15}
+h2{margin:0 0 10px;font-size:1.05rem;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+p{margin:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+button{font:inherit;color:var(--ink);background:var(--panel);border:2px solid var(--rule);border-radius:10px;padding:14px 12px;text-align:left;cursor:pointer;min-height:56px}
+button small{display:block;color:var(--muted);font-size:.8rem;line-height:1.3;margin-top:2px}
+button[aria-pressed="true"]{border-color:var(--on);background:#2a2440}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#start{background:var(--on);color:#1b1500;border-color:var(--on);font-weight:700;text-align:center;font-size:1.15rem}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.row button{flex:0 0 auto;text-align:center}
+#now{position:sticky;bottom:12px;box-shadow:0 0 0 6px var(--bg);font-variant-numeric:tabular-nums;background:var(--panel);border-radius:10px;padding:12px 14px;color:var(--ink)}
+.warn{color:var(--on)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Lyssna på musiken</h1>
+    <p>Varje knapp spelar ett stycke ur Critical ST8, precis som i spelet. Musiken byts mjukt, så det tar en sekund eller två innan det nya stycket hörs helt.</p>
+  </header>
+
+  <button id="start">Starta ljudet</button>
+  <p id="muted" class="warn" hidden>Ljudet är avstängt i spelet (tangenten N). <button id="unmute">Slå på ljudet</button></p>
+
+  <section>
+    <h2>Introtemat</h2>
+    <p>Välj vilket av de tre förslagen som ska bli spelets tema. Det hörs på startskärmen, och varianter av det hörs i rymden, på stationer, vid vinst och vid förlust.</p>
+    <div class="grid" id="themes" style="margin-top:12px"></div>
+  </section>
+
+  <section>
+    <h2>Scener</h2>
+    <div class="grid" id="scenes"></div>
+  </section>
+
+  <section>
+    <h2>Sektor</h2>
+    <p>Samma stycke får en egen färg i varje sektor: ljusare i början, mörkare och råare längre in. Startskärmen, vinsten och förlusten låter alltid likadant.</p>
+    <div class="grid" id="sectors" style="margin-top:12px"></div>
+  </section>
+
+  <section>
+    <h2>Mer</h2>
+    <div class="row">
+      <button id="pause" aria-pressed="false">Paus</button>
+      <button id="instant" aria-pressed="true">Byt direkt</button>
+    </div>
+    <p style="margin-top:10px">Med "Byt direkt" av lugnar sig musiken lika långsamt som i spelet: efter strid dröjer det sju sekunder innan den går ner.</p>
+  </section>
+
+  <div id="now">Tryck på Starta ljudet.</div>
+</main>
+
+<script type="module">
+import { initAudio, isMuted, toggleMute } from '../../src/audio.js';
+import { updateMusic, setMusicTheme, setMusicInstant, musicStatus, THEME } from '../../src/music.js';
+import { THEMES } from '../../src/music/theory.js';
+
+const SCENES = [
+  ['title', 'Startskärm', 'Introtemat'],
+  ['space', 'Rymd', 'Lugnt, mest stämning'],
+  ['warning', 'Varning', 'Fiender på väg'],
+  ['combat', 'Strid', 'Fiender nära'],
+  ['boarding', 'Bordning, smyg', 'Spänning, väntan'],
+  ['alarm', 'Bordning, larm', 'Upptäckt'],
+  ['station', 'Station', 'Vänlig station'],
+  ['won', 'Vinst', 'Bossen besegrad, spelas en gång'],
+  ['lost', 'Förlust', 'Skeppet förstört'],
+];
+const SECTORS = ['Kestrel Drift', 'Ash Belt', 'Hollow Reach', 'The Narrows', 'The Maw'];
+const NAMES = Object.fromEntries(SCENES.map(([k, v]) => [k, v]));
+
+const info = { scene: 'title', sector: 0, paused: false, won: false };
+let theme = THEME;
+let started = false;
+
+function buttons(box, items, pick) {
+  const all = items.map(([key, label, hint], i) => {
+    const b = document.createElement('button');
+    b.innerHTML = `${label}${hint ? `<small>${hint}</small>` : ''}`;
+    b.addEventListener('click', () => {
+      all.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      start();
+      pick(key, i);
+    });
+    box.append(b);
+    return b;
+  });
+  return all;
+}
+
+const themeButtons = buttons(
+  document.getElementById('themes'),
+  THEMES.map((t, i) => [i, `${String.fromCharCode(65 + i)}: ${t.name}`, i === THEME ? 'Används i spelet nu' : '']),
+  (i) => {
+    theme = i;
+    setMusicTheme(i);
+    info.scene = 'title';
+    sceneButtons.forEach((b, j) => b.setAttribute('aria-pressed', String(j === 0)));
+  },
+);
+themeButtons[theme].setAttribute('aria-pressed', 'true');
+
+const sceneButtons = buttons(document.getElementById('scenes'), SCENES, (key) => {
+  if (key === 'won') {
+    // The victory plays when the boss falls during a game: one frame without it, then with it.
+    info.scene = 'space';
+    info.won = false;
+    requestAnimationFrame(() => (info.won = true));
+  } else {
+    info.scene = key;
+    info.won = false;
+  }
+});
+sceneButtons[0].setAttribute('aria-pressed', 'true');
+
+const sectorButtons = buttons(
+  document.getElementById('sectors'),
+  SECTORS.map((name, i) => [i, `${i + 1}. ${name}`]),
+  (i) => (info.sector = i),
+);
+sectorButtons[0].setAttribute('aria-pressed', 'true');
+
+const toggle = (id, apply) => {
+  const b = document.getElementById(id);
+  b.addEventListener('click', () => {
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', String(on));
+    apply(on);
+  });
+};
+toggle('pause', (on) => (info.paused = on));
+toggle('instant', (on) => setMusicInstant(on));
+setMusicInstant(true);
+
+function start() {
+  initAudio();
+  started = true;
+  document.getElementById('muted').hidden = !isMuted();
+}
+document.getElementById('start').addEventListener('click', start);
+document.getElementById('unmute').addEventListener('click', () => {
+  if (isMuted()) toggleMute();
+  document.getElementById('muted').hidden = true;
+});
+
+// Like the game: the music is updated once per frame.
+let last = performance.now();
+const now = document.getElementById('now');
+function frame(t) {
+  const dt = (t - last) / 1000;
+  last = t;
+  if (started) {
+    updateMusic(info, dt);
+    const s = musicStatus();
+    if (s && s.piece) {
+      const sector = ['title', 'won', 'lost'].includes(s.piece) ? '' : ` · ${SECTORS[s.sector] ?? `sektor ${s.sector + 1}`}`;
+      now.textContent = `Spelar: ${NAMES[s.piece] ?? s.piece}${sector} · takt ${s.bar + 1}` +
+        ` · tema ${String.fromCharCode(65 + theme)}${info.paused ? ' · pausad' : ''}`;
+    }
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// For checking without ears: what is playing and how many sounds are going.
+window.__music = { info, status: musicStatus };
+</script>
+</body>
+</html>
