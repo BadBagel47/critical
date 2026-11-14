@@ -151,6 +151,20 @@ await page.keyboard.press('KeyM');
 await page.keyboard.press('Digit1');
 await page.waitForTimeout(100);
 check((await get("v.panel === 'map'")) === false, 'M closes the map');
+// Over the map the Engineer has a sight of their own, so the pointer of the system is hidden there, and only there.
+await page.keyboard.press('Digit3');
+await page.keyboard.press('KeyM');
+await page.mouse.move(box.x + 200 * k, box.y + 200 * k);
+await page.waitForTimeout(150);
+const overMap = await page.evaluate(() => document.getElementById('game').style.cursor);
+await page.mouse.move(box.x + 560 * k, box.y + 300 * k);
+await page.waitForTimeout(150);
+const besideMap = await page.evaluate(() => document.getElementById('game').style.cursor);
+check(overMap === 'none' && besideMap === 'crosshair', 'the Engineer sees one sight over the map, not two');
+await page.keyboard.press('KeyM');
+await page.keyboard.press('Digit1');
+await page.waitForTimeout(100);
+
 await shot('06c-captain-minimap');
 
 // Break-in: F at a locked wreck opens the panel, clicks turn tiles, a solved puzzle opens the lock.

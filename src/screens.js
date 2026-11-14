@@ -298,6 +298,19 @@ export const SCREENS = {
   },
   away: { pad: 'away', input: awayInput, draw: drawAway, toasts: [42] },
 };
+// Whether the screen draws a sight of its own where the pointer is: the Gunner's, a boarder's, and the
+// Engineer's over the map. The pointer of the system is hidden then, so that there are not two of them.
+export function drawsPointer(game, mode) {
+  const { state, view, keys } = game;
+  if (!view.started || state.paused || state.over || view.help) return false;
+  const me = playerById(state, view.playerId);
+  if (mode === 'gunner') return true;
+  if (mode === 'map') return me.post === 'engineer' && !!mapPoint(keys.mouse.x, keys.mouse.y);
+  if (mode !== 'away') return false;
+  const place = findDock(state, me.inside);
+  return !!place && !place.interior.trade;
+}
+
 // What can be clicked right now, by name: what the screen itself offers, and what there is to do here.
 export function buttonsOf(game) {
   const mode = settle(game);
