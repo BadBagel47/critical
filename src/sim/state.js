@@ -47,6 +47,8 @@ export function createState(seed = 1, options = {}) {
     raid: null,
     raidTimer: 0,
     traffic: { timer: 0 },
+    // sides that the crew is in trouble with right here, see sides.js
+    strife: {},
     // Sectors, the star charts the crew holds, and a jump being charged.
     sectors: createSectors(),
     sector: 0,

@@ -13,7 +13,7 @@ import { stepVessels, stepAlarm } from './vessels.js';
 import { stepBolts, stepRockets, stepCollisions } from './shots.js';
 import { stepStations } from './stations.js';
 import { stepTraffic } from './traffic.js';
-import { CREW, enemies, stepStanding } from './sides.js';
+import { CREW, enemies, stepStanding, stepStrife } from './sides.js';
 import { stepDarts } from './darts.js';
 import { stepJump } from './sectors.js';
 import { stepBoarding } from './boarding.js';
@@ -68,6 +68,7 @@ export function step(state, cmds, dt) {
   stepVessels(state, dt);
   stepStations(state, cmds, dt);
   stepStanding(state, dt);
+  stepStrife(state, dt);
   const solids = solidCircles(state);
   stepCollisions(state, dt, solids);
   stepBolts(state, dt, solids);

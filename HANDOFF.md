@@ -61,7 +61,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
   - `kinds.js`: allt som finns i rymden beskrivet som data, både saker (`THINGS`) och skeppsklasser (`SHIPS`). En ny sort börjar här.
   - `things.js`: saker som står still (stenar, vrak, stationer, containrar, bärgningsgods, bojar). De ligger i `state.things`.
   - `vessels.js`: andra skepp än fregatten. De ligger i `state.vessels`. Hur en klass flyger och slåss är dess "brain". Ett skepp med ett ärende flyger sina `legs` i tur och ordning.
-  - `sides.js`: vem som står på vems sida, och vad varje sida tycker om besättningen (anseendet i `state.standing`). Allt som kan skjuta eller bli skjutet har en `side`: besättningen, piraterna, en faktion, eller en station som står för sig själv.
+  - `sides.js`: vem som står på vems sida, vad varje sida tycker om besättningen (anseendet i `state.standing`), och vilka sidor besättningen har retat upp just här (`state.strife`). Allt som kan skjuta eller bli skjutet har en `side`: besättningen, piraterna, en faktion, eller en station som står för sig själv.
   - `stations.js`: stationerna. Hur en station behandlar besättningen (`align`, `closed`) räknas fram ur dess sida och anseendet i varje steg, så ändra sidan eller anseendet och aldrig `align` direkt. Här finns också försvaret och piratanfallen.
   - `traffic.js`: faktionernas skepp som hoppar in, gör sitt ärende och hoppar ut.
   - `weapons.js`: fregattens vapen som data. Ett nytt vapen är en ny rad i `WEAPONS`.
@@ -152,7 +152,7 @@ Bordning, agentens val som användaren inte har sett än (2026-11-14)
 
 Stationer, vapen och sektorer, agentens val som användaren inte har sett än (2026-11-14)
 - Fem fasta sektorer: Kestrel Drift, Ash Belt, Hollow Reach, The Narrows och The Maw. Stationer säljer kartan till nästa sektor, och kartor kan ligga i valv.
-- En station som besättningen skjuter på i lugn och ro blir avvaktande efter två träffar, stänger efter fem och öppnar eld efter åtta. Den varnar vid varje träff.
+- En station som besättningen skjuter på i lugn och ro varnar vid första träffen och slår tillbaka från nästa, se reglerna för F-129 nedan. Anseendet sjunker för varje träff: avvaktande efter två, stängd efter fem och fientlig för gott efter åtta.
 - En fientlig station tas över från en terminal i dess valv. Misslyckas inbrottet slår stationen tillbaka med två Fighters, och låset får ett nytt pussel.
 - En övertagen station får shipyard.
 - Stationerna är dubbelt så stora som förut, 192 punkter tvärs över mot fregattens 108 på längden. Storleken är agentens val (F-065, 2026-11-14).
@@ -214,7 +214,12 @@ Faktioner, stationsförsvar och trafik, agentens val som användaren inte har se
 - Dockningsskölden är 40, och 90 med uppgraderingen Docking Field (150 krediter, en system slot). Den laddas på fyra sekunder och försvinner när skeppet lägger ut.
 - Trafik: ett nytt skepp eller en patrull var tjugonde till fyrtiofemte sekund, högst fem samtidigt, två av tre är fraktskepp. Fraktskepp besöker en eller två stationer i 12 till 25 sekunder var. Patruller är två skepp som går en runda förbi stationerna. Ingen trafik kommer till en sektor där piraterna har alla stationer.
 - Pirater jagar närmaste fiende inom sikt och annars fregatten. Darts skjuter bara på fiender.
-- Sparningar gjorda före den här ändringen går inte att läsa in (`SAVE_VERSION` är 2).
+- Sparningar gjorda före den senaste ändringen av spelets tillstånd går inte att läsa in (`SAVE_VERSION` är 3).
+- Strider som andra har del i (F-129, byggt 2026-11-14, agentens siffror):
+  - Den första träffen på någon som inte är fiende ger en varning. En träff till inom en halv minut startar en strid: sidans skepp och stationens kanoner här behandlar besättningen som fiende, och stationen släpper inte in någon. Skott som redan var på väg när varningen kom räknas inte.
+  - Striden lägger sig 25 sekunder efter besättningens sista skott. Den gäller bara i sektorn och är skild från anseendet, som fortsätter sjunka för varje träff.
+  - Beväpnade skepp från samma sida kommer till hjälp från längre håll än de annars ser, både mot besättningen och när pirater anfaller en av sidans stationer.
+  - Obeväpnade skepp flyr från fiender som kommer nära och från besättningens första skott. Skepp från andra sidor som är nära en strid mellan besättningen och någon annan ger upp sitt ärende och hoppar ut.
 
 Bordning av stationer, besked från användaren (2026-11-14, inget av det är byggt än)
 - Tre lägen inne på ett ställe: lugnt (handelsgolv), lockdown (stället räknar besättningen som fiende: mörkt, roterande röda ljus, stängda dörrar, och man smyger) och larm (upptäckt). Ett larm ligger kvar tills man gått. Man kan inte gömma sig och vänta ut det.

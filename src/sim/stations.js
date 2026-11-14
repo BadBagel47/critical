@@ -2,7 +2,7 @@
 // follows from that: friendly and neutral ones trade, hostile ones shoot. All of them defend themselves.
 import { B } from './balance.js';
 import { THINGS } from './kinds.js';
-import { CREW, PIRATE, ownSide, moodOf, enemies, changeStanding } from './sides.js';
+import { CREW, PIRATE, ownSide, moodOf, enemies, changeStanding, provoke, isAngry } from './sides.js';
 import { thingsOf, findThing, findDock, mapInfo } from './things.js';
 import { makeVessel } from './vessels.js';
 import { currentSector } from './sectors.js';
@@ -72,7 +72,8 @@ function makePeace(state, st, align) {
 // Bring a station in line with what its side thinks of the crew right now.
 function syncStation(state, st) {
   const mood = moodOf(state, st.side);
-  const closed = mood === 'closed';
+  // A station that is busy fighting the crew off lets nobody in either.
+  const closed = mood === 'closed' || isAngry(state, st.side);
   if (closed && !st.closed) teleportAllHome(state, st.id);
   st.closed = closed;
   const want = alignFor(mood);
@@ -209,9 +210,9 @@ export function struckBy(state, st, side) {
 export function damageStation(state, st, dmg, at, by) {
   st.lastHit = state.time;
   if (by === CREW && st.side !== PIRATE && st.side !== CREW) {
-    // Shooting at someone who is not an enemy costs their good will. They say so the first time.
-    if (st.align !== 'hostile') state.events.push({ type: 'stationWarning', name: st.name });
+    // Shooting at someone who is not an enemy costs their good will, and they do not just take it.
     changeStanding(state, st.side, -B.STANDING_LOSS.stationHit);
+    provoke(state, st.side);
   }
   const absorbed = Math.min(st.shield, dmg);
   st.shield -= absorbed;

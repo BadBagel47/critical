@@ -5,7 +5,7 @@
 // fight pirates, and the crew only when the crew has made an enemy of that faction.
 import { B } from './balance.js';
 import { SHIPS } from './kinds.js';
-import { CREW, PIRATE, enemies, changeStanding, thankForPirate } from './sides.js';
+import { CREW, PIRATE, enemies, changeStanding, thankForPirate, provoke, isAngry, anyoneAngry } from './sides.js';
 import { addThing, thingsOf, findThing } from './things.js';
 import { currentSector, createWreck } from './sectors.js';
 import { forward, headingTo, angleDiff, turnToward, toWorld, dist, rand, randRange, TAU } from './util.js';
@@ -56,6 +56,7 @@ export function makeVessel(state, kind, x, y, side = PIRATE) {
     raid: null,
     legs: null,
     hold: 0,
+    fleeing: false,
     gone: false,
     ...START[c.brain](state, c),
   };
@@ -77,8 +78,12 @@ export function hurtVessel(state, v, dmg, by = CREW) {
   v.hp -= dmg;
   const c = SHIPS[v.kind];
   const crew = by === CREW;
-  // Shooting at someone who is not an enemy costs their good will.
-  if (crew && v.side !== PIRATE) changeStanding(state, v.side, -B.STANDING_LOSS.shipHit);
+  // Shooting at someone who is not an enemy costs their good will. They fight back, or run if they cannot.
+  if (crew && v.side !== PIRATE) {
+    changeStanding(state, v.side, -B.STANDING_LOSS.shipHit);
+    provoke(state, v.side);
+    if (!BRAINS[c.brain]) fleeFrom(state, v, state.ship);
+  }
   if (crew && state.raid && v.raid === state.raid.id) state.raid.helped = true;
   if (v.hp > 0) return;
   state.fx.push({ type: 'boom', x: v.x, y: v.y, t: 0, dur: c.boom.dur, size: c.boom.size });
@@ -170,13 +175,44 @@ function nearestEnemy(state, v, reach) {
 //   raiders   the station they are raiding, unless an enemy comes close
 //   pirates   the nearest enemy, and otherwise the frigate, which they hunt wherever it is
 //   others    the nearest enemy in sight
+//             and from further away when their own side is in a fight: with the crew, or one of their
+//             stations with raiders
 function pickTarget(state, v) {
   if (v.raid && state.raid && state.raid.id === v.raid) {
     const st = findThing(state, state.raid.station);
     return nearestEnemy(state, v, 380) || (st ? { x: st.x, y: st.y, vx: 0, vy: 0 } : state.ship);
   }
-  const enemy = nearestEnemy(state, v, SIGHT);
+  const enemy = nearestEnemy(state, v, sideInFight(state, v.side) ? B.HELP_RANGE : SIGHT);
   return enemy || (v.side === PIRATE ? state.ship : null);
+}
+
+// A side has a fight of its own in this sector when the crew has provoked it, or raiders are at one of its stations.
+function sideInFight(state, side) {
+  if (side === PIRATE) return false;
+  if (isAngry(state, side)) return true;
+  const raided = state.raid && findThing(state, state.raid.station);
+  return !!raided && raided.side === side;
+}
+
+// ---------- keeping out of trouble ----------
+// A ship gives up its errand and leaves the sector, away from what it wants no part of.
+export function fleeFrom(state, v, from) {
+  if (v.fleeing) return;
+  const f = forward(headingTo(v.x - from.x, v.y - from.y));
+  v.legs = [{ x: v.x + f.x * B.FLEE_DISTANCE, y: v.y + f.y * B.FLEE_DISTANCE, hold: 0, jump: true }];
+  v.hold = 0;
+  v.fleeing = true;
+}
+
+// What a ship wants to get away from, if anything: an unarmed ship runs from its enemies, and nobody stays
+// to watch the crew fight someone else.
+function troubleFor(state, v, c) {
+  if (v.fleeing || v.side === PIRATE) return null;
+  const enemy = BRAINS[c.brain] ? null : nearestEnemy(state, v, B.FLEE_RANGE);
+  if (enemy) return enemy;
+  const ship = state.ship;
+  const bystander = anyoneAngry(state) && !isAngry(state, v.side);
+  return bystander && dist(v.x, v.y, ship.x, ship.y) < B.AVOID_RANGE ? ship : null;
 }
 
 // The way to a target: how far, and the heading that leads it.
@@ -318,6 +354,8 @@ export function stepVessels(state, dt) {
   for (const v of state.vessels) {
     const c = SHIPS[v.kind];
     v.cool -= dt;
+    const trouble = troubleFor(state, v, c);
+    if (trouble) fleeFrom(state, v, trouble);
     // A ship that can fight goes for its target. Without one, or without guns, it gets on with its errand.
     const target = BRAINS[c.brain] ? pickTarget(state, v) : null;
     let { want, speed } = target ? BRAINS[c.brain](state, v, c, aimAt(v, target), dt) : stepErrand(state, v, c, dt);

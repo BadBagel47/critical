@@ -122,6 +122,7 @@ function clearTraffic(s, raidDelay) {
   s.beams = [];
   s.things = s.things.filter((t) => THINGS[t.kind].persist);
   s.raid = null;
+  s.strife = {};
   s.raidTimer = randRange(s, raidDelay[0], raidDelay[1]);
   s.traffic = { timer: randRange(s, 8, 20) };
 }

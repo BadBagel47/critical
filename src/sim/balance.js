@@ -20,6 +20,17 @@ export const B = {
   STANDING_LOSS: { stationHit: 10, shipHit: 2, shipKill: 25 },
   STANDING_GAIN: { rescue: 20, pirate: 0.5, forgive: 0.05 },
   WARY_PRICE: 1.5,
+  // a side that the crew shoots at warns them first. A hit after the warning, but not in the first moment
+  // after it, starts a fight that lasts this long after the crew's last shot
+  WARNING_TIME: 30,
+  WARNING_GRACE: 1.5,
+  GRUDGE_TIME: 25,
+  // how far away a ship comes to help its own side, how near an enemy has to be for an unarmed ship to run,
+  // how near a fight that is not theirs ships give up their errand, and how far they fly before they jump out
+  HELP_RANGE: 1200,
+  FLEE_RANGE: 420,
+  AVOID_RANGE: 600,
+  FLEE_DISTANCE: 650,
   // how long a player's wish for a post that someone else holds stands, so that two players can swap
   SWAP_TIME: 6,
   // power

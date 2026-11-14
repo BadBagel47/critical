@@ -42,9 +42,51 @@ export function moodOf(state, side) {
 export function enemies(state, a, b) {
   if (a === b) return false;
   if (a === PIRATE || b === PIRATE) return true;
-  if (a === CREW) return moodOf(state, b) === 'hostile';
-  if (b === CREW) return moodOf(state, a) === 'hostile';
+  if (a === CREW) return moodOf(state, b) === 'hostile' || isAngry(state, b);
+  if (b === CREW) return moodOf(state, a) === 'hostile' || isAngry(state, a);
   return false;
+}
+
+// ---------- trouble on the spot ----------
+// A side that the crew shoots at defends itself there and then, whatever it thinks of them otherwise.
+// state.strife[side] is { warned, angry }: the seconds left of a warning, and of a fight.
+export const isAngry = (state, side) => !!state.strife[side] && state.strife[side].angry > 0;
+export const anyoneAngry = (state) => Object.keys(state.strife).some((side) => state.strife[side].angry > 0);
+
+// The crew has shot at a side that is not their enemy. The first time they are told to stop. If they go on,
+// the side fights back for a while: its ships and its station guns here treat the crew as an enemy.
+export function provoke(state, side) {
+  if (side === CREW || side === PIRATE || moodOf(state, side) === 'hostile') return;
+  const now = state.strife[side] || (state.strife[side] = { warned: 0, angry: 0 });
+  const name = nameOfSide(state, side);
+  if (now.angry > 0) {
+    now.angry = B.GRUDGE_TIME;
+  } else if (now.warned <= 0) {
+    now.warned = B.WARNING_TIME;
+    state.events.push({ type: 'holdFire', side, name });
+  } else if (now.warned < B.WARNING_TIME - B.WARNING_GRACE) {
+    // Shots that were already on their way when the warning came are let pass.
+    now.angry = B.GRUDGE_TIME;
+    state.events.push({ type: 'fightBack', side, name });
+  }
+}
+
+// Warnings are forgotten and fights die down when the crew stops shooting.
+export function stepStrife(state, dt) {
+  for (const side of Object.keys(state.strife)) {
+    const now = state.strife[side];
+    if (now.angry > 0) {
+      now.angry -= dt;
+      if (now.angry > 0) continue;
+      // Whoever just stood down has no patience left for a while.
+      now.angry = 0;
+      now.warned = B.WARNING_TIME - B.WARNING_GRACE;
+      state.events.push({ type: 'standDown', side, name: nameOfSide(state, side) });
+    } else {
+      now.warned -= dt;
+      if (now.warned <= 0) delete state.strife[side];
+    }
+  }
 }
 
 export function nameOfSide(state, side) {

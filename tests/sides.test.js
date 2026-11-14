@@ -6,7 +6,7 @@ import { step } from '../src/sim/step.js';
 import { damageShip } from '../src/sim/damage.js';
 import { thingsOf } from '../src/sim/things.js';
 import { makeVessel, hurtVessel } from '../src/sim/vessels.js';
-import { moodOf, enemies, changeStanding, stepStanding, FACTIONS } from '../src/sim/sides.js';
+import { moodOf, enemies, isAngry, changeStanding, stepStanding, FACTIONS } from '../src/sim/sides.js';
 import { servicePrices, damageStation, isTrading } from '../src/sim/stations.js';
 import { dockShieldMax, CATALOG } from '../src/sim/upgrades.js';
 import { SHIPS, THINGS } from '../src/sim/kinds.js';
@@ -266,13 +266,121 @@ test('stray shots from the crew are no attack on a station that is in a fight', 
   run(s, fire, 1.5);
   assert.ok(s.standing[st.side] < 0, 'when all is calm, shooting at it is an attack');
   assert.ok(st.shield < B.STATION_SHIELD);
-  assert.ok(s.events.some((e) => e.type === 'stationWarning'));
+  assert.ok(
+    s.events.some((e) => e.type === 'holdFire'),
+    'and the station says so',
+  );
   const home = yard(s);
   s.ship.x = home.x;
   s.ship.y = home.y + 220;
   s.bolts = [];
   run(s, { gunner: { aim: { x: home.x, y: home.y }, fire: true } }, 1.5);
   assert.equal(home.shield, B.STATION_SHIELD, "the crew's own yard is never hit by their shots");
+});
+
+// ---------- fights that others have a stake in ----------
+const seen = (s, type) => s.events.some((e) => e.type === type);
+// Stay where you are for as long as it takes.
+const parked = (v) => {
+  v.legs = [{ x: v.x, y: v.y, hold: 1e9 }];
+  return v;
+};
+
+test('a station that is shot at warns first, then fights back for a while, and stands down when it stops', () => {
+  const s = quiet(),
+    st = post(s);
+  s.ship.x = st.x;
+  s.ship.y = st.y + 220;
+  const hit = () => damageStation(s, st, 1, { x: st.x, y: st.y }, 'crew');
+  hit();
+  assert.ok(seen(s, 'holdFire'), 'the first shot gets a warning');
+  hit();
+  assert.equal(isAngry(s, st.side), false, 'shots that were already on their way are let pass');
+  run(s, {}, 3);
+  assert.equal(s.ship.shield, B.SHIELD_MAX, 'and nothing more comes of it');
+  s.events.length = 0;
+  hit();
+  assert.ok(seen(s, 'fightBack'), 'a shot after the warning starts a fight');
+  assert.equal(enemies(s, 'crew', st.side), true);
+  assert.notEqual(moodOf(s, st.side), 'hostile', 'though the station has not given up on the crew for good');
+  run(s, {}, 8);
+  assert.ok(s.ship.shield + s.ship.hull < B.SHIELD_MAX + B.HULL_MAX, 'its guns open fire');
+  assert.equal(st.closed, true, 'and it lets nobody aboard meanwhile');
+  s.events.length = 0;
+  run(s, {}, B.GRUDGE_TIME);
+  assert.ok(seen(s, 'standDown') || !isAngry(s, st.side));
+  assert.equal(enemies(s, 'crew', st.side), false, 'it stands down when the crew has stopped shooting');
+  step(s, {}, DT);
+  assert.equal(st.closed, false);
+  hit();
+  assert.equal(isAngry(s, st.side), true, 'but it has no patience left for a while');
+});
+
+test('ships of the side that is attacked come to help, and ships of other sides leave', () => {
+  const s = farOut(quiet());
+  s.ship.mods.alarm = 3;
+  const victim = parked(makeVessel(s, 'fighter', s.ship.x + 300, s.ship.y, 'wardens'));
+  const friend = parked(makeVessel(s, 'gunboat', s.ship.x + 1000, s.ship.y, 'wardens'));
+  const bystander = parked(makeVessel(s, 'freighter', s.ship.x - 350, s.ship.y, 'charter'));
+  const patrol = parked(makeVessel(s, 'fighter', s.ship.x, s.ship.y + 400, 'drifters'));
+  s.vessels.push(victim, friend, bystander, patrol);
+  hurtVessel(s, victim, 1);
+  assert.ok(seen(s, 'holdFire'));
+  run(s, {}, 3);
+  assert.equal(s.alarm.count, 0, 'a warning is only a warning');
+  assert.equal(friend.x, s.ship.x + 1000, 'and everyone stays where they are');
+  hurtVessel(s, victim, 1);
+  assert.ok(seen(s, 'fightBack'));
+  run(s, {}, 8);
+  assert.ok(s.alarm.count >= 2, 'both ships of that side are enemies now');
+  assert.ok(friend.x < s.ship.x + 800, 'the one further away comes to help');
+  assert.ok(s.ship.shield + s.ship.hull < B.SHIELD_MAX + B.HULL_MAX, 'and the crew is fired on');
+  assert.equal(bystander.fleeing, true, 'a freighter of another side gives up its errand');
+  assert.equal(patrol.fleeing, true, 'and so does a patrol that has no part in it');
+  assert.ok(dist(bystander.x, bystander.y, s.ship.x, s.ship.y) > 350, 'they fly away from the fight');
+  assert.equal(victim.fleeing, false);
+  for (let i = 0; i < 40 * 60 && s.vessels.includes(patrol); i++) step(s, {}, DT);
+  assert.equal(s.vessels.includes(patrol), false, 'and jump out of the sector');
+  assert.equal(s.standing.drifters, 0, 'no harm done to those who left');
+});
+
+test('an unarmed ship runs from pirates, and from the first shot the crew fires at it', () => {
+  const s = farOut(quiet());
+  const freighter = parked(makeVessel(s, 'freighter', s.ship.x + 2000, s.ship.y, 'charter'));
+  s.vessels.push(freighter);
+  run(s, {}, 1);
+  assert.equal(freighter.fleeing, false, 'it minds its own business while all is calm');
+  const pirate = makeVessel(s, 'fighter', freighter.x + 300, freighter.y);
+  s.vessels.push(pirate);
+  step(s, {}, DT);
+  assert.equal(freighter.fleeing, true);
+  assert.ok(freighter.legs[0].jump && freighter.legs[0].x < freighter.x, 'it heads away from the pirate to jump out');
+  const other = parked(makeVessel(s, 'freighter', s.ship.x, s.ship.y - 300, 'drifters'));
+  s.vessels = [other];
+  hurtVessel(s, other, 1);
+  assert.equal(other.fleeing, true, 'one shot from the crew is enough');
+  assert.ok(other.legs[0].y < other.y, 'away from the frigate');
+});
+
+test('a patrol comes from afar when raiders are at a station of its own side, and others do not', () => {
+  const s = quiet();
+  s.charts.push(1);
+  s.ship.fuel = 90;
+  step(s, { captain: { jump: 1 } }, DT);
+  run(s, {}, B.JUMP_CHARGE + 0.2);
+  s.spawn.timer = s.traffic.timer = 1e9;
+  s.vessels = [];
+  const depot = stations(s).find((st) => st.side === 'drifters');
+  s.ship.x = depot.x + 6000;
+  s.ship.y = depot.y;
+  const own = parked(makeVessel(s, 'gunboat', depot.x, depot.y + 1000, 'drifters'));
+  const other = parked(makeVessel(s, 'gunboat', depot.x, depot.y - 1150, 'wardens'));
+  s.vessels.push(own, other);
+  s.raidTimer = 0.01;
+  run(s, {}, 8);
+  assert.equal(s.raid && s.raid.station, depot.id, 'the raid is on the depot');
+  assert.ok(dist(own.x, own.y, depot.x, depot.y) < 800, 'its own patrol sets off to help');
+  assert.equal(dist(other.x, other.y, depot.x, depot.y), 1150, 'the patrol of another side stays on its round');
 });
 
 // ---------- the docking shield ----------

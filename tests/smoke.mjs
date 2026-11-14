@@ -286,6 +286,35 @@ await page.evaluate(() => {
   window.__critical.state.traffic.timer = 30;
 });
 
+// A station that is shot at warns first, and fights back if the crew goes on.
+const trouble = await page.evaluate(async () => {
+  const c = window.__critical,
+    s = c.state,
+    st = c.stations.find((x) => !x.home);
+  const { damageStation } = await import(new URL('src/sim/stations.js', document.baseURI).href);
+  s.vessels = [];
+  s.ship.docked = null;
+  s.ship.x = st.x;
+  s.ship.y = st.y + 2000;
+  const hit = () => damageStation(s, st, 1, { x: st.x, y: st.y }, 'crew');
+  hit();
+  const warned = !!s.strife[st.side] && s.strife[st.side].warned > 0 && s.strife[st.side].angry <= 0;
+  await new Promise((r) => setTimeout(r, 150));
+  const told = c.view.toasts.some((t) => /HOLD YOUR FIRE/.test(t.text));
+  c.advance(3);
+  hit();
+  c.advance(0.1);
+  const angry = s.strife[st.side].angry > 0 && st.closed === true && st.align === 'neutral';
+  // Leave no hard feelings behind for the rest of the test.
+  s.strife = {};
+  s.standing[st.side] = 0;
+  s.bolts = [];
+  c.advance(0.1);
+  return { warned, told, angry, open: st.closed === false };
+});
+check(trouble.warned && trouble.told, 'the first shot at a station gets a warning on the screen');
+check(trouble.angry && trouble.open, 'more shots make it fight back, and it is open again when that is over');
+
 // Station: dock at the friendly yard, open the panel, refuel and buy upgrades.
 await page.evaluate(() => {
   const s = window.__critical.state,
