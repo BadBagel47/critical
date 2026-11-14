@@ -4,6 +4,7 @@ import { forward, headingTo, turnToward, angleDiff, toWorld, dist, rand, randRan
 import { buyUpgrade, hullMax, fuelMax, CATALOG } from './upgrades.js';
 import { findDock } from './dock.js';
 import { makePirate, currentSector } from './sectors.js';
+import { teleportAllHome } from './boarding.js';
 
 export function createStation(s, x, y, align, shipyard, name) {
   return {
@@ -15,6 +16,8 @@ export function createStation(s, x, y, align, shipyard, name) {
 
 export function turnHostile(state, st) {
   if (st.align === 'hostile') return;
+  // Anyone walking around inside is sent back to the ship, and the trading floor is gone.
+  teleportAllHome(state, st.id); st.interior = null; st.breakin = null;
   st.align = 'hostile'; st.lock = 'locked';
   st.guns = STATION_GEOM.guns.map((g) => ({ ...g, hp: B.STATION_GUN_HP, heading: 0, cool: 1 }));
   if (state.ship.docked === st.id) state.ship.docked = null;

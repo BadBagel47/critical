@@ -50,6 +50,7 @@ export function createInterior(state, wreck) {
   set(0, 8, 'A'); set(0, 9, 'A');
   const it = {
     tiles, rooms, vault, entry: { x: 1.5 * TILE, y: 9 * TILE }, timer: null, live: false, doorCut: 0, doorOpen: false, terminal: null, takeover: 0,
+    trade: false, desks: [], civilians: [],
     avatars: [], guards: [], turrets: [], sentries: [], loot: [], bolts: [], grenades: [], fx: [],
   };
   const taken = [];
@@ -61,6 +62,8 @@ export function createInterior(state, wreck) {
     }
     const p = { x: (rm.c0 + rm.c1 + 1) / 2 * TILE, y: (rm.r0 + rm.r1 + 1) / 2 * TILE }; taken.push(p); return p;
   };
+  // A friendly or neutral station is a place to walk around and trade in, with nothing to fight.
+  if (wreck.kind === 'station' && wreck.align !== 'hostile') { makeTrade(state, it); return it; }
   const corridor = { c0: 0, c1: IW - 1, r0: 6, r1: 11 };
   const d = wreck.difficulty, open = rooms.map((_, i) => i).filter((i) => i !== vault);
   const pick = () => rooms[open[Math.floor(rand(state) * open.length)]];
@@ -87,6 +90,25 @@ export function createInterior(state, wreck) {
   return it;
 }
 
+// Turn an interior into a trading floor: doors open, desks to trade at, people walking about.
+export function makeTrade(state, it) {
+  it.trade = true; it.doorOpen = true; it.terminal = null; it.timer = null;
+  it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
+  it.guards = []; it.turrets = []; it.bolts = []; it.grenades = [];
+  const mid = (rm) => ((rm.c0 + rm.c1 + 1) / 2) * TILE;
+  it.desks = [
+    { type: 'services', x: 5.5 * TILE, y: 7.5 * TILE },
+    { type: 'shipyard', x: mid(it.rooms[1]), y: 2.5 * TILE },
+    { type: 'armory', x: mid(it.rooms[4]), y: 15.5 * TILE },
+  ];
+  it.civilians = [];
+  for (let i = 0; i < 5; i++) {
+    const rm = i < 2 ? { c0: 8, c1: IW - 2, r0: 6, r1: 11 } : it.rooms[(i * 2) % it.rooms.length];
+    const x = (rm.c0 + 2 + rand(state) * (rm.c1 - rm.c0 - 3)) * TILE, y = (rm.r0 + 2 + rand(state) * (rm.r1 - rm.r0 - 3)) * TILE;
+    it.civilians.push({ id: state.nextId++, x, y, heading: rand(state) * TAU, home: { x, y }, goal: { x, y }, wait: rand(state) * 3 });
+  }
+}
+
 // ---------- players ----------
 const playerById = (state, id) => state.players.find((p) => p.id === id);
 export const anyoneInside = (state, wreckId) => state.players.some((p) => (wreckId === undefined ? p.inside !== null : p.inside === wreckId));
@@ -96,8 +118,16 @@ export function tryBoard(state, playerId) {
   if (!player || player.inside !== null || !ship.docked) return false;
   const wreck = findDock(state, ship.docked);
   if (!wreck) return false;
-  // Friendly and neutral stations are not boarded. Their services open instead.
-  if (wreck.kind === 'station' && wreck.align !== 'hostile') { state.events.push({ type: 'stationMenu', player: playerId, station: wreck.id }); return false; }
+  // Friendly and neutral stations are open to walk into. No lock, no teleporter needed.
+  if (wreck.kind === 'station' && wreck.align !== 'hostile') {
+    if (!wreck.interior) wreck.interior = createInterior(state, wreck);
+    const floor = wreck.interior;
+    if (!floor.trade) makeTrade(state, floor);
+    floor.live = true; player.inside = wreck.id;
+    floor.avatars.push({ player: playerId, x: floor.entry.x + 6, y: floor.entry.y - 6 + floor.avatars.length * 8, heading: Math.PI / 2, carry: [], cool: 0, grenades: 0, charges: 0, sentries: 0 });
+    state.events.push({ type: 'boarded', player: playerId, wreck: wreck.id, trade: true });
+    return true;
+  }
   if (wreck.lock !== 'open') {
     // The docking lock has to be bypassed first. Opening the panel starts the clock.
     if (!wreck.breakin) wreck.breakin = createBreakin(state, wreck, breakinBonus(ship));
@@ -137,7 +167,8 @@ export function teleportAllHome(state, targetId) {
   const target = findDock(state, targetId);
   if (!target || !target.interior) return 0;
   const inside = [...target.interior.avatars];
-  for (const av of inside) leave(state, target.interior, av, true);
+  // Leaving a trading station is just walking out. Anywhere else it is a teleport.
+  for (const av of inside) leave(state, target.interior, av, !target.interior.trade);
   return inside.length;
 }
 
@@ -180,6 +211,13 @@ function stepAvatar(state, it, av, cmd, dt) {
   if (len > 0) {
     const sp = B.CREW_SPEED_FOOT * (1 - B.CARRY_SLOW * av.carry.length) * dt / Math.max(1, len);
     move(it, av, mx * sp, my * sp, B.CREW_RADIUS);
+  }
+  if (it.trade) {
+    // Weapons stay holstered on a trading station. The use key works the desks and the airlock.
+    if (cmd.usePressed && av.x < TILE * 2.2 && Math.abs(av.y - it.entry.y) < TILE * 1.5) { leave(state, it, av, false); return; }
+    const desk = cmd.usePressed ? it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20) : null;
+    if (desk) state.events.push({ type: 'deskUsed', player: av.player, desk: desk.type });
+    return;
   }
   if (cmd.fire && av.cool <= 0) {
     const f = forward(av.heading + randRange(state, -0.02, 0.02));
@@ -225,7 +263,7 @@ function stepAvatar(state, it, av, cmd, dt) {
   }
   if (it.terminal && it.doorOpen && cmd.use && dist(av.x, av.y, it.terminal.x, it.terminal.y) < 16) {
     it.takeover += dt / B.TAKEOVER_TIME; it.hacking = true;
-    if (it.takeover >= 1) { const st = state.stations.find((x) => x.interior === it); if (st) takeOver(state, st); it.terminal = null; }
+    if (it.takeover >= 1) { const st = state.stations.find((x) => x.interior === it); if (st) takeOver(state, st); it.terminal = null; it.desks = []; }
   }
   if (player.hp <= 0) leave(state, it, av, true);
 }
@@ -298,6 +336,11 @@ function stepInterior(state, wreck, cmds, dt) {
   it.fx = it.fx.filter((f) => f.t < f.dur);
   for (const av of [...it.avatars]) stepAvatar(state, it, av, cmds && cmds.away ? cmds.away[av.player] : null, dt);
   for (const g of it.guards) stepGuard(state, it, g, dt);
+  for (const c of it.civilians) {
+    c.wait -= dt;
+    if (c.wait <= 0) { c.goal = { x: c.home.x + randRange(state, -40, 40), y: c.home.y + randRange(state, -26, 26) }; c.wait = randRange(state, 2, 6); }
+    if (dist(c.x, c.y, c.goal.x, c.goal.y) > 4) { c.heading = turnToward(c.heading, headingTo(c.goal.x - c.x, c.goal.y - c.y), 4 * dt); const f = forward(c.heading); move(it, c, f.x * 22 * dt, f.y * 22 * dt, B.CREW_RADIUS); }
+  }
   for (const t of it.turrets) stepTurret(state, it, t, dt);
   for (const s of it.sentries) stepSentry(state, it, s, dt);
   for (const b of it.bolts) {

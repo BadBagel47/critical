@@ -66,8 +66,8 @@ function dockedLine(state) {
   if (!t) return null;
   const calm = { color: COL.ion[2], border: COL.ion[0] }, warm = { color: COL.ochre[2], border: COL.ochre[0] };
   const inside = state.players.filter((p) => p.inside === t.id).length;
-  if (inside) return { text: `${inside} INSIDE  ·  E UNDOCKS AND TELEPORTS ${inside === 1 ? 'THEM' : 'THEM ALL'} HOME`, ...warm };
-  if (t.kind === 'station' && t.align !== 'hostile') return { text: `DOCKED AT ${t.name}  ·  F SERVICES  ·  E UNDOCK`, ...calm };
+  if (inside) return { text: t.interior && t.interior.trade ? `${inside} ABOARD ${t.name}  ·  E UNDOCKS AND CALLS THEM BACK` : `${inside} INSIDE  ·  E UNDOCKS AND TELEPORTS ${inside === 1 ? 'THEM' : 'THEM ALL'} HOME`, ...warm };
+  if (t.kind === 'station' && t.align !== 'hostile') return { text: `DOCKED AT ${t.name}  ·  F GO ABOARD  ·  E UNDOCK`, ...calm };
   const what = t.kind === 'station' ? t.name : t.kind === 'pod' ? 'CARGO POD' : 'WRECK';
   if (t.lock !== 'open') {
     if (t.breakin && t.breakin.started) return { text: `${what}  ·  F BACK TO THE LOCK  ·  0:${String(Math.max(0, Math.ceil(t.breakin.time))).padStart(2, '0')}`, ...warm };

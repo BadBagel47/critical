@@ -871,3 +871,58 @@ test('test mode starts with everything installed, room for it, credits and all c
   assert.equal(createState(1).test, false, 'a normal game is unchanged');
   run(s, { captain: { throttle: 1, boost: true, darts: false }, gunner: { aim: { x: 0, y: -200 }, fire: true } }, 5);
 });
+
+// ---------- walking around on friendly and neutral stations ----------
+test('a friendly station is walked into without a lock, and its desks open the shop', () => {
+  const s = quiet(createState(1)), st = atStation(s, station(s, 'friendly'));
+  s.players[0].tele = 30;
+  step(s, { system: { board: [0] } }, DT);
+  assert.equal(s.players[0].inside, st.id, 'no lock and no teleporter needed');
+  const it = st.interior, av = it.avatars[0];
+  assert.equal(it.trade, true);
+  assert.equal(it.guards.length + it.turrets.length, 0);
+  assert.deepEqual(it.desks.map((d) => d.type), ['services', 'shipyard', 'armory']);
+  for (const d of it.desks) assert.ok(!blocked(it, d.x, d.y, 4), d.type + ' desk stands on the floor');
+  step(s, { away: { 0: { fire: true, aim: { x: av.x + 50, y: av.y } } } }, DT);
+  assert.equal(it.bolts.length, 0, 'weapons stay holstered');
+  s.events.length = 0;
+  av.x = it.desks[2].x; av.y = it.desks[2].y - 10;
+  step(s, { away: { 0: { usePressed: true } } }, DT);
+  assert.ok(s.events.some((e) => e.type === 'deskUsed' && e.desk === 'armory'));
+  s.credits = 500;
+  step(s, { shop: [{ action: 'buy', item: 'pack' }] }, DT);
+  assert.equal(s.ship.mods.pack, 1, 'buying works while standing inside');
+  av.x = it.entry.x; av.y = it.entry.y;
+  step(s, { away: { 0: { usePressed: true } } }, DT);
+  assert.equal(s.players[0].inside, null);
+  assert.equal(s.players[0].tele < 30.1 && s.players[0].lockedOut === null, true, 'walking out is not a teleport');
+});
+
+test('undocking calls people back from a trading station without a teleport, and a station that turns hostile throws them out', () => {
+  const s = quiet(createState(1)), st = atStation(s, station(s, 'neutral'));
+  step(s, { system: { board: [0] } }, DT);
+  step(s, { captain: { dock: true } }, DT);
+  assert.equal(s.players[0].inside, null);
+  assert.equal(s.players[0].tele, 0, 'no teleporter cooldown');
+  atStation(s, st);
+  step(s, { system: { board: [0] } }, DT);
+  turnHostile(s, st);
+  assert.equal(s.players[0].inside, null);
+  assert.equal(st.interior, null, 'the trading floor is gone');
+});
+
+test('a station that is taken over becomes a trading floor', () => {
+  const s = quiet(createState(1)), st = station(s, 'neutral');
+  turnHostile(s, st); atStation(s, st); st.lock = 'open';
+  step(s, { system: { board: [0] } }, DT);
+  const it = st.interior, av = it.avatars[0];
+  it.guards = []; it.turrets = []; it.doorOpen = true; it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
+  av.x = it.terminal.x; av.y = it.terminal.y;
+  run(s, { away: { 0: { use: true } } }, B.TAKEOVER_TIME + 0.2);
+  assert.equal(st.align, 'friendly');
+  av.x = it.entry.x; av.y = it.entry.y;
+  step(s, { away: { 0: { usePressed: true } } }, DT);
+  step(s, { system: { board: [0] } }, DT);
+  assert.equal(st.interior.trade, true);
+  assert.equal(st.interior.desks.length, 3);
+});

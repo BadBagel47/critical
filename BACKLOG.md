@@ -11,9 +11,6 @@ Prioritet: Hög, Medel, Låg.
 **C** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**D** – strong model, high level – Gå ombord på alla stationer
-- F-047 – Gå runt till fots även på vänliga och neutrala stationer, kanske med butiken där inne
-
 **E** – strong model, high level – Musik och ljud
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - F-048 – Musik för de olika lägena
@@ -34,7 +31,6 @@ Väntar på användaren: D-052 (storyläge eller grund för vad spelet går ut p
 | ID | Vad | Status |
 |---|---|---|
 | F-030 | Automatisk paus när någon varit frånkopplad en stund | Ej påbörjad |
-| F-047 | Vi ska nog kunna gå ombord på alla stationer. Kanske ha butiken där inne. Just nu går det bara på fientliga, och vänliga och neutrala visar en panel | Ej påbörjad |
 | F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer | Ej påbörjad |
 | F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
@@ -101,3 +97,4 @@ Väntar på användaren: D-052 (storyläge eller grund för vad spelet går ut p
 | F-042 | Stöd för handkontroll på alla poster, i bordning och i panelerna | 2026-11-14 |
 | D-033 | Google Fonts borttaget från den publicerade designsidan. Genomgång av vad spelet laddar och sparar, med en kontroll som går att köra om | 2026-11-14 |
 | F-051 | Testläge där man har alla saker från början: T på startskärmen, eller ?test i adressen | 2026-11-14 |
+| F-047 | Gå ombord på alla stationer. Vänliga och neutrala har tre diskar där inne: services, shipyard och armory | 2026-11-14 |

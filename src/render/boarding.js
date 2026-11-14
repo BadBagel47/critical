@@ -81,6 +81,15 @@ export function drawBoarding(ctx, state, view, assets) {
   for (let x = 68; x < OX; x += 10) { ctx.fillStyle = WALL[0]; ctx.fillRect(x, OY + 8 * TILE + 2, 1, 28); }
   ctx.save(); ctx.translate(OX, OY);
   drawTiles(ctx, it, state.time);
+  const DESK = { services: ['SERVICES', COL.ochre[2]], shipyard: [wreck.shipyard ? 'SHIPYARD' : 'NO SHIPYARD', wreck.shipyard ? COL.captain : COL.faint], armory: ['ARMORY', COL.ember[1]] };
+  for (const dk of it.desks) {
+    const [name, c] = DESK[dk.type];
+    glow(ctx, dk.x, dk.y, 16, c, 0.1);
+    rect(ctx, dk.x - 18, dk.y - 5, 36, 10, '#2a2c3a', COL.out); rect(ctx, dk.x - 17, dk.y - 4, 34, 2, '#44475a'); rect(ctx, dk.x - 14, dk.y - 1, 8, 4, c); rect(ctx, dk.x + 6, dk.y - 1, 3, 3, COL.acid[1]);
+    sprite(ctx, img.boarder, dk.x, dk.y + (dk.y < 9 * TILE ? -12 : 12), dk.y < 9 * TILE ? Math.PI : 0);
+    font.draw(ctx, name, dk.x, dk.y + (dk.y < 9 * TILE ? 10 : -16), c, { align: 'c' });
+  }
+  for (const c of it.civilians) sprite(ctx, img.boarder, c.x, c.y, c.heading);
   for (const l of it.loot) { glow(ctx, l.x, l.y, 9, l.type === 'crate' ? COL.ochre[2] : COL.ion[2], 0.14); sprite(ctx, img[l.type], l.x, l.y); }
   if (it.terminal) {
     const t = it.terminal; glow(ctx, t.x, t.y, 12, COL.ember[1], 0.16);
@@ -94,6 +103,8 @@ export function drawBoarding(ctx, state, view, assets) {
     if (g.mode === 'alert') { ctx.fillStyle = COL.ember[2]; ctx.fillRect(g.x - 1, g.y - 14, 2, 4); ctx.fillRect(g.x - 1, g.y - 9, 2, 2); }
   }
   for (const a of it.avatars) {
+    // A ring marks the player's own figure.
+    if (a.player === player.id) { ctx.strokeStyle = COL.ion[2]; ctx.globalAlpha = 0.6; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(a.x, a.y, 9, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
     sprite(ctx, img.boarder, a.x, a.y, a.heading);
     a.carry.forEach((c, i) => rect(ctx, a.x - 5 + i * 4, a.y - 13, 3, 3, c.type === 'crate' ? COL.ochre[2] : COL.ion[2], COL.out));
   }
@@ -112,14 +123,24 @@ export function drawBoarding(ctx, state, view, assets) {
   ctx.restore();
 
   // ---- HUD ----
-  let x = label(ctx, font, 8, 8, 'BOARDING', { fg: COL.out, bg: COL.white, border: null }) + 4;
+  let x = label(ctx, font, 8, 8, it.trade ? 'ON THE STATION' : 'BOARDING', { fg: COL.out, bg: COL.white, border: null }) + 4;
   label(ctx, font, x, 8, 'AWAY FROM YOUR POST', { fg: COL.faint });
-  if (isStation) label(ctx, font, VIEW_W / 2 + 60, 8, it.terminal ? `${wreck.name}  ·  FIND THE TERMINAL IN THE VAULT` : `${wreck.name} IS YOURS`, { anchor: 'c', fg: it.terminal ? COL.ember[2] : COL.acid[2], border: it.terminal ? COL.ember[0] : COL.acid[0] });
+  if (it.trade) label(ctx, font, VIEW_W / 2 + 60, 8, `${wreck.name}  ·  ${wreck.align.toUpperCase()} STATION`, { anchor: 'c', fg: wreck.align === 'friendly' ? COL.engineer : COL.text });
+  else if (isStation) label(ctx, font, VIEW_W / 2 + 60, 8, it.terminal ? `${wreck.name}  ·  FIND THE TERMINAL IN THE VAULT` : `${wreck.name} IS YOURS`, { anchor: 'c', fg: it.terminal ? COL.ember[2] : COL.acid[2], border: it.terminal ? COL.ember[0] : COL.acid[0] });
   else { const low = it.timer < 30; label(ctx, font, VIEW_W / 2 + 60, 8, 'REACTOR UNSTABLE   ' + fmt(Math.max(0, it.timer)), { anchor: 'c', fg: low ? COL.ember[2] : COL.ochre[2], border: low ? COL.ember[0] : COL.ochre[0] }); }
   // Only the best enemy alarm reaches the people inside.
   if (level(state.ship, 'alarm') >= 3 && alarmText(state)) label(ctx, font, VIEW_W / 2 + 60, 24, alarmText(state), { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
-  label(ctx, font, VIEW_W - 8, 8, `CARRY  ${me ? me.carry.length : 0} / ${carryMax(state.ship)}`, { anchor: 'r', fg: COL.ochre[2] });
-  label(ctx, font, VIEW_W - 8, 22, `CREDITS  ${state.credits}`, { anchor: 'r', fg: COL.dim });
+  if (!it.trade) label(ctx, font, VIEW_W - 8, 8, `CARRY  ${me ? me.carry.length : 0} / ${carryMax(state.ship)}`, { anchor: 'r', fg: COL.ochre[2] });
+  label(ctx, font, VIEW_W - 8, it.trade ? 8 : 22, `CREDITS  ${state.credits}`, { anchor: 'r', fg: it.trade ? COL.ochre[2] : COL.dim });
+  if (it.trade) {
+    font.draw(ctx, 'W A S D MOVE  ·  F AT A DESK TO TRADE  ·  F AT THE AIRLOCK TO LEAVE', VIEW_W - 8, 346, COL.faint, { align: 'r' });
+    if (me) {
+      const dk = it.desks.find((d) => dist(d.x, d.y, me.x, me.y) < 20);
+      if (me.x < TILE * 2.2 && Math.abs(me.y - it.entry.y) < TILE * 1.5) label(ctx, font, OX + me.x + 14, OY + me.y - 26, 'F  BACK TO THE SHIP', { fg: COL.acid[2], border: COL.acid[0] });
+      else if (dk) label(ctx, font, OX + dk.x, OY + dk.y + (dk.y < 9 * TILE ? 22 : -32), 'F  ' + DESK[dk.type][0], { anchor: 'c', fg: COL.ochre[3], border: COL.ochre[1] });
+    }
+    return;
+  }
   rect(ctx, 8, 332, 100, 22, COL.panel, COL.line);
   font.draw(ctx, 'HP', 12, 340, COL.dim); bar(ctx, 28, 340, 74, player.hp / crewHpMax(state.ship), player.hp < 40 ? COL.ember[1] : COL.engineer);
   x = label(ctx, font, 114, 336, 'TELEPORT READY', { fg: COL.ion[2], border: COL.ion[0] }) + 6;

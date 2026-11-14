@@ -124,6 +124,14 @@ Nödanrop, lås och utrustning, agentens val som användaren inte har sett än (
 - Pirater lämnar ibland bärgningsgods som plockas upp genom att flyga över det. Tractor beam drar in det på avstånd.
 - Point defense stoppar ungefär en tredjedel av skotten som kommer nära. Pirater har inga raketer än.
 
+Ombord på stationer, agentens val som användaren inte har sett än (2026-11-14)
+- F vid en vänlig eller neutral station går ombord, utan lås och utan krav på laddad teleporter.
+- Butiken finns bara där inne, vid tre diskar: Services nära luftslussen, Shipyard och Armory i var sitt rum. F vid en disk öppnar panelen.
+- Vapnen går inte att använda på en handelsstation.
+- Att lägga ut kallar hem dem som är ombord utan teleport och utan kostnad.
+- En station som blir fientlig kastar ut alla och får en ny insida.
+- En övertagen station får diskar nästa gång någon går in.
+
 Balans, agentens val (2026-11-14)
 - Piratvågorna kommer glesare ju färre som är ombord, så att en ensam spelare hinner lämna skeppet. Ensam är det drygt en minut mellan vågorna.
 - Provat med en simulerad spelare, inte av en människa: den som stannar vid vapnen klarar sig, och ett obevakat skepp går förlorat på drygt två minuter.

@@ -51,6 +51,16 @@ function commands() {
   if (input.hit('KeyP', 'Escape')) cmds.system = { pause: true, by: view.player };
   if (state.paused || state.over) return cmds;
   const me = state.players[view.playerId];
+  const wreck = dockedWreck();
+  if (view.station && !isShop(wreck)) view.station = false;
+  if (view.station) {
+    // At the station panel: clicks buy things, and the player's post is left alone.
+    if (input.hit('KeyF')) { view.station = false; return cmds; }
+    const hit = input.mouse.clicked ? stationClick(state, wreck, view.stationTab, input.mouse.x, input.mouse.y) : null;
+    if (hit && hit.tab) view.stationTab = hit.tab;
+    if (hit && hit.order) cmds.shop = [hit.order];
+    return cmds;
+  }
   if (me.inside !== null) {
     // Away on a boarding: the player has no post on the ship.
     const m = input.mouse, pad = input.pad; let at = { x: m.x - OX, y: m.y - OY }, lob = at;
@@ -68,22 +78,12 @@ function commands() {
     } };
     return cmds;
   }
-  const wreck = dockedWreck();
   if (view.hacking && (!wreck || wreck.lock === 'open')) view.hacking = false;
   if (view.hacking) {
     // At the break-in panel: clicks turn tiles, and the player's post is left alone.
     if (input.hit('KeyF')) { view.hacking = false; return cmds; }
     const m = input.mouse, order = wreck.breakin ? breakinAction(wreck, m.x, m.y, m.clicked, m.rightClicked, input.hit('Space')) : null;
     if (order) cmds.hack = { [me.id]: [order] };
-    return cmds;
-  }
-  if (view.station && !isShop(wreck)) view.station = false;
-  if (view.station) {
-    // At the station panel: clicks buy things, and the player's post is left alone.
-    if (input.hit('KeyF')) { view.station = false; return cmds; }
-    const hit = input.mouse.clicked ? stationClick(state, wreck, view.stationTab, input.mouse.x, input.mouse.y) : null;
-    if (hit && hit.tab) view.stationTab = hit.tab;
-    if (hit && hit.order) cmds.shop = [hit.order];
     return cmds;
   }
   if (input.hit('KeyF') && wreck) cmds.system.board = [me.id];
@@ -219,7 +219,7 @@ function heldCommands() {
 
 // Short messages at the top of the screen for things that just happened.
 const TOAST = {
-  boarded: () => ['BOARDING  ·  THE REACTOR IS UNSTABLE', COL.ochre[2]],
+  boarded: (e) => (e.trade ? null : ['BOARDING', COL.ochre[2]]),
   teleported: () => ['TELEPORTED HOME  ·  TELEPORTER CHARGING', COL.ember[2]],
   returned: () => ['BACK ON THE SHIP', COL.acid[2]],
   deposit: (e) => [`STOWED ${e.count}  ·  +${e.fuel} FUEL  ·  +${e.credits} CREDITS`, COL.ochre[3]],
@@ -275,7 +275,7 @@ function toasts() {
   setEngine(state.over || state.paused || state.ship.docked ? 0 : Math.abs(state.ship.throttle) * (state.ship.boosting ? 1.6 : 1));
   for (const e of state.events) {
     if (e.type === 'breakinOpened' && e.player === view.playerId) view.hacking = true;
-    if (e.type === 'stationMenu' && e.player === view.playerId) { view.station = true; view.map = false; }
+    if (e.type === 'deskUsed' && e.player === view.playerId) { view.station = true; view.stationTab = e.desk === 'armory' ? 'armory' : 'hull'; }
     if (e.type === 'jumped') { view.cam = { x: 0, y: 0 }; view.map = false; }
     const make = TOAST[e.type]; if (!make) continue;
     const made = make(e); if (!made) continue;

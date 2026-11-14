@@ -112,8 +112,12 @@ await page.evaluate(() => { const s = window.__critical.state; s.ship.docked = n
 
 // Station: dock at the friendly yard, open the panel, refuel and buy upgrades.
 await page.evaluate(() => { const s = window.__critical.state, st = s.stations.find((x) => x.align === 'friendly'); s.spawn.timer = 1e9; s.pirates = []; s.ship.x = st.x; s.ship.y = st.y + 90; s.ship.heading = 0; s.ship.docked = st.id; s.ship.fuel = 30; s.credits = 2000; window.__critical.view.cam = { x: s.ship.x, y: s.ship.y }; });
-await page.keyboard.press('Digit1'); await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
-check(await get('v.station') === true, 'F opens the station panel at a friendly station');
+await page.keyboard.press('Digit1'); await page.keyboard.press('KeyF'); await page.waitForTimeout(250);
+check(await get('s.players[0].inside') !== null && await get("s.stations.find((x) => x.align === 'friendly').interior.trade") === true, 'F walks aboard a friendly station');
+await page.waitForTimeout(400); await shot('12a-station-floor');
+await page.evaluate(() => { const it = window.__critical.state.stations.find((x) => x.align === 'friendly').interior, d = it.desks[0], a = it.avatars[0]; a.x = d.x; a.y = d.y + 12; });
+await page.waitForTimeout(100); await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
+check(await get('v.station') === true, 'F at a desk opens the station panel');
 await click(60 + 12 + 40, 38 + 64 + 8); await page.waitForTimeout(150);
 check(await get('s.ship.fuel') === 100, 'refuelling is free at a friendly station');
 for (const row of [0, 1]) { await click(276 + 60, 38 + 66 + row * 15 + 7); await page.waitForTimeout(80); }
@@ -129,6 +133,9 @@ check(await get('s.credits') < 2000, 'upgrades cost credits');
 await shot('12-station');
 await page.keyboard.press('KeyF'); await page.waitForTimeout(100);
 check(await get('v.station') === false, 'F closes the station panel');
+await page.evaluate(() => { const it = window.__critical.state.stations.find((x) => x.align === 'friendly').interior, a = it.avatars[0]; a.x = it.entry.x; a.y = it.entry.y; });
+await page.waitForTimeout(100); await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
+check(await get('s.players[0].inside') === null, 'F at the airlock walks back to the ship');
 await page.evaluate(() => { const s = window.__critical.state; s.ship.mods = { twin: 1, heavy: 1, rockets: 1, bay: 1, armor: 1, emit: 1, alarm: 3, tscan: 1 }; s.ship.slots = { hard: 6, system: 4 }; s.ship.rockets = 8; s.ship.dartStock = 3; });
 
 // A hostile station: break in, board it and find the terminal.
@@ -147,11 +154,11 @@ check(await get("s.stations.find((x) => x.align === 'hostile').lock") === 'open'
 await page.keyboard.press('Digit1'); await page.waitForTimeout(80);
 await page.keyboard.press('KeyF'); await page.waitForTimeout(250);
 check(await get('s.players[0].inside') !== null, 'a hostile station with an open lock can be boarded');
-await page.evaluate(() => { const s = window.__critical.state, it = s.stations.find((x) => x.interior).interior, a = it.avatars[0]; it.guards = []; it.turrets = []; it.doorOpen = true; it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c)); a.x = it.terminal.x; a.y = it.terminal.y + 10; });
+await page.evaluate(() => { const s = window.__critical.state, it = s.stations.find((x) => x.name === 'DRIFT POST').interior, a = it.avatars[0]; it.guards = []; it.turrets = []; it.doorOpen = true; it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c)); a.x = it.terminal.x; a.y = it.terminal.y + 10; });
 await page.waitForTimeout(200); await shot('12c-station-inside');
 await page.keyboard.down('KeyF'); await page.waitForTimeout(4600); await page.keyboard.up('KeyF');
 check(await get("s.stations.filter((x) => x.align === 'friendly').length") === 2, 'holding F at the terminal takes the station over');
-await page.evaluate(() => { const s = window.__critical.state, it = s.stations.find((x) => x.interior).interior, a = it.avatars[0]; a.x = it.entry.x; a.y = it.entry.y; });
+await page.evaluate(() => { const s = window.__critical.state, it = s.stations.find((x) => x.name === 'DRIFT POST').interior, a = it.avatars[0]; a.x = it.entry.x; a.y = it.entry.y; });
 await page.waitForTimeout(100); await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
 check(await get('s.players[0].inside') === null, 'the boarder returns from the station');
 await page.keyboard.press('Digit1');
