@@ -186,6 +186,49 @@ export function generateSector(s, id) {
   sec.visited = true;
 }
 
+// For trying things out: a test game has one of everything that can be docked with close to where the ship
+// starts. A station of every side, a wreck of every hull and two cargo pods stand in rings round the start.
+// This is only for test games. An ordinary game is never laid out like this.
+export function gatherForTesting(s) {
+  const turn = (deg) => (deg * Math.PI) / 180;
+  // Whatever was laid out near the start is cleared away, rocks too, so that nothing is in the way.
+  s.things = s.things.filter((t) => t.kind === 'rock' && Math.hypot(t.x, t.y) > 1500);
+  s.known = [];
+  const onward = currentSector(s).links.filter((l) => l !== 0);
+  // side, shipyard, where (degrees from straight ahead, and how far), name
+  const stations = [
+    ['crew', true, 0, 470, 'KESTREL YARD'],
+    [null, false, 60, 950, 'FREE TEST POST'],
+    ['charter', true, 120, 950, 'CHARTER TEST DOCK'],
+    ['wardens', true, 180, 950, 'WARDENS TEST DOCK'],
+    ['drifters', true, 240, 950, 'DRIFTERS TEST DOCK'],
+    // The pirates' station stands further out, so that its guns do not reach the start.
+    ['pirate', false, 300, 1150, 'PIRATE TEST HOLD'],
+  ];
+  stations.forEach(([side, yard, deg, far, name], i) => {
+    const p = at(turn(deg), far);
+    const st = createStation(s, p.x, p.y, side, yard, name, side === 'crew');
+    if (side !== 'pirate') st.chart = onward[i % Math.max(1, onward.length)] ?? null;
+    addThing(s, st);
+  });
+  // hull, how dangerous, where
+  const wrecks = [
+    ['gunboat', 1, 35, 320],
+    ['hull', 2, 145, 360],
+    ['freighter', 3, 215, 380],
+  ];
+  for (const [hull, risk, deg, far] of wrecks) {
+    const p = at(turn(deg), far);
+    const wreck = createWreck(s, p.x, p.y, risk, hull);
+    wreck.heading = 0;
+    addThing(s, wreck);
+  }
+  for (const deg of [90, 270]) {
+    const p = at(turn(deg), 250);
+    addThing(s, createPod(s, p.x, p.y));
+  }
+}
+
 // Why the ship cannot jump to a sector right now, or null when it can.
 export function jumpBlocked(state, to) {
   const sec = currentSector(state);

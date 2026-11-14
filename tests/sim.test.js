@@ -1333,6 +1333,43 @@ test('a hacking kit gives more time in a break-in', () => {
 });
 
 // ---------- test mode ----------
+test('a test game has one of everything that can be docked with close to the start, and an ordinary game has not', () => {
+  const s = createState(4, { test: true });
+  const near = (t) => Math.hypot(t.x - s.ship.x, t.y - s.ship.y);
+  const sides = stations(s).map((st) => (st.side.startsWith('free-') ? 'free' : st.side));
+  assert.deepEqual(sides.sort(), ['charter', 'crew', 'drifters', 'free', 'pirate', 'wardens']);
+  assert.deepEqual(
+    wrecks(s)
+      .map((w) => w.hull)
+      .sort(),
+    ['freighter', 'gunboat', 'hull'],
+  );
+  assert.equal(pods(s).length, 2);
+  const all = [...stations(s), ...wrecks(s), ...pods(s)];
+  assert.ok(
+    all.every((t) => near(t) <= 1200),
+    'everything is close by',
+  );
+  assert.ok(
+    stations(s).find((st) => st.home && near(st) < 500),
+    'the home yard is nearest',
+  );
+  const pirate = stations(s).find((st) => st.side === 'pirate');
+  assert.ok(near(pirate) > B.STATION_RANGE + 200, 'the pirate station cannot shoot at the start');
+  for (const a of all) {
+    for (const b of all) {
+      if (a !== b) assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > 200, 'nothing stands on top of anything else');
+    }
+  }
+  assert.ok(
+    s.things.every((t) => t.kind !== 'rock' || near(t) > 1500),
+    'and no rocks are in the way',
+  );
+  const usual = createState(4);
+  assert.equal(stations(usual).length, 2, 'an ordinary game is laid out as before');
+  assert.ok(stations(usual).some((st) => near(st) > 1200));
+});
+
 test('test mode starts with everything installed, room for it, credits and all charts', () => {
   const s = createState(1, { test: true });
   assert.equal(s.test, true);

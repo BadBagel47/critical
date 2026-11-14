@@ -106,6 +106,7 @@ Spelet
 - Automatisk paus vid tappad anslutning sker först efter en stund. Gränsen prövas ut.
 - Publicering: GitHub Pages så länge, flytt till Cloudflare när nätverksmotorn byggs in (2026-11-14).
 - Testläge: T på startskärmen, eller `?test` sist i adressen, startar spelet med alla uppgraderingar, all utrustning, alla stjärnkartor och 5000 krediter (2026-11-14).
+- I testläget ligger också allt man kan docka med samlat nära startpunkten: en station av varje sida, ett vrak av varje skrov och två fraktcontainrar. Piratstationen står längre ut, utom räckhåll för sina kanoner. Det är en testfunktion som inte ska finnas i det vanliga spelet (F-148, 2026-11-14). Koden är `gatherForTesting()` i `src/sim/sectors.js`.
 - Styrning: tangentbord och mus, eller handkontroll. Agentens val, användaren har inte provat än.
 - Engineer ser rymden som de andra, med energi och skadevarningar i en smal remsa, och börjar i det läget. V eller en knapp öppnar panelen och fäller undan den (F-134, byggt 2026-11-14).
 - Knappar som visar vad man kan göra (F-112, 2026-11-14): en knapp dyker upp när det finns något att göra, med kortkommandot för tangentbord och en lösning för touch. Agentens utformning, som användaren har godkänt i ord men inte sett: knapparna ligger nere till höger, högst två åt gången med huvudsaken störst. Tangentbord visar tangenten som en ruta följd av ordet, handkontroll visar kontrollens knapp, och pekskärm visar en rund knapp med symbol och ordet under. Text finns alltid med.
