@@ -145,6 +145,7 @@ Regler som gäller allt ovan, och som får egna tester när det byggs:
 - Den som spelar ensam kan alltid göra allt som krävs för att komma vidare, oavsett roll.
 - Ingen turret eller kamera spärrar en väg som måste gås utan att det finns ett sätt förbi.
 - Besättningens egen varvsstation i första sektorn kan aldrig anfallas, tas över eller bli fientlig.
+- Det pågår aldrig mer än ett anfall åt gången på era stationer, och det går alltid att hinna dit.
 - En prissumma går alltid att bli av med, även utan pengar.
 - Ett lågt anseende går alltid att höja.
 
@@ -162,7 +163,54 @@ Scenen `boarding` delas i två: `boarding` för smygande under lockdown och bord
 - Ägda stationer lagar sig inte själva (avsnitt 8).
 - Förlåtelsen med tiden tas bort när uppdragen finns (avsnitt 10).
 
-## 14. Byggordning
+## 14. Anfall på stationer ni äger
+
+**Bestämt (2026-11-14).**
+- Vi provar att en station kan falla även när besättningen är i ett annat system.
+- En station som anfalls skickar ett meddelande och rapporterar attacken, med en varning i tre nivåer: **LOW** när den inte ser någon stor risk att bli övertagen, **MEDIUM** när risken börjar bli stor och **HIGH** när den tror att den kommer att förlora.
+- Det ska finnas regler för hur ofta det sker och om angriparna kommer i grupp.
+- En faktion ni är ovän med ska också kunna anfalla. Den är mer organiserad och mer aggressiv än pirater. Anseendet och hur utbredd faktionen är i systemet ska påverka.
+- Det får inte gå att fuska sig ur ett övertagande genom att bara skjuta sönder skeppet som har dockat.
+
+**Förslag: ett anfall i tre steg, likadant vare sig ni är på plats eller inte.**
+
+| Steg | Vad som händer | Vad som avgör |
+|---|---|---|
+| 1. Belägring | Angriparna hoppar in och slåss mot sköld och kanontorn | Angriparnas styrka mot stationens yttre försvar |
+| 2. Bordning | När det yttre försvaret är nere dockar ett bordningsskepp, och striden flyttar in i stationen | Bordarnas styrka mot stationens inre försvar (vakter, turrets, säkerhetsnivå) |
+| 3. Avgörande | Bordarna når mainframen och stationen faller, eller så slås de tillbaka och resten flyr | Tiden: bordarna behöver ungefär en och en halv minut inne |
+
+- **Är ni på plats** spelas steg 1 som en vanlig strid i rymden, som nödanropen i dag. I steg 2 kan ni docka vid en annan arm, gå in och slå ut bordarna själva innan de når mainframen. Det är samma bordning som annars, fast ni försvarar.
+- **Är ni i ett annat system** räknas varje steg ut i stället, med samma styrkor och med lite slump. Kommer ni dit mitt i anfallet blir det en riktig strid i det steg anfallet har nått, med stationen så skadad som den då är.
+- **Skeppet som har dockat:** när det väl har dockat är bordarna redan inne. Att skjuta sönder skeppet avbryter inte övertagandet, det hindrar bara dem från att få förstärkning och från att fly. Skeppet skyddas dessutom av stationens dockningssköld, precis som ert eget. Övertagandet stoppas bara inne i stationen: av ert inre försvar eller av er själva.
+- **Försvaret ni köper i mainframen** har därmed två delar som märks på olika ställen: det yttre (sköld och kanontorn) avgör steg 1, det inre (vakter, turrets, säkerhet) avgör steg 2.
+
+**Förslag: varningen.** Stationen räknar själv ut hur troligt det är att den faller, och säger det i meddelandet. Nivån uppdateras när läget ändras.
+
+| Varning | Stationens bedömning | Typiskt läge |
+|---|---|---|
+| LOW | Under en fjärdedels risk att falla | Det yttre försvaret håller |
+| MEDIUM | Mellan en fjärdedel och hälften | Skölden är nere, kanontorn slås ut |
+| HIGH | Över hälften | Bordarna är inne |
+
+Meddelandet säger vilken station, vem som anfaller, nivån och ungefär hur lång tid som är kvar, till exempel `DRIFT POST UNDER ATTACK  ·  PIRATES  ·  RISK MEDIUM  ·  3 MIN`.
+
+**Förslag: hur ofta, och vem.**
+- Högst ett anfall åt gången på era stationer, i hela världen. Det ska alltid gå att hinna dit.
+- Ett anfall tar fyra till sex minuter från första varningen till avgörandet när ingen hjälper till. Ett hopp tar under en halv minut, så även två hopp bort hinner man.
+- En nyss övertagen station lämnas i fred i fem minuter.
+- Minst åtta minuter mellan två anfall. Fler egna stationer ger inte fler anfall, bara fler mål.
+- Besättningens egen varvsstation i första sektorn anfalls aldrig.
+
+| Angripare | När | Hur |
+|---|---|---|
+| Pirater | Oftare ju farligare sektorn är och ju fler piratstationer som finns där | En lös grupp på fyra till sex skepp, som i dag. Bordningsskeppet är en Gunboat |
+| En faktion ni är ovän med | Oftare ju sämre anseendet är och ju fler stationer faktionen har i sektorn och i grannsektorerna. Helst mot stationer ni tagit från den | En ordnad styrka: fler skepp, alltid minst en Gunboat (senare Juggernaut), ett eget bordningsskepp, och de går rakt på det yttre försvaret i stället för att jaga er |
+
+- En faktion anfaller bara när anseendet är "fientlig". Vid "stängd" nöjer den sig med att hålla er ute.
+- En station som faller blir angriparens. Halva det försvar ni köpt finns kvar, så den är svårare att ta tillbaka än den var att ta första gången.
+
+## 15. Byggordning
 
 | Steg | Innehåll | Punkter |
 |---|---|---|
@@ -170,11 +218,12 @@ Scenen `boarding` delas i två: `boarding` för smygande under lockdown och bord
 | 2 | Rollernas bonusar | F-113 |
 | 3 | Mainframen med hack i nivåer, och panelen för ägda stationer | F-109, F-110 |
 | 4 | Ta över neutrala baser, bounty hunters och prissumma | F-114 |
+| 5 | Anfall på stationer ni äger: varningar i tre nivåer, belägring och bordning, uträkning när ni är borta, och faktioner som anfaller | F-121, F-122, F-123 |
 
 Steg 1 är störst och bör provspelas innan resten byggs. Stora baser med två våningar (F-103, D-072) kan komma före eller efter. Planlösningen i avsnitt 3 är gjord för att fungera med båda.
 
-## 15. Frågor som är kvar
+## 16. Frågor som är kvar
 
-1. Ska en station ni äger kunna falla till pirater medan ni är i en annan sektor, eller bara medan ni är på plats? I dag räknas bara den sektor ni är i.
-2. Ska bounty hunters också kunna komma när ni har anfallit en faktions skepp eller stationer utifrån, eller bara efter ett övertagande?
-3. Räcker siffrorna ovan som startvärden att provspela, eller vill du ändra någon redan nu?
+1. **Besvarad 2026-11-14:** stationer ska kunna falla även när ni är i ett annat system, se avsnitt 14.
+2. Ska bounty hunters också komma när ni har anfallit någon utifrån, eller bara efter ett övertagande? **Agentens förslag:** den som har en egen flotta kommer själv, och den som inte har det sätter ett pris på er. En station utan faktion har inga skepp, så prissumman är dess enda sätt att slå tillbaka, både när ni tar över den och när ni skjuter den till fiende utifrån. En faktion svarar i stället med sina patruller och med anfall på era stationer (avsnitt 14). Då får man aldrig båda straffen för samma sak.
+3. Siffrorna i förslaget är startvärden att provspela med. De som finns är: 30 sekunder som en sövd vakt sover, sex pilar till tranq gun, en sekund för att bli upptäckt, 20 sekunder som en turret är utslagen, 25 procent mer skada för Gunner, dubbel hackfart för Engineer, åtta rutors överblick för Captain, 60 sekunder som kameror är avstängda från mainframen, 40 i sänkt anseende när larmet går på en neutral bas och 10 hos alla andra vid övertagande, en prissumma på 300 krediter, en grupp bounty hunters på två Fighters och en Gunboat var tredje till fjärde minut i högst tre omgångar, och tiderna för anfall i avsnitt 14. Alla är lätta att ändra efter provspelning.

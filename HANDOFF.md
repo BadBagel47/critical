@@ -228,6 +228,9 @@ Bordning av stationer, besked från användaren (2026-11-14, inget av det är by
 - Anseende ska inte förlåtas med tiden. Man ska få jobba för det, främst genom uppdrag som tillhör faktioner och som kan ge plus hos en och minus hos en annan (F-118, D-073). Det som är byggt i dag förlåter fortfarande med tiden och ska ändras när uppdragen finns.
 - Faktioner ska kunna vara i krig med varandra (F-119).
 - Användaren har godkänt agentens förslag i samtalet (2026-11-14): bounty hunters som en kombination av prissumma och anfall då och då, ett krig mellan två faktioner per omgång, att förlåtelsen med tiden tas bort först när uppdragen finns, och att en faktion vars station besättningen håller som bäst kan bli "stängd".
+- Vi provar att stationer kan falla till angripare även när besättningen är i ett annat system. En station som anfalls rapporterar det med en varning i tre nivåer: low, medium och high, efter hur stor risken är att den faller (F-121, 2026-11-14).
+- En faktion man är ovän med ska också kunna anfalla ens stationer, mer organiserat och aggressivt än pirater, och oftare ju sämre anseendet är och ju mer utbredd faktionen är i systemet (F-123, 2026-11-14).
+- Ett övertagande ska inte gå att fuska sig ur genom att skjuta sönder skeppet som har dockat (F-122, 2026-11-14).
 - Det samlade förslaget ligger i docs/station-boarding.md och väntar på ja. Det som då var kvar att bestämma: hur en attack inifrån börjar på en neutral bas (agentens förslag: en öppen del och en del bara för personal), att ingen längre kastas ut när stationen blir fientlig, hur larm skiljer sig från lockdown i bild, hur oförstörbara turrets aldrig kan låsa spelet, hur hårt bounty hunters slår, och vad panelen på en ägd station ska kunna när stationer i dag lagar sig själva.
 
 Sparande, uppdrag och omgångar (2026-11-14)

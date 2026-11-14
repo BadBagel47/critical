@@ -26,59 +26,64 @@ Prioritet: Hög, Medel, Låg.
 **E** – strong model, high level – Ta över neutrala baser (efter gruppen om mainframen)
 - F-114 – Hacka en neutral bas med stor risk: red alert, bounty hunters som anfaller skeppet och sjunkande anseende
 
-**F** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
+**F** – strong model, high level – Anfall på egna stationer (efter gruppen om mainframen)
+- F-121 – Stationer kan falla även när man är i ett annat system, och varnar i tre nivåer när de anfalls
+- F-122 – Ett övertagande i steg: belägring, bordning och avgörande, som inte går att fuska sig ur genom att skjuta det dockade skeppet
+- F-123 – Regler för hur ofta det sker, och ordnade anfall från faktioner man är ovän med
+
+**G** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 - D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
 
-**G** – strong model, high level – Förslag: ekonomi och belöningar
+**H** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**H** – strong model, high level – Baser i två storlekar
+**I** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 - D-101 – Gör inomhusmiljöerna mer utarbetade, så att stationer och vrak känns som platser
 
-**I** – strong model, high level – Sällsynta skepp
+**J** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**J** – strong model, high level – Handel
+**K** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**K** – strong model, medium level – Butik med bilder
+**L** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**L** – strong model, high level – Värme
+**M** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**M** – strong model, high level – Slå ut och borda
+**N** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**N** – strong model, high level – Missiler och raketer
+**O** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**O** – strong model, high level – Kontakt med andra skepp
+**P** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**P** – strong model, high level – Asteroider och anomalier
+**Q** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**Q** – strong model, high level – En värld som förändras
+**R** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**R** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**S** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**S** – strong model, high level – Ljudeffekter
+**T** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md och väntar på att användaren lyssnar på docs/music/ och väljer introtema.
@@ -111,6 +116,9 @@ Väntar på användaren: D-117 (förslaget om bordning av stationer i docs/stati
 | D-101 | Jobba fram mer utstuderade inomhusmiljöer | Ej påbörjad |
 | F-102 | Lockdown mode, så att en fientlig station stänger dörrar till shop och armory tills spelarna tagit över kontrollen Tillägg 2026-11-14: när man går in för att loota på ett fientligt ställe ska det vara roterande röda ljus och hela stället mörkare än normalt, eftersom stället är i lockdown mode. Spelarna kan avbryta detta vid en kontrollpanel längst in. Den ligger på den högsta våningen på ställen med flera våningar. Påverkar musiken | Ej påbörjad |
 | F-120 | Spelet ska tala om för musiken när larmet har gått under en bordning, så att musiken byter från smyg till larm. Lägg till `alarm: true` i det som skickas till `updateMusic()` i `src/main.js` (eller låt `sceneOf()` ge `'alarm'`). Musiken för larm är redan byggd och väntar på det. Hör ihop med F-102 och F-107 | Ej påbörjad |
+| F-121 | Vi provar med att stationer kan falla till pirater även när man är i andra system. När de blir anfallna skickar de ett meddelande till spelaren och rapporterar attacken. Varningen graderas i tre nivåer: low när de inte ser någon stor risk att bli övertagna, medium när risken börjar bli stor och high när de tror att de kommer att förlora | Ej påbörjad |
+| F-122 | Hur ett övertagande av en station går till: angriparna dockar, och det sker en uträkning om de kan ta över basen beroende på hur mycket skydd spelaren har installerat genom mainframen. Det blir fuskigt om man kan skjuta sönder skeppet när det har dockat, så det måste hanteras. Agentens förslag i docs/station-boarding.md avsnitt 14: belägring, bordning och avgörande, där bordarna redan är inne när skeppet har dockat | Ej påbörjad |
+| F-123 | Regler för hur ofta stationer anfalls och om angriparna kommer i grupp. Är man ovän med en faktion ska den också kunna utföra attacker. De bör vara mer organiserade och mer aggressiva. Anseendet och nivån på faktionens spridning i systemet borde också påverka | Ej påbörjad |
 | F-107 | Stealth vid bordning: först är det smygande som gäller, tills man blir upptäckt av patrullerande vakter. Man kan växla till en tranq gun (som man kan köpa) och söva vakter för att undvika att bli upptäckt. Om en annan vakt upptäcker en sövd vakt går larmet direkt. Musiken behöver då skilja på smygande och larm Besked 2026-11-14: smyg gäller inte i vrak, det funkar inte bra där. Larmet får vara på, man kan inte gömma sig och vänta ut det. Sövda vakter vaknar. Går man fram till en sövd vakt innan den vaknar kan man döda den. Oklart vad det ska stå på knappen utan att det låter brutalt (Snap?). Agentens förslag: RESTRAIN, vakten binds och är borta resten av bordningen, eller TAKE DOWN om den ska dö | Ej påbörjad |
 | F-108 | Stationer har kameror som sveper, och som man måste undvika för att larmet inte ska gå | Ej påbörjad |
 | F-109 | Alla stationer har en panel där man kan ansluta till stationens mainframe. Vad man ska kunna göra där är inte bestämt. Agentens förslag: se stationens planritning, stänga av kameror och turrets en stund, öppna låsta dörrar, och hos vänliga stationer se priser och uppdrag Tillägg 2026-11-14: Engineer är den som kan hacka mainframen. På en station man äger är inställningarna i panelen att reparera stationen, aktivera externa försvarsturrets igen om de blivit förstörda och sedan lagade, och slå av lockdown mode. Mainframen kan även uppgradera basens försvar. Agentens förslag: en och samma panel på alla stationer, med olika innehåll beroende på om man äger stationen, är fiende eller neutral | Ej påbörjad |
