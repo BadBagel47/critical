@@ -5,7 +5,8 @@ import { TILE, IW, IH, tileAt } from '../sim/boarding.js';
 import { dist } from '../sim/util.js';
 import { sprite, rect, label, bar } from './draw.js';
 import { drawStars } from './space.js';
-import { findDock } from '../sim/dock.js';
+import { findDock } from '../sim/things.js';
+import { playerById } from '../sim/players.js';
 import { hullMax, shieldMax, level, carryMax, crewHpMax } from '../sim/upgrades.js';
 import { alarmText } from './hud.js';
 
@@ -138,7 +139,7 @@ function effect(ctx, f) {
 
 export function drawBoarding(ctx, state, view, assets) {
   const { img, font } = assets,
-    player = state.players[0];
+    player = playerById(state, view.playerId);
   const wreck = findDock(state, player.inside),
     it = wreck.interior,
     isStation = wreck.kind === 'station';

@@ -1,4 +1,4 @@
-// All tuning numbers for the simulation live here.
+// Tuning numbers for the rules of the game. What each kind of thing and ship is like is in kinds.js.
 export const B = {
   // frigate
   HULL_MAX: 200,
@@ -11,6 +11,8 @@ export const B = {
   TURN_SMOOTH: 6,
   THROTTLE_RATE: 0.9,
   ENGINE_POWER: [0.3, 0.6, 0.85, 1.0, 1.25],
+  // how long a player's wish for a post that someone else holds stands, so that two players can swap
+  SWAP_TIME: 6,
   // power
   POWER_TOTAL: 8,
   POWER_MAX_PER_SYSTEM: 4,
@@ -38,17 +40,8 @@ export const B = {
   MAX_PIRATES: 5,
   // Fewer people on board means more time between waves, so a small crew can still leave the ship.
   PIRATE_PACE: { 1: 2.2, 2: 1.4, 3: 1 },
-  FIGHTER_HP: 24,
-  FIGHTER_SPEED: 135,
-  FIGHTER_ATTACK_SPEED: 160,
-  FIGHTER_TURN: 2.4,
-  FIGHTER_RADIUS: 13,
   PIRATE_BOLT_SPEED: 290,
   PIRATE_BOLT_TTL: 1.5,
-  PIRATE_BOLT_DMG: 5,
-  PIRATE_BURST: 3,
-  PIRATE_BURST_GAP: 0.13,
-  PIRATE_COOLDOWN: 1.9,
   // docking
   DOCK_RANGE: 20,
   DOCK_SPEED: 32,
@@ -119,7 +112,6 @@ export const B = {
   BUOY_DANGER: 150,
   BUOY_DRAIN: 10,
   // stations
-  STATION_RADIUS: 38,
   STATION_RANGE: 460,
   STATION_GUN_HP: 45,
   STATION_GUN_COOLDOWN: 1.1,
@@ -146,23 +138,7 @@ export const B = {
   ROCKET_DMG: 34,
   ROCKET_RADIUS: 36,
   ROCKET_LOCK: 130,
-  // more pirates
-  GUNBOAT_HP: 90,
-  GUNBOAT_SPEED: 85,
-  GUNBOAT_TURN: 1.2,
-  GUNBOAT_RADIUS: 20,
-  GUNBOAT_COOLDOWN: 1.0,
-  GUNBOAT_DMG: 9,
-  GUNBOAT_RANGE: 380,
-  CRUISER_HP: 1400,
-  CRUISER_SPEED: 38,
-  CRUISER_TURN: 0.5,
-  CRUISER_RADIUS: 44,
-  CRUISER_COOLDOWN: 1.2,
-  CRUISER_DMG: 8,
-  CRUISER_RANGE: 520,
-  CRUISER_SPAWN: 22,
-  BOUNTY: { fighter: 5, gunboat: 25, cruiser: 500 },
+  // pirates in later sectors
   TIER_HP: 0.15,
   MAX_WRECKS: 5,
   // darts
@@ -192,7 +168,6 @@ export const B = {
   DIAL_WIDTH: 0.95,
   DIAL_STAGES: 3,
   DIAL_MISSES: 3,
-  POD_RADIUS: 12,
   POD_CREDITS: [60, 140],
   // distress calls
   RAID_FIRST: [110, 180],
@@ -228,27 +203,6 @@ export const B = {
   SENTRY_COOLDOWN: 0.45,
 };
 
-// Station geometry in station-local pixels (sprite is 96 x 96).
-export const STATION_GEOM = {
-  ports: [
-    { x: 0, y: -46 },
-    { x: 0, y: 46 },
-    { x: -46, y: 0 },
-    { x: 46, y: 0 },
-  ],
-  guns: [
-    { x: -27, y: -27 },
-    { x: 27, y: 27 },
-  ],
-};
-// Cruiser gun mounts in cruiser-local pixels (sprite is 96 x 168).
-export const CRUISER_GEOM = {
-  guns: [
-    { x: -28, y: 6 },
-    { x: 28, y: 6 },
-    { x: 0, y: -58 },
-  ],
-};
 // Wing mounts on the frigate, used by the twin turrets and the rocket pods.
 export const WING_MOUNTS = [
   { x: -20, y: 17 },
@@ -273,23 +227,5 @@ export const SHIP_GEOM = {
     { id: 'port', name: 'PORT WING', x: -22, y: 16 },
     { id: 'starboard', name: 'STARBOARD WING', x: 22, y: 16 },
     { id: 'engines', name: 'ENGINES', x: 0, y: 44 },
-  ],
-};
-
-// Wreck geometry in wreck-local pixels (sprite is 80 x 140, nose up).
-export const WRECK_GEOM = {
-  port: { x: -33, y: 10 },
-  portNormal: { x: -1, y: 0 },
-  circles: [
-    { x: 0, y: -40, r: 22 },
-    { x: 0, y: 0, r: 28 },
-    { x: 0, y: 40, r: 26 },
-  ],
-};
-// Cargo pod geometry in pod-local pixels (sprite is 24 x 34).
-export const POD_GEOM = {
-  ports: [
-    { x: 0, y: -19 },
-    { x: 0, y: 19 },
   ],
 };

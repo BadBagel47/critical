@@ -1,8 +1,7 @@
 // The Engineer post: a blueprint of the ship with damage nodes, and the power panel.
 import { VIEW_W, VIEW_H, COL } from '../config.js';
 import { B } from '../sim/balance.js';
-import { nodeStatus } from '../sim/state.js';
-import { powerAvailable, powerUsed } from '../sim/step.js';
+import { nodeStatus, powerAvailable, powerUsed } from '../sim/ship.js';
 import { rect, label, dashed } from './draw.js';
 import { drawTabs, drawBars } from './hud.js';
 import { drawTools } from './map.js';
@@ -190,11 +189,11 @@ export function drawEngineer(ctx, state, view, assets) {
   rect(ctx, PANEL_X + 12, 256, VIEW_W - PANEL_X - 24, 1, COL.line);
   drawTools(ctx, font, state, PANEL_X + 12, 266, VIEW_W - PANEL_X - 24);
   font.draw(ctx, 'M  OPEN THE MAP TO SEND PROBES', PANEL_X + 12, 316, COL.faint);
-  drawTabs(ctx, font, view);
+  drawTabs(ctx, font, state, view);
   if (state.time - ship.lastHit < 1.5)
     label(ctx, font, 222, 30, 'UNDER FIRE', { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
   // While a station lock is being worked on, this screen is the only place that shows its code.
-  const locked = state.stations.find(
+  const locked = state.things.find(
     (st) => st.breakin && st.breakin.kind === 'code' && st.breakin.started && st.lock !== 'open',
   );
   if (locked) {

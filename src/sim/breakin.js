@@ -3,6 +3,7 @@
 //   station - 'code':  enter the code that the Engineer screen shows, before it changes
 //   pod     - 'dial':  stop the needle inside the mark three times in a row
 import { B } from './balance.js';
+import { THINGS } from './kinds.js';
 import { rand, randRange, angleDiff, TAU } from './util.js';
 
 export const GW = 7,
@@ -113,7 +114,7 @@ const newMark = (state, bk) => {
 
 // `bonus` stretches the time, for crews that bought a hacking kit.
 export function createBreakin(state, target, bonus = 1) {
-  const kind = target.kind === 'station' ? 'code' : target.kind === 'pod' ? 'dial' : 'pipes';
+  const kind = THINGS[target.kind].lock;
   const seconds =
     (kind === 'code' ? B.CODE_TIME : kind === 'dial' ? B.DIAL_TIME : B.BREAKIN_TIME[target.difficulty]) * bonus;
   const bk = { kind, time: seconds, total: seconds, started: false };
@@ -131,7 +132,7 @@ export function stepBreakin(state, target, cmds, dt) {
   const bk = target.breakin;
   if (!bk || target.lock === 'open') return null;
   const orders = [];
-  for (const byPlayer of Object.values((cmds && cmds.hack) || {}))
+  for (const byPlayer of Object.values(cmds.hack || {}))
     for (const c of byPlayer) if (c.wreck === target.id) orders.push(c);
   let solved = false,
     failed = false;

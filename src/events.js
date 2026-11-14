@@ -1,0 +1,110 @@
+// What the screen does about what just happened in the game: messages at the top, sound, and panels that open.
+import { COL } from './config.js';
+import { playEvents, setEngine } from './audio.js';
+
+const WARM = COL.ochre[2];
+const GOOD = COL.acid[2];
+const BAD = COL.ember[2];
+const LOOT = COL.ochre[3];
+const TECH = COL.ion[2];
+const FOUND = {
+  station: (e) => `${e.align.toUpperCase()} STATION FOUND  ·  MARKED ON THE MAP`,
+  pod: () => 'CARGO POD FOUND  ·  MARKED ON THE MAP',
+  wreck: () => 'WRECK FOUND  ·  MARKED ON THE MAP',
+};
+const NOT_READY = { pulse: 'SCANNER RECHARGING', probe: 'NO PROBES LEFT', buoy: 'NO BUOYS LEFT' };
+
+// Short messages for things that just happened: event type -> [text, colour], or null for no message.
+const TOAST = {
+  boarded: (e) => (e.trade ? null : ['BOARDING', WARM]),
+  teleported: () => ['TELEPORTED HOME  ·  TELEPORTER CHARGING', BAD],
+  returned: () => ['BACK ON THE SHIP', GOOD],
+  deposit: (e) => [`STOWED ${e.count}  ·  +${e.fuel} FUEL  ·  +${e.credits} CREDITS`, LOOT],
+  teleCharging: (e) => [`TELEPORTER CHARGING  ·  ${Math.ceil(e.left)} S`, TECH],
+  lockedOut: () => ['TELEPORTED OUT  ·  NO WAY BACK IN THIS DOCKING', BAD],
+  recalled: (e) => [`UNDOCKED  ·  ${e.count} TELEPORTED HOME`, BAD],
+  doorOpen: () => ['VAULT OPEN', LOOT],
+  wreckExploded: () => ['THE WRECK BLEW UP', BAD],
+  lockOpen: (e) => (e.kind === 'pod' ? null : ['LOCK BYPASSED  ·  F TO BOARD', GOOD]),
+  lockFailed: (e) => (e.kind === 'wreck' ? ['BYPASS FAILED', BAD] : null),
+  podLooted: (e) => [
+    `POD OPEN  ·  +${e.credits} CREDITS` + (e.fuel ? `  ·  +${e.fuel} FUEL` : '') + (e.part ? '  ·  A SPARE SLOT' : ''),
+    LOOT,
+  ],
+  podAlarm: () => ['THE POD ALARM IS RINGING  ·  PIRATES INCOMING', BAD],
+  codeWrong: () => ['WRONG CODE', BAD],
+  codeChanged: () => ['THE STATION CODE CHANGED', WARM],
+  distress: (e) => [`DISTRESS CALL FROM ${e.name}`, LOOT],
+  distressSaved: (e) => [
+    e.favor ? `${e.name} OWES YOU  ·  DISCOUNT AND SHIPYARD FOR A WHILE` : `${e.name} IS SAFE  ·  +${e.reward} CREDITS`,
+    GOOD,
+  ],
+  distressOver: (e) => [`${e.name} WAS RAIDED`, COL.dim],
+  salvage: (e) => [`SALVAGE  ·  +${e.value} CREDITS`, LOOT],
+  breached: () => ['DOOR BREACHED  ·  EVERY GUARD HEARD THAT', BAD],
+  sentryDown: () => ['TURRET DEPLOYED', TECH],
+  pulse: () => ['SCANNER PULSE', TECH],
+  probe: () => ['PROBE AWAY', TECH],
+  buoy: () => ['RADAR BUOY DROPPED', COL.engineer],
+  buoyLost: () => ['A RADAR BUOY WAS SHOT DOWN', BAD],
+  found: (e) => (FOUND[e.kind] ? [FOUND[e.kind](e), WARM] : null),
+  bought: (e) => [`INSTALLED  ·  ${e.name}`, GOOD],
+  cannotBuy: (e) => [e.reason, WARM],
+  refuelled: (e) => [`REFUELLED  ·  +${Math.round(e.amount)} FUEL`, LOOT],
+  repairedAll: () => ['SHIP REPAIRED', GOOD],
+  rearmed: () => ['ROCKETS REARMED', LOOT],
+  chart: (e, state) => [`STAR CHART  ·  ${state.sectors[e.sector].name}`, TECH],
+  slotFound: (e) => [e.slot === 'hard' ? 'FOUND A SPARE HARDPOINT' : 'FOUND A SPARE SYSTEM SLOT', GOOD],
+  stationWarning: (e) => [`${e.name}:  STOP SHOOTING AT US`, WARM],
+  stationHostile: (e) => [`${e.name} IS NOW HOSTILE`, BAD],
+  stationFightsBack: (e) => [`BYPASS FAILED  ·  ${e.name} FIGHTS BACK`, BAD],
+  stationTaken: (e) => [`${e.name} IS YOURS  ·  SHIPYARD OPEN`, GOOD],
+  gunDown: () => ['STATION GUN DESTROYED', LOOT],
+  noRockets: () => ['OUT OF ROCKETS', WARM],
+  dartLost: () => ['A DART WAS SHOT DOWN', BAD],
+  dartBuilt: () => ['A NEW DART IS READY', TECH],
+  jumpCharging: (e) => [`JUMP DRIVE CHARGING  ·  ${e.name}`, TECH],
+  jumpCancelled: () => ['JUMP CANCELLED', WARM],
+  cannotJump: (e) => ['CANNOT JUMP  ·  ' + e.reason, WARM],
+  jumped: (e) => ['ARRIVED IN ' + e.name, COL.ion[3]],
+  alarm: (e) => [`ENEMY ALARM  ·  ${e.count} ${e.count === 1 ? 'PIRATE' : 'PIRATES'} INCOMING`, BAD],
+  kill: (e) => (e.kind === 'fighter' ? null : [`${e.name} DESTROYED  ·  +${e.bounty} CREDITS`, LOOT]),
+  toolNotReady: (e) => [NOT_READY[e.tool], WARM],
+  noPower: () => ['NO FREE POWER  ·  LOWER ANOTHER SYSTEM FIRST', WARM],
+  powerLost: () => ['REACTOR DAMAGED  ·  POWER LOST', BAD],
+  postTaken: (e) => [`${e.post.toUpperCase()} IS HELD BY ${e.by}  ·  THEY CAN SWAP BY ASKING FOR YOUR POST`, WARM],
+  playerJoined: (e) => [`${e.name} JOINED THE CREW`, TECH],
+  playerLeft: (e) => [`${e.name} LEFT THE CREW`, COL.dim],
+};
+// Things that only concern the player they happened to.
+const PERSONAL = new Set(['boarded', 'teleported', 'returned', 'deposit', 'teleCharging', 'lockedOut', 'postTaken']);
+
+export function toast(view, state, text, color = COL.text, seconds = 3.5) {
+  if (view.toasts.some((t) => t.text === text)) return;
+  view.toasts.push({ text, color, until: state.time + seconds });
+}
+
+// Called once per frame, after the game has been stepped and before its event list is emptied.
+export function readEvents(game) {
+  const { state, view } = game;
+  const ship = state.ship;
+  playEvents(state.events);
+  const quiet = state.over || state.paused || ship.docked;
+  setEngine(quiet ? 0 : Math.abs(ship.throttle) * (ship.boosting ? 1.6 : 1));
+  for (const e of state.events) {
+    const mine = e.player === view.playerId;
+    // The lock panel and the shop open for the player who walked up to them.
+    if (e.type === 'breakinOpened' && mine) view.panel = 'lock';
+    if (e.type === 'deskUsed' && mine) {
+      view.panel = 'shop';
+      view.shopTab = e.desk === 'armory' ? 'armory' : 'hull';
+    }
+    if (e.type === 'jumped') {
+      view.cam = { x: 0, y: 0 };
+      view.panel = null;
+    }
+    if (PERSONAL.has(e.type) && !mine) continue;
+    const made = TOAST[e.type] && TOAST[e.type](e, state);
+    if (made) toast(view, state, made[0], made[1]);
+  }
+}

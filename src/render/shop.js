@@ -1,10 +1,10 @@
-// The station panel: services on the left, and three tabs of things to buy on the right.
+// The shop panel at a station desk: services on the left, and three tabs of things to buy on the right.
 // The world keeps running behind it.
 import { VIEW_W, VIEW_H, COL } from '../config.js';
 import { servicePrices, yardOpen, discount } from '../sim/stations.js';
 import { CATALOG, TABS, TAB_NAME, itemsOf, blockedReason, priceOf, level, slotsUsed } from '../sim/upgrades.js';
 import { rect } from './draw.js';
-import { ALIGN_COL } from './space.js';
+import { ALIGN_COL } from './looks.js';
 
 const PW = 520,
   PH = 284,
@@ -15,7 +15,7 @@ const PW = 520,
 const fmt = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 
 // Every clickable row and tab, with what it orders. Shared by drawing and clicking.
-export function stationRows(state, st, tab) {
+export function shopRows(state, st, tab) {
   const rows = [],
     prices = servicePrices(state, st),
     ship = state.ship,
@@ -75,14 +75,14 @@ export function stationRows(state, st, tab) {
   return rows;
 }
 // Returns { tab } when a tab was clicked, { order } for something to buy, or null.
-export function stationClick(state, st, tab, mx, my) {
-  const row = stationRows(state, st, tab).find((r) => mx >= r.x && mx < r.x + r.w && my >= r.y && my < r.y + r.h);
+export function shopClick(state, st, tab, mx, my) {
+  const row = shopRows(state, st, tab).find((r) => mx >= r.x && mx < r.x + r.w && my >= r.y && my < r.y + r.h);
   if (!row) return null;
   if (row.tab) return { tab: row.tab };
   return row.enabled ? { order: row.order } : null;
 }
 
-export function drawStation(ctx, font, state, st, tab, mouse) {
+export function drawShop(ctx, font, state, st, tab, mouse) {
   const ship = state.ship;
   ctx.globalAlpha = 0.6;
   ctx.fillStyle = '#05050a';
@@ -110,7 +110,7 @@ export function drawStation(ctx, font, state, st, tab, mouse) {
   font.draw(ctx, 'SERVICES', PX + 12, PY + 50, COL.dim);
   rect(ctx, PX + 208, PY + 44, 1, PH - 76, COL.line);
   let hover = null;
-  for (const r of stationRows(state, st, tab)) {
+  for (const r of shopRows(state, st, tab)) {
     const over = mouse && mouse.x >= r.x && mouse.x < r.x + r.w && mouse.y >= r.y && mouse.y < r.y + r.h;
     if (over && !r.tab) hover = r;
     if (r.tab) {

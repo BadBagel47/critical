@@ -1,8 +1,10 @@
 // Boarding: the top-down interior of a wreck, with guards, turrets, loot and the teleporter.
 import { B } from './balance.js';
-import { createWreck, currentSector, makePirate } from './sectors.js';
-import { dockTargets, findDock } from './dock.js';
-import { takeOver } from './stations.js';
+import { createWreck, currentSector } from './sectors.js';
+import { addThing, removeThing, thingsOf, dockTargets, findDock } from './things.js';
+import { makeVessel } from './vessels.js';
+import { playerById, leavePost, returnToPost } from './players.js';
+import { takeOver, isTrading } from './stations.js';
 import { has, fuelMax, crewHpMax, carryMax, rifleDmg, teleCooldown, breakinBonus } from './upgrades.js';
 import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
@@ -109,7 +111,7 @@ export function createInterior(state, wreck) {
     return p;
   };
   // A friendly or neutral station is a place to walk around and trade in, with nothing to fight.
-  if (wreck.kind === 'station' && wreck.align !== 'hostile') {
+  if (isTrading(wreck)) {
     makeTrade(state, it);
     return it;
   }
@@ -227,23 +229,23 @@ export function makeTrade(state, it) {
 }
 
 // ---------- players ----------
-const playerById = (state, id) => state.players.find((p) => p.id === id);
 export const anyoneInside = (state, wreckId) =>
   state.players.some((p) => (wreckId === undefined ? p.inside !== null : p.inside === wreckId));
 
 export function tryBoard(state, playerId) {
-  const player = playerById(state, playerId),
-    ship = state.ship;
+  const player = playerById(state, playerId);
+  const ship = state.ship;
   if (!player || player.inside !== null || !ship.docked) return false;
   const wreck = findDock(state, ship.docked);
   if (!wreck) return false;
   // Friendly and neutral stations are open to walk into. No lock, no teleporter needed.
-  if (wreck.kind === 'station' && wreck.align !== 'hostile') {
+  if (isTrading(wreck)) {
     if (!wreck.interior) wreck.interior = createInterior(state, wreck);
     const floor = wreck.interior;
     if (!floor.trade) makeTrade(state, floor);
     floor.live = true;
     player.inside = wreck.id;
+    leavePost(player);
     floor.avatars.push({
       player: playerId,
       x: floor.entry.x + 6,
@@ -278,6 +280,7 @@ export function tryBoard(state, playerId) {
   if (wreck.kind === 'wreck' && it.timer === null) it.timer = B.REACTOR_TIME[wreck.difficulty];
   it.live = true;
   player.inside = wreck.id;
+  leavePost(player);
   it.avatars.push({
     player: playerId,
     x: it.entry.x + 6,
@@ -309,6 +312,7 @@ function leave(state, it, av, teleported) {
     state.events.push({ type: 'returned', player: av.player });
   }
   player.inside = null;
+  returnToPost(state, player);
 }
 
 // The ship is leaving: everyone still inside is teleported home, at the usual cost.
@@ -480,7 +484,7 @@ function stepAvatar(state, it, av, cmd, dt) {
     it.takeover += dt / B.TAKEOVER_TIME;
     it.hacking = true;
     if (it.takeover >= 1) {
-      const st = state.stations.find((x) => x.interior === it);
+      const st = thingsOf(state, 'station').find((x) => x.interior === it);
       if (st) takeOver(state, st);
       it.terminal = null;
       it.desks = [];
@@ -616,7 +620,7 @@ function stepInterior(state, wreck, cmds, dt) {
   it.hacking = false;
   for (const f of it.fx) f.t += dt;
   it.fx = it.fx.filter((f) => f.t < f.dur);
-  for (const av of [...it.avatars]) stepAvatar(state, it, av, cmds && cmds.away ? cmds.away[av.player] : null, dt);
+  for (const av of [...it.avatars]) stepAvatar(state, it, av, cmds.away ? cmds.away[av.player] : null, dt);
   for (const g of it.guards) stepGuard(state, it, g, dt);
   for (const c of it.civilians) {
     c.wait -= dt;
@@ -699,68 +703,71 @@ function stepInterior(state, wreck, cmds, dt) {
 }
 
 function blowUp(state, wreck) {
-  const it = wreck.interior,
-    ship = state.ship;
+  const it = wreck.interior;
+  const ship = state.ship;
   if (it) for (const av of [...it.avatars]) leave(state, it, av, true);
   for (const p of state.players) if (p.lockedOut === wreck.id) p.lockedOut = null;
   state.fx.push({ type: 'boom', x: wreck.x, y: wreck.y, t: 0, dur: 1.3, size: 90 });
-  state.wrecks = state.wrecks.filter((w) => w !== wreck);
+  removeThing(state, wreck);
   state.events.push({ type: 'wreckExploded', wreck: wreck.id });
   if (ship.docked === wreck.id) {
     ship.docked = null;
-    const a = headingTo(ship.x - wreck.x, ship.y - wreck.y),
-      f = forward(a);
+    const f = forward(headingTo(ship.x - wreck.x, ship.y - wreck.y));
     ship.vx = f.x * 60;
     ship.vy = f.y * 60;
     damageShip(state, B.WRECK_BLAST_DMG, { x: ship.x, y: ship.y });
   }
   // A new wreck drifts in somewhere else so there is always something to find.
-  const a = rand(state) * TAU,
-    d = randRange(state, 1300, 2200);
-  if (state.wrecks.length < 3)
-    state.wrecks.push(
-      createWreck(state, ship.x + Math.sin(a) * d, ship.y - Math.cos(a) * d, 1 + Math.floor(rand(state) * 3)),
-    );
+  const a = rand(state) * TAU;
+  const d = randRange(state, 1300, 2200);
+  if (thingsOf(state, 'wreck').length >= 3) return;
+  const x = ship.x + Math.sin(a) * d;
+  const y = ship.y - Math.cos(a) * d;
+  addThing(state, createWreck(state, x, y, 1 + Math.floor(rand(state) * 3)));
 }
 
+// A station does not blow up. It fights back: fighters scramble and the lock resets.
+function fightBack(state, st) {
+  st.breakin = null;
+  for (let i = 0; i < 2; i++) state.vessels.push(makeVessel(state, 'fighter', st.x + (i ? 60 : -60), st.y - 60));
+  state.events.push({ type: 'stationFightsBack', name: st.name });
+}
+
+// A cargo pod sounds an alarm that brings the next pirate wave at once.
+function soundAlarm(state, pod) {
+  pod.breakin = null;
+  state.spawn.timer = 0;
+  state.events.push({ type: 'podAlarm' });
+}
+
+// A pod has no inside. Its cargo is taken straight on board.
+function lootPod(state, pod) {
+  const ship = state.ship;
+  const credits = Math.round(randRange(state, B.POD_CREDITS[0], B.POD_CREDITS[1]) / 5) * 5;
+  const fuel = rand(state) < 0.5 ? B.CELL_FUEL : 0;
+  state.credits += credits;
+  ship.fuel = Math.min(fuelMax(ship), ship.fuel + fuel);
+  const part = rand(state) < 0.15 ? (rand(state) < 0.5 ? 'hard' : 'system') : null;
+  if (part) ship.slots[part]++;
+  removeThing(state, pod);
+  state.known = state.known.filter((k) => k.id !== pod.id);
+  if (ship.docked === pod.id) ship.docked = null;
+  state.fx.push({ type: 'hit', x: pod.x, y: pod.y, t: 0, dur: 0.4 });
+  state.events.push({ type: 'podLooted', credits, fuel, part });
+}
+
+// What happens to each kind of thing when its lock is failed, and when it is opened without an inside to board.
+const LOCK_FAILED = { wreck: blowUp, station: fightBack, pod: soundAlarm };
+const LOCK_OPENED = { pod: lootPod };
+
 export function stepBoarding(state, cmds, dt) {
-  for (const id of (cmds && cmds.system && cmds.system.board) || []) tryBoard(state, id);
+  for (const id of (cmds.system && cmds.system.board) || []) tryBoard(state, id);
   for (const p of state.players) p.tele = Math.max(0, p.tele - dt);
-  for (const w of dockTargets(state)) {
-    const result = stepBreakin(state, w, cmds, dt);
-    if (result === 'failed') {
-      if (w.kind === 'wreck') {
-        blowUp(state, w);
-        continue;
-      }
-      w.breakin = null;
-      if (w.kind === 'station') {
-        // A station does not blow up. It fights back: fighters scramble and the lock resets.
-        for (let i = 0; i < 2; i++) state.pirates.push(makePirate(state, 'fighter', w.x + (i ? 60 : -60), w.y - 60));
-        state.events.push({ type: 'stationFightsBack', name: w.name });
-      } else {
-        // A cargo pod sounds an alarm that brings the next pirate wave at once.
-        state.spawn.timer = 0;
-        state.events.push({ type: 'podAlarm' });
-      }
-      continue;
-    }
-    if (result === 'solved' && w.kind === 'pod') {
-      // A pod has no inside. Its cargo is taken straight on board.
-      const credits = Math.round(randRange(state, B.POD_CREDITS[0], B.POD_CREDITS[1]) / 5) * 5,
-        fuel = rand(state) < 0.5 ? B.CELL_FUEL : 0;
-      state.credits += credits;
-      state.ship.fuel = Math.min(fuelMax(state.ship), state.ship.fuel + fuel);
-      const part = rand(state) < 0.15 ? (rand(state) < 0.5 ? 'hard' : 'system') : null;
-      if (part) state.ship.slots[part]++;
-      state.pods = state.pods.filter((x) => x !== w);
-      state.known = state.known.filter((k) => k.id !== w.id);
-      if (state.ship.docked === w.id) state.ship.docked = null;
-      state.fx.push({ type: 'hit', x: w.x, y: w.y, t: 0, dur: 0.4 });
-      state.events.push({ type: 'podLooted', credits, fuel, part });
-      continue;
-    }
-    if (w.interior && w.interior.live) stepInterior(state, w, cmds, dt);
+  for (const target of dockTargets(state)) {
+    const result = stepBreakin(state, target, cmds, dt);
+    if (result === 'failed') LOCK_FAILED[target.kind](state, target);
+    else if (result === 'solved' && LOCK_OPENED[target.kind]) LOCK_OPENED[target.kind](state, target);
+    else if (target.interior && target.interior.live) stepInterior(state, target, cmds, dt);
   }
   // Everyone gets their health back once the whole crew is on the ship again.
   if (!anyoneInside(state)) for (const p of state.players) p.hp = crewHpMax(state.ship);

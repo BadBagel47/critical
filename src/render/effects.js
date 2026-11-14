@@ -2,10 +2,11 @@
 // shots and so on and adds particles for them. It never changes the game state.
 import { VIEW_W, VIEW_H, COL } from '../config.js';
 import { B, SHIP_GEOM } from '../sim/balance.js';
-import { nodeStatus } from '../sim/state.js';
+import { nodeStatus } from '../sim/ship.js';
 import { toWorld, forward, headingTo, dist } from '../sim/util.js';
 import { hullMax, has, jumpCharge } from '../sim/upgrades.js';
 import { Particles } from './particles.js';
+import { lookOf } from './looks.js';
 
 const FIRE = ['#fff3c4', COL.ochre[3], COL.ochre[2], COL.ember[1], COL.ember[0]];
 const SMOKE = ['#6b6f82', '#44475a', '#2a2c3a'];
@@ -261,13 +262,12 @@ export function updateEffects(fx, state, view, dt) {
         });
       }
     }
-    for (const e of state.pirates) {
+    for (const e of state.vessels) {
       if (!near(e)) continue;
-      const big = e.kind === 'cruiser',
-        back = e.kind === 'cruiser' ? 84 : e.kind === 'gunboat' ? 28 : 14,
-        ef = forward(e.heading);
-      tick(fx, 'p' + e.id, big ? 26 : e.kind === 'gunboat' ? 14 : 9, dt, () => {
-        const n = toWorld(e, { x: (Math.random() - 0.5) * (big ? 22 : 4), y: back });
+      const exhaust = lookOf(e).exhaust;
+      const ef = forward(e.heading);
+      tick(fx, 'p' + e.id, exhaust.rate, dt, () => {
+        const n = toWorld(e, { x: (Math.random() - 0.5) * exhaust.width, y: exhaust.y });
         p.add({
           x: n.x,
           y: n.y,
@@ -275,7 +275,7 @@ export function updateEffects(fx, state, view, dt) {
           vy: e.vy - ef.y * 40 + (Math.random() - 0.5) * 10,
           life: 0.3 + Math.random() * 0.25,
           drag: 1.5,
-          size0: big ? 3 : 2,
+          size0: exhaust.size,
           size1: 1,
           colors: EMBER,
         });
@@ -327,8 +327,8 @@ export function updateEffects(fx, state, view, dt) {
             colors: ['#fff3c4', COL.ochre[2], ...SMOKE],
           });
         });
-    for (const c of state.salvage)
-      if (near(c) && Math.random() < dt * 2)
+    for (const c of state.things)
+      if (c.kind === 'salvage' && near(c) && Math.random() < dt * 2)
         p.add({
           x: c.x + (Math.random() - 0.5) * 8,
           y: c.y + (Math.random() - 0.5) * 8,

@@ -21,5 +21,3 @@ export const COL = {
   gunner: '#dba445',
   engineer: '#58b0a0',
 };
-
-export const POSTS = ['captain', 'gunner', 'engineer'];

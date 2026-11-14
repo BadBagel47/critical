@@ -59,7 +59,7 @@ export function stepDarts(state, cmd, dt, piratesNear) {
     } else {
       let target = null,
         best = B.DART_RANGE;
-      for (const p of state.pirates) {
+      for (const p of state.vessels) {
         const pd = dist(p.x, p.y, ship.x, ship.y);
         if (pd < best) {
           best = pd;
