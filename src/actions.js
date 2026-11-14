@@ -85,6 +85,12 @@ export function actionsOf(game, mode) {
   if (mode === 'lock') return [use('back', 'STEP AWAY', 'BACK', { main: false })];
   if (mode === 'shop') return [use('back', 'CLOSE', 'CLOSE', { main: false })];
   if (mode === 'away') return away(state, me);
-  if (mode === 'crew' || POSTS.includes(mode)) return onBoard(state, me);
-  return [];
+  if (mode !== 'crew' && !POSTS.includes(mode)) return [];
+  const list = onBoard(state, me);
+  // The Engineer can fold their screen away to see space, and bring it back.
+  if (mode === 'engineer') {
+    const open = !!(game.view && game.view.engOpen);
+    list.push(act('panel', 'KeyV', open ? 'SEE SPACE' : 'OPEN THE PANEL', open ? 'SPACE' : 'PANEL'));
+  }
+  return list;
 }

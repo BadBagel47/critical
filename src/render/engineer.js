@@ -204,24 +204,48 @@ export function drawEngineer(ctx, state, view, assets) {
   drawTabs(ctx, font, state, view);
   if (state.time - ship.lastHit < 1.5)
     label(ctx, font, 222, 30, 'UNDER FIRE', { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
-  // While a station lock is being worked on, this screen is the only place that shows its code.
+  drawLockCode(ctx, font, state);
+  drawBars(ctx, font, state);
+  font.draw(ctx, 'CLICK PIPS AND NODES  ·  SHIFT CLICK QUEUES', PANEL_X - 8, 346, COL.faint, { align: 'r' });
+}
+
+// While a station lock is being worked on, only the Engineer is shown its code: on this screen, and beside
+// the view of space when the screen is folded away.
+export function drawLockCode(ctx, font, state) {
   const locked = state.things.find(
     (st) => st.breakin && st.breakin.kind === 'code' && st.breakin.started && st.lock !== 'open',
   );
-  if (locked) {
-    rect(ctx, 8, 28, 132, 58, COL.panel, COL.ochre[1]);
-    font.draw(ctx, 'STATION LOCK CODE', 14, 34, COL.ochre[2]);
-    font.draw(ctx, locked.breakin.code.join('  '), 74, 48, COL.white, { align: 'c', scale: 2 });
-    font.draw(
-      ctx,
-      `CHANGES IN ${Math.ceil(locked.breakin.shift)} S`,
-      14,
-      72,
-      locked.breakin.shift < 5 ? COL.ember[2] : COL.dim,
-    );
-  }
-  drawBars(ctx, font, state);
-  font.draw(ctx, 'CLICK PIPS AND NODES  ·  SHIFT CLICK QUEUES', PANEL_X - 8, 346, COL.faint, { align: 'r' });
+  if (!locked) return;
+  rect(ctx, 8, 28, 132, 58, COL.panel, COL.ochre[1]);
+  font.draw(ctx, 'STATION LOCK CODE', 14, 34, COL.ochre[2]);
+  font.draw(ctx, locked.breakin.code.join('  '), 74, 48, COL.white, { align: 'c', scale: 2 });
+  const soon = locked.breakin.shift < 5;
+  font.draw(ctx, `CHANGES IN ${Math.ceil(locked.breakin.shift)} S`, 14, 72, soon ? COL.ember[2] : COL.dim);
+}
+
+// What the Engineer keeps an eye on while looking at space: the power, with the system that the keys work
+// picked out, and what is damaged.
+export function drawEngineerStrip(ctx, font, state, view) {
+  const ship = state.ship;
+  const names = ['WEAPONS', 'SHIELDS', 'ENGINES', 'REPAIR'];
+  const colors = [COL.gunner, COL.ion[1], COL.captain, COL.ochre[3]];
+  rect(ctx, 150, 326, 322, 28, COL.panel, COL.line);
+  SYSTEM_KEYS.forEach((sys, i) => {
+    const x = 156 + i * 79;
+    const picked = i === view.engRow;
+    if (picked) rect(ctx, x - 3, 328, 76, 11, '#1c1c28', COL.engineer);
+    font.draw(ctx, names[i], x, 331, picked ? COL.white : COL.dim);
+    for (let k = 0; k < B.POWER_MAX_PER_SYSTEM; k++) {
+      rect(ctx, x + 49 + k * 6, 331, 5, 6, k < ship.power[sys] ? colors[i] : '#1c1c28');
+    }
+  });
+  const hurt = ship.nodes.filter((n) => nodeStatus(n.hp) !== 'ok');
+  const worst = hurt.some((n) => nodeStatus(n.hp) === 'critical');
+  const text = hurt.length ? 'DAMAGED  ·  ' + hurt.map((n) => n.name).join(', ') : 'ALL SYSTEMS OK';
+  font.draw(ctx, text, 156, 343, hurt.length ? (worst ? COL.ember[2] : COL.ochre[2]) : COL.faint);
+  // The keys for the power are shown as long as there is no damage to tell about.
+  if (!hurt.length) font.draw(ctx, 'W S PICK  ·  A D POWER', 466, 343, COL.faint, { align: 'r' });
+  drawLockCode(ctx, font, state);
 }
 
 function crewPos(ship) {

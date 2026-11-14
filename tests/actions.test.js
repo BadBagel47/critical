@@ -45,7 +45,7 @@ test('docked at a station that trades, anyone can go aboard and the Captain can 
   assert.deepEqual(names(s), ['aboard', 'undock']);
   assert.equal(offered(s)[1].main, false, 'going aboard is the main thing, undocking the other');
   s.players[0].post = 'engineer';
-  assert.deepEqual(names(s), ['aboard']);
+  assert.deepEqual(names(s), ['aboard', 'panel']);
 });
 
 test('a locked wreck offers its lock, an open one a boarding, and a charging teleporter says so', () => {
@@ -106,6 +106,21 @@ test('at a vault door the lock can be cut by holding, or blown with a charge', (
   for (let i = 0; i < 30; i++) step(s, { away: { 0: { use: true } } }, DT);
   const cut = offered(s, 'away')[0];
   assert.ok(cut.progress > 0 && cut.progress < 1, 'the button shows how far the cutting has come');
+});
+
+test('the Engineer is offered to open their panel, and to fold it away again', () => {
+  const s = quiet();
+  s.players[0].post = 'engineer';
+  const view = { engOpen: false };
+  const offer = () => actionsOf({ state: s, me: s.players[0], view }, 'engineer');
+  assert.deepEqual(
+    offer().map((a) => [a.name, a.label, a.code]),
+    [['panel', 'OPEN THE PANEL', 'KeyV']],
+  );
+  view.engOpen = true;
+  assert.equal(offer()[0].label, 'SEE SPACE');
+  s.players[0].post = 'captain';
+  assert.deepEqual(names(s), [], 'the other posts have no panel to fold');
 });
 
 test('nothing is offered while the game is paused or the ship is lost', () => {

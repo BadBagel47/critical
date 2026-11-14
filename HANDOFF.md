@@ -104,7 +104,7 @@ Spelet
 - Publicering: GitHub Pages så länge, flytt till Cloudflare när nätverksmotorn byggs in (2026-11-14).
 - Testläge: T på startskärmen, eller `?test` sist i adressen, startar spelet med alla uppgraderingar, all utrustning, alla stjärnkartor och 5000 krediter (2026-11-14).
 - Styrning: tangentbord och mus, eller handkontroll. Agentens val, användaren har inte provat än.
-- Engineer ska kunna fälla undan sin arbetsvy och se rymden, med energi och skadevarningar kvar i en smal remsa, och börjar i det läget (F-134, 2026-11-14, inte byggt).
+- Engineer ser rymden som de andra, med energi och skadevarningar i en smal remsa, och börjar i det läget. V eller en knapp öppnar panelen och fäller undan den (F-134, byggt 2026-11-14).
 - Knappar som visar vad man kan göra (F-112, 2026-11-14): en knapp dyker upp när det finns något att göra, med kortkommandot för tangentbord och en lösning för touch. Agentens utformning, som användaren har godkänt i ord men inte sett: knapparna ligger nere till höger, högst två åt gången med huvudsaken störst. Tangentbord visar tangenten som en ruta följd av ordet, handkontroll visar kontrollens knapp, och pekskärm visar en rund knapp med symbol och ordet under. Text finns alltid med.
 - Dockning ska vara enkel (F-111, 2026-11-14). Agentens val: nosen behöver vara 48 punkter från dockningsarmen (förut 20), närmaste arm väljs, och skeppet dras in och vrids rätt av sig självt på ungefär en sekund. Farten får fortfarande vara högst 32.
 - Ljudet skapas i webbläsaren utan ljudfiler. N slår av och på allt ljud. Varje spelare ställer nivån på ljudeffekter och musik var för sig under SOUND i menyn, och valen sparas i webbläsaren (F-105, 2026-11-14).

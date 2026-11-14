@@ -32,6 +32,8 @@ export function createView(input) {
     help: false,
     wonSeen: false,
     engRow: 0,
+    // The Engineer's own screen is folded away from the start, so that they see space like the others.
+    engOpen: false,
     padAim: 0,
     cam: { x: 0, y: 0 },
     mouse: input.mouse,
@@ -121,7 +123,7 @@ function engineerInput(game, out) {
   if (keys.hit('ArrowDown', 'KeyS')) view.engRow = (view.engRow + 1) % rows;
   if (keys.hit('ArrowRight', 'KeyD')) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: 1 });
   if (keys.hit('ArrowLeft', 'KeyA')) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: -1 });
-  if (keys.mouse.clicked) {
+  if (keys.mouse.clicked && view.engOpen) {
     const click = engineerClick(state, keys.mouse.x, keys.mouse.y, keys.mouse.shift);
     if (click && click.power) cmd.power.push(...click.power);
     if (click && click.repair) cmd.repair = click.repair;
@@ -204,7 +206,7 @@ function awayInput(game, out) {
 // What a player on board the ship sees: the Engineer's own screen, or space with the HUD.
 function drawOnBoard(game) {
   const { ctx, state, view, assets } = game;
-  if (game.me.post === 'engineer') {
+  if (game.me.post === 'engineer' && view.engOpen) {
     drawEngineer(ctx, state, view, assets);
     return;
   }
@@ -249,7 +251,7 @@ export const SCREENS = {
     input: engineerInput,
     draw: drawOnBoard,
     toasts: [44],
-    buttons: (game) => engineerButtons(game.state),
+    buttons: (game) => (game.view.engOpen ? engineerButtons(game.state) : []),
   },
   crew: { pad: 'captain', input: onBoard, draw: drawOnBoard, toasts: [44] },
   map: {
@@ -313,6 +315,8 @@ export function viewKeys(game, mode) {
     return;
   }
   if (state.won && !view.wonSeen && keys.hit('Enter', 'NumpadEnter')) view.wonSeen = true;
+  // V folds the Engineer's screen away and brings it back.
+  if (mode === 'engineer' && keys.hit('KeyV')) view.engOpen = !view.engOpen;
   const canOpenMap = mode === 'map' || POSTS.includes(mode) || mode === 'crew';
   if (keys.hit('KeyM') && canOpenMap) view.panel = mode === 'map' ? null : 'map';
 }

@@ -42,6 +42,7 @@ const PAD_KEYS = {
     X: 'KeyQ',
     Y: 'KeyB',
     A: 'CLICK',
+    L3: 'KeyV',
     RB: 'Tab',
     LB: 'PadPrevPost',
   },

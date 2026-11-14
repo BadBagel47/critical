@@ -56,9 +56,27 @@ check((await get('s.ship.throttle')) > 0.8, 'throttle persists after leaving the
 await shot('03-gunner');
 await page.mouse.up();
 
-// Engineer: click a pip and a node.
+// Engineer: space with a strip for the power at first, and V opens the panel. Then click a pip and a node.
 await page.keyboard.press('Digit3');
+await page.waitForTimeout(150);
+check(
+  (await get('v.engOpen')) === false &&
+    (await get("window.__critical.buttons().some((b) => b.name === 'action.panel')")),
+  'the Engineer sees space at first, with a button for the panel',
+);
+await shot('03b-engineer-space');
+const weaponsBefore = await get('s.ship.power.weapons');
+await page.keyboard.press('ArrowLeft');
+await page.waitForTimeout(80);
+check(
+  (await get('s.ship.power.weapons')) === weaponsBefore - 1,
+  'the arrow keys still set the power while the panel is folded away',
+);
+await page.keyboard.press('ArrowRight');
+await page.waitForTimeout(80);
+await page.keyboard.press('KeyV');
 await page.waitForTimeout(100);
+check((await get('v.engOpen')) === true, 'V opens the panel');
 const k = await page.evaluate(() => document.getElementById('game').getBoundingClientRect().width / 640);
 const box = await page.evaluate(() => {
   const r = document.getElementById('game').getBoundingClientRect();

@@ -140,12 +140,27 @@ const ICON = {
   ],
 };
 ICON.board = ICON.aboard;
+ICON.panel = [
+  '###########',
+  '#.........#',
+  '#.###.###.#',
+  '#.........#',
+  '#.#####...#',
+  '#.........#',
+  '#.###.....#',
+  '#.........#',
+  '###########',
+  '....###....',
+  '..#######..',
+];
 
-const KEY_NAME = { KeyE: 'E', KeyF: 'F', KeyC: 'C' };
+const KEY_NAME = { KeyE: 'E', KeyF: 'F', KeyC: 'C', KeyV: 'V' };
 // How the player is playing right now: 'touch', 'pad' or 'keys'.
 const styleOf = (keys) => (keys.touch ? 'touch' : keys.pad.used ? 'pad' : 'keys');
 // Where the lowest button ends: above the HUD in space and inside, and at the bottom edge beside a panel.
-const FLOOR = { lock: 354, shop: 354, engineer: 354 };
+const FLOOR = { lock: 354, shop: 354 };
+// The Engineer's own screen has its free corner lower down than the view of space has.
+const floorOf = (game, mode) => (mode === 'engineer' && game.view.engOpen ? 354 : FLOOR[mode] || 322);
 
 // The buttons as boxes, the main one first. Each is { name, x, y, w, h, action }.
 export function actionButtons(game, mode) {
@@ -157,14 +172,14 @@ export function actionButtons(game, mode) {
   if (style === 'touch') {
     // Round buttons where the right thumb rests: the main one in the corner, the other one beside it.
     // The word goes under the button, so the buttons end a line of text above the floor.
-    const floor = (FLOOR[mode] || 322) - 12;
+    const floor = floorOf(game, mode) - 12;
     return list.map((action, i) => {
       const size = i === 0 ? 46 : 38;
       const x = VIEW_W - 14 - 46 - (i === 0 ? 0 : 12 + 38);
       return { name: 'action.' + action.name, x, y: floor - size, w: size, h: size, action };
     });
   }
-  let y = (FLOOR[mode] || 322) - 18;
+  let y = floorOf(game, mode) - 18;
   return list.map((action) => {
     const text = (action.hold ? 'HOLD  ' : '') + action.label;
     const w = 6 + 13 + 6 + font.width(text) + 7;
