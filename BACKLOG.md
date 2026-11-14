@@ -5,9 +5,9 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – strong model, high level – Teknikval och projektgrund
-- D-004 – Slå fast tekniken och var spelet publiceras, så att resten kan byggas
-- F-005 – Sätt upp spelet så att det öppnas i webbläsaren och spelare går med via rumskod
+**A** – strong model, high level – Projektgrund
+- D-004 – Slå fast var spelet publiceras, så att det går att prova efter varje körning
+- F-005 – Sätt upp spelet så att det öppnas i webbläsaren och går att spela ensam
 
 **B** – strong model, high level – Flyga och slåss
 - D-013 – Exportera skepp och figurer från ritskripten som färdiga bilder till spelet
@@ -27,8 +27,8 @@ Prioritet: Hög, Medel, Låg.
 
 | ID | Vad | Status |
 |---|---|---|
-| D-004 | Välj teknik och var spelet publiceras. Förslag: webbspel där en spelare är värd och de andra ansluter direkt, publicerat via GitHub Pages. Kräver ingen egen server. | Väntar på användaren |
-| F-005 | Projektgrund: spelet öppnas i webbläsaren och spelare går med via rumskod | Ej påbörjad |
+| D-004 | Välj var spelet publiceras. Tekniken är bestämd: webbspel, och onlineläget går via användarens motor på Cloudflare (se F-040). Kvar att avgöra: Cloudflare Pages eller GitHub Pages. | Väntar på användaren |
+| F-005 | Projektgrund: spelet öppnas i webbläsaren och går att spela ensam. Spellogiken hålls skild från nätverket så att motorn kan kopplas in senare | Ej påbörjad |
 | F-006 | Captain: flyg fregatten i rymden uppifrån. Hela skeppet vrids som en bild | Ej påbörjad |
 | F-007 | Gunner: sikta och skjut med pulslaser | Ej påbörjad |
 | F-008 | Engineer: fördela energi mellan vapen, sköld, motorer och reparation, och flytta reparationssymbolen mellan skadepunkter | Ej påbörjad |
@@ -59,6 +59,7 @@ Prioritet: Hög, Medel, Låg.
 | F-028 | Fler inbrottsspel: kod för stationer och lås för fraktcontainrar | Ej påbörjad |
 | F-029 | Övriga skeppsuppgraderingar: afterburner, jump drive, tractor beam, point defense, targeting computer, power core, repair drones, fuel tank | Ej påbörjad |
 | F-030 | Automatisk paus när någon varit frånkopplad en stund | Ej påbörjad |
+| F-040 | Onlinespel för upp till tre spelare via användarens motor, som bygger på Cloudflares realtidstjänster. Målet är att gratiskontot ska räcka | Väntar på motorn |
 | D-031 | Avgör om man ska kunna hoppa tillbaka till gamla sektorer | Väntar på användaren |
 | D-032 | Avgör om lootet blir kvar på platsen när någon teleporteras hem | Väntar på användaren |
 

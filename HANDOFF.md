@@ -10,8 +10,8 @@ Spelet är i designstadiet. Det finns ingen spelbar kod än. Repot innehåller d
 
 ## Nästa steg
 
-1. Användaren godkänner teknikvalet i D-004.
-2. Bygg första spelbara versionen enligt "Proposed runs" i BACKLOG.md.
+1. Användaren avgör var spelet publiceras (D-004) och ger besked om motorn (F-040).
+2. Bygg första spelbara versionen enligt "Proposed runs" i BACKLOG.md. Den byggs för en ensam spelare först, och onlineläget kopplas in när motorn finns.
 
 ## Mål
 
@@ -23,7 +23,7 @@ Idéer spånas i chatten och samlas i designskissen. Det som ska byggas läggs i
 
 ## Publicering
 
-Ingen publicering än. Hur och var spelet publiceras avgörs i D-004.
+Ingen publicering än. Var spelet publiceras avgörs i D-004.
 
 ## Dokumentkarta
 
@@ -39,6 +39,7 @@ Spelet
 - All text i spelet är på engelska.
 - Inget moment pausar spelet. En pausknapp fryser världen för alla.
 - Automatisk paus vid tappad anslutning sker först efter en stund. Gränsen prövas ut.
+- Onlineläget ska använda användarens egen motor, som byggs just nu och bygger på Cloudflares realtidstjänster. Målet är att ett gratiskonto ska räcka för det här kompisspelet (2026-11-14).
 
 Poster
 - Tre poster: Captain, Gunner, Engineer. "Post" betyder spelarens plats på skeppet, "station" betyder rymdstation.
