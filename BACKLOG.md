@@ -5,17 +5,41 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-Inget att föreslå just nu. Det som återstår väntar på användaren: provspelning och synpunkter på balans, besked i D-044 och D-045, och motorn för onlineläget (F-040).
+**A** – strong model, high level – Testläge
+- F-051 – Ett testläge där man har alla saker från början, så att allt går att prova direkt
+
+**B** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+- F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
+
+**C** – strong model, high level – Anomalier
+- F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
+
+**D** – strong model, high level – Gå ombord på alla stationer
+- F-047 – Gå runt till fots även på vänliga och neutrala stationer, kanske med butiken där inne
+
+**E** – strong model, high level – Musik och ljud
+- F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
+- F-048 – Musik för de olika lägena
+
+Väntar på användaren: D-052 (storyläge eller grund för vad spelet går ut på) behöver ett samtal först. Dessutom provspelning, besked i D-044 och D-045, och motorn för onlineläget (F-040).
 
 ## Hög
 
-Inget just nu.
+| ID | Vad | Status |
+|---|---|---|
+| F-051 | Testläge där man har alla saker från början så att de kan testas | Ej påbörjad |
+| F-050 | Justerade nivåer för vapen, sköld, motorer och engineering så att det känns att det är svårt i början och att det ska vara värt att uppgradera | Ej påbörjad |
 
 ## Medel
 
 | ID | Vad | Status |
 |---|---|---|
 | F-030 | Automatisk paus när någon varit frånkopplad en stund | Ej påbörjad |
+| F-047 | Vi ska nog kunna gå ombord på alla stationer. Kanske ha butiken där inne. Just nu går det bara på fientliga, och vänliga och neutrala visar en panel | Ej påbörjad |
+| F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer | Ej påbörjad |
+| F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
+| F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
+| D-052 | Någon form av storyläge, eller åtminstone grund för vad spelet går ut på, behöver ses över | Väntar på användaren |
 | F-040 | Onlinespel för upp till tre spelare via användarens motor, som bygger på Cloudflares realtidstjänster. Målet är att gratiskontot ska räcka | Väntar på motorn |
 | D-031 | Hoppa tillbaka till gamla sektorer. Beslut tills vidare: det går, och sektorn är som den lämnades | Beslutat tills vidare |
 | D-043 | Lägga ut medan någon är kvar inne. Beslut tills vidare: det går, och alla som är inne teleporteras hem på vanligt sätt | Beslutat tills vidare |

@@ -12,9 +12,10 @@ Ingen människa har provspelat än, så känsla och balans är otestade. Onlinel
 
 ## Nästa steg
 
-1. Användaren provspelar och ger synpunkter.
-2. Fortsätt enligt "Proposed runs" i BACKLOG.md.
-3. Onlineläget (F-040) väntar på användarens motor.
+1. Fortsätt enligt "Proposed runs" i BACKLOG.md. Testläget (F-051) kommer först, så att användaren kan prova allt.
+2. Användaren provspelar och ger synpunkter.
+3. Prata igenom vad spelet går ut på (D-052).
+4. Onlineläget (F-040) väntar på användarens motor.
 
 ## Mål
 
