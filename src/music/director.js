@@ -17,7 +17,6 @@ export const INTENSITY = {
   boarding: 2,
   combat: 3,
   alarm: 4,
-  chase: 4,
 };
 
 // Seconds a calmer moment must last before the music follows it down.

@@ -105,9 +105,10 @@ Flera agenter arbetar i repot samtidigt. För att det inte ska krocka:
 - Rymden är mest stämning.
 - Bordning har två lägen: smyg med spänning, där man väntar på att allt ska braka loss, och larm som höjer pulsen. Spelet skiljer inte på dem än, se F-120.
 - Varje sektor har en egen färg: ljusare och lugnare i början, mörkare, råare och lite snabbare längre in.
+- Larmet under bordning är en jakt som höjer pulsen utan larmljud. En version med siren prövades och valdes bort (2026-11-14).
+- Introlåten är ungefär en och en halv minut innan den börjar om (2026-11-14).
 - Vinsten har ett eget stycke som knyter an till introt. Förlusten har den korta mollvarianten.
 
 ## Öppna frågor till användaren
 
 - Vilket av de tre förslagen ska bli introtemat?
-- Vilken larmmusik ska användas: A med siren eller B, en jakt utan larmljud? Användaren var inte nöjd med A (2026-11-14). Valet sätts i `ALARM` i `src/music.js`.

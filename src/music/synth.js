@@ -15,7 +15,6 @@ const LEVEL = {
   bass: 0.2,
   sub: 0.3,
   stab: 0.07,
-  siren: 0.06,
   fall: 0.22,
   kick: 0.4,
   snare: 0.22,
@@ -100,12 +99,10 @@ export function play(context, note, t, { dest, echo, step, grit, done }) {
       end = envelope(amp.gain, t, peak, 0.06, len * 0.9, note.v === 'fall' ? 0.8 : 0.5);
       break;
     }
-    case 'lead':
-    case 'siren': {
+    case 'lead': {
       const f = filter('lowpass', 1800 + grit * 1500, 2);
       f.frequency.exponentialRampToValueAtTime(900 + grit * 900, t + Math.min(len, 0.6));
       const o = osc('square', hz);
-      if (note.v === 'siren') o.frequency.linearRampToValueAtTime(midiToHz(note.m + 1), t + len);
       o.connect(f);
       f.connect(amp);
       end = envelope(amp.gain, t, peak, 0.01, len * 0.85, 0.15);

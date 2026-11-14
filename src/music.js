@@ -12,8 +12,6 @@ import { startSteer, steer, wanted } from './music/director.js';
 
 // The title theme, as an index into THEMES in music/theory.js. Chosen by ear on the listening page.
 export const THEME = 0;
-// Which piece plays when the alarm goes off during boarding: 'alarm' or the alternative 'chase'. Chosen by ear.
-export const ALARM = 'alarm';
 
 let engine = null;
 let engineOut = null;
@@ -49,7 +47,7 @@ export function updateMusic(info, dt) {
     else victory = false;
   }
   engine.setPaused(Boolean(info.paused));
-  engine.update(piece === 'alarm' ? ALARM : piece, info.sector || 0);
+  engine.update(piece, info.sector || 0);
 }
 
 // For the listening page: choose the title theme, and see what is playing.

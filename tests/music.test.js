@@ -133,16 +133,6 @@ test('boarding is split into sneaking and alarm when the game says so', () => {
   assert.equal(wanted({ scene: 'something new' }), 'space');
 });
 
-test('a long alarm keeps changing, and the siren is only heard now and then', () => {
-  const c = { colour: colourOf(1), theme: THEMES[0] };
-  const bars = Array.from({ length: 32 }, (_, bar) =>
-    JSON.stringify(Array.from({ length: BAR }, (_, pos) => PIECES.alarm.notes(bar * BAR + pos, c))),
-  );
-  assert.ok(new Set(bars).size >= 16, `only ${new Set(bars).size} different bars in 32`);
-  const sirenBars = bars.filter((b) => b.includes('"siren"')).length;
-  assert.ok(sirenBars > 0 && sirenBars <= 4, `the siren is heard in ${sirenBars} bars of 32`);
-});
-
 test('combat has no cheerful four on the floor and no major tonic', () => {
   const c = { colour: colourOf(0), theme: THEMES[0] };
   for (let bar = 0; bar < 16; bar++) {
@@ -153,13 +143,20 @@ test('combat has no cheerful four on the floor and no major tonic', () => {
   }
 });
 
-test('the alternative alarm raises the pulse without any alarm sounds, and keeps changing', () => {
+test('the alarm raises the pulse without any alarm sounds, and keeps changing', () => {
   const c = { colour: colourOf(2), theme: THEMES[0] };
   const bars = Array.from({ length: 32 }, (_, bar) =>
-    Array.from({ length: BAR }, (_, pos) => PIECES.chase.notes(bar * BAR + pos, c)).flat(),
+    Array.from({ length: BAR }, (_, pos) => PIECES.alarm.notes(bar * BAR + pos, c)).flat(),
   );
   assert.ok(bars.flat().every((n) => n.v !== 'siren'));
   assert.ok(new Set(bars.map((b) => JSON.stringify(b))).size >= 20);
-  assert.ok(PIECES.chase.bpm > PIECES.boarding.bpm);
-  assert.equal(wanted({ scene: 'chase' }), 'chase');
+  assert.ok(PIECES.alarm.bpm > PIECES.boarding.bpm);
+});
+
+test('the title loops only after about a minute and a half, and every part of it differs', () => {
+  const c = { colour: colourOf(0), theme: THEMES[1] };
+  const bar = (b) => JSON.stringify(Array.from({ length: BAR }, (_, pos) => PIECES.title.notes(b * BAR + pos, c)));
+  const seconds = (36 * 4 * 60) / PIECES.title.bpm;
+  assert.ok(seconds > 80, `the title loops after ${seconds} seconds`);
+  assert.ok(new Set(Array.from({ length: 36 }, (_, b) => bar(b))).size >= 30);
 });
