@@ -31,9 +31,11 @@ for (const path of ['', 'docs/design/']) {
     session: Object.keys(sessionStorage),
     cookies: document.cookie,
   }));
-  console.log(
-    `${base + path}\n  requests to other services: ${outside.length ? outside.join(', ') : 'none'}\n  missing files: ${broken.length ? broken.join(', ') : 'none'}\n  stored in the browser: ${JSON.stringify(stored)}`,
-  );
+  const list = (items) => (items.length ? items.join(', ') : 'none');
+  console.log(base + path);
+  console.log('  requests to other services: ' + list(outside));
+  console.log('  missing files: ' + list(broken));
+  console.log('  stored in the browser: ' + JSON.stringify(stored));
   if (outside.length || broken.length) failed = true;
   await page.close();
 }

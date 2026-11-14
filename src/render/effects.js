@@ -1,10 +1,10 @@
 // Visual effects for space and for boarding. This watches the game state for new explosions,
 // shots and so on and adds particles for them. It never changes the game state.
 import { VIEW_W, VIEW_H, COL } from '../config.js';
-import { B, SHIP_GEOM } from '../sim/balance.js';
+import { SHIP_GEOM } from '../sim/balance.js';
 import { nodeStatus } from '../sim/ship.js';
 import { toWorld, forward, headingTo, dist } from '../sim/util.js';
-import { hullMax, has, jumpCharge } from '../sim/upgrades.js';
+import { hullMax, jumpCharge } from '../sim/upgrades.js';
 import { Particles } from './particles.js';
 import { lookOf } from './looks.js';
 
@@ -94,249 +94,244 @@ function explode(p, f, big) {
     });
 }
 
+const rnd = (spread) => (Math.random() - 0.5) * spread;
+const once = (fx, thing) => {
+  if (fx.seen.has(thing)) return false;
+  fx.seen.add(thing);
+  return true;
+};
+
+// New explosions, hits and jumps that the game reports.
+function watchBlasts(fx, state, near) {
+  const ship = state.ship;
+  const p = fx.space;
+  for (const f of state.fx) {
+    if (!once(fx, f) || !near(f, 200)) continue;
+    const away = dist(f.x, f.y, ship.x, ship.y);
+    if (f.type === 'boom') {
+      explode(p, f, f.size > 60);
+      fx.shake = Math.min(9, fx.shake + f.size / 14 / (1 + away / 300));
+      if (f.size > 60) fx.flash = Math.max(fx.flash, 0.5);
+    } else if (f.type === 'hit') {
+      p.burst(f.x, f.y, 6, { speed: 70, life: 0.3, drag: 3, size0: 2, size1: 1, colors: FIRE });
+      if (away < 40) fx.shake = Math.min(6, fx.shake + 1.6);
+    } else if (f.type === 'shield') {
+      p.burst(f.x, f.y, 5, { speed: 50, life: 0.35, drag: 3, size0: 2, size1: 1, colors: ION });
+      if (away < 80) fx.ripples.push({ a: headingTo(f.x - ship.x, f.y - ship.y) - ship.heading, t: 0 });
+    } else if (f.type === 'jump') {
+      fx.flash = 1;
+      fx.warp = 0.7;
+      p.clear();
+      p.ring(f.x, f.y, 10, 320, 0.8, COL.ion[3], 4);
+    }
+  }
+}
+
+// A muzzle flash for every new bolt, and sparks along every new heavy laser beam.
+function watchShots(fx, state, near) {
+  const p = fx.space;
+  for (const b of state.bolts) {
+    if (!once(fx, b) || !near(b)) continue;
+    const colors = b.owner === 'player' ? (b.small ? ION : FIRE) : ACID;
+    p.add({ x: b.x, y: b.y, life: 0.09, size0: b.small ? 6 : 11, size1: 3, glow: true, colors });
+    const look = { angle: Math.atan2(b.vy, b.vx), spread: 0.7, speed: 90, life: 0.15, drag: 4, size0: 1.5, size1: 1 };
+    p.burst(b.x, b.y, 2, { ...look, colors });
+  }
+  for (const b of state.beams) {
+    if (!once(fx, b)) continue;
+    fx.shake = Math.min(8, fx.shake + 4);
+    const n = 40;
+    const a = Math.atan2(b.y1 - b.y0, b.x1 - b.x0);
+    for (let i = 0; i < n; i++) {
+      const u = i / n;
+      const side = a + (Math.PI / 2) * (i % 2 ? 1 : -1);
+      const look = { angle: side, spread: 0.8, speed: 50, life: 0.5, drag: 3, size0: 2, size1: 1, colors: ION };
+      p.burst(b.x0 + (b.x1 - b.x0) * u, b.y0 + (b.y1 - b.y0) * u, 1, look);
+    }
+    p.add({ x: b.x0, y: b.y0, life: 0.25, size0: 34, size1: 8, glow: true, colors: ION });
+  }
+}
+
+// What trails behind and around the frigate: engine exhaust, smoke from damage, and the glow of
+// the jump drive and the heavy laser as they charge.
+function shipTrails(fx, state, dt) {
+  const ship = state.ship;
+  const p = fx.space;
+  if (state.over) return;
+  const f = forward(ship.heading);
+  const th = Math.max(0, ship.throttle);
+  if (!ship.docked && th > 0.05) {
+    tick(fx, 'engine', 34 * th * (ship.boosting ? 2.4 : 1), dt, () => {
+      const n = toWorld(ship, { x: Math.random() < 0.5 ? -6 : 6, y: 52 });
+      p.add({
+        x: n.x,
+        y: n.y,
+        vx: ship.vx - f.x * (50 + Math.random() * 40) + rnd(16),
+        vy: ship.vy - f.y * (50 + Math.random() * 40) + rnd(16),
+        life: 0.35 + Math.random() * 0.3,
+        drag: 1.5,
+        size0: 2.5,
+        size1: 1,
+        colors: ship.boosting ? ['#ffffff', ...FIRE] : ION,
+      });
+    });
+    if (ship.boosting) {
+      tick(fx, 'boost', 16, dt, () => {
+        const n = toWorld(ship, { x: 0, y: 54 });
+        p.add({
+          x: n.x,
+          y: n.y,
+          vx: ship.vx * 0.6,
+          vy: ship.vy * 0.6,
+          life: 0.3,
+          size0: 14,
+          size1: 4,
+          glow: true,
+          colors: FIRE,
+        });
+      });
+    }
+  }
+  const hurt = ship.nodes.filter((n) => nodeStatus(n.hp) !== 'ok');
+  if (hurt.length || ship.hull < hullMax(ship) * 0.4) {
+    tick(fx, 'smoke', 3 + hurt.length * 2.5, dt, () => {
+      const pool = hurt.length ? hurt : SHIP_GEOM.nodes;
+      const n = pool[Math.floor(Math.random() * pool.length)];
+      const w = toWorld(ship, n);
+      p.add({
+        x: w.x,
+        y: w.y,
+        vx: ship.vx * 0.4 + rnd(10),
+        vy: ship.vy * 0.4 + rnd(10),
+        life: 0.9 + Math.random() * 0.6,
+        drag: 0.8,
+        size0: 2,
+        size1: 7,
+        colors: SMOKE,
+      });
+      const critical = n.hp !== undefined && nodeStatus(n.hp) === 'critical';
+      if (critical && Math.random() < 0.5) {
+        p.burst(w.x, w.y, 2, { speed: 50, life: 0.3, drag: 3, size0: 1.5, size1: 1, colors: FIRE });
+      }
+    });
+  }
+  // Motes drawn in towards a point, faster the closer the charge is to full.
+  const drawnIn = (x, y, r, pull, life, size1) => {
+    const a = Math.random() * 7;
+    p.add({
+      x: x + Math.cos(a) * r,
+      y: y + Math.sin(a) * r,
+      vx: ship.vx - Math.cos(a) * r * pull,
+      vy: ship.vy - Math.sin(a) * r * pull,
+      life,
+      drag: 0,
+      size0: 1.5,
+      size1,
+      colors: ION,
+    });
+  };
+  if (state.jump) {
+    const u = state.jump.t / jumpCharge(ship);
+    tick(fx, 'jump', 20 + u * 90, dt, () => drawnIn(ship.x, ship.y, 150 - u * 50, 1.6, 0.55, 2.5));
+  }
+  if (ship.charge > 0) {
+    const nose = toWorld(ship, SHIP_GEOM.nose);
+    tick(fx, 'charge', 30 * ship.charge + 8, dt, () => drawnIn(nose.x, nose.y, 26, 2.6, 0.36, 2));
+  }
+}
+
+// Exhaust behind other ships, Darts and rockets, smoke from ships that are badly hurt, and a glint on salvage.
+function otherTrails(fx, state, near, dt) {
+  const p = fx.space;
+  for (const e of state.vessels) {
+    if (!near(e)) continue;
+    const exhaust = lookOf(e).exhaust;
+    const ef = forward(e.heading);
+    tick(fx, 'p' + e.id, exhaust.rate, dt, () => {
+      const n = toWorld(e, { x: rnd(exhaust.width), y: exhaust.y });
+      p.add({
+        x: n.x,
+        y: n.y,
+        vx: e.vx - ef.x * 40 + rnd(10),
+        vy: e.vy - ef.y * 40 + rnd(10),
+        life: 0.3 + Math.random() * 0.25,
+        drag: 1.5,
+        size0: exhaust.size,
+        size1: 1,
+        colors: EMBER,
+      });
+    });
+    if (e.hp < e.hpMax * 0.5) {
+      tick(fx, 's' + e.id, 5, dt, () => {
+        p.add({
+          x: e.x + rnd(8),
+          y: e.y + rnd(8),
+          vx: e.vx * 0.3,
+          vy: e.vy * 0.3,
+          life: 0.8,
+          drag: 0.8,
+          size0: 2,
+          size1: 6,
+          colors: SMOKE,
+        });
+      });
+    }
+  }
+  for (const d of state.darts) {
+    if (!near(d)) continue;
+    tick(fx, 'd' + d.id, 10, dt, () => {
+      const df = forward(d.heading);
+      p.add({
+        x: d.x - df.x * 9,
+        y: d.y - df.y * 9,
+        vx: d.vx * 0.3,
+        vy: d.vy * 0.3,
+        life: 0.25,
+        drag: 1,
+        size0: 1.5,
+        size1: 1,
+        colors: ION,
+      });
+    });
+  }
+  for (const r of state.rockets) {
+    if (!near(r)) continue;
+    tick(fx, 'r' + (r.x | 0), 40, dt, () => {
+      const rf = forward(r.heading);
+      p.add({
+        x: r.x - rf.x * 5,
+        y: r.y - rf.y * 5,
+        vx: rnd(12),
+        vy: rnd(12),
+        life: 0.5 + Math.random() * 0.3,
+        drag: 1,
+        size0: 1.5,
+        size1: 4.5,
+        colors: ['#fff3c4', COL.ochre[2], ...SMOKE],
+      });
+    });
+  }
+  for (const c of state.things) {
+    if (c.kind !== 'salvage' || !near(c) || Math.random() >= dt * 2) continue;
+    p.add({ x: c.x + rnd(8), y: c.y + rnd(8), life: 0.4, size0: 1, size1: 2, colors: [COL.ochre[3], COL.ochre[1]] });
+  }
+}
+
 // Called once per frame. `dt` is real time, so effects keep moving at a steady pace.
 export function updateEffects(fx, state, view, dt) {
-  const ship = state.ship,
-    p = fx.space;
   fx.shake = Math.max(0, fx.shake - dt * 14);
   fx.flash = Math.max(0, fx.flash - dt * 2.2);
   fx.warp = Math.max(0, fx.warp - dt);
-  fx.offset =
-    fx.shake > 0.05 ? { x: (Math.random() - 0.5) * fx.shake, y: (Math.random() - 0.5) * fx.shake } : { x: 0, y: 0 };
+  fx.offset = fx.shake > 0.05 ? { x: rnd(fx.shake), y: rnd(fx.shake) } : { x: 0, y: 0 };
   for (const r of fx.ripples) r.t += dt;
   fx.ripples = fx.ripples.filter((r) => r.t < 0.5);
-  const near = (o, m = 80) =>
-    Math.abs(o.x - view.cam.x) < VIEW_W / 2 + m && Math.abs(o.y - view.cam.y) < VIEW_H / 2 + m;
+  const cam = view.cam;
+  const near = (o, m = 80) => Math.abs(o.x - cam.x) < VIEW_W / 2 + m && Math.abs(o.y - cam.y) < VIEW_H / 2 + m;
   if (!state.paused) {
-    for (const f of state.fx) {
-      if (fx.seen.has(f)) continue;
-      fx.seen.add(f);
-      if (!near(f, 200)) continue;
-      if (f.type === 'boom') {
-        explode(p, f, f.size > 60);
-        fx.shake = Math.min(9, fx.shake + f.size / 14 / (1 + dist(f.x, f.y, ship.x, ship.y) / 300));
-        if (f.size > 60) fx.flash = Math.max(fx.flash, 0.5);
-      } else if (f.type === 'hit') {
-        p.burst(f.x, f.y, 6, { speed: 70, life: 0.3, drag: 3, size0: 2, size1: 1, colors: FIRE });
-        if (dist(f.x, f.y, ship.x, ship.y) < 40) fx.shake = Math.min(6, fx.shake + 1.6);
-      } else if (f.type === 'shield') {
-        p.burst(f.x, f.y, 5, { speed: 50, life: 0.35, drag: 3, size0: 2, size1: 1, colors: ION });
-        if (dist(f.x, f.y, ship.x, ship.y) < 80)
-          fx.ripples.push({ a: headingTo(f.x - ship.x, f.y - ship.y) - ship.heading, t: 0 });
-      } else if (f.type === 'jump') {
-        fx.flash = 1;
-        fx.warp = 0.7;
-        p.clear();
-        p.ring(f.x, f.y, 10, 320, 0.8, COL.ion[3], 4);
-      }
-    }
-    for (const b of state.bolts) {
-      if (fx.seen.has(b)) continue;
-      fx.seen.add(b);
-      if (!near(b)) continue;
-      const a = Math.atan2(b.vy, b.vx),
-        col = b.owner === 'player' ? (b.small ? ION : FIRE) : ACID;
-      p.add({ x: b.x, y: b.y, life: 0.09, size0: b.small ? 6 : 11, size1: 3, glow: true, colors: col });
-      p.burst(b.x, b.y, 2, {
-        angle: a,
-        spread: 0.7,
-        speed: 90,
-        life: 0.15,
-        drag: 4,
-        size0: 1.5,
-        size1: 1,
-        colors: col,
-      });
-    }
-    for (const b of state.beams) {
-      if (fx.seen.has(b)) continue;
-      fx.seen.add(b);
-      fx.shake = Math.min(8, fx.shake + 4);
-      const n = 40,
-        a = Math.atan2(b.y1 - b.y0, b.x1 - b.x0);
-      for (let i = 0; i < n; i++) {
-        const u = i / n;
-        p.burst(b.x0 + (b.x1 - b.x0) * u, b.y0 + (b.y1 - b.y0) * u, 1, {
-          angle: a + (Math.PI / 2) * (i % 2 ? 1 : -1),
-          spread: 0.8,
-          speed: 50,
-          life: 0.5,
-          drag: 3,
-          size0: 2,
-          size1: 1,
-          colors: ION,
-        });
-      }
-      p.add({ x: b.x0, y: b.y0, life: 0.25, size0: 34, size1: 8, glow: true, colors: ION });
-    }
-    // Engines, trails and damage. These run while the game runs.
-    const f = forward(ship.heading),
-      th = Math.max(0, ship.throttle);
-    if (!state.over && !ship.docked && th > 0.05) {
-      tick(fx, 'engine', 34 * th * (ship.boosting ? 2.4 : 1), dt, () => {
-        const n = toWorld(ship, { x: Math.random() < 0.5 ? -6 : 6, y: 52 });
-        p.add({
-          x: n.x,
-          y: n.y,
-          vx: ship.vx - f.x * (50 + Math.random() * 40) + (Math.random() - 0.5) * 16,
-          vy: ship.vy - f.y * (50 + Math.random() * 40) + (Math.random() - 0.5) * 16,
-          life: 0.35 + Math.random() * 0.3,
-          drag: 1.5,
-          size0: 2.5,
-          size1: 1,
-          colors: ship.boosting ? ['#ffffff', ...FIRE] : ION,
-        });
-      });
-      if (ship.boosting)
-        tick(fx, 'boost', 16, dt, () => {
-          const n = toWorld(ship, { x: 0, y: 54 });
-          p.add({
-            x: n.x,
-            y: n.y,
-            vx: ship.vx * 0.6,
-            vy: ship.vy * 0.6,
-            life: 0.3,
-            size0: 14,
-            size1: 4,
-            glow: true,
-            colors: FIRE,
-          });
-        });
-    }
-    if (!state.over) {
-      const hurt = ship.nodes.filter((n) => nodeStatus(n.hp) !== 'ok');
-      if (hurt.length || ship.hull < hullMax(ship) * 0.4)
-        tick(fx, 'smoke', 3 + hurt.length * 2.5, dt, () => {
-          const n = hurt.length
-              ? hurt[Math.floor(Math.random() * hurt.length)]
-              : SHIP_GEOM.nodes[Math.floor(Math.random() * SHIP_GEOM.nodes.length)],
-            w = toWorld(ship, n);
-          p.add({
-            x: w.x,
-            y: w.y,
-            vx: ship.vx * 0.4 + (Math.random() - 0.5) * 10,
-            vy: ship.vy * 0.4 + (Math.random() - 0.5) * 10,
-            life: 0.9 + Math.random() * 0.6,
-            drag: 0.8,
-            size0: 2,
-            size1: 7,
-            colors: SMOKE,
-          });
-          if (n.hp !== undefined && nodeStatus(n.hp) === 'critical' && Math.random() < 0.5)
-            p.burst(w.x, w.y, 2, { speed: 50, life: 0.3, drag: 3, size0: 1.5, size1: 1, colors: FIRE });
-        });
-      if (state.jump) {
-        const u = state.jump.t / jumpCharge(ship);
-        tick(fx, 'jump', 20 + u * 90, dt, () => {
-          const a = Math.random() * 7,
-            r = 150 - u * 50;
-          p.add({
-            x: ship.x + Math.cos(a) * r,
-            y: ship.y + Math.sin(a) * r,
-            vx: ship.vx - Math.cos(a) * r * 1.6,
-            vy: ship.vy - Math.sin(a) * r * 1.6,
-            life: 0.55,
-            drag: 0,
-            size0: 1.5,
-            size1: 2.5,
-            colors: ION,
-          });
-        });
-      }
-      if (ship.charge > 0) {
-        const nose = toWorld(ship, SHIP_GEOM.nose);
-        tick(fx, 'charge', 30 * ship.charge + 8, dt, () => {
-          const a = Math.random() * 7,
-            r = 26;
-          p.add({
-            x: nose.x + Math.cos(a) * r,
-            y: nose.y + Math.sin(a) * r,
-            vx: ship.vx - Math.cos(a) * r * 2.6,
-            vy: ship.vy - Math.sin(a) * r * 2.6,
-            life: 0.36,
-            drag: 0,
-            size0: 1.5,
-            size1: 2,
-            colors: ION,
-          });
-        });
-      }
-    }
-    for (const e of state.vessels) {
-      if (!near(e)) continue;
-      const exhaust = lookOf(e).exhaust;
-      const ef = forward(e.heading);
-      tick(fx, 'p' + e.id, exhaust.rate, dt, () => {
-        const n = toWorld(e, { x: (Math.random() - 0.5) * exhaust.width, y: exhaust.y });
-        p.add({
-          x: n.x,
-          y: n.y,
-          vx: e.vx - ef.x * 40 + (Math.random() - 0.5) * 10,
-          vy: e.vy - ef.y * 40 + (Math.random() - 0.5) * 10,
-          life: 0.3 + Math.random() * 0.25,
-          drag: 1.5,
-          size0: exhaust.size,
-          size1: 1,
-          colors: EMBER,
-        });
-      });
-      if (e.hp < e.hpMax * 0.5)
-        tick(fx, 's' + e.id, 5, dt, () =>
-          p.add({
-            x: e.x + (Math.random() - 0.5) * 8,
-            y: e.y + (Math.random() - 0.5) * 8,
-            vx: e.vx * 0.3,
-            vy: e.vy * 0.3,
-            life: 0.8,
-            drag: 0.8,
-            size0: 2,
-            size1: 6,
-            colors: SMOKE,
-          }),
-        );
-    }
-    for (const d of state.darts)
-      if (near(d))
-        tick(fx, 'd' + d.id, 10, dt, () => {
-          const df = forward(d.heading);
-          p.add({
-            x: d.x - df.x * 9,
-            y: d.y - df.y * 9,
-            vx: d.vx * 0.3,
-            vy: d.vy * 0.3,
-            life: 0.25,
-            drag: 1,
-            size0: 1.5,
-            size1: 1,
-            colors: ION,
-          });
-        });
-    for (const r of state.rockets)
-      if (near(r))
-        tick(fx, 'r' + (r.x | 0), 40, dt, () => {
-          const rf = forward(r.heading);
-          p.add({
-            x: r.x - rf.x * 5,
-            y: r.y - rf.y * 5,
-            vx: (Math.random() - 0.5) * 12,
-            vy: (Math.random() - 0.5) * 12,
-            life: 0.5 + Math.random() * 0.3,
-            drag: 1,
-            size0: 1.5,
-            size1: 4.5,
-            colors: ['#fff3c4', COL.ochre[2], ...SMOKE],
-          });
-        });
-    for (const c of state.things)
-      if (c.kind === 'salvage' && near(c) && Math.random() < dt * 2)
-        p.add({
-          x: c.x + (Math.random() - 0.5) * 8,
-          y: c.y + (Math.random() - 0.5) * 8,
-          life: 0.4,
-          size0: 1,
-          size1: 2,
-          colors: [COL.ochre[3], COL.ochre[1]],
-        });
+    watchBlasts(fx, state, near);
+    watchShots(fx, state, near);
+    shipTrails(fx, state, dt);
+    otherTrails(fx, state, near, dt);
   }
   fx.space.update(dt);
   fx.inside.update(dt);

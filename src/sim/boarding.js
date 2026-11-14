@@ -43,37 +43,61 @@ export function los(it, x0, y0, x1, y1) {
 }
 
 // ---------- generation ----------
-export function createInterior(state, wreck) {
+// The floor plan: three rooms above and three below a corridor, each with a door onto it.
+// One of the rooms is the vault, behind a locked door. The airlock is at the left end of the corridor.
+function layOut(state) {
   const tiles = new Array(IW * IH).fill('#');
   const set = (tx, ty, c) => {
     tiles[ty * IW + tx] = c;
   };
-  const s1 = 9 + Math.floor(rand(state) * 4),
-    s2 = 19 + Math.floor(rand(state) * 5);
-  const rooms = [];
-  for (const [r0, r1] of [
+  const s1 = 9 + Math.floor(rand(state) * 4);
+  const s2 = 19 + Math.floor(rand(state) * 5);
+  const rows = [
     [0, 6],
     [11, 17],
-  ])
-    for (const [c0, c1] of [
-      [0, s1],
-      [s1, s2],
-      [s2, IW - 1],
-    ])
-      rooms.push({ c0, c1, r0, r1 });
-  for (const rm of rooms)
+  ];
+  const columns = [
+    [0, s1],
+    [s1, s2],
+    [s2, IW - 1],
+  ];
+  const rooms = [];
+  for (const [r0, r1] of rows) for (const [c0, c1] of columns) rooms.push({ c0, c1, r0, r1 });
+  for (const rm of rooms) {
     for (let ty = rm.r0 + 1; ty < rm.r1; ty++) for (let tx = rm.c0 + 1; tx < rm.c1; tx++) set(tx, ty, '.');
+  }
   for (let ty = 7; ty <= 10; ty++) for (let tx = 1; tx < IW - 1; tx++) set(tx, ty, '.');
   const vault = [2, 5, 1, 4][Math.floor(rand(state) * 4)];
   rooms.forEach((rm, i) => {
-    const dc = rm.c0 + 2 + Math.floor(rand(state) * Math.max(1, rm.c1 - rm.c0 - 4)),
-      row = rm.r0 === 0 ? 6 : 11;
-    set(dc, row, i === vault ? 'L' : '.');
-    set(dc + 1, row, i === vault ? 'L' : '.');
+    const dc = rm.c0 + 2 + Math.floor(rand(state) * Math.max(1, rm.c1 - rm.c0 - 4));
+    const row = rm.r0 === 0 ? 6 : 11;
+    const door = i === vault ? 'L' : '.';
+    set(dc, row, door);
+    set(dc + 1, row, door);
     rm.door = { x: (dc + 1) * TILE, y: row * TILE + TILE / 2 };
   });
   set(0, 8, 'A');
   set(0, 9, 'A');
+  return { tiles, rooms, vault };
+}
+
+const CORRIDOR = { c0: 0, c1: IW - 1, r0: 6, r1: 11 };
+const newGuard = (state, p, heading) => ({
+  id: state.nextId++,
+  x: p.x,
+  y: p.y,
+  hp: B.GUARD_HP,
+  heading,
+  mode: 'idle',
+  cool: 1,
+  home: { ...p },
+  goal: { ...p },
+  wait: 1,
+  lost: 0,
+});
+
+export function createInterior(state, wreck) {
+  const { tiles, rooms, vault } = layOut(state);
   const it = {
     tiles,
     rooms,
@@ -97,11 +121,17 @@ export function createInterior(state, wreck) {
     grenades: [],
     fx: [],
   };
+  // A friendly or neutral station is a place to walk around and trade in, with nothing to fight.
+  if (isTrading(wreck)) {
+    makeTrade(state, it);
+    return it;
+  }
+  // A free spot in a room, not too close to anything placed before it.
   const taken = [];
   const spot = (rm, minX = 0) => {
     for (let n = 0; n < 40; n++) {
-      const x = (rm.c0 + 1.5 + rand(state) * (rm.c1 - rm.c0 - 2)) * TILE,
-        y = (rm.r0 + 1.5 + rand(state) * (rm.r1 - rm.r0 - 2)) * TILE;
+      const x = (rm.c0 + 1.5 + rand(state) * (rm.c1 - rm.c0 - 2)) * TILE;
+      const y = (rm.r0 + 1.5 + rand(state) * (rm.r1 - rm.r0 - 2)) * TILE;
       if (x < minX || taken.some((t) => dist(t.x, t.y, x, y) < 18)) continue;
       taken.push({ x, y });
       return { x, y };
@@ -110,86 +140,47 @@ export function createInterior(state, wreck) {
     taken.push(p);
     return p;
   };
-  // A friendly or neutral station is a place to walk around and trade in, with nothing to fight.
-  if (isTrading(wreck)) {
-    makeTrade(state, it);
-    return it;
+  const difficulty = wreck.difficulty;
+  const vaultRoom = rooms[vault];
+  const open = rooms.map((_, i) => i).filter((i) => i !== vault);
+  const anyRoom = () => rooms[open[Math.floor(rand(state) * open.length)]];
+  const credits = (range) => Math.round(randRange(state, range[0], range[1]) / 5) * 5;
+  // `what` is called after the spot is found, so that the random numbers come in a fixed order.
+  const addLoot = (room, what) => {
+    const p = spot(room);
+    it.loot.push({ id: state.nextId++, ...what(), ...p });
+  };
+
+  // Guards: the first one in the corridor, the rest in the rooms. More of them where it is more dangerous.
+  for (let i = 0; i < difficulty + 1; i++) {
+    const p = i === 0 ? spot(CORRIDOR, 13 * TILE) : spot(anyRoom(), 6 * TILE);
+    it.guards.push(newGuard(state, p, rand(state) * TAU));
   }
-  const corridor = { c0: 0, c1: IW - 1, r0: 6, r1: 11 };
-  const d = wreck.difficulty,
-    open = rooms.map((_, i) => i).filter((i) => i !== vault);
-  const pick = () => rooms[open[Math.floor(rand(state) * open.length)]];
-  for (let i = 0; i < d + 1; i++) {
-    const p = i === 0 ? spot(corridor, 13 * TILE) : spot(pick(), 6 * TILE);
-    it.guards.push({
-      id: state.nextId++,
-      x: p.x,
-      y: p.y,
-      hp: B.GUARD_HP,
-      heading: rand(state) * TAU,
-      mode: 'idle',
-      cool: 1,
-      home: { ...p },
-      goal: { ...p },
-      wait: 1,
-      lost: 0,
-    });
-  }
-  for (let i = 0; i < d - 1; i++) {
-    const p = i === 0 ? { x: (IW - 2.5) * TILE, y: (8 + rand(state) * 2) * TILE } : spot(pick(), 8 * TILE);
+  // Turrets: the first one at the far end of the corridor.
+  for (let i = 0; i < difficulty - 1; i++) {
+    const p = i === 0 ? { x: (IW - 2.5) * TILE, y: (8 + rand(state) * 2) * TILE } : spot(anyRoom(), 8 * TILE);
     taken.push(p);
     it.turrets.push({ id: state.nextId++, x: p.x, y: p.y, hp: B.TURRET_HP, heading: Math.PI * 1.5, cool: 1 });
   }
-  const credits = (range) => Math.round(randRange(state, range[0], range[1]) / 5) * 5;
-  for (let i = 0; i < 2 + d; i++) {
-    const p = spot(pick());
-    it.loot.push({ id: state.nextId++, type: 'cell', ...p });
+  // Loot: fuel cells and crates in the rooms, and the best of it in the vault.
+  for (let i = 0; i < 2 + difficulty; i++) addLoot(anyRoom(), () => ({ type: 'cell' }));
+  for (let i = 0; i < 2 + difficulty; i++) {
+    addLoot(anyRoom(), () => ({ type: 'crate', value: credits(B.CRATE_CREDITS) }));
   }
-  for (let i = 0; i < 2 + d; i++) {
-    const p = spot(pick());
-    it.loot.push({ id: state.nextId++, type: 'crate', value: credits(B.CRATE_CREDITS), ...p });
-  }
-  for (let i = 0; i < 2; i++) {
-    const p = spot(rooms[vault]);
-    it.loot.push({ id: state.nextId++, type: 'crate', value: credits(B.VAULT_CREDITS), ...p });
-  }
-  {
-    const p = spot(rooms[vault]);
-    it.loot.push({ id: state.nextId++, type: 'cell', ...p });
-  }
+  for (let i = 0; i < 2; i++) addLoot(vaultRoom, () => ({ type: 'crate', value: credits(B.VAULT_CREDITS) }));
+  addLoot(vaultRoom, () => ({ type: 'cell' }));
   // Vaults sometimes hold a star chart or a spare slot. A station vault always has a chart if one is missing.
-  const missing = state.sectors
-    ? currentSector(state)
-        .links.filter((l) => !state.charts.includes(l))
-        .sort((a, b) => b - a)
-    : [];
+  const missing = currentSector(state)
+    .links.filter((l) => !state.charts.includes(l))
+    .sort((a, b) => b - a);
   if (missing.length && (wreck.kind === 'station' || rand(state) < 0.35)) {
-    const p = spot(rooms[vault]);
-    it.loot.push({ id: state.nextId++, type: 'chart', sector: missing[0], ...p });
+    addLoot(vaultRoom, () => ({ type: 'chart', sector: missing[0] }));
   }
-  if (rand(state) < 0.2) {
-    const p = spot(rooms[vault]);
-    it.loot.push({ id: state.nextId++, type: 'part', slot: rand(state) < 0.5 ? 'hard' : 'system', ...p });
-  }
-  // A hostile station is taken over from the terminal in its vault.
+  if (rand(state) < 0.2) addLoot(vaultRoom, () => ({ type: 'part', slot: rand(state) < 0.5 ? 'hard' : 'system' }));
+  // A hostile station is taken over from the terminal in its vault, and has two more guards.
   if (wreck.kind === 'station') {
-    it.terminal = spot(rooms[vault]);
-    for (let i = 0; i < 2; i++) {
-      const p = spot(pick(), 8 * TILE);
-      it.guards.push({
-        id: state.nextId++,
-        x: p.x,
-        y: p.y,
-        hp: B.GUARD_HP,
-        heading: 0,
-        mode: 'idle',
-        cool: 1,
-        home: { ...p },
-        goal: { ...p },
-        wait: 1,
-        lost: 0,
-      });
-    }
+    it.terminal = spot(vaultRoom);
+    for (let i = 0; i < 2; i++) it.guards.push(newGuard(state, spot(anyRoom(), 8 * TILE), 0));
   }
   return it;
 }
@@ -364,86 +355,150 @@ function explode(state, it, g) {
   for (const av of [...it.avatars]) if (inBlast(av)) hurtAvatar(state, it, av, B.GRENADE_SELF_DMG);
 }
 
+// ---------- what a boarder does ----------
+const atAirlockDoor = (it, av) => av.x < TILE * 2.2 && Math.abs(av.y - it.entry.y) < TILE * 1.5;
+const openVault = (it) => {
+  it.doorOpen = true;
+  it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
+};
+
+function walk(it, av, cmd, dt) {
+  const mx = clamp(cmd.mx || 0, -1, 1);
+  const my = clamp(cmd.my || 0, -1, 1);
+  const len = Math.hypot(mx, my);
+  if (len <= 0) return;
+  // Carrying things slows the boarder down.
+  const sp = (B.CREW_SPEED_FOOT * (1 - B.CARRY_SLOW * av.carry.length) * dt) / Math.max(1, len);
+  move(it, av, mx * sp, my * sp, B.CREW_RADIUS);
+}
+
+function fireRifle(state, it, av) {
+  const f = forward(av.heading + randRange(state, -0.02, 0.02));
+  it.bolts.push({
+    x: av.x + f.x * 7,
+    y: av.y + f.y * 7,
+    vx: f.x * B.RIFLE_SPEED,
+    vy: f.y * B.RIFLE_SPEED,
+    ttl: B.RIFLE_TTL,
+    owner: 'crew',
+    dmg: rifleDmg(state.ship),
+  });
+  av.cool = B.RIFLE_INTERVAL;
+  state.events.push({ type: 'rifle' });
+}
+
+function throwGrenade(it, av, at) {
+  let tx = at.x;
+  let ty = at.y;
+  const d = dist(av.x, av.y, tx, ty);
+  if (d > B.GRENADE_RANGE) {
+    tx = av.x + ((tx - av.x) * B.GRENADE_RANGE) / d;
+    ty = av.y + ((ty - av.y) * B.GRENADE_RANGE) / d;
+  }
+  // A grenade stops at the first wall on its way.
+  const n = Math.ceil(dist(av.x, av.y, tx, ty) / 4);
+  let ex = av.x;
+  let ey = av.y;
+  for (let i = 1; i <= n; i++) {
+    const x = av.x + ((tx - av.x) * i) / n;
+    const y = av.y + ((ty - av.y) * i) / n;
+    if (solidAt(it, x, y)) break;
+    ex = x;
+    ey = y;
+  }
+  av.grenades--;
+  it.grenades.push({
+    x: av.x,
+    y: av.y,
+    sx: av.x,
+    sy: av.y,
+    tx: ex,
+    ty: ey,
+    t: 0,
+    dur: Math.max(0.15, dist(av.x, av.y, ex, ey) / B.GRENADE_SPEED),
+    fuse: B.GRENADE_FUSE,
+  });
+}
+
+// Loot is picked up by walking over it.
+function pickUpLoot(state, it, av) {
+  for (const item of [...it.loot]) {
+    if (av.carry.length >= carryMax(state.ship)) break;
+    if (dist(item.x, item.y, av.x, av.y) >= 9) continue;
+    av.carry.push(item);
+    it.loot = it.loot.filter((l) => l !== item);
+    state.events.push({ type: 'pickup', item: item.type });
+  }
+}
+
+// The locked vault door: hold the use key next to it to cut it open, or blow it with a breaching charge.
+function workVaultDoor(state, it, av, cmd, dt) {
+  if (it.doorOpen) return;
+  const door = it.rooms[it.vault].door;
+  const away = dist(av.x, av.y, door.x, door.y);
+  if (cmd.charge && av.charges > 0 && away < 28) {
+    // A breaching charge opens the door at once, and every guard comes running.
+    av.charges--;
+    openVault(it);
+    it.fx.push({ type: 'boom', x: door.x, y: door.y, t: 0, dur: 0.45, size: 24 });
+    for (const g of it.guards) {
+      g.mode = 'alert';
+      g.lost = 0;
+      g.seen = { x: door.x, y: door.y };
+    }
+    state.events.push({ type: 'breached' });
+  }
+  if (cmd.use && away < 22) {
+    it.doorCut += dt / B.DOOR_CUT_TIME;
+    it.cutting = true;
+    if (it.doorCut >= 1) {
+      openVault(it);
+      state.events.push({ type: 'doorOpen' });
+    }
+  }
+}
+
+// A hostile station is taken over by holding the use key at the terminal in its vault.
+function workTerminal(state, it, av, cmd, dt) {
+  if (!it.terminal || !it.doorOpen || !cmd.use) return;
+  if (dist(av.x, av.y, it.terminal.x, it.terminal.y) >= 16) return;
+  it.takeover += dt / B.TAKEOVER_TIME;
+  it.hacking = true;
+  if (it.takeover < 1) return;
+  const st = thingsOf(state, 'station').find((x) => x.interior === it);
+  if (st) takeOver(state, st);
+  it.terminal = null;
+  it.desks = [];
+}
+
+// On a trading station weapons stay holstered. The use key works the desks and the airlock.
+function stepVisitor(state, it, av, cmd) {
+  if (!cmd.usePressed) return;
+  if (atAirlockDoor(it, av)) {
+    leave(state, it, av, false);
+    return;
+  }
+  const desk = it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20);
+  if (desk) state.events.push({ type: 'deskUsed', player: av.player, desk: desk.type });
+}
+
 function stepAvatar(state, it, av, cmd, dt) {
   const player = playerById(state, av.player);
   av.cool = Math.max(0, av.cool - dt);
   if (!cmd) return;
   if (cmd.aim) av.heading = headingTo(cmd.aim.x - av.x, cmd.aim.y - av.y);
-  const mx = clamp(cmd.mx || 0, -1, 1),
-    my = clamp(cmd.my || 0, -1, 1),
-    len = Math.hypot(mx, my);
-  if (len > 0) {
-    const sp = (B.CREW_SPEED_FOOT * (1 - B.CARRY_SLOW * av.carry.length) * dt) / Math.max(1, len);
-    move(it, av, mx * sp, my * sp, B.CREW_RADIUS);
-  }
+  walk(it, av, cmd, dt);
   if (it.trade) {
-    // Weapons stay holstered on a trading station. The use key works the desks and the airlock.
-    if (cmd.usePressed && av.x < TILE * 2.2 && Math.abs(av.y - it.entry.y) < TILE * 1.5) {
-      leave(state, it, av, false);
-      return;
-    }
-    const desk = cmd.usePressed ? it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20) : null;
-    if (desk) state.events.push({ type: 'deskUsed', player: av.player, desk: desk.type });
+    stepVisitor(state, it, av, cmd);
     return;
   }
-  if (cmd.fire && av.cool <= 0) {
-    const f = forward(av.heading + randRange(state, -0.02, 0.02));
-    it.bolts.push({
-      x: av.x + f.x * 7,
-      y: av.y + f.y * 7,
-      vx: f.x * B.RIFLE_SPEED,
-      vy: f.y * B.RIFLE_SPEED,
-      ttl: B.RIFLE_TTL,
-      owner: 'crew',
-      dmg: rifleDmg(state.ship),
-    });
-    av.cool = B.RIFLE_INTERVAL;
-    state.events.push({ type: 'rifle' });
-  }
-  if (cmd.grenade && av.grenades > 0) {
-    let tx = cmd.grenade.x,
-      ty = cmd.grenade.y;
-    const d = dist(av.x, av.y, tx, ty);
-    if (d > B.GRENADE_RANGE) {
-      tx = av.x + ((tx - av.x) * B.GRENADE_RANGE) / d;
-      ty = av.y + ((ty - av.y) * B.GRENADE_RANGE) / d;
-    }
-    // A grenade stops at the first wall on its way.
-    const n = Math.ceil(dist(av.x, av.y, tx, ty) / 4);
-    let ex = av.x,
-      ey = av.y;
-    for (let i = 1; i <= n; i++) {
-      const x = av.x + ((tx - av.x) * i) / n,
-        y = av.y + ((ty - av.y) * i) / n;
-      if (solidAt(it, x, y)) break;
-      ex = x;
-      ey = y;
-    }
-    av.grenades--;
-    it.grenades.push({
-      x: av.x,
-      y: av.y,
-      sx: av.x,
-      sy: av.y,
-      tx: ex,
-      ty: ey,
-      t: 0,
-      dur: Math.max(0.15, dist(av.x, av.y, ex, ey) / B.GRENADE_SPEED),
-      fuse: B.GRENADE_FUSE,
-    });
-  }
-  // Loot is picked up by walking over it.
-  for (const item of [...it.loot]) {
-    if (av.carry.length >= carryMax(state.ship)) break;
-    if (dist(item.x, item.y, av.x, av.y) < 9) {
-      av.carry.push(item);
-      it.loot = it.loot.filter((l) => l !== item);
-      state.events.push({ type: 'pickup', item: item.type });
-    }
-  }
+  if (cmd.fire && av.cool <= 0) fireRifle(state, it, av);
+  if (cmd.grenade && av.grenades > 0) throwGrenade(it, av, cmd.grenade);
+  pickUpLoot(state, it, av);
+  // What is carried is stowed on the ship at the airlock.
   const atAirlock = tileAt(it, Math.floor(av.x / TILE), Math.floor(av.y / TILE)) === 'A' || av.x < TILE * 1.2;
   if (atAirlock) deposit(state, av);
-  if (cmd.usePressed && av.x < TILE * 2.2 && Math.abs(av.y - it.entry.y) < TILE * 1.5) {
+  if (cmd.usePressed && atAirlockDoor(it, av)) {
     deposit(state, av);
     leave(state, it, av, false);
     return;
@@ -453,43 +508,8 @@ function stepAvatar(state, it, av, cmd, dt) {
     it.sentries.push({ id: state.nextId++, x: av.x, y: av.y, hp: B.SENTRY_HP, heading: av.heading, cool: 0.3 });
     state.events.push({ type: 'sentryDown' });
   }
-  // Hold the use key next to the locked door to cut it open.
-  if (!it.doorOpen) {
-    const door = it.rooms[it.vault].door,
-      near = dist(av.x, av.y, door.x, door.y) < 22;
-    if (cmd.charge && av.charges > 0 && dist(av.x, av.y, door.x, door.y) < 28) {
-      // A breaching charge opens the door at once, and every guard comes running.
-      av.charges--;
-      it.doorOpen = true;
-      it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
-      it.fx.push({ type: 'boom', x: door.x, y: door.y, t: 0, dur: 0.45, size: 24 });
-      for (const g of it.guards) {
-        g.mode = 'alert';
-        g.lost = 0;
-        g.seen = { x: door.x, y: door.y };
-      }
-      state.events.push({ type: 'breached' });
-    }
-    if (cmd.use && near) {
-      it.doorCut += dt / B.DOOR_CUT_TIME;
-      it.cutting = true;
-      if (it.doorCut >= 1) {
-        it.doorOpen = true;
-        it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
-        state.events.push({ type: 'doorOpen' });
-      }
-    }
-  }
-  if (it.terminal && it.doorOpen && cmd.use && dist(av.x, av.y, it.terminal.x, it.terminal.y) < 16) {
-    it.takeover += dt / B.TAKEOVER_TIME;
-    it.hacking = true;
-    if (it.takeover >= 1) {
-      const st = thingsOf(state, 'station').find((x) => x.interior === it);
-      if (st) takeOver(state, st);
-      it.terminal = null;
-      it.desks = [];
-    }
-  }
+  workVaultDoor(state, it, av, cmd, dt);
+  workTerminal(state, it, av, cmd, dt);
   if (player.hp <= 0) leave(state, it, av, true);
 }
 
@@ -614,6 +634,89 @@ function stepTurret(state, it, t, dt) {
   }
 }
 
+// People on a trading station wander about near where they started.
+function stepCivilian(state, it, c, dt) {
+  c.wait -= dt;
+  if (c.wait <= 0) {
+    c.goal = { x: c.home.x + randRange(state, -40, 40), y: c.home.y + randRange(state, -26, 26) };
+    c.wait = randRange(state, 2, 6);
+  }
+  if (dist(c.x, c.y, c.goal.x, c.goal.y) <= 4) return;
+  c.heading = turnToward(c.heading, headingTo(c.goal.x - c.x, c.goal.y - c.y), 4 * dt);
+  const f = forward(c.heading);
+  move(it, c, f.x * 22 * dt, f.y * 22 * dt, B.CREW_RADIUS);
+}
+
+function stepInsideBolts(state, it, dt) {
+  const spark = (b, dur) => it.fx.push({ type: 'hit', x: b.x, y: b.y, t: 0, dur });
+  for (const b of it.bolts) {
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+    b.ttl -= dt;
+    if (b.ttl <= 0) continue;
+    if (solidAt(it, b.x, b.y)) {
+      b.ttl = 0;
+      spark(b, 0.12);
+      continue;
+    }
+    if (b.owner === 'crew') {
+      const guard = it.guards.find((g) => dist(g.x, g.y, b.x, b.y) < 6.5);
+      const e = guard || it.turrets.find((t) => dist(t.x, t.y, b.x, b.y) < 7.5);
+      if (!e) continue;
+      e.hp -= b.dmg;
+      b.ttl = 0;
+      spark(b, 0.15);
+      // A guard that is shot knows roughly where the shot came from.
+      if (e.mode) {
+        e.mode = 'alert';
+        e.lost = 0;
+        e.seen = e.seen || { x: b.x - b.vx * 0.2, y: b.y - b.vy * 0.2 };
+      }
+      continue;
+    }
+    const av = it.avatars.find((a) => dist(a.x, a.y, b.x, b.y) < 6);
+    const sentry = it.sentries.find((x) => dist(x.x, x.y, b.x, b.y) < 7);
+    if (av) {
+      b.ttl = 0;
+      hurtAvatar(state, it, av, b.dmg);
+    } else if (sentry) {
+      b.ttl = 0;
+      sentry.hp -= b.dmg;
+      spark(b, 0.15);
+    }
+  }
+  it.bolts = it.bolts.filter((b) => b.ttl > 0);
+}
+
+// A grenade flies to where it was thrown, lies there for a moment and goes off.
+function stepGrenades(state, it, dt) {
+  for (const g of it.grenades) {
+    if (g.t < g.dur) {
+      g.t = Math.min(g.dur, g.t + dt);
+      const u = g.t / g.dur;
+      g.x = g.sx + (g.tx - g.sx) * u;
+      g.y = g.sy + (g.ty - g.sy) * u;
+      continue;
+    }
+    g.fuse -= dt;
+    if (g.fuse > 0) continue;
+    explode(state, it, g);
+    g.done = true;
+  }
+  it.grenades = it.grenades.filter((g) => !g.done);
+}
+
+function clearFallen(state, it) {
+  for (const e of [...it.guards, ...it.turrets]) {
+    if (e.hp > 0) continue;
+    it.fx.push({ type: 'boom', x: e.x, y: e.y, t: 0, dur: 0.4, size: 14 });
+    state.events.push({ type: 'guardDown' });
+  }
+  it.guards = it.guards.filter((g) => g.hp > 0);
+  it.turrets = it.turrets.filter((t) => t.hp > 0);
+  it.sentries = it.sentries.filter((x) => x.hp > 0);
+}
+
 function stepInterior(state, wreck, cmds, dt) {
   const it = wreck.interior;
   it.cutting = false;
@@ -622,84 +725,16 @@ function stepInterior(state, wreck, cmds, dt) {
   it.fx = it.fx.filter((f) => f.t < f.dur);
   for (const av of [...it.avatars]) stepAvatar(state, it, av, cmds.away ? cmds.away[av.player] : null, dt);
   for (const g of it.guards) stepGuard(state, it, g, dt);
-  for (const c of it.civilians) {
-    c.wait -= dt;
-    if (c.wait <= 0) {
-      c.goal = { x: c.home.x + randRange(state, -40, 40), y: c.home.y + randRange(state, -26, 26) };
-      c.wait = randRange(state, 2, 6);
-    }
-    if (dist(c.x, c.y, c.goal.x, c.goal.y) > 4) {
-      c.heading = turnToward(c.heading, headingTo(c.goal.x - c.x, c.goal.y - c.y), 4 * dt);
-      const f = forward(c.heading);
-      move(it, c, f.x * 22 * dt, f.y * 22 * dt, B.CREW_RADIUS);
-    }
-  }
+  for (const c of it.civilians) stepCivilian(state, it, c, dt);
   for (const t of it.turrets) stepTurret(state, it, t, dt);
   for (const s of it.sentries) stepSentry(state, it, s, dt);
-  for (const b of it.bolts) {
-    b.x += b.vx * dt;
-    b.y += b.vy * dt;
-    b.ttl -= dt;
-    if (b.ttl <= 0) continue;
-    if (solidAt(it, b.x, b.y)) {
-      b.ttl = 0;
-      it.fx.push({ type: 'hit', x: b.x, y: b.y, t: 0, dur: 0.12 });
-      continue;
-    }
-    if (b.owner === 'crew') {
-      const e =
-        it.guards.find((g) => dist(g.x, g.y, b.x, b.y) < 6.5) || it.turrets.find((t) => dist(t.x, t.y, b.x, b.y) < 7.5);
-      if (e) {
-        e.hp -= b.dmg;
-        b.ttl = 0;
-        it.fx.push({ type: 'hit', x: b.x, y: b.y, t: 0, dur: 0.15 });
-        if (e.mode) {
-          e.mode = 'alert';
-          e.lost = 0;
-          e.seen = e.seen || { x: b.x - b.vx * 0.2, y: b.y - b.vy * 0.2 };
-        }
-      }
-    } else {
-      const av = it.avatars.find((a) => dist(a.x, a.y, b.x, b.y) < 6),
-        sentry = it.sentries.find((x) => dist(x.x, x.y, b.x, b.y) < 7);
-      if (av) {
-        b.ttl = 0;
-        hurtAvatar(state, it, av, b.dmg);
-      } else if (sentry) {
-        b.ttl = 0;
-        sentry.hp -= b.dmg;
-        it.fx.push({ type: 'hit', x: b.x, y: b.y, t: 0, dur: 0.15 });
-      }
-    }
-  }
-  it.bolts = it.bolts.filter((b) => b.ttl > 0);
-  for (const g of it.grenades) {
-    if (g.t < g.dur) {
-      g.t = Math.min(g.dur, g.t + dt);
-      const u = g.t / g.dur;
-      g.x = g.sx + (g.tx - g.sx) * u;
-      g.y = g.sy + (g.ty - g.sy) * u;
-    } else {
-      g.fuse -= dt;
-      if (g.fuse <= 0) {
-        explode(state, it, g);
-        g.done = true;
-      }
-    }
-  }
-  it.grenades = it.grenades.filter((g) => !g.done);
-  for (const e of [...it.guards, ...it.turrets])
-    if (e.hp <= 0) {
-      it.fx.push({ type: 'boom', x: e.x, y: e.y, t: 0, dur: 0.4, size: 14 });
-      state.events.push({ type: 'guardDown' });
-    }
-  it.guards = it.guards.filter((g) => g.hp > 0);
-  it.turrets = it.turrets.filter((t) => t.hp > 0);
-  it.sentries = it.sentries.filter((x) => x.hp > 0);
-  if (it.timer !== null) {
-    it.timer -= dt;
-    if (it.timer <= 0) blowUp(state, wreck);
-  }
+  stepInsideBolts(state, it, dt);
+  stepGrenades(state, it, dt);
+  clearFallen(state, it);
+  // The reactor of a wreck runs down from the first step inside.
+  if (it.timer === null) return;
+  it.timer -= dt;
+  if (it.timer <= 0) blowUp(state, wreck);
 }
 
 function blowUp(state, wreck) {

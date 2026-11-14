@@ -5,68 +5,61 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – strong model, high level – Teknisk översyn
-- F-059 – Lägg posterna i spellogiken och ta bort antagandet om en enda spelare, så att onlineläget går att bygga
-- D-055 – Gör skärmlägena till ett enda tydligt läge i taget, så att nya lägen blir enkla att lägga till
-- D-056 – Ge alla saker i rymden en gemensam form och beskriv skepp, vapen och varor som data, så att nytt innehåll blir billigt att lägga till
-- D-057 – Städa upp den tätt skrivna koden utan att ändra hur spelet beter sig
-- D-063 – Håll spelet förutsägbart, med testet som vaktar det
-
-**B** – standard model, medium level – Tester och verktyg
+**A** – standard model, medium level – Tester och verktyg
 - D-058 – Låt provkörningen klicka på namngivna knappar, lägg till kontroll av stavfel och typer, och kör testerna automatiskt vid varje sparning
 
-**C** – strong model, medium level – Skarpare text och bild som fyller fönstret
+**B** – strong model, medium level – Skarpare text och bild som fyller fönstret
 - F-077 – Rita text och UI på ett dubbelt så fint rutnät medan skeppet och rymden är som nu, så att texten blir lättare att läsa
 - F-078 – Låt bilden fylla fönstret i stället för att hoppa mellan fasta storlekar, så att spelet inte blir litet i ett vanligt webbläsarfönster
 
-**D** – strong model, medium level – Större stationer
+**C** – strong model, medium level – Större stationer
 - F-065 – Rita stationerna större i rymdvyn och flytta dockning, kanoner och träffyta efter det, så att de känns som stora platser bredvid skeppet
 
-**E** – strong model, high level – Spara spelet
+**D** – strong model, high level – Spara spelet
 - F-079 – Spara och fortsätta en omgång i webbläsaren, och exportera och importera en sparfil, så att långa omgångar inte går förlorade
 
-**F** – strong model, high level – Faktioner och trafik
+**E** – strong model, high level – Faktioner och trafik
 - F-035 – Faktioner med egna stationer, områden och anseende, så att världen får sidor att förhålla sig till
 - F-069 – Lägg till freighter som skeppsklass, större och långsam, så att trafiken får ett eget skepp
 - F-066 – Låt andra skepp flyga fram till stationer, docka en stund och lämna, så att stationerna känns besökta
 - F-067 – Låt handelsskepp, patruller och pirater hoppa in och ut ur systemet och slåss med varandra, så att miljön känns levande
 
-**G** – strong model, high level – Sällsynta skepp
+**F** – strong model, high level – Sällsynta skepp
 - F-070 – Juggernaut som långsamt och tungt bestyckat krigsskepp, på patrull hos faktioner och i mycket sällsynta fall som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**H** – strong model, high level – Handel
+**G** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**I** – strong model, medium level – Butik med bilder
+**H** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**J** – strong model, high level – Värme
+**I** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**K** – strong model, high level – Slå ut och borda
+**J** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**L** – strong model, high level – Missiler och raketer
+**K** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**M** – strong model, high level – Kontakt med andra skepp
+**L** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**N** – strong model, high level – Asteroider och anomalier
+**M** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**O** – strong model, high level – En värld som förändras
+**N** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 
-**P** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**O** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**Q** – strong model, high level – Musik och ljud
+**P** – strong model, high level – Musik och ljud
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - F-048 – Musik för de olika lägena
 
@@ -76,10 +69,6 @@ Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. D-
 
 | ID | Vad | Status |
 |---|---|---|
-| F-059 | Posterna ska finnas i spellogiken, inte bara på den egna skärmen. Ta bort antagandet om en enda spelare. Förutsättning för onlineläget oavsett motor | Ej påbörjad |
-| D-055 | Skärmlägena (karta, butik, inbrott, bordning, hjälp) hålls i dag isär med enskilda flaggor. Gör dem till ett enda tydligt läge i taget | Ej påbörjad |
-| D-056 | Gemensam form för saker i rymden (vrak, stationer, containrar, pirater, bärgningsgods), så att rörelse, ritning, karta och kollision inte skrivs om för varje ny sort. Från D-075: skepp, vapen och varor beskrivs som data i stället för kod | Ej påbörjad |
-| D-057 | Städa upp den tätt skrivna koden, bland annat 46 rader längre än 220 tecken, utan att ändra hur spelet beter sig | Ej påbörjad |
 | F-079 | Med tanke på att detta kan bli långa spelomgångar så behöver vi också titta på hur man kan spara sin progress. Eftersom det är i webbläsaren så behöver man även kunna exportera och importera en sparfil | Ej påbörjad |
 | F-050 | Justerade nivåer för vapen, sköld, motorer och engineering så att det känns att det är svårt i början och att det ska vara värt att uppgradera | Ej påbörjad |
 
@@ -92,7 +81,6 @@ Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. D-
 | D-060 | Nätverksförberedelse: dela upp spelets tillstånd i tre lager. Det som aldrig ändras skickas en gång, det som ändras sällan skickas vid ändring, och det som rör sig skickas ofta. Mätt 2026-11-14: hela tillståndet är omkring 25 kB, varav 3 kB ändras hela tiden | Väntar på användaren |
 | D-061 | Nätverksförberedelse: ge allt ett eget id. Skott, raketer och effekter saknar det i dag | Väntar på användaren |
 | D-062 | Nätverksförberedelse: skicka skott som händelser (var och när de avfyrades) i stället för som positioner | Väntar på användaren |
-| D-063 | Nätverksförberedelse: håll spelet förutsägbart. Samma start och samma kommandon ska ge exakt samma förlopp. Testet som vaktar det finns, och varje ny funktion måste klara det | Ej påbörjad |
 | F-064 | Homing missiles (nytt vapen) och rockets som uppgraderingar. De ska söka sig mot mål. Missiler är mer rörliga medan raketer kan justera sin bana något, men missar den sitt mål så släpper den målet helt. Missar dessa vapen sitt mål så ska de kunna träffa andra som är i vägen för deras bana. I dag finns bara raketer, och de är för rörliga jämfört med det här. Från D-075: ammunition som köps på stationer | Ej påbörjad |
 | F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer | Ej påbörjad |
 | F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
@@ -186,3 +174,8 @@ Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. D-
 | F-047 | Gå ombord på alla stationer. Vänliga och neutrala har tre diskar där inne: services, shipyard och armory | 2026-11-14 |
 | F-054 | Mer utarbetade visuella effekter: explosioner med tryckvåg, gnistor, rök och vrakdelar, mynningsflammor, sköldringar vid träff, motorspår, skakningar, hoppeffekt och moln i bakgrunden per sektor | 2026-11-14 |
 | D-075 | Genomgång av vad från Escape Velocity med efterföljare och Endless Sky som kan passa. Användaren gillade alla förslag. De blev F-081 till F-088 och D-089, tillägg i D-056, F-064, F-066, F-067, F-068, F-035, D-071, D-072, D-073 och D-074, samt F-076 (parkerad). Valdes bort: banklån och dagar som går vid landning | 2026-11-14 |
+| F-059 | Posterna finns i spellogiken. Flera spelare kan styra samma skepp, och spellogiken avgör vem som får göra vad | 2026-11-14 |
+| D-055 | Skärmen är alltid i exakt ett läge, och varje läge beskrivs på ett ställe | 2026-11-14 |
+| D-056 | Gemensam form för saker i rymden och för andra skepp. Saker, skeppsklasser och vapen beskrivs som data | 2026-11-14 |
+| D-057 | Koden är formaterad med en sak per rad och de längsta funktionerna är uppdelade, utan att spelet beter sig annorlunda | 2026-11-14 |
+| D-063 | Tester som vaktar att spelet är förutsägbart, även efter att det sparats och lästs in. Gäller varje ny funktion framöver | 2026-11-14 |

@@ -12,7 +12,7 @@ Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra för
 
 ## Nästa steg
 
-1. Fortsätt enligt "Proposed runs" i BACKLOG.md. Den tekniska översynen kommer först, eftersom den gör allt som följer lättare att bygga.
+1. Fortsätt enligt "Proposed runs" i BACKLOG.md. Den tekniska översynen är gjord, så nya saker kan byggas direkt.
    - Starta gärna en ny session för varje körning. Allt som behövs står i repot.
 2. Användaren fortsätter provspela och ger synpunkter.
 3. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073), två våningar på baser (D-072) och eskortskepp (D-071).
@@ -46,17 +46,31 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 ## Kod
 
 - `index.html` och `src/`: spelet. Ren JavaScript utan byggsteg.
-- `src/sim/`: spellogiken, helt skild från bild och inmatning. Varje post skickar kommandon till `step()`. Det är här nätverksmotorn ska kopplas in.
-- `src/sim/balance.js`: alla siffror för fart, skada och liknande.
-- `src/render/`: skärmarna. `effects.js` och `particles.js` ritar effekterna. De läser bara spelets tillstånd och ändrar det aldrig, så de påverkar inte ett kommande onlineläge.
+- `src/sim/`: spellogiken, helt skild från bild och inmatning. Den läser aldrig klockan, skärmen eller egna slumptal, och ett test vaktar det.
+  - `state.js`: hela spelet som ett enda vanligt objekt, som går att spara och skicka som det är.
+  - `step.js`: ett steg i spelet. `stepPlayers()` tar emot vad varje spelare ber om. Det är här nätverksmotorn ska kopplas in.
+  - `players.js`: besättningen och posterna. Här avgörs vem som får göra vad.
+  - `kinds.js`: allt som finns i rymden beskrivet som data, både saker (`THINGS`) och skeppsklasser (`SHIPS`). En ny sort börjar här.
+  - `things.js`: saker som står still (stenar, vrak, stationer, containrar, bärgningsgods, bojar). De ligger i `state.things`.
+  - `vessels.js`: andra skepp än fregatten. De ligger i `state.vessels`. Hur en klass flyger och slåss är dess "brain".
+  - `weapons.js`: fregattens vapen som data. Ett nytt vapen är en ny rad i `WEAPONS`.
+  - `posts.js`, `ship.js`, `shots.js`: de tre posterna, fregatten och skotten.
+  - `balance.js`: siffror för spelets regler. Siffror för varje skeppsklass står i `kinds.js`.
+- `src/screens.js`: vad spelaren ser. Det finns alltid exakt ett läge, och varje läge är en rad i `SCREENS` som säger hur det ritas och vad tangenterna gör. Ett nytt läge läggs till där.
+- `src/main.js`: start och huvudloop. `src/events.js`: meddelanden, ljud och paneler som svar på det som hänt i spelet.
+- `src/render/`: skärmarna. `looks.js` beskriver hur varje sorts sak och skepp ser ut, på samma sätt som `kinds.js` beskriver vad de är. `effects.js` och `particles.js` ritar effekterna. Allt här läser bara spelets tillstånd och ändrar det aldrig.
 - `assets/`: bilder och typsnitt som skapas av `tools/export_assets.py`.
 - Skärmen är 640 × 360 punkter och förstoras bara i hela steg (1, 2, 3 gånger) till det största som ryms i fönstret, se `resize()` i `src/main.js`. Typsnittet är 9 punkter högt. F-077 och F-078 ändrar detta.
+- Koden formateras med Prettier: `npm run format`.
 
 ## Test
 
-- `npm test`: tester av spellogiken.
+- `npm test`: tester av spellogiken, besättningen, sakerna som data och förutsägbarheten.
+  - `tests/determinism.test.js` kör en lång inspelad omgång med tre spelare (`tests/tour.js`) och kontrollerar att samma start och samma kommandon ger exakt samma spel, även efter att spelet sparats som text och lästs in igen. Varje ny funktion måste klara det (D-063).
+  - `tests/style.test.js` vaktar radlängd och att spellogiken inte beror på något utanför `src/sim/`.
 - `npm run serve` och sedan `npm run smoke`: provkör spelet i en webbläsare. Kräver Playwright installerat globalt.
 - `node tests/outside.mjs`: kontrollerar att spelet och designsidan inte laddar något från andra tjänster, och visar vad som sparas i webbläsaren.
+- I webbläsarens konsol finns `window.__critical` med spelets tillstånd, aktuellt läge (`mode`) och genvägar till vrak, stationer och containrar.
 
 ## Decisions
 
@@ -81,6 +95,7 @@ Poster
 - Den som går in för att loota lämnar sin post ledig för någon annan och får tillbaka den när den är ombord igen.
 - Första versionen har alla tre posterna och fritt byte mellan dem.
 - En post som lämnas fortsätter som den ställdes in. Gasen ligger därför kvar när Captain lämnar sin post, så att en ensam spelare kan flyga och skjuta.
+- Agentens val som användaren inte har sett än (2026-11-14): en post kan bara hållas av en spelare i taget. Två spelare byter post genom att be om varandras poster inom några sekunder. Den som kommer tillbaka från en bordning får sin gamla post om den är ledig, annars en annan ledig post.
 
 Värld
 - Sektorer som nås med stjärnkartor som hittas eller köps. Hopp kostar bränsle.
@@ -175,10 +190,17 @@ Grafik
 
 ## Teknisk bedömning
 
-2026-11-14, efter drygt trettio byggda funktioner:
-- Bra: spellogiken är skild från bild och inmatning, hela tillståndet går att spara och läsa in mitt i en omgång med identiskt förlopp efteråt, och testerna körs innan något sparas.
-- Bör åtgärdas före fler funktioner: se F-059, D-055, D-056 och D-057.
-- Inför onlineläget: se D-060 till D-063. De tre första behöver besked om hur användarens motor fungerar, om den räknar ut spelet på servern eller bara förmedlar meddelanden, och vilka gränser den har.
+2026-11-14, efter den tekniska översynen (F-059, D-055, D-056, D-057, D-063):
+- Spellogiken är skild från bild och inmatning, och hela tillståndet går att spara som text och läsa in mitt i en omgång med identiskt förlopp efteråt. Testerna vaktar det.
+- Posterna finns i spellogiken, och flera spelare kan styra samma skepp i samma steg. Skärmen visar fortfarande bara en spelare, den lokala.
+- Saker och skepp beskrivs som data. En ny skeppsklass eller en ny sorts sak behöver en rad i `src/sim/kinds.js` och en i `src/render/looks.js`, och ett nytt beteende om den ska bete sig på ett nytt sätt.
+- Översynen ändrade inte hur spelet beter sig. Sex långa inspelade omgångar gav samma resultat steg för steg före och efter.
+- Kvar att känna till:
+  - Alla andra skepp räknas som pirater. Vem som är fiende till vem (sidor) behövs för faktioner och vänlig trafik (F-035).
+  - Darts ligger kvar för sig i `state.darts` och är inte skepp i `state.vessels`. Det bör ändras när eskorter byggs (D-071).
+  - Skärmarna för Engineer, inbrott och butik är formaterade men inte omskrivna. Butiken görs om i F-080.
+  - Förutsägbarheten gäller inom en och samma webbläsare. Olika webbläsare kan räkna vinklar med olika avrundning, så om nätverksmotorn bygger på att alla räknar själva behövs egna vinkelfunktioner. Det hör till D-060 till D-062.
+- Inför onlineläget: se D-060 till D-062. De behöver besked om hur användarens motor fungerar, om den räknar ut spelet på servern eller bara förmedlar meddelanden, och vilka gränser den har.
 - Effekter och ljud läser bara av spelet och behöver aldrig skickas över nätet.
 
 ## Lagar och regler
