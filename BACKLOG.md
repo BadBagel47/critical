@@ -15,20 +15,31 @@ Prioritet: Hög, Medel, Låg.
 **B** – standard model, medium level – Tester och verktyg
 - D-058 – Låt provkörningen klicka på namngivna knappar, lägg till kontroll av stavfel och typer, och kör testerna automatiskt vid varje sparning
 
-**C** – strong model, high level – Missiler och raketer
+**C** – strong model, medium level – Större stationer
+- F-065 – Rita stationerna större i rymdvyn och flytta dockning, kanoner och träffyta efter det, så att de känns som stora platser bredvid skeppet
+
+**D** – strong model, high level – Levande rymd
+- F-069 – Lägg till freighter som skeppsklass, större och långsam, så att trafiken får ett eget skepp
+- F-066 – Låt andra skepp flyga fram till stationer, docka en stund och lämna, så att stationerna känns besökta
+- F-067 – Låt vänliga skepp hoppa in i systemet, stanna en stund och sedan flyga vidare eller hoppa ut, så att miljön känns levande
+
+**E** – strong model, high level – Handel
+- F-068 – Varor som köps och säljs hos stationer med olika priser, så att man kan tjäna pengar på att frakta mellan dem
+
+**F** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, och raketer som släpper målet om de missar. Båda kan träffa annat som ligger i banan
 
-**D** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**G** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**E** – strong model, high level – Anomalier
+**H** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**F** – strong model, high level – Musik och ljud
+**I** – strong model, high level – Musik och ljud
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - F-048 – Musik för de olika lägena
 
-Väntar på användaren: D-060, D-061 och D-062 (nätverksförberedelser) behöver besked om hur motorn fungerar. D-052 (storyläge) behöver ett samtal först. Dessutom provspelning, besked i D-044 och D-045, och motorn för onlineläget (F-040).
+Väntar på användaren: F-070 (Jaggernaut) behöver besked om vems skepp det är. D-071 (eskortskepp), D-072 (två våningar) och D-073 (uppdrag) behöver ett samtal först, liksom D-052 (storyläge). D-060, D-061 och D-062 (nätverksförberedelser) behöver besked om hur motorn fungerar. Dessutom besked i D-044 och D-045, och motorn för onlineläget (F-040).
 
 ## Hög
 
@@ -54,6 +65,15 @@ Väntar på användaren: D-060, D-061 och D-062 (nätverksförberedelser) behöv
 | F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer | Ej påbörjad |
 | F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
+| F-065 | Låt oss göra så att stationerna är större i rymdvyn | Ej påbörjad |
+| F-066 | Det vore trevligt om andra skepp kan besöka stationer. Att de åker fram, dockar en stund, och sedan lämnar | Ej påbörjad |
+| F-067 | Vänliga skepp kan hyperjumpa in och ut ur systemet. De kan stanna en stund och sedan antingen flyga till något annat ställe, eller hoppa vidare. Detta för att miljön ska kännas mer levande | Ej påbörjad |
+| F-068 | Handelssystem för goods. Att man kan köpa och sälja varor mellan olika stationer med olika priser. Det är inget som man själv kan använda, utan det är bara för att kunna tjäna pengar | Ej påbörjad |
+| F-069 | Skeppstypen freighter. Lite större långsamma skepp | Ej påbörjad |
+| F-070 | Skeppstyp Jaggernaut. Ett ovanligt krigsskepp som är långsamt och tungt bestyckat. Öppet: vems skepp det är (pirat, vänligt eller båda), och stavningen i spelet | Väntar på användaren |
+| D-071 | Vi behöver en lösning för eskortskepp. Öppet: vad som menas, till exempel skepp som följer och skyddar spelaren, skydd för freighters eller eskortuppdrag | Väntar på användaren |
+| D-072 | Baser ska ha två våningar med olika funktioner. Vi funderar lite på hur detta kan göras bra | Väntar på användaren |
+| D-073 | Det ska gå att få uppdrag på stationer man kan besöka genom att prata med folk. Detta kräver mer genomgång innan vi inför. Hänger ihop med D-052 | Väntar på användaren |
 | D-052 | Någon form av storyläge, eller åtminstone grund för vad spelet går ut på, behöver ses över | Väntar på användaren |
 | F-040 | Onlinespel för upp till tre spelare via användarens motor, som bygger på Cloudflares realtidstjänster. Målet är att gratiskontot ska räcka | Väntar på motorn |
 | D-031 | Hoppa tillbaka till gamla sektorer. Beslut tills vidare: det går, och sektorn är som den lämnades | Beslutat tills vidare |

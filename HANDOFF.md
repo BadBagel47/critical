@@ -8,14 +8,14 @@ Project language: English (all text in the game and README)
 
 Spelet går att spela ensam från start till mål. Du flyger fregatten, skjuter pirater, sköter energi och reparationer, byter fritt mellan de tre posterna, dockar med vrak och stationer, bryter dig in, bordar uppifrån och hämtar bränsle, krediter, stjärnkartor och slots. Vid stationer köps uppgraderingar som syns på skeppet och utrustning för bordarna. Stationer som anfalls sänder nödanrop, och varje sorts mål har sitt eget inbrottsspel. Det finns fem sektorer som nås med stjärnkartor, och i den sista väntar en Cruiser som boss.
 
-Ingen människa har provspelat än, så känsla och balans är otestade. Onlineläget saknas och väntar på användarens motor.
+Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-073 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
 ## Nästa steg
 
 1. Fortsätt enligt "Proposed runs" i BACKLOG.md. Den tekniska översynen kommer först, eftersom den gör allt som följer lättare att bygga.
    - Starta gärna en ny session för varje körning. Allt som behövs står i repot.
-2. Användaren provspelar och ger synpunkter.
-3. Prata igenom vad spelet går ut på (D-052).
+2. Användaren fortsätter provspela och ger synpunkter.
+3. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073), två våningar på baser (D-072) och eskortskepp (D-071).
 4. Onlineläget (F-040) väntar på användarens motor.
 
 ## Mål
@@ -87,6 +87,7 @@ Värld
 - Skeppet kan bara byggas om vid en station med shipyard.
 - En vänlig eller neutral station som anfalls kan sända nödanrop. En neutral station som får hjälp förblir neutral men ger rabatt och tillgång till sin shipyard under en tid.
 - Pirater är fristående och aggressiva mot alla.
+- Varor (goods) som köps och säljs mellan stationer är bara till för att tjäna pengar. Spelaren kan inte använda dem själv (F-068, 2026-11-14).
 
 Bordning
 - Bordning sker uppifrån, i samma vinkel som rymden.
@@ -148,6 +149,7 @@ Skepp och uppgraderingar
 - Två sorters slots: hardpoints och system slots. Båda kan köpas eller hittas som loot.
 - Fighter bay är en uppgradering. Darts är den minsta skeppsklassen.
 - Skeppsklasser: Dart, Fighter, Interceptor, Gunboat, Frigate, Cruiser.
+- Två nya skeppsklasser ska in: Freighter, lite större och långsam (F-069), och Jaggernaut, ett ovanligt krigsskepp som är långsamt och tungt bestyckat (F-070) (2026-11-14).
 
 Grafik
 - En pixelstil för hela spelet, alltid uppifrån, med dämpade färger. Stark färg används bara för ljus, skott och loot.
