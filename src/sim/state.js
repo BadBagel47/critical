@@ -1,5 +1,6 @@
 import { B, SHIP_GEOM } from './balance.js';
 import { rand, randRange, TAU, dist } from './util.js';
+import { createMap } from './map.js';
 
 export function nodeStatus(hp) {
   return hp >= 70 ? 'ok' : hp >= 30 ? 'damaged' : 'critical';
@@ -14,6 +15,7 @@ export function createShip() {
     nodes: SHIP_GEOM.nodes.map((n) => ({ ...n, hp: 100 })),
     crew: { at: 2, moving: null, queue: [] },
     docked: null,
+    pulse: null, pulseCool: 0, probeStock: B.PROBE_STOCK, probeRegen: 0, buoyStock: B.BUOY_STOCK,
   };
 }
 
@@ -28,6 +30,7 @@ export function createState(seed = 1) {
     spawn: { timer: B.FIRST_WAVE_DELAY, wave: 0 }, kills: 0, credits: 0, nextId: 1, events: [],
     // People on board. `inside` is the id of the wreck a player is boarding, or null when on the ship.
     players: [{ id: 0, name: 'PLAYER 1', hp: B.CREW_HP, inside: null, lockedOut: null, tele: 0 }],
+    map: createMap(), known: [], probes: [], buoys: [],
   };
   // A first wreck close to the start, two more further out.
   const base = rand(s) * TAU;

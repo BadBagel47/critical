@@ -5,6 +5,7 @@ import { nodeStatus } from '../sim/state.js';
 import { powerAvailable, powerUsed } from '../sim/step.js';
 import { rect, label, dashed } from './draw.js';
 import { drawTabs, drawBars } from './hud.js';
+import { drawTools } from './map.js';
 
 const BX = 150, BY = 72, PANEL_X = 440;
 const SYS = [
@@ -96,7 +97,8 @@ export function drawEngineer(ctx, state, view, assets) {
   else if (used < avail) font.draw(ctx, (avail - used) + ' FREE', PANEL_X + 12, 218, COL.ochre[3]);
   else font.draw(ctx, 'LOWER ONE TO RAISE ANOTHER', PANEL_X + 12, 218, COL.faint);
   font.draw(ctx, 'TOOLS', PANEL_X + 12, 244, COL.text); rect(ctx, PANEL_X + 12, 256, VIEW_W - PANEL_X - 24, 1, COL.line);
-  font.draw(ctx, 'NONE INSTALLED', PANEL_X + 16, 266, COL.faint);
+  drawTools(ctx, font, state, PANEL_X + 12, 266, VIEW_W - PANEL_X - 24);
+  font.draw(ctx, 'M  OPEN THE MAP TO SEND PROBES', PANEL_X + 12, 316, COL.faint);
   drawTabs(ctx, font, view);
   if (state.time - ship.lastHit < 1.5) label(ctx, font, 222, 30, 'UNDER FIRE', { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
   drawBars(ctx, font, state);

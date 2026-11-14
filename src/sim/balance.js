@@ -32,6 +32,11 @@ export const B = {
   DOOR_CUT_TIME: 3, REACTOR_TIME: [0, 170, 150, 130], WRECK_BLAST_DMG: 60,
   // break-in game, seconds per difficulty
   BREAKIN_TIME: [0, 60, 50, 42],
+  // map, scanner pulse, probes and buoys
+  MAP_HALF: 2800, MAP_CELL: 100, VISION_SHIP: 420,
+  PULSE_RADIUS: 1100, PULSE_TIME: 4, PULSE_COOLDOWN: 25,
+  PROBE_STOCK: 3, PROBE_REGEN: 50, PROBE_RADIUS: 380, PROBE_SPEED: 260, PROBE_RANGE: 2600, PROBE_LINGER: 12,
+  BUOY_STOCK: 2, BUOY_RADIUS: 520, BUOY_HP: 20, BUOY_DANGER: 150, BUOY_DRAIN: 10,
 };
 
 // Frigate geometry in ship-local pixels: x right, y back (the nose is at negative y).

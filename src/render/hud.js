@@ -4,6 +4,7 @@ import { B } from '../sim/balance.js';
 import { nodeStatus } from '../sim/state.js';
 import { speedOf, fireInterval } from '../sim/step.js';
 import { rect, label, bar } from './draw.js';
+import { drawMiniMap } from './map.js';
 
 const POST_NAME = { captain: 'CAPTAIN', gunner: 'GUNNER', engineer: 'ENGINEER' };
 const fmtTime = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
@@ -88,6 +89,8 @@ export function drawHud(ctx, state, view, assets, dock) {
     for (const [dx, dy, w, h] of [[-7, 0, 4, 1], [4, 0, 4, 1], [0, -7, 1, 4], [0, 4, 1, 4]]) ctx.fillRect(Math.round(m.x) + dx, Math.round(m.y) + dy, w, h);
   }
   drawPowerMini(ctx, font, state, VIEW_W - 126, 332);
+  drawMiniMap(ctx, state, VIEW_W - 70, 44);
+  font.draw(ctx, 'M  MAP', VIEW_W - 8, 110, COL.faint, { align: 'r' });
 }
 
 export function drawOverlay(ctx, font, title, lines, color = COL.text) {
@@ -97,11 +100,11 @@ export function drawOverlay(ctx, font, title, lines, color = COL.text) {
 }
 
 const HELP = [
-  ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  THIS HELP     F  BREAK IN AND BOARD WHEN DOCKED'],
+  ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     F  BREAK IN AND BOARD'],
   ['CAPTAIN', 'W S  THROTTLE     A D  TURN     X  FULL STOP     E  DOCK AND UNDOCK'],
   ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE'],
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW'],
-  ['', 'SHIFT CLICK  ADD TO THE REPAIR QUEUE     ARROWS  SELECT AND ADJUST POWER'],
+  ['', 'SHIFT CLICK  QUEUE A REPAIR     Q  SCANNER PULSE     B  DROP A BUOY     CLICK THE MAP  PROBE'],
   ['BOARDING', 'W A S D  MOVE     MOUSE  AIM     CLICK  FIRE     G  GRENADE     F  USE'],
 ];
 export function drawHelp(ctx, font, y0 = 96) {

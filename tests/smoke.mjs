@@ -62,9 +62,23 @@ check(await get('s.paused') === true && await get('s.time') === t0, 'P pauses th
 await page.keyboard.press('Digit1'); await page.waitForTimeout(100); await shot('05-paused');
 await page.keyboard.press('KeyP');
 await page.keyboard.press('KeyH'); await page.waitForTimeout(100); await shot('06-help');
+await page.keyboard.press('KeyH');
+
+// Map: M opens it, the Engineer sends a probe by clicking and fires the scanner pulse with Q.
+await page.keyboard.press('Digit3'); await page.keyboard.press('KeyM'); await page.waitForTimeout(150);
+check(await get('v.map') === true, 'M opens the map');
+await click(12 + 280, 12 + 60); await page.waitForTimeout(150);
+check(await get('s.probes.length') === 1 && await get('s.ship.probeStock') === 2, 'clicking the map sends a probe');
+await page.keyboard.press('KeyQ'); await page.waitForTimeout(1500);
+check(await get('s.ship.pulseCool') > 0 && await get('s.known.length') >= 1, 'Q fires the scanner pulse and it finds a wreck');
+await page.keyboard.press('KeyB'); await page.waitForTimeout(100);
+check(await get('s.buoys.length') === 1, 'B drops a buoy');
+await shot('06b-map');
+await page.keyboard.press('KeyM'); await page.keyboard.press('Digit1'); await page.waitForTimeout(100);
+check(await get('v.map') === false, 'M closes the map');
+await shot('06c-captain-minimap');
 
 // Break-in: F at a locked wreck opens the panel, clicks turn tiles, a solved puzzle opens the lock.
-await page.keyboard.press('KeyH');
 await page.evaluate(() => { const s = window.__critical.state; s.spawn.timer = 1e9; s.pirates = []; s.ship.docked = s.wrecks[0].id; s.ship.vx = s.ship.vy = 0; s.ship.throttle = 0; });
 await page.keyboard.press('KeyF'); await page.waitForTimeout(200);
 check(await get('v.hacking') === true && await get('s.wrecks[0].breakin.started') === true, 'F opens the break-in panel');

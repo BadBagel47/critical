@@ -5,6 +5,7 @@ import { nodeStatus } from './state.js';
 import { clamp, forward, headingTo, angleDiff, turnToward, toWorld, dist, rand, randRange, TAU } from './util.js';
 import { stepBoarding, anyoneInside } from './boarding.js';
 import { damageShip } from './damage.js';
+import { stepMap, useTool } from './map.js';
 export { damageShip };
 
 // ---------- derived values ----------
@@ -115,6 +116,7 @@ function stepEngineer(state, cmd, dt) {
   const ship = state.ship, crew = ship.crew;
   if (cmd) {
     for (const p of cmd.power || []) setPower(state, p.sys, p.delta);
+    if (cmd.tool) useTool(state, cmd.tool);
     if (cmd.repair && ship.nodes[cmd.repair.node]) {
       const i = cmd.repair.node;
       if (!cmd.repair.queue) crew.queue = [i];
@@ -304,6 +306,7 @@ export function step(state, cmds, dt) {
   stepCollisions(state, dt, solids);
   stepBolts(state, dt, solids);
   stepBoarding(state, cmds, dt);
+  stepMap(state, dt);
   if (state.time - ship.lastHit > B.SHIELD_DELAY) {
     const emit = (nodeFactor(ship, 'port') + nodeFactor(ship, 'starboard')) / 2;
     ship.shield = Math.min(B.SHIELD_MAX, ship.shield + B.SHIELD_RECHARGE[ship.power.shields] * emit * dt);

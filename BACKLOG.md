@@ -5,9 +5,19 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – strong model, high level – Karta och scanner
-- F-018 – Gemensam karta där dimman lyfts av det ni ser
-- F-019 – Scannerpuls, sonder och radarbojar som avslöjar mer av kartan
+**A** – strong model, high level – Stationer och butik
+- F-020 – Vänliga, neutrala och fientliga stationer att docka med, tanka vid och handla hos
+- F-021 – Hardpoints och system slots, så att köpta uppgraderingar syns på skeppet
+
+**B** – strong model, high level – Fler vapen och Darts
+- F-022 – Tung laser och raketer att köpa och växla mellan
+- F-023 – Fighter bay som skickar ut Darts
+
+**C** – strong model, high level – Sektorer och hopp
+- F-024 – Stjärnkartor som låser upp hopp till nya, svårare sektorer med en boss i den sista
+
+**D** – standard model, medium level – Larm och scanner
+- F-026 – Enemy alarm som varnar tidigare, och target scanner som visar liv och bordningssvårighet
 
 ## Hög
 
@@ -17,8 +27,6 @@ Inget just nu.
 
 | ID | Vad | Status |
 |---|---|---|
-| F-018 | Gemensam karta med fog of war | Ej påbörjad |
-| F-019 | Scanner pulse, sonder och radarbojar | Ej påbörjad |
 | F-020 | Stationer: vänlig, neutral och fientlig, tankning och shipyard | Ej påbörjad |
 | F-021 | Hardpoints och system slots, och uppgraderingar som syns på skeppet | Ej påbörjad |
 | F-022 | Fler vapen: tung laser och raketer | Ej påbörjad |
@@ -75,3 +83,5 @@ Inget just nu.
 | F-015 | Teleporter: hem vid nästan död, inte in igen samma bordning, liv åter när alla är tillbaka, laddning före nästa bordning | 2026-11-14 |
 | F-017 | Loot: bränsleceller och lådor med krediter, högst tre saker per vända | 2026-11-14 |
 | F-016 | Inbrottsspel för vrak: vrid rörbitar så att strömmen når dockningslåset innan tiden är ute | 2026-11-14 |
+| F-018 | Gemensam karta med fog of war: stillastående saker ligger kvar, pirater syns bara inom sikt | 2026-11-14 |
+| F-019 | Scannerpuls, sonder och radarbojar för Engineer, och en minikarta på skärmen | 2026-11-14 |

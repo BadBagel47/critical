@@ -8,6 +8,7 @@ import { drawSpace, drawStars } from './render/space.js';
 import { drawHud, drawOverlay, drawHelp, drawTitle, drawToasts } from './render/hud.js';
 import { drawBoarding, OX, OY } from './render/boarding.js';
 import { drawBreakin, breakinTile } from './render/breakin.js';
+import { drawMap, mapPoint } from './render/map.js';
 import { drawEngineer, engineerClick, SYSTEM_KEYS } from './render/engineer.js';
 
 const canvas = document.getElementById('game');
@@ -23,7 +24,7 @@ window.addEventListener('resize', resize);
 resize();
 
 const input = createInput(canvas);
-const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [], hacking: false };
+const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [], hacking: false, map: false };
 let state = createState(Date.now() % 100000);
 let assets = null;
 
@@ -62,6 +63,15 @@ function commands() {
     return cmds;
   }
   if (input.hit('KeyF') && wreck) cmds.system.board = [me.id];
+  if (view.map) {
+    // Looking at the map: posts keep running as set. The Engineer can use the tools from here.
+    if (view.post === 'engineer') {
+      const at = input.mouse.clicked ? mapPoint(input.mouse.x, input.mouse.y) : null;
+      const tool = at ? { type: 'probe', x: at.x, y: at.y } : input.hit('KeyQ') ? { type: 'pulse' } : input.hit('KeyB') ? { type: 'buoy' } : null;
+      if (tool) cmds.engineer = { power: [], repair: null, tool };
+    }
+    return cmds;
+  }
   if (view.post === 'captain') {
     cmds.captain = {
       throttle: (input.down('KeyW', 'ArrowUp') ? 1 : 0) - (input.down('KeyS', 'ArrowDown') ? 1 : 0),
@@ -72,7 +82,7 @@ function commands() {
     const m = input.mouse;
     cmds.gunner = { aim: { x: view.cam.x + m.x - VIEW_W / 2, y: view.cam.y + m.y - VIEW_H / 2 }, fire: m.down || input.down('Space') };
   } else {
-    const e = { power: [], repair: null };
+    const e = { power: [], repair: null, tool: input.hit('KeyQ') ? { type: 'pulse' } : input.hit('KeyB') ? { type: 'buoy' } : null };
     if (input.hit('ArrowUp', 'KeyW')) view.engRow = (view.engRow + SYSTEM_KEYS.length - 1) % SYSTEM_KEYS.length;
     if (input.hit('ArrowDown', 'KeyS')) view.engRow = (view.engRow + 1) % SYSTEM_KEYS.length;
     if (input.hit('ArrowRight', 'KeyD')) e.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: 1 });
@@ -93,13 +103,14 @@ function localKeys() {
     return;
   }
   if (input.hit('KeyH')) view.help = !view.help;
-  if (state.players[view.playerId].inside !== null) return;
+  if (state.players[view.playerId].inside !== null) { view.map = false; return; }
+  if (input.hit('KeyM') && !view.hacking) view.map = !view.map;
   if (input.hit('Digit1')) view.post = 'captain';
   if (input.hit('Digit2')) view.post = 'gunner';
   if (input.hit('Digit3')) view.post = 'engineer';
   if (input.hit('Tab')) view.post = POSTS[(POSTS.indexOf(view.post) + 1) % POSTS.length];
   if (state.over && input.hit('KeyR')) {
-    view.toasts = []; view.hacking = false; state = createState((state.seed * 7 + 13) % 100000); view.post = 'captain'; view.cam = { x: 0, y: 0 }; }
+    view.toasts = []; view.hacking = false; view.map = false; state = createState((state.seed * 7 + 13) % 100000); view.post = 'captain'; view.cam = { x: 0, y: 0 }; }
 }
 
 function render(t) {
@@ -112,6 +123,7 @@ function render(t) {
     return;
   }
   if (state.players[view.playerId].inside !== null) drawBoarding(ctx, state, view, assets);
+  else if (view.map) drawMap(ctx, state, view, assets);
   else if (view.post === 'engineer') drawEngineer(ctx, state, view, assets);
   else { const dock = drawSpace(ctx, state, view, assets); drawHud(ctx, state, view, assets, dock); }
   const dw = dockedWreck();
@@ -165,6 +177,12 @@ const TOAST = {
   wreckExploded: () => ['THE WRECK BLEW UP', COL.ember[2]],
   lockOpen: () => ['LOCK BYPASSED  ·  F TO BOARD', COL.acid[2]],
   lockFailed: () => ['BYPASS FAILED', COL.ember[2]],
+  found: () => ['WRECK FOUND  ·  MARKED ON THE MAP', COL.ochre[2]],
+  pulse: () => ['SCANNER PULSE', COL.ion[2]],
+  probe: () => ['PROBE AWAY', COL.ion[2]],
+  buoy: () => ['RADAR BUOY DROPPED', COL.engineer],
+  buoyLost: () => ['A RADAR BUOY WAS SHOT DOWN', COL.ember[2]],
+  toolNotReady: (e) => [e.tool === 'pulse' ? 'SCANNER RECHARGING' : e.tool === 'probe' ? 'NO PROBES LEFT' : 'NO BUOYS LEFT', COL.ochre[2]],
   noPower: () => ['NO FREE POWER  ·  LOWER ANOTHER SYSTEM FIRST', COL.ochre[2]],
   powerLost: () => ['REACTOR DAMAGED  ·  POWER LOST', COL.ember[2]],
 };

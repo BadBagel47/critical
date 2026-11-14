@@ -335,3 +335,76 @@ test('running out of time blows the wreck up and hurts the docked ship', () => {
   assert.equal(s.ship.docked, null);
   assert.ok(s.ship.hull + s.ship.shield < before);
 });
+
+// ---------- map, scanner pulse, probes and buoys ----------
+import { isSeen, isVisible, visionSources } from '../src/sim/map.js';
+
+test('the map starts dark and the ship lifts the fog around itself', () => {
+  const s = quiet(createState(1));
+  assert.equal(isSeen(s, 0, 0), false);
+  run(s, {}, 0.5);
+  assert.equal(isSeen(s, 0, 0), true);
+  assert.equal(isSeen(s, 0, -B.VISION_SHIP - 300), false);
+  run(s, { captain: { throttle: 1 } }, 12);
+  assert.equal(isSeen(s, 0, -B.VISION_SHIP - 300), true, 'flying reveals more');
+});
+
+test('a wreck stays on the map as last seen, and pirates show only while in sight', () => {
+  const s = quiet(createState(1)), w = s.wrecks[0];
+  run(s, {}, 0.5);
+  assert.equal(s.known.length, 0, 'the first wreck is out of sight at the start');
+  s.ship.x = w.x + 300; s.ship.y = w.y;
+  run(s, {}, 0.5);
+  assert.equal(s.known.length, 1);
+  s.ship.x = 0; s.ship.y = 0;
+  s.wrecks = s.wrecks.filter((x) => x !== w);
+  run(s, {}, 0.5);
+  assert.equal(s.known.length, 1, 'still shown where it was last seen');
+  s.ship.x = w.x + 300; s.ship.y = w.y;
+  run(s, {}, 0.5);
+  assert.equal(s.known.length, 0, 'gone once someone looks again');
+  assert.equal(isVisible(s, s.ship.x + 100, s.ship.y), true);
+  assert.equal(isVisible(s, s.ship.x + 2000, s.ship.y), false);
+});
+
+test('the scanner pulse sees far for a moment and then needs to recharge', () => {
+  const s = quiet(createState(1));
+  step(s, { engineer: { tool: { type: 'pulse' } } }, DT);
+  run(s, {}, 1.5);
+  assert.equal(isSeen(s, B.PULSE_RADIUS - 150, 0), true);
+  assert.ok(s.known.length >= 1, 'the pulse finds the nearest wreck');
+  run(s, {}, B.PULSE_TIME);
+  assert.equal(s.ship.pulse, null);
+  step(s, { engineer: { tool: { type: 'pulse' } } }, DT);
+  assert.equal(s.ship.pulse, null, 'still recharging');
+  run(s, {}, B.PULSE_COOLDOWN);
+  step(s, { engineer: { tool: { type: 'pulse' } } }, DT);
+  assert.ok(s.ship.pulse);
+});
+
+test('a probe flies to its target, reveals the way, burns out and is restocked', () => {
+  const s = quiet(createState(1));
+  step(s, { engineer: { tool: { type: 'probe', x: 1500, y: 0 } } }, DT);
+  assert.equal(s.ship.probeStock, B.PROBE_STOCK - 1);
+  run(s, {}, 1500 / B.PROBE_SPEED + 1);
+  assert.equal(isSeen(s, 1500, 0), true);
+  assert.equal(isSeen(s, 900, 0), true, 'the way there is revealed too');
+  assert.equal(s.probes.length, 1);
+  run(s, {}, B.PROBE_LINGER + 1);
+  assert.equal(s.probes.length, 0);
+  run(s, {}, B.PROBE_REGEN);
+  assert.equal(s.ship.probeStock, B.PROBE_STOCK);
+});
+
+test('a buoy keeps watching until pirates shoot it down', () => {
+  const s = quiet(createState(1));
+  step(s, { engineer: { tool: { type: 'buoy' } } }, DT);
+  assert.equal(s.ship.buoyStock, B.BUOY_STOCK - 1);
+  s.ship.x = 2000; s.ship.y = 2000;
+  run(s, {}, 1);
+  assert.equal(visionSources(s).filter((v) => v.kind === 'buoy').length, 1);
+  assert.equal(isVisible(s, 100, 0), true, 'the buoy still sees its area');
+  s.pirates.push({ id: 99, kind: 'fighter', x: 40, y: 0, vx: 0, vy: 0, heading: 0, hp: 24, mode: 'breakoff', timer: 0.5, burst: 0, burstTimer: 0, cool: 1e9, side: 1 });
+  run(s, {}, 1.5);
+  assert.ok(s.buoys.length === 0 || s.buoys[0].hp < B.BUOY_HP);
+});

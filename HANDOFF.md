@@ -6,7 +6,7 @@ Project language: English (all text in the game and README)
 
 ## Nuläge
 
-Spelet går att spela ensam: flyga fregatten, skjuta pirater, sköta energi och reparationer, byta fritt mellan de tre posterna, docka med vrak och borda dem uppifrån för att hämta bränsle och krediter. Vraken har ett inbrottsspel på tid som måste klaras före bordning. Karta, stationer och uppgraderingar saknas än. Ingen människa har provspelat än, så balansen är otestad.
+Spelet går att spela ensam: flyga fregatten, skjuta pirater, sköta energi och reparationer, byta fritt mellan de tre posterna, docka med vrak och borda dem uppifrån för att hämta bränsle och krediter. Vraken har ett inbrottsspel på tid som måste klaras före bordning. Det finns en gemensam karta med dimma, och Engineer har scannerpuls, sonder och radarbojar. Stationer, uppgraderingar, fler vapen och sektorer saknas än. Ingen människa har provspelat än, så balansen är otestad.
 
 ## Nästa steg
 
@@ -91,6 +91,12 @@ Bordning, agentens val som användaren inte har sett än (2026-11-14)
 - Reaktorn räknar ner från första steget in. Vid noll sprängs vraket, alla teleporteras hem, ett dockat skepp skadas och ett nytt vrak dyker upp på annat håll.
 - Skeppet kan inte lägga ut medan någon är kvar inne.
 - Bränsle förbrukas av gasen. Tom tank ger ett skepp som nästan står still.
+
+Karta, agentens val som användaren inte har sett än (2026-11-14)
+- Scannerpuls, sonder och radarbojar finns från start tills butiken är byggd. Enligt designen ska de sedan köpas.
+- Sonder och bojar fylls på av sig själva med tiden.
+- Pilarna i skärmkanten visar bara pirater inom sikt och vrak som redan hittats.
+- Kartan öppnas med M av vem som helst. Verktygen används från Engineer-posten.
 
 Skepp och uppgraderingar
 - Spelarskeppet är alltid samma fregatt. Uppgraderingar syns på skrovet.

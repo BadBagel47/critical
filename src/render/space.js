@@ -5,6 +5,7 @@ import { nodeStatus } from '../sim/state.js';
 import { dockCandidate, shipNose, wreckPort, speedOf } from '../sim/step.js';
 import { toWorld, dist, headingTo } from '../sim/util.js';
 import { sprite, dashed, brackets } from './draw.js';
+import { isVisible, visionSources } from '../sim/map.js';
 
 const STARS = (() => {
   let seed = 12345; const r = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
@@ -114,6 +115,9 @@ export function drawSpace(ctx, state, view, assets) {
     dashed(ctx, dock.nose.x, dock.nose.y, dock.p.x, dock.p.y, dock.ready ? COL.ion[2] : COL.ion[0]);
     brackets(ctx, dock.p.x, dock.p.y, 9, dock.ready ? COL.ion[3] : COL.ion[1]);
   }
+  for (const b of state.buoys) { ctx.fillStyle = COL.out; ctx.fillRect(b.x - 3, b.y - 4, 6, 9); ctx.fillStyle = COL.engineer; ctx.fillRect(b.x - 2, b.y - 3, 4, 7); ctx.fillRect(b.x - 0.5, b.y - 9, 1, 6); ctx.fillStyle = Math.floor(state.time * 2) % 2 ? COL.white : COL.engineer; ctx.fillRect(b.x - 0.5, b.y - 10, 1, 1); }
+  for (const pr of state.probes) { ctx.globalAlpha = 0.4; ctx.fillStyle = COL.ion[1]; ctx.beginPath(); ctx.arc(pr.x, pr.y, 5, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.fillStyle = COL.ion[3]; ctx.fillRect(pr.x - 1.5, pr.y - 1.5, 3, 3); }
+  if (ship.pulse) { ctx.globalAlpha = Math.max(0, 0.5 * (1 - ship.pulse.t / 1.2)); ctx.strokeStyle = COL.ion[2]; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(ship.pulse.x, ship.pulse.y, 40 + ship.pulse.t * 500, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
   for (const b of state.bolts) bolt(ctx, b);
   for (const p of state.pirates) {
     if (!near(p, 40)) continue;
@@ -124,7 +128,9 @@ export function drawSpace(ctx, state, view, assets) {
   if (!state.over) drawShip(ctx, state, img);
   for (const f of state.fx) effect(ctx, f);
   ctx.restore();
-  for (const p of state.pirates) edgeMarker(ctx, font, cam, p.x, p.y, COL.ember[1]);
-  for (const w of state.wrecks) edgeMarker(ctx, font, cam, w.x, w.y, COL.ochre[2], Math.round(dist(ship.x, ship.y, w.x, w.y) / 10) + ' M');
+  // Arrows at the screen edge point at what the map knows about: pirates in sight and wrecks already found.
+  const sources = visionSources(state);
+  for (const p of state.pirates) if (isVisible(state, p.x, p.y, sources)) edgeMarker(ctx, font, cam, p.x, p.y, COL.ember[1]);
+  for (const k of state.known) edgeMarker(ctx, font, cam, k.x, k.y, COL.ochre[2], Math.round(dist(ship.x, ship.y, k.x, k.y) / 10) + ' M');
   return dock;
 }
