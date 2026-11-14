@@ -244,7 +244,7 @@ export function drawEngineerStrip(ctx, font, state, view) {
   const text = hurt.length ? 'DAMAGED  ·  ' + hurt.map((n) => n.name).join(', ') : 'ALL SYSTEMS OK';
   font.draw(ctx, text, 156, 343, hurt.length ? (worst ? COL.ember[2] : COL.ochre[2]) : COL.faint);
   // The keys for the power are shown as long as there is no damage to tell about.
-  if (!hurt.length) font.draw(ctx, 'W S PICK  ·  A D POWER', 466, 343, COL.faint, { align: 'r' });
+  if (!hurt.length) font.draw(ctx, 'LEFT RIGHT PICK  ·  UP DOWN POWER', 466, 343, COL.faint, { align: 'r' });
   drawLockCode(ctx, font, state);
 }
 

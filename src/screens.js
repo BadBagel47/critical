@@ -119,10 +119,26 @@ function engineerInput(game, out) {
   const rows = SYSTEM_KEYS.length;
   onBoard(game, out);
   const cmd = { power: [], repair: null, tool: quickTool(keys) };
-  if (keys.hit('ArrowUp', 'KeyW')) view.engRow = (view.engRow + rows - 1) % rows;
-  if (keys.hit('ArrowDown', 'KeyS')) view.engRow = (view.engRow + 1) % rows;
-  if (keys.hit('ArrowRight', 'KeyD')) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: 1 });
-  if (keys.hit('ArrowLeft', 'KeyA')) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: -1 });
+  // The keys follow how the systems are laid out. On the panel they are in a column: up and down pick one,
+  // left and right set its power. In the strip beside the view of space they are in a row, so there left and
+  // right pick one, and up and down raise and lower its power.
+  const [before, after, more, less] = view.engOpen
+    ? [
+        ['ArrowUp', 'KeyW'],
+        ['ArrowDown', 'KeyS'],
+        ['ArrowRight', 'KeyD'],
+        ['ArrowLeft', 'KeyA'],
+      ]
+    : [
+        ['ArrowLeft', 'KeyA'],
+        ['ArrowRight', 'KeyD'],
+        ['ArrowUp', 'KeyW'],
+        ['ArrowDown', 'KeyS'],
+      ];
+  if (keys.hit(...before)) view.engRow = (view.engRow + rows - 1) % rows;
+  if (keys.hit(...after)) view.engRow = (view.engRow + 1) % rows;
+  if (keys.hit(...more)) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: 1 });
+  if (keys.hit(...less)) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: -1 });
   if (keys.mouse.clicked && view.engOpen) {
     const click = engineerClick(state, keys.mouse.x, keys.mouse.y, keys.mouse.shift);
     if (click && click.power) cmd.power.push(...click.power);

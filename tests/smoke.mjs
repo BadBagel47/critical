@@ -65,14 +65,19 @@ check(
   'the Engineer sees space at first, with a button for the panel',
 );
 await shot('03b-engineer-space');
+// Beside the view of space the systems lie in a row: up and down set the power, left and right pick a system.
 const weaponsBefore = await get('s.ship.power.weapons');
-await page.keyboard.press('ArrowLeft');
+await page.keyboard.press('ArrowDown');
 await page.waitForTimeout(80);
 check(
   (await get('s.ship.power.weapons')) === weaponsBefore - 1,
   'the arrow keys still set the power while the panel is folded away',
 );
+await page.keyboard.press('ArrowUp');
 await page.keyboard.press('ArrowRight');
+await page.waitForTimeout(80);
+check((await get('v.engRow')) === 1, 'and left and right pick the system');
+await page.keyboard.press('ArrowLeft');
 await page.waitForTimeout(80);
 await page.keyboard.press('KeyV');
 await page.waitForTimeout(100);
