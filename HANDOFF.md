@@ -37,6 +37,7 @@ Världen ska vara av samma typ som i Escape Velocity med efterföljare och Endle
 ## Arbetssätt
 
 Idéer spånas i chatten och samlas i designskissen. Det som ska byggas läggs i BACKLOG.md och körs i grupper efter godkännande.
+- När grupperna i "Proposed runs" är fler än bokstäverna fortsätter de efter Z med AA, AB och så vidare. Grupper slås inte ihop för att få plats (användaren, 2026-11-14).
 
 ## Publicering
 

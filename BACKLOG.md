@@ -107,8 +107,10 @@ Prioritet: Hög, Medel, Låg.
 **Y** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**Z** – strong model, high level – Ljudeffekter och visuell feedback
+**Z** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
+
+**AA** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md och väntar på att användaren lyssnar på docs/music/ och väljer introtema.
