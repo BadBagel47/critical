@@ -24,6 +24,18 @@ function drums(pos, bar, { fill = false, busy = false, g = 1 } = {}) {
   return out;
 }
 
+// Tense drums: a broken kick instead of four on the floor, which sounds too cheerful in a fight.
+// Now and then a quiet ghost note on the snare, different from bar to bar.
+function tense(pos, step, { kicks = [0, 3, 8, 10], hats = 2, fill = false, g = 1 } = {}) {
+  const out = [];
+  if (kicks.includes(pos)) out.push({ v: 'kick', m: 36, d: 1, g: (pos === 0 ? 0.95 : 0.75) * g });
+  if (pos === 4 || pos === 12) out.push({ v: 'snare', m: 38, d: 1, g: 0.7 * g });
+  if (hats && pos % hats === 0) out.push({ v: 'hat', m: 42, d: 1, g: (pos % 4 === 2 ? 0.45 : 0.25) * g });
+  if (pos % 2 && pos > 4 && rand(step, 7) < 0.12) out.push({ v: 'snare', m: 38, d: 1, g: 0.2 * g });
+  if (fill && pos >= 10 && pos !== 12) out.push({ v: 'snare', m: 38, d: 1, g: (0.3 + pos / 32) * g });
+  return out;
+}
+
 // Title: the theme, so that the game has a tune of its own. Twelve bars that loop:
 // two of build-up, the theme, the theme again an octave up with drums, and two to breathe.
 const title = {
@@ -109,26 +121,42 @@ const warning = {
   },
 };
 
-// Combat: driving drums and bass, short chord stabs and a riff of its own. Loud enough to lift, but under the effects.
-const RIFF = [7, null, 6, null, 4, null, 3, 4, null, null, 2, null, 3, null, null, null];
-const BASSLINE = [0, 0, 12, 0, 0, 12, 0, 7, 0, 0, 12, 0, 0, 12, 7, 12];
+// Combat: tense and driving in a dark minor key. A chugging bass, a broken beat instead of four on the floor,
+// and a riff with a lowered second. Two halves of eight bars with chords of their own, so a long fight keeps moving.
+/** @type {[number, string][][]} */
+const COMBAT_CHORDS = [
+  [
+    [0, 'min'],
+    [0, 'min'],
+    [-4, 'maj'],
+    [-5, 'min'],
+  ],
+  [
+    [0, 'min'],
+    [1, 'maj'],
+    [-4, 'maj'],
+    [-5, 'min'],
+  ],
+];
+// How hard each sixteenth of the bass is played.
+const CHUG = [1, 0.35, 0.35, 0.8, 0.35, 0.35, 0.8, 0.35, 0.35, 0.35, 0.8, 0.35, 0.35, 0.35, 0.6, 0.5];
+const DARK_RIFF = [0, null, 1, null, 0, null, -2, null, 3, null, 1, null, 0, null, null, null];
 const combat = {
   name: 'combat',
-  bpm: 132,
+  bpm: 128,
   notes(step, { colour }) {
     const { bar, pos } = at(step);
     const root = colour.root;
-    const ch = chordOn(colour.scale, [0, 5, 6, 4][bar % 4]);
-    const out = drums(pos, bar, { fill: bar % 8 === 7, busy: colour.grit > 0.3, g: 0.9 });
-    out.push({ v: 'bass', m: root - 12 + ch[0] + BASSLINE[pos], d: 0.9, g: 0.6 });
-    if (bar % 2 === 1 && (pos === 6 || pos === 14)) out.push(...chord('stab', ch, root + 12, 1.5, 0.5));
-    if (bar % 4 >= 2 && RIFF[pos] !== null) {
-      out.push({
-        v: 'lead',
-        m: root + 12 + degree(colour.scale, RIFF[pos] + (bar % 4 === 3 ? -2 : 0)),
-        d: 1.5,
-        g: 0.5,
-      });
+    const half = Math.floor(bar / 8) % 2;
+    const c = COMBAT_CHORDS[half][bar % 4];
+    const kicks = half ? [0, 3, 6, 8, 11] : [0, 3, 8, 10];
+    const out = tense(pos, step, { kicks, hats: half && colour.grit > 0.3 ? 1 : 2, fill: bar % 8 === 7, g: 0.9 });
+    out.push({ v: 'bass', m: root - 12 + c[0] + (pos === 15 && bar % 4 === 3 ? 1 : 0), d: 0.8, g: 0.75 * CHUG[pos] });
+    if (pos === 0) out.push(...chord('dark', triad(c), root, BAR, 0.5));
+    if (!half && bar % 2 === 1 && (pos === 0 || pos === 6)) out.push(...chord('stab', triad(c), root + 12, 1.5, 0.4));
+    const riff = half ? bar % 4 >= 2 : bar % 8 >= 6;
+    if (riff && DARK_RIFF[pos] !== null) {
+      out.push({ v: half ? 'lead' : 'pluck', m: root + 12 + DARK_RIFF[pos], d: 1.5, g: 0.45 });
     }
     return out;
   },
@@ -156,20 +184,59 @@ const boarding = {
   },
 };
 
-// Boarding, alarm: the same ground, but the pulse races, the bass grinds and a siren cuts through.
-const GRIND = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 1, 0, 1];
+// Boarding, alarm: the pulse races. Four sections of eight bars, with the siren only now and then,
+// so that a long alarm keeps moving instead of nagging:
+//   A  broken drums, a grinding bass and the siren at the start
+//   B  the chords move and a riff comes in
+//   C  the drums drop out: a racing heartbeat and a rising arpeggio build up again
+//   D  everything, with the siren once more
+const ALARM_ROOTS = [
+  [0, 0, 1, 0],
+  [0, -4, -2, 1],
+  [0, 0, 0, 0],
+  [0, -4, 1, -5],
+];
+const GRIND = [1, 0.35, 0.6, 0.35, 0.35, 0.6, 0.35, 0.35, 1, 0.35, 0.6, 0.35, 0.35, 0.6, 0.35, 0.6];
+const ALARM_RIFF = [7, null, null, 8, null, null, 7, null, 3, null, null, 1, null, null, 0, null];
+const RISING = [0, 1, 7, 12, 13, 12, 7, 1];
 const alarm = {
   name: 'alarm',
-  bpm: 150,
+  bpm: 140,
   notes(step, { colour }) {
     const { bar, pos } = at(step);
     const root = colour.root;
-    const out = drums(pos, bar, { busy: true, fill: bar % 4 === 3, g: 0.9 });
-    if (pos === 2) out.push({ v: 'heart', m: 33, d: 1, g: 0.6 });
-    if (pos === 0 && bar % 4 === 0) out.push(...chord('dark', DRONE, root - 12, 4 * BAR, 0.45));
-    out.push({ v: 'bass', m: root - 12 + GRIND[pos] + (bar % 4 === 2 ? 5 : 0), d: 0.9, g: 0.6 });
-    if (pos === 0) out.push({ v: 'siren', m: root + 27, d: 7, g: 0.6 });
-    if (pos === 8) out.push({ v: 'siren', m: root + 26, d: 7, g: 0.6 });
+    const cycle = bar % 32;
+    const part = Math.floor(cycle / 8);
+    const r = ALARM_ROOTS[part][Math.floor(cycle / 2) % 4];
+    const out = [];
+    if (pos === 0 && bar % 4 === 0) out.push(...chord('dark', DRONE, root - 12, 4 * BAR, part === 2 ? 0.6 : 0.35));
+    if (part === 2) {
+      if ([0, 3, 8, 11].includes(pos)) out.push({ v: 'heart', m: 33, d: 1, g: pos % 8 === 0 ? 0.8 : 0.5 });
+      if (pos === 0 && cycle % 2 === 0) out.push({ v: 'kick', m: 36, d: 1, g: 0.6 });
+      const rise = (cycle - 16 + pos / 16) / 8;
+      out.push({ v: 'pluck', m: root + 12 + RISING[pos % 8], d: 1, g: 0.15 + 0.35 * rise });
+      if (cycle === 23) out.push(...tense(pos, step, { kicks: [], hats: 0, fill: true, g: 0.9 }));
+      return out;
+    }
+    out.push(
+      ...tense(pos, step, {
+        kicks: [0, 6, 8, 11],
+        hats: part === 3 ? 1 : 2,
+        fill: cycle % 8 === 7 && part !== 1,
+        g: 0.85,
+      }),
+    );
+    out.push({ v: 'bass', m: root - 12 + r + (pos === 14 && part === 3 ? 12 : 0), d: 0.8, g: 0.6 * GRIND[pos] });
+    if (part === 1 || (part === 3 && cycle % 4 >= 2)) {
+      // The riff starts on either half of the bar, chosen anew each bar, so it is never quite the same.
+      const n = ALARM_RIFF[(pos + (rand(bar, 9) < 0.35 ? 8 : 0)) % 16];
+      if (n !== null) out.push({ v: 'lead', m: root + 12 + r + n, d: 1.5, g: 0.4 });
+    }
+    if (part === 0 && cycle >= 4 && cycle % 2 === 0 && pos === 0) out.push({ v: 'soft', m: root + 13, d: 8, g: 0.25 });
+    if (cycle < 2 || cycle === 24) {
+      if (pos === 0) out.push({ v: 'siren', m: root + 27, d: 7, g: 0.45 });
+      if (pos === 8) out.push({ v: 'siren', m: root + 26, d: 7, g: 0.45 });
+    }
     return out;
   },
 };
