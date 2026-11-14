@@ -23,11 +23,23 @@ Prioritet: Hög, Medel, Låg.
 **D** – standard model, medium level – Vrak och dockning
 - F-011 – Ett vrak att docka med, med dockningshjälp
 
+**E** – strong model, high level – Bordning
+- F-014 – Gå in i vraket uppifrån och slåss mot vakter och kanontorn
+- F-015 – Teleportern som räddar den som nästan dör
+- F-017 – Loot som ger bränsle och krediter
+
+**F** – standard model, medium level – Inbrottsspel
+- F-016 – Koppla förbi dockningslåset på tid innan ni kommer in i ett vrak
+
+**G** – strong model, high level – Karta och scanner
+- F-018 – Gemensam karta där dimman lyfts av det ni ser
+- F-019 – Scannerpuls, sonder och radarbojar som avslöjar mer av kartan
+
 ## Hög
 
 | ID | Vad | Status |
 |---|---|---|
-| D-004 | Välj var spelet publiceras. Tekniken är bestämd: webbspel, och onlineläget går via användarens motor på Cloudflare (se F-040). Kvar att avgöra: Cloudflare Pages eller GitHub Pages. | Väntar på användaren |
+| D-004 | Välj var spelet publiceras. Tekniken är bestämd: webbspel, och onlineläget går via användarens motor på Cloudflare (se F-040). Kvar att avgöra: Cloudflare Pages eller GitHub Pages. Förslag: GitHub Pages direkt från main, och ett spel utan byggsteg så att det som sparas är det som publiceras. | Väntar på användaren |
 | F-005 | Projektgrund: spelet öppnas i webbläsaren och går att spela ensam. Spellogiken hålls skild från nätverket så att motorn kan kopplas in senare | Ej påbörjad |
 | F-006 | Captain: flyg fregatten i rymden uppifrån. Hela skeppet vrids som en bild | Ej påbörjad |
 | F-007 | Gunner: sikta och skjut med pulslaser | Ej påbörjad |
