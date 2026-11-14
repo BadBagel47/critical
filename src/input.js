@@ -23,7 +23,15 @@ const PAD_BUTTONS = [
 // What each button means in each situation, as the keyboard key it stands in for. CLICK presses the cursor.
 const PAD_KEYS = {
   all: { START: 'KeyP', BACK: 'KeyM', B: 'KeyF' },
-  title: { A: 'Enter', START: 'Enter', Y: 'KeyT' },
+  menu: {
+    A: 'Enter',
+    START: 'Enter',
+    Y: 'KeyT',
+    UP: 'ArrowUp',
+    DOWN: 'ArrowDown',
+    LEFT: 'ArrowLeft',
+    RIGHT: 'ArrowRight',
+  },
   captain: { A: 'KeyE', X: 'KeyX', Y: 'KeyR', L3: 'ShiftLeft', RB: 'Tab', LB: 'PadPrevPost' },
   gunner: { RIGHT: 'KeyE', LEFT: 'KeyQ', RB: 'Tab', LB: 'PadPrevPost' },
   engineer: {
@@ -48,7 +56,15 @@ export function createInput(canvas) {
     keys: new Set(),
     padKeys: new Set(),
     pressed: new Set(),
-    mouse: { x: VIEW_W / 2, y: VIEW_H / 2, down: false, clicked: false, rightClicked: false, shift: false },
+    mouse: {
+      x: VIEW_W / 2,
+      y: VIEW_H / 2,
+      down: false,
+      clicked: false,
+      rightClicked: false,
+      shift: false,
+      moved: false,
+    },
     pad: { connected: false, used: false, lx: 0, ly: 0, rx: 0, ry: 0, lt: 0, rt: 0, held: new Set() },
     onGesture: null,
   };
@@ -73,6 +89,7 @@ export function createInput(canvas) {
     input.mouse.x = ((e.clientX - r.left) / r.width) * VIEW_W;
     input.mouse.y = ((e.clientY - r.top) / r.height) * VIEW_H;
     input.mouse.shift = e.shiftKey;
+    input.mouse.moved = true;
     input.pad.used = false;
   };
   canvas.addEventListener('mousemove', place);
@@ -96,6 +113,7 @@ export function createInput(canvas) {
     input.pressed.clear();
     input.mouse.clicked = false;
     input.mouse.rightClicked = false;
+    input.mouse.moved = false;
   };
 
   // Read the gamepad. `mode` says what the buttons should mean right now, and `cursor` whether the

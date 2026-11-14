@@ -1,18 +1,42 @@
 // Sound. Everything is synthesised with the Web Audio API, so the game ships no audio files.
-// The audio context can only start after a key press or click, so init() is called from those.
-let ac = null,
-  master = null,
-  engineGain = null,
-  musicGain = null,
-  muted = false;
+// The sound runs through three volumes: effects and music each have their own, and both go through the master,
+// which the N key turns off and on. Every player sets these for themselves, and the browser remembers them.
+const MASTER = 0.22;
+const STORED = { muted: 'critical-muted', volume: 'critical-volume' };
+let ac = null;
+let master = null;
+let effects = null;
+let musicGain = null;
+let engineGain = null;
+let muted = false;
+const volume = { effects: 1, music: 0.7 };
 const last = new Map();
 
+const stored = (key) => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null; // storage may be unavailable
+  }
+};
+const store = (key, value) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // storage may be unavailable
+  }
+};
+muted = stored(STORED.muted) === '1';
 try {
-  muted = localStorage.getItem('critical-muted') === '1';
+  const saved = JSON.parse(stored(STORED.volume) || '{}');
+  for (const kind of Object.keys(volume)) {
+    if (typeof saved[kind] === 'number') volume[kind] = Math.max(0, Math.min(1, saved[kind]));
+  }
 } catch {
-  /* storage may be unavailable */
+  // an unreadable setting falls back to the default
 }
 
+// The audio context can only start after a key press or click, so this is called from those.
 export function initAudio() {
   if (ac) {
     if (ac.state === 'suspended') ac.resume();
@@ -22,11 +46,17 @@ export function initAudio() {
   if (!AC) return;
   ac = new AC();
   master = ac.createGain();
-  master.gain.value = muted ? 0 : 0.22;
+  master.gain.value = muted ? 0 : MASTER;
   master.connect(ac.destination);
+  effects = ac.createGain();
+  effects.gain.value = volume.effects;
+  effects.connect(master);
+  musicGain = ac.createGain();
+  musicGain.gain.value = volume.music;
+  musicGain.connect(master);
   // A low engine hum that follows the throttle.
-  const osc = ac.createOscillator(),
-    filter = ac.createBiquadFilter();
+  const osc = ac.createOscillator();
+  const filter = ac.createBiquadFilter();
   osc.type = 'sawtooth';
   osc.frequency.value = 52;
   filter.type = 'lowpass';
@@ -35,30 +65,36 @@ export function initAudio() {
   engineGain.gain.value = 0;
   osc.connect(filter);
   filter.connect(engineGain);
-  engineGain.connect(master);
+  engineGain.connect(effects);
   osc.start();
 }
-// Where music connects: its own volume under the master, so that muting silences it too.
+
+// Where music connects: its own volume under the master, so that the settings and the N key reach it too.
 // Gives { context, out } once sound has started, and null before that.
 export function musicOutput() {
-  if (!ac) return null;
-  if (!musicGain) {
-    musicGain = ac.createGain();
-    musicGain.connect(master);
-  }
-  return { context: ac, out: musicGain };
+  return ac ? { context: ac, out: musicGain } : null;
 }
+
 export const isMuted = () => muted;
 export function toggleMute() {
   muted = !muted;
-  if (master) master.gain.value = muted ? 0 : 0.22;
-  try {
-    localStorage.setItem('critical-muted', muted ? '1' : '0');
-  } catch {
-    /* ignore */
-  }
+  if (master) master.gain.value = muted ? 0 : MASTER;
+  store(STORED.muted, muted ? '1' : '0');
   return muted;
 }
+
+// The volume of 'effects' or 'music', from 0 to 1.
+export const volumeOf = (kind) => volume[kind];
+export function setVolume(kind, value) {
+  if (!(kind in volume)) return;
+  volume[kind] = Math.round(Math.max(0, Math.min(1, value)) * 10) / 10;
+  const node = kind === 'music' ? musicGain : effects;
+  if (node) node.gain.value = volume[kind];
+  store(STORED.volume, JSON.stringify(volume));
+  // A short sound to judge the new effects level by.
+  if (kind === 'effects' && ac && !muted) tone(660, 660, 0.08, 'triangle', 0.2);
+}
+
 export function setEngine(level) {
   if (engineGain) engineGain.gain.setTargetAtTime(Math.max(0, Math.min(1, level)) * 0.35, ac.currentTime, 0.15);
 }
@@ -73,7 +109,7 @@ function tone(from, to, dur, type = 'square', gain = 0.3, delay = 0) {
   g.gain.setValueAtTime(gain, t);
   g.gain.exponentialRampToValueAtTime(0.001, t + dur);
   osc.connect(g);
-  g.connect(master);
+  g.connect(effects);
   osc.start(t);
   osc.stop(t + dur + 0.02);
 }
@@ -92,7 +128,7 @@ function noise(dur, gain = 0.3, cutoff = 1200, delay = 0) {
   g.gain.value = gain;
   src.connect(filter);
   filter.connect(g);
-  g.connect(master);
+  g.connect(effects);
   src.start(t);
 }
 

@@ -99,6 +99,8 @@ export function readEvents(game) {
       view.panel = 'shop';
       view.shopTab = e.desk === 'armory' ? 'armory' : 'hull';
     }
+    // The game saves itself every time the ship docks.
+    if (e.type === 'dock') game.actions.autosave();
     if (e.type === 'jumped') {
       view.cam = { x: 0, y: 0 };
       view.panel = null;

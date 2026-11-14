@@ -136,7 +136,9 @@ check(
   'F opens the break-in panel',
 );
 const rot0 = await get('window.__critical.wrecks[0].breakin.tiles[0].rot');
-await click(222 + 14, 130 + 14);
+// The grid is centred in the panel, so where its first tile is depends on its size.
+const grid = await get('({ w: window.__critical.wrecks[0].breakin.w, h: window.__critical.wrecks[0].breakin.h })');
+await click(155 + (330 - grid.w * 28) / 2 + 14, 130 + (4 - grid.h) * 14 + 14);
 await page.waitForTimeout(150);
 check((await get('window.__critical.wrecks[0].breakin.tiles[0].rot')) === (rot0 + 1) % 4, 'clicking a tile turns it');
 await shot('07-breakin');
@@ -558,6 +560,137 @@ const mutedNow = await page.evaluate(() => window.__critical.audio.isMuted());
 await page.keyboard.press('KeyN');
 await page.waitForTimeout(80);
 check((await page.evaluate(() => window.__critical.audio.isMuted())) === !mutedNow, 'N switches the sound off and on');
+
+// The menu: saving, loading, sound levels, the autosave, and what happens when the ship is lost.
+{
+  const p = await browser.newPage({ viewport: { width: 1280, height: 720 }, ignoreHTTPSErrors: !!remote });
+  p.on('pageerror', (e) => errors.push('menu page: ' + String(e)));
+  await p.goto(url);
+  await p.waitForFunction(() => window.__critical, null, { timeout: 10000 });
+  await p.waitForTimeout(300);
+  const at = (expr) =>
+    p.evaluate(`(() => { const c = window.__critical, s = c.state, v = c.view; return ${expr}; })()`);
+  const press = async (...codes) => {
+    for (const code of codes) {
+      await p.keyboard.press(code);
+      await p.waitForTimeout(60);
+    }
+  };
+  const snap = async (name) => {
+    if (shots) await p.screenshot({ path: `${shots}/${name}.png` });
+  };
+  await snap('20-title-menu');
+  check(
+    (await at('v.menu.page')) === 'title' && (await at('v.menu.row')) === 1,
+    'the title menu starts on NEW GAME when nothing is saved',
+  );
+  await press('Enter');
+  check((await at('v.started')) === true && (await at('s.hardcore')) === false, 'NEW GAME starts an ordinary game');
+  await p.evaluate(() => {
+    const s = window.__critical.state;
+    s.spawn.timer = 1e9;
+    s.raidTimer = 1e9;
+    s.credits = 777;
+  });
+  await press('KeyO');
+  check((await at('c.mode')) === 'menu', 'O opens the menu');
+  await snap('21-menu');
+  await press('ArrowDown', 'Enter');
+  check((await at('v.menu.page')) === 'save', 'SAVE GAME shows the slots');
+  await press('Enter');
+  check(
+    (await at("localStorage.getItem('critical-save-1') !== null")) === true,
+    'choosing a slot saves the game there',
+  );
+  await snap('22-save');
+  await press('KeyF', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'Enter');
+  check((await at('v.menu.page')) === 'sound', 'SOUND shows the levels');
+  await press('ArrowLeft', 'ArrowLeft', 'ArrowDown', 'ArrowRight');
+  const levels = JSON.parse(await at("localStorage.getItem('critical-volume')"));
+  check(
+    levels.effects === 0.8 && levels.music === 0.8,
+    'the arrow keys set the levels for effects and music, and they are kept',
+  );
+  await snap('23-sound');
+  await press('KeyF', 'KeyF');
+  check((await at('c.mode')) !== 'menu', 'F leaves the menu');
+  await p.evaluate(() => (window.__critical.state.credits = 5));
+  await press('KeyO', 'ArrowDown', 'ArrowDown', 'Enter');
+  check(
+    (await at('v.menu.page')) === 'load' && (await at('v.menu.row')) === 1,
+    'LOAD GAME starts on the first slot that holds a save',
+  );
+  await snap('24-load');
+  await press('Enter');
+  check((await at('s.credits')) === 5, 'loading over a game in progress asks first');
+  await press('Enter');
+  check((await at('s.credits')) === 777 && (await at('c.mode')) !== 'menu', 'the saved game is back');
+  // The game saves itself when the ship docks.
+  await p.evaluate(() => {
+    const s = window.__critical.state;
+    s.credits = 888;
+    s.events.push({ type: 'dock', target: 0, kind: 'wreck' });
+  });
+  await p.waitForTimeout(200);
+  check((await at("localStorage.getItem('critical-save-auto') !== null")) === true, 'docking saves the game by itself');
+  await p.evaluate(() => {
+    const s = window.__critical.state;
+    s.credits = 1;
+    s.over = true;
+  });
+  await p.waitForTimeout(200);
+  await snap('25-lost-with-save');
+  await press('KeyR');
+  check(
+    (await at('s.over')) === false && (await at('s.credits')) === 888,
+    'R after losing the ship loads the last save',
+  );
+  // A save file can be written and read back.
+  await press('KeyO', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown');
+  const [download] = await Promise.all([p.waitForEvent('download'), p.keyboard.press('Enter')]);
+  const file = await download.path();
+  const saved = JSON.parse((await import('node:fs')).readFileSync(file, 'utf8'));
+  check(saved.game === 'critical-st8' && saved.state.credits === 888, 'the game can be exported to a file');
+  await p.evaluate(() => (window.__critical.state.credits = 2));
+  await press('KeyF', 'KeyO', 'ArrowDown', 'ArrowDown', 'Enter');
+  const rows = await at('8');
+  for (let i = 0; i < rows; i++) if ((await at('v.menu.row')) !== 6) await press('ArrowDown');
+  const [chooser] = await Promise.all([p.waitForEvent('filechooser'), p.keyboard.press('Enter')]);
+  await chooser.setFiles(file);
+  await p.waitForTimeout(300);
+  check((await at('s.credits')) === 888 && (await at('c.mode')) !== 'menu', 'and a save file can be imported');
+  // Hardcore: one life, and the run takes its saves with it.
+  await press('KeyO', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'Enter', 'Enter');
+  check(
+    (await at('v.started')) === false && (await at('v.menu.row')) === 0,
+    'quitting goes to the title screen, which now offers CONTINUE',
+  );
+  await snap('26-title-continue');
+  await press('ArrowDown', 'ArrowDown', 'Enter');
+  check((await at('s.hardcore')) === true, 'a hardcore game can be started');
+  await p.evaluate(() => {
+    const s = window.__critical.state;
+    s.spawn.timer = 1e9;
+    s.events.push({ type: 'dock', target: 0, kind: 'wreck' });
+  });
+  await p.waitForTimeout(200);
+  const auto = JSON.parse(await at("localStorage.getItem('critical-save-auto')"));
+  check(auto.summary.hardcore === true, 'a hardcore game also saves itself when docking');
+  await press('KeyO');
+  await snap('27-menu-hardcore');
+  await press('KeyF');
+  await p.evaluate(() => (window.__critical.state.over = true));
+  await p.waitForTimeout(200);
+  await snap('28-lost-hardcore');
+  check(
+    (await at("localStorage.getItem('critical-save-auto')")) === null,
+    'losing the ship in hardcore removes the save of that run',
+  );
+  check((await at("localStorage.getItem('critical-save-1') !== null")) === true, 'but leaves other saves alone');
+  await press('KeyR');
+  check((await at('v.started')) === false, 'and R goes back to the title screen');
+  await p.close();
+}
 
 // Gamepad: a stand-in controller drives the title screen, the Captain and the Gunner.
 const padPage = await browser.newPage({ viewport: { width: 1280, height: 720 }, ignoreHTTPSErrors: !!remote });

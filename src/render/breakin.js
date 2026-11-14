@@ -2,7 +2,7 @@
 // Each kind of target has its own game. See src/sim/breakin.js.
 import { VIEW_W, VIEW_H, COL } from '../config.js';
 import { B } from '../sim/balance.js';
-import { GW, GH, mask, flow } from '../sim/breakin.js';
+import { mask, flow } from '../sim/breakin.js';
 import { rect, bar } from './draw.js';
 
 const T = 28,
@@ -10,8 +10,8 @@ const T = 28,
   PH = 204,
   PX = (VIEW_W - PW) / 2,
   PY = (VIEW_H - PH) / 2;
-const GX = PX + (PW - GW * T) / 2,
-  GY = PY + 52;
+// Where the pipe grid starts. Grids come in different sizes and are centred in the same space.
+const gridAt = (bk) => ({ x: PX + (PW - bk.w * T) / 2, y: PY + 52 + ((4 - bk.h) * T) / 2 });
 const DIGIT = { w: 34, gap: 8 },
   DX = PX + (PW - (B.CODE_DIGITS * DIGIT.w + (B.CODE_DIGITS - 1) * DIGIT.gap)) / 2,
   DY = PY + 104;
@@ -37,10 +37,11 @@ const TEXT = {
 };
 
 const inside = (mx, my) => mx >= PX && mx < PX + PW && my >= PY && my < PY + PH;
-const tileAt = (mx, my) => {
-  const x = Math.floor((mx - GX) / T),
-    y = Math.floor((my - GY) / T);
-  return x >= 0 && y >= 0 && x < GW && y < GH ? { x, y } : null;
+const tileAt = (bk, mx, my) => {
+  const g = gridAt(bk);
+  const x = Math.floor((mx - g.x) / T);
+  const y = Math.floor((my - g.y) / T);
+  return x >= 0 && y >= 0 && x < bk.w && y < bk.h ? { x, y } : null;
 };
 const digitAt = (mx, my) => {
   for (let i = 0; i < B.CODE_DIGITS; i++) {
@@ -60,13 +61,15 @@ export function breakinAction(target, mx, my, click, right, space) {
     const digit = click ? digitAt(mx, my) : null;
     return digit ? { wreck: id, digit } : null;
   }
-  const t = tileAt(mx, my);
+  const t = tileAt(target.breakin, mx, my);
   return t ? { wreck: id, x: t.x, y: t.y, dir: right ? -1 : 1 } : null;
 }
 
 function drawPipes(ctx, font, bk, mouse) {
   const { lit } = flow(bk),
-    hover = mouse ? tileAt(mouse.x, mouse.y) : null;
+    hover = mouse ? tileAt(bk, mouse.x, mouse.y) : null;
+  const { x: GX, y: GY } = gridAt(bk);
+  const GW = bk.w;
   bk.tiles.forEach((t, i) => {
     const x = GX + (i % GW) * T,
       y = GY + Math.floor(i / GW) * T,

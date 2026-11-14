@@ -6,6 +6,7 @@ import { createSectors, generateSector } from './sectors.js';
 import { applyTestLoadout } from './upgrades.js';
 
 // `options.test` starts the game with everything unlocked, for trying things out.
+// `options.hardcore` gives the crew a single life: a lost ship ends the run for good.
 export function createState(seed = 1, options = {}) {
   const state = {
     seed,
@@ -17,6 +18,7 @@ export function createState(seed = 1, options = {}) {
     over: false,
     won: false,
     test: false,
+    hardcore: !!options.hardcore,
     nextId: 1,
     credits: 0,
     kills: 0,

@@ -8,93 +8,82 @@ Prioritet: Hög, Medel, Låg.
 **A** – standard model, medium level – Tester och verktyg
 - D-058 – Låt provkörningen klicka på namngivna knappar, lägg till kontroll av stavfel och typer, och kör testerna automatiskt vid varje sparning
 
-**B** – standard model, medium level – Lättare inbrott i vrak
-- B-092 – Gör rörspelet lättare med 15 rutor i stället för 28 och färre som behöver vridas, med samma tid som nu, så att det går att hinna. Större vrak får svårare lås
-
-**C** – standard model, medium level – Inställningar för ljud
-- F-105 – En inställningsskärm där varje spelare ställer nivån på ljudeffekter och musik var för sig, sparat i den egna webbläsaren, så att musiken går att sänka utan att effekterna försvinner
-
-**D** – strong model, high level – Spara spelet
-- F-079 – En autosparfil vid dockning, fem manuella platser, och export och import av sparfil. Vid död laddas senaste sparfilen om, så att långa omgångar inte går förlorade
-- F-096 – Hardcore mode med ett enda liv, för den som vill ha det svårare
-
-**E** – strong model, high level – Pekskärm
+**B** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**F** – strong model, high level – Stationer som försvarar sig
+**C** – strong model, high level – Stationer som försvarar sig
 - F-098 – Ge baserna turrets och en sköld, så att de kan stå emot ett anfall en stund
 - D-045 – Låt en station som inte överlever ett anfall bli fientlig, så att nödanropen får betydelse
 - F-099 – Ge dockade skepp en liten extra sköld som syns på sköldmätaren och går att uppgradera, så att man får en bättre chans att loota
 
-**G** – strong model, high level – Faktioner och trafik
+**D** – strong model, high level – Faktioner och trafik
 - F-035 – Tre faktioner med egna stationer, områden och anseende, så att världen får sidor att förhålla sig till
 - F-069 – Lägg in freightern enligt vald design, större och långsam, så att trafiken får ett eget skepp
 - F-066 – Låt andra skepp flyga fram till stationer, docka en stund och lämna, så att stationerna känns besökta
 - F-067 – Låt handelsskepp, patruller och pirater hoppa in och ut ur systemet och slåss med varandra, så att miljön känns levande
 
-**H** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
+**E** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
 
-**I** – strong model, high level – Förslag: ekonomi och belöningar
+**F** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**J** – strong model, high level – Baser i två storlekar
+**G** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 - D-101 – Gör inomhusmiljöerna mer utarbetade, så att stationer och vrak känns som platser
 - F-102 – Lockdown: en fientlig station håller dörrarna till shop och armory stängda tills spelarna tagit över
 
-**K** – strong model, high level – Unika skepp
+**H** – strong model, high level – Sällsynta skepp
+- F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**L** – strong model, high level – Handel
+**I** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**M** – strong model, medium level – Butik med bilder
+**J** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**N** – strong model, high level – Värme
+**K** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**O** – strong model, high level – Slå ut och borda
+**L** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**P** – strong model, high level – Missiler och raketer
+**M** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**Q** – strong model, high level – Kontakt med andra skepp
+**N** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**R** – strong model, high level – Asteroider och anomalier
+**O** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**S** – strong model, high level – En värld som förändras
+**P** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 
-**T** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**Q** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**U** – strong model, high level – Ljudeffekter
+**R** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
 Hos en annan agent: F-048 (musik) görs skilt från körningarna här, enligt docs/music-brief.md.
 
-Väntar på användaren: D-094 (design på nya skepp) behöver ett val mellan Juggernaut E och F, och därefter kan F-070 (Juggernaut) byggas. D-095 (faktionernas riktiga namn), D-074 (smuggelgods) och D-093 (nya eller fler minigames) behöver ett samtal först. F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
+Väntar på användaren: D-095 (faktionernas riktiga namn), D-074 (smuggelgods) och D-093 (nya eller fler minigames) behöver ett samtal först. F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
 
 ## Hög
 
 | ID | Vad | Status |
 |---|---|---|
-| F-079 | Med tanke på att detta kan bli långa spelomgångar så behöver vi också titta på hur man kan spara sin progress. Eftersom det är i webbläsaren så behöver man även kunna exportera och importera en sparfil. Besked 2026-11-14: en autosparfil vid dockning och 5 manuella platser. Vid död laddas senaste sparfilen om | Ej påbörjad |
-| B-092 | Minispelet för att ta sig in i skepp är lite för svårt på så kort tid. Tror det är bättre att göra det lättare än att ge mer tid för att lösa det. Mätt 2026-11-14: 28 rutor, och i snitt 13 vridningar för den som redan kan lösningen, på 42 till 60 sekunder. Besked 2026-11-14: prova 15 rutor. Större vrak kan få svårare lås | Ej påbörjad |
 | F-050 | Justerade nivåer för vapen, sköld, motorer och engineering så att det känns att det är svårt i början och att det ska vara värt att uppgradera | Ej påbörjad |
 
 ## Medel
@@ -108,17 +97,14 @@ Väntar på användaren: D-094 (design på nya skepp) behöver ett val mellan Ju
 | D-062 | Nätverksförberedelse: skicka skott som händelser (var och när de avfyrades) i stället för som positioner | Väntar på användaren |
 | F-064 | Homing missiles (nytt vapen) och rockets som uppgraderingar. De ska söka sig mot mål. Missiler är mer rörliga medan raketer kan justera sin bana något, men missar den sitt mål så släpper den målet helt. Missar dessa vapen sitt mål så ska de kunna träffa andra som är i vägen för deras bana. I dag finns bara raketer, och de är för rörliga jämfört med det här. Från D-075: ammunition som köps på stationer | Ej påbörjad |
 | F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer. Musiken skapas med kod, det passar spelstilen. Görs av en annan agent enligt docs/music-brief.md | Ej påbörjad |
-| F-105 | Varje spelare kan ändra sin nivå på ljudeffekter och musik i spelets inställningar. I dag finns ingen inställningsskärm, bara tangenten N som slår av och på allt ljud | Ej påbörjad |
 | F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
 | F-066 | Det vore trevligt om andra skepp kan besöka stationer. Att de åker fram, dockar en stund, och sedan lämnar. Från D-075: varje sektor har sin egen blandning av handelsskepp, patruller och pirater | Ej påbörjad |
 | F-067 | Vänliga skepp kan hyperjumpa in och ut ur systemet. De kan stanna en stund och sedan antingen flyga till något annat ställe, eller hoppa vidare. Detta för att miljön ska kännas mer levande. Från D-075: skeppen slåss också med varandra, och pirater anfaller freighters | Ej påbörjad |
 | F-068 | Handelssystem för goods. Att man kan köpa och sälja varor mellan olika stationer med olika priser. Det är inget som man själv kan använda, utan det är bara för att kunna tjäna pengar. Agentens förslag som användaren inte invänt mot: lastrum med begränsad plats som går att bygga ut, och priser som rör sig långsamt. Från D-075: prisnivåer per vara och station, och en kartvy som visar var det lönar sig | Ej påbörjad |
 | F-069 | Skeppstypen freighter. Lite större långsamma skepp. Design vald 2026-11-14: förslag A, en ryggrad med containrar (D-094) | Ej påbörjad |
-| F-070 | Skeppstyp Juggernaut. Ett ovanligt krigsskepp som är långsamt och tungt bestyckat. Patrullerar hos faktioner och dyker i väldigt sällsynta fall upp som pirat. Kräver F-035. Besked 2026-11-14: lite rund form som ett ägg fast inte fullt så mjukt, bepansrat, monterade turrets, mindre än bossen. Väntar på val av design (D-094) | Väntar på användaren |
-| D-094 | Ta fram design på nya skepp innan vi lägger in dem. Freighter: förslag A är valt. Juggernaut: användaren vill ha en lite rund form som ett ägg fast inte fullt så mjukt, bepansrat, med monterade turrets och samma känsla som de andra rymdskeppen. Två förslag, E (smala änden fram) och F (breda änden fram), finns i docs/design/img/new-ships.png. Användaren väljer ett av dem eller ber om ändringar | Väntar på användaren |
+| F-070 | Skeppstyp Juggernaut. Ett ovanligt krigsskepp som är långsamt och tungt bestyckat. Patrullerar hos faktioner och dyker i väldigt sällsynta fall upp som pirat. Kräver F-035. Design vald 2026-11-14: förslag E, ett kantigt ägg med smala änden fram, pansarplåtar och monterade kanontorn, mindre än Cruisern | Ej påbörjad |
 | D-095 | Genomgång av faktionerna: riktiga namn och karaktär i stället för platshållarna, och hur anseende höjs och sänks | Väntar på användaren |
-| F-096 | Hardcore mode där man bara får ett liv | Ej påbörjad |
 | D-097 | Plan över droprates och hur de påverkas av olika skepp | Ej påbörjad |
 | F-098 | Låt baser ha turrets som de kan försvara sig med. Ge dem även en sköld | Ej påbörjad |
 | F-099 | Skepp som dockar kan få en liten extraboost i sköld. Sköldmätaren kan få ett tillägg som visar detta. Detta för att man ska få en bättre chans att loota. Detta kan också vara något som går att köpa uppgradering till | Ej påbörjad |
@@ -218,3 +204,8 @@ Väntar på användaren: D-094 (design på nya skepp) behöver ett val mellan Ju
 | F-078 | Bilden fyller fönstret i stället för att hoppa mellan fasta storlekar | 2026-11-14 |
 | F-065 | Stationerna är dubbelt så stora i rymdvyn, nyritade med ring, nav och fyra dockningsarmar. Dockning, kanoner och träffyta är flyttade efter det | 2026-11-14 |
 | D-044 | Neutrala shipyards är alltid öppna mot betalning, till samma priser som hos vänliga. En station som står i skuld efter ett nödanrop ger fortfarande rabatt | 2026-11-14 |
+| B-092 | Inbrottet i vrak är lättare: 15 rutor i stället för 28 och i snitt drygt fem vridningar, med samma tid. Vrak med högre risk har större lås | 2026-11-14 |
+| F-105 | Varje spelare ställer nivån på ljudeffekter och musik var för sig, under SOUND i menyn (O). Nivåerna sparas i den egna webbläsaren | 2026-11-14 |
+| F-079 | Spelet sparar sig självt vid dockning, och har fem manuella platser. Sparfiler går att exportera och importera. När skeppet går förlorat laddas senaste sparningen | 2026-11-14 |
+| F-096 | Hardcore mode: ett enda liv. Spelet sparar sig bara självt, och när skeppet går förlorat tas omgångens sparning bort | 2026-11-14 |
+| D-094 | Design på nya skepp: Freighter enligt förslag A och Juggernaut enligt förslag E är valda. Ritskriptet är docs/design/tools/ships2.py | 2026-11-14 |

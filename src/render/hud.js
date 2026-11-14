@@ -241,7 +241,7 @@ const HELP = [
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW     SHIFT CLICK  QUEUE'],
   ['', 'Q  SCANNER PULSE     B  DROP A BUOY     ON THE MAP  CLICK TO SEND A PROBE'],
   ['BOARDING', 'W A S D  MOVE     MOUSE  AIM     CLICK  FIRE     G  GRENADE     F  USE     C  CHARGE     T  TURRET'],
-  ['', 'N  SOUND ON AND OFF     A GAMEPAD WORKS TOO'],
+  ['', 'O  MENU: SAVE, LOAD AND SOUND     N  ALL SOUND ON AND OFF     A GAMEPAD WORKS TOO'],
 ];
 export function drawHelp(ctx, font, y0 = 96) {
   rect(ctx, 30, y0 - 18, 580, 186, COL.panel, COL.line);
@@ -252,18 +252,4 @@ export function drawHelp(ctx, font, y0 = 96) {
     font.draw(ctx, text, 110, y, COL.dim);
   });
   font.draw(ctx, 'A POST YOU LEAVE KEEPS DOING WHAT YOU SET IT TO.', 42, y0 + 150, COL.faint);
-}
-
-export function drawTitle(ctx, font, assets, t) {
-  font.draw(ctx, 'CRITICAL ST8', VIEW_W / 2, 30, COL.text, { align: 'c', scale: 5 });
-  font.draw(ctx, 'ONE SHIP  ·  THREE POSTS  ·  FIVE SECTORS  ·  SOLO BUILD', VIEW_W / 2, 72, COL.ion[1], {
-    align: 'c',
-  });
-  drawHelp(ctx, font, 106);
-  if (Math.floor(t * 2) % 2 === 0) {
-    font.draw(ctx, 'PRESS ENTER TO LAUNCH', VIEW_W / 2, 302, COL.ochre[2], { align: 'c', scale: 2 });
-  }
-  const test = 'PRESS T FOR TEST MODE  ·  EVERYTHING UNLOCKED FROM THE START';
-  font.draw(ctx, test, VIEW_W / 2, 326, COL.ion[1], { align: 'c' });
-  font.draw(ctx, 'EARLY VERSION  ·  ONLINE PLAY COMES LATER', VIEW_W / 2, 344, COL.faint, { align: 'c' });
 }

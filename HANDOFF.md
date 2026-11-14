@@ -8,7 +8,7 @@ Project language: English (all text in the game and README)
 
 Spelet går att spela ensam från start till mål. Du flyger fregatten, skjuter pirater, sköter energi och reparationer, byter fritt mellan de tre posterna, dockar med vrak och stationer, bryter dig in, bordar uppifrån och hämtar bränsle, krediter, stjärnkartor och slots. Vid stationer köps uppgraderingar som syns på skeppet och utrustning för bordarna. Stationer som anfalls sänder nödanrop, och varje sorts mål har sitt eget inbrottsspel. Det finns fem sektorer som nås med stjärnkartor, och i den sista väntar en Cruiser som boss.
 
-Sedan dess är koden omgjord i grunden utan att spelet beter sig annorlunda (den tekniska översynen), texten är skarpare, bilden fyller fönstret och stationerna är dubbelt så stora. Användaren har inte sett de tre sista ändringarna än.
+Sedan dess är koden omgjord i grunden utan att spelet beter sig annorlunda (den tekniska översynen), texten är skarpare, bilden fyller fönstret och stationerna är dubbelt så stora. Spelet har en meny (O) där man sparar, laddar och ställer ljudnivåer, det sparar sig självt vid dockning, det finns ett hardcore-läge, och inbrottet i vrak är lättare. Musiken görs av en annan agent enligt docs/music-brief.md.
 
 Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-089 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
@@ -60,7 +60,9 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
   - `posts.js`, `ship.js`, `shots.js`: de tre posterna, fregatten och skotten.
   - `balance.js`: siffror för spelets regler. Siffror för varje skeppsklass står i `kinds.js`.
 - `src/screens.js`: vad spelaren ser. Det finns alltid exakt ett läge, och varje läge är en rad i `SCREENS` som säger hur det ritas och vad tangenterna gör. Ett nytt läge läggs till där.
-- `src/main.js`: start och huvudloop. `src/events.js`: meddelanden, ljud och paneler som svar på det som hänt i spelet.
+- `src/main.js`: start och huvudloop, och det menyn kan göra (nytt spel, spara, ladda, exportera, importera). `src/events.js`: meddelanden, ljud och paneler som svar på det som hänt i spelet.
+- `src/menu.js`: startskärmen och spelmenyn bakom O, som sidor av rader. En ny rad eller sida läggs till i `PAGES`.
+- `src/saves.js`: sparade spel. En sparning är hela spelets tillstånd som text. `SAVE_VERSION` måste höjas när tillståndet byter form, och ett test i `tests/saves.test.js` säger till när det behövs. Sparningar från en äldre version nekas då i stället för att gå sönder.
 - `src/scene.js`: vilket slags ögonblick spelaren är i (lugnt, varning, strid, bordning, station), för musiken. `src/music.js`: musikens fil, tom tills F-048 är gjord. Den anropas en gång per bildruta och kopplar sitt ljud till `musicOutput()` i `src/audio.js`.
 - `src/render/`: skärmarna. `looks.js` beskriver hur varje sorts sak och skepp ser ut, på samma sätt som `kinds.js` beskriver vad de är. `effects.js` och `particles.js` ritar effekterna. Allt här läser bara spelets tillstånd och ändrar det aldrig.
 - `assets/`: bilder och typsnitt som skapas av `tools/export_assets.py`.
@@ -75,6 +77,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - `npm run serve` och sedan `npm run smoke`: provkör spelet i en webbläsare. Kräver Playwright installerat globalt.
 - `node tests/outside.mjs`: kontrollerar att spelet och designsidan inte laddar något från andra tjänster, och visar vad som sparas i webbläsaren.
 - I webbläsarens konsol finns `window.__critical` med spelets tillstånd, aktuellt läge (`mode`) och genvägar till vrak, stationer och containrar.
+- När ett test i `tests/saves.test.js` säger att tillståndet bytt form: höj `SAVE_VERSION` i `src/saves.js` och skriv in de nya värdena i testet.
 
 ## Decisions
 
@@ -87,7 +90,7 @@ Spelet
 - Publicering: GitHub Pages så länge, flytt till Cloudflare när nätverksmotorn byggs in (2026-11-14).
 - Testläge: T på startskärmen, eller `?test` sist i adressen, startar spelet med alla uppgraderingar, all utrustning, alla stjärnkartor och 5000 krediter (2026-11-14).
 - Styrning: tangentbord och mus, eller handkontroll. Agentens val, användaren har inte provat än.
-- Ljudet skapas i webbläsaren utan ljudfiler. N slår av och på, och valet sparas i webbläsaren. Varje spelare ska kunna ställa nivån på ljudeffekter och musik var för sig i inställningarna (F-105, 2026-11-14, inte byggt än).
+- Ljudet skapas i webbläsaren utan ljudfiler. N slår av och på allt ljud. Varje spelare ställer nivån på ljudeffekter och musik var för sig under SOUND i menyn, och valen sparas i webbläsaren (F-105, 2026-11-14).
 - Handkontroll: vänster spak styr eller flyttar pekaren, höger spak siktar, avtryckarna gasar och skjuter, RB och LB byter post, START pausar och BACK öppnar kartan. Tabellen finns i `src/input.js`.
 - Onlineläget ska använda användarens egen motor, som byggs just nu och bygger på Cloudflares realtidstjänster. Målet är att ett gratiskonto ska räcka för det här kompisspelet (2026-11-14).
 
@@ -125,6 +128,7 @@ Bordning
 - Tills vidare: Captain kan lägga ut medan någon är kvar inne. Alla som är inne teleporteras då hem, tappar det de bär och måste ladda om teleportern (D-043, 2026-11-14).
 - Mål är olika svåra att borda. En scanner visar det.
 - Varje typ av mål har ett eget inbrottsspel på tid.
+- Inbrottet i vrak ska vara lätt snarare än ha lång tid: 15 rutor och ungefär sex vridningar för de lättaste vraken, större lås för vrak med högre risk (B-092, 2026-11-14).
 
 Bordning, agentens val som användaren inte har sett än (2026-11-14)
 - Valvdörren i ett vrak öppnas genom att hålla in F bredvid den, inte med ett eget inbrottsspel.
@@ -180,7 +184,10 @@ Faktioner, platshållare som ska ses över i D-095 (2026-11-14)
 - Dåligt anseende ger först högre priser, sedan stängda stationer, sedan patruller som anfaller. Det ska alltid gå att höja ett lågt anseende.
 
 Sparande, uppdrag och omgångar (2026-11-14)
-- En autosparfil vid dockning och fem manuella platser. Vid död laddas senaste sparfilen om. Hardcore mode med ett liv är en egen punkt (F-096).
+- En autosparfil vid dockning och fem manuella platser. Vid död laddas senaste sparfilen om. Byggt 2026-11-14 (F-079).
+- Hardcore mode: ett liv. Spelet sparar sig bara självt, det går inte att ladda eller exportera under en omgång, och omgångens sparning tas bort när skeppet går förlorat. Hur hardcore ska fungera i detalj är agentens val (F-096, 2026-11-14).
+- Sparningar från en äldre version av spelet går inte att läsa in efter att spelets tillstånd har ändrat form. Det är agentens val: hellre ett tydligt nej än en trasig omgång.
+- Menyn öppnas med O. Spelet går vidare bakom den, i linje med att inget moment pausar spelet.
 - Varje omgång ska vara genererad: systemen, en röd tråd av berättelse och frivilliga sidouppdrag. Kartans storlek väljs vid start. Ingen färdigskriven story från början till slut.
 - Uppdrag: alla sorter, högst fem samtidigt för stunden. Vissa har tidsgräns och betalar mer. Ett misslyckat uppdrag kostar lönen och lite anseende hos stationens faktion, eller hos just den stationen om den är neutral.
 - Det får aldrig gå att låsa sig, till exempel utan pengar eller bränsle (D-100).
@@ -194,7 +201,7 @@ Skepp och uppgraderingar
 - Fighter bay är en uppgradering. Darts är den minsta skeppsklassen.
 - Skeppsklasser: Dart, Fighter, Interceptor, Gunboat, Frigate, Cruiser.
 - Två nya skeppsklasser ska in: Freighter, lite större och långsam (F-069), och Juggernaut, ett ovanligt krigsskepp som är långsamt och tungt bestyckat (F-070). Juggernaut patrullerar hos faktioner och dyker i mycket sällsynta fall upp som pirat (2026-11-14).
-- Freighterns design är vald: en ryggrad med containrar, förslag A. Juggernauten ska ha en lite rund form som ett ägg fast inte fullt så mjukt, vara bepansrad med monterade turrets, ha samma känsla som de andra rymdskeppen och vara mindre än Cruisern. Två förslag väntar på val (D-094, 2026-11-14).
+- Designen är vald för båda de nya skeppen: Freighter är en ryggrad med containrar (förslag A), och Juggernaut är ett kantigt ägg med smala änden fram, pansarplåtar och monterade kanontorn, mindre än Cruisern (förslag E). Båda finns i `docs/design/tools/ships2.py` (D-094, 2026-11-14).
 - Stationernas storlek är godkänd. Stora baser med två våningar blir 1,5 gånger större, med annan design, mer vapen och starkare sköld (F-103, 2026-11-14).
 - Nya skepp designas och visas för användaren innan de läggs in i spelet (2026-11-14). Förslagen ritas av `docs/design/tools/ships2.py`.
 
@@ -238,7 +245,6 @@ Genomgång 2026-11-14 (D-033). Agenten är ingen jurist, och inget här är juri
 - Spelet och designsidan laddar inget från andra tjänster. Det kontrolleras med `node tests/outside.mjs`.
 - Designsidan laddade tidigare typsnitt från Google Fonts. De är borttagna och sidan använder systemets typsnitt.
 - Spelet hanterar inga personuppgifter: inga namn, konton eller formulär.
-- Spelet sparar en enda sak i webbläsaren: om ljudet är av eller på (`critical-muted`), och bara efter att spelaren själv tryckt N. Inga kakor. Regeln som kan beröras är lagen om elektronisk kommunikation, 9 kap. 28 §, om lagring i användarens utrustning. Lagring som behövs för något användaren själv har bett om brukar vara undantagen från samtycke. Användaren bedömer att det är okej (2026-11-14).
+- Spelet sparar tre sorters saker i webbläsaren, alla på spelarens egen begäran och utan personuppgifter: om ljudet är av eller på (`critical-muted`), ljudnivåerna (`critical-volume`) och sparade spel (`critical-save-auto` och `critical-save-1` till `5`). Inga kakor. Regeln som kan beröras är lagen om elektronisk kommunikation, 9 kap. 28 §, om lagring i användarens utrustning. Lagring som behövs för något användaren själv har bett om brukar vara undantagen från samtycke. Användaren bedömer att det är okej (2026-11-14).
 - Webbhotellet GitHub Pages får besökarnas IP-adresser, vilket följer av att sidan ligger där.
-- Sparade omgångar (F-079) blir ny lagring i webbläsaren. Den görs på spelarens egen begäran och innehåller inga personuppgifter, så samma bedömning som för ljudinställningen bör gälla. Användaren bedömer att det är okej (2026-11-14).
 - Ny genomgång behövs när onlineläget byggs (D-046): spelarnamn, anslutningar och Cloudflare som ny tjänst.

@@ -1,0 +1,228 @@
+// The menu: the title screen, and the game menu behind the O key. Both are pages of rows that are worked
+// with the arrow keys and Enter, the mouse, or a gamepad. A page is a function that lists its rows, so a new
+// choice is one more row and a new page one more entry in PAGES.
+//   row.run       what happens when the row is chosen
+//   row.confirm   a question shown first, for choices that throw something away. Choosing again goes ahead.
+//   row.slider    the row sets a volume instead: 'effects' or 'music'
+//   row.off       the row cannot be chosen right now, and `right` says why
+import { VIEW_W, VIEW_H, COL } from './config.js';
+import { rect, bar } from './render/draw.js';
+import { volumeOf, setVolume, isMuted, toggleMute } from './audio.js';
+import { AUTO, MANUAL, latestSlot, describeSave } from './saves.js';
+
+const W = 430;
+const X = (VIEW_W - W) / 2;
+const ROW_H = 16;
+const STEP_Y = 20;
+const SLIDER = { x: X + W - 150, w: 110 };
+
+export const createMenu = () => ({ page: 'title', row: 0, confirm: null, note: null });
+// Open a page with the first row that can be chosen picked.
+export function openPage(game, page) {
+  const menu = game.view.menu;
+  Object.assign(menu, { page, row: 0, confirm: null, note: null });
+  const rows = PAGES[page].rows(game);
+  menu.row = Math.max(
+    0,
+    rows.findIndex((r) => !r.off),
+  );
+}
+const rootOf = (game) => (game.view.started ? 'main' : 'title');
+
+const slotName = (slot) => (slot === AUTO ? 'AUTOSAVE' : 'SLOT ' + slot);
+// A row for one save slot. `use` is what choosing it does, and `whenEmpty` whether an empty slot can be chosen.
+function slotRow(game, slot, use, whenEmpty, confirm) {
+  const save = game.saves[slot];
+  const about = save ? describeSave(save) : null;
+  return {
+    id: 'slot' + slot,
+    label: slotName(slot) + (about ? '   ' + about.left : ''),
+    right: about ? about.right : 'EMPTY',
+    off: !save && !whenEmpty,
+    confirm: save ? confirm : null,
+    run: () => use(slot),
+  };
+}
+const back = (game) => ({ id: 'back', label: 'BACK', run: () => openPage(game, rootOf(game)) });
+const noStorage = (game) => (game.storage ? null : 'THIS BROWSER DOES NOT ALLOW SAVING');
+
+const PAGES = {
+  title: {
+    rows(game) {
+      const a = game.actions;
+      const latest = latestSlot(game.saves);
+      return [
+        {
+          id: 'continue',
+          label: 'CONTINUE',
+          right: latest ? slotName(latest) : 'NO SAVED GAME',
+          off: !latest,
+          run: () => a.load(latest),
+        },
+        { id: 'new', label: 'NEW GAME', run: () => a.newGame({}) },
+        { id: 'hardcore', label: 'NEW GAME  ·  HARDCORE', right: 'ONE LIFE', run: () => a.newGame({ hardcore: true }) },
+        { id: 'load', label: 'LOAD GAME', run: () => openPage(game, 'load') },
+        { id: 'sound', label: 'SOUND', run: () => openPage(game, 'sound') },
+        { id: 'test', label: 'TEST MODE', right: 'EVERYTHING UNLOCKED', run: () => a.newGame({ test: true }) },
+      ];
+    },
+  },
+  main: {
+    title: 'MENU',
+    rows(game) {
+      const a = game.actions;
+      const state = game.state;
+      // A hardcore run is saved only by the game itself, and cannot be copied to a file and brought back.
+      const hard = state.hardcore ? 'NOT IN HARDCORE' : null;
+      const noSave =
+        noStorage(game) || (state.over ? 'THE SHIP IS LOST' : null) || (hard && 'HARDCORE SAVES ITSELF WHEN YOU DOCK');
+      const quit = 'THE GAME IS LEFT AS IT WAS LAST SAVED  ·  CHOOSE AGAIN TO QUIT';
+      return [
+        { id: 'resume', label: 'BACK TO THE GAME', run: a.closeMenu },
+        { id: 'save', label: 'SAVE GAME', right: noSave, off: !!noSave, run: () => openPage(game, 'save') },
+        { id: 'load', label: 'LOAD GAME', right: hard, off: !!hard, run: () => openPage(game, 'load') },
+        { id: 'sound', label: 'SOUND', run: () => openPage(game, 'sound') },
+        { id: 'export', label: 'EXPORT THIS GAME TO A FILE', right: hard, off: !!hard, run: a.exportGame },
+        { id: 'quit', label: 'QUIT TO THE TITLE SCREEN', confirm: quit, run: a.quit },
+      ];
+    },
+  },
+  save: {
+    title: 'SAVE GAME',
+    rows(game) {
+      const overwrite = 'CHOOSE AGAIN TO SAVE OVER THIS ONE';
+      return [...MANUAL.map((slot) => slotRow(game, slot, game.actions.save, true, overwrite)), back(game)];
+    },
+  },
+  load: {
+    title: 'LOAD GAME',
+    rows(game) {
+      const leave = game.view.started ? 'THE GAME YOU ARE IN IS LEFT  ·  CHOOSE AGAIN TO LOAD' : null;
+      const slots = [AUTO, ...MANUAL].map((slot) => slotRow(game, slot, game.actions.load, false, leave));
+      return [...slots, { id: 'import', label: 'IMPORT A SAVE FILE', run: game.actions.importGame }, back(game)];
+    },
+  },
+  sound: {
+    title: 'SOUND',
+    rows(game) {
+      return [
+        { id: 'effects', label: 'EFFECTS', slider: 'effects' },
+        { id: 'music', label: 'MUSIC', slider: 'music' },
+        { id: 'mute', label: 'ALL SOUND', right: isMuted() ? 'OFF' : 'ON', run: toggleMute },
+        back(game),
+      ];
+    },
+  },
+};
+
+// Every row of the current page with its place on the screen. Shared by drawing and clicking.
+export function menuRows(game) {
+  const page = PAGES[game.view.menu.page];
+  const rows = page.rows(game);
+  const y0 = game.view.started ? (VIEW_H - rows.length * STEP_Y) / 2 + 8 : 108;
+  return rows.map((row, i) => ({ ...row, x: X, y: y0 + i * STEP_Y, w: W, h: ROW_H }));
+}
+const over = (m, r) => m.x >= r.x && m.x < r.x + r.w && m.y >= r.y && m.y < r.y + r.h;
+
+function choose(game, row) {
+  const menu = game.view.menu;
+  if (!row || row.off || !row.run) return;
+  if (row.confirm && menu.confirm !== row.id) {
+    menu.confirm = row.id;
+    return;
+  }
+  menu.confirm = null;
+  row.run();
+}
+
+// Keys, mouse and gamepad on a menu page.
+export function menuInput(game) {
+  const { keys, view } = game;
+  const menu = view.menu;
+  const rows = menuRows(game);
+  const m = keys.mouse;
+  const move = (dir) => {
+    for (let n = 0; n < rows.length; n++) {
+      menu.row = (menu.row + dir + rows.length) % rows.length;
+      if (!rows[menu.row].off) break;
+    }
+    menu.confirm = null;
+  };
+  const hovered = rows.findIndex((r) => over(m, r));
+  if (hovered >= 0 && !rows[hovered].off && (m.moved || m.clicked) && hovered !== menu.row) {
+    menu.row = hovered;
+    menu.confirm = null;
+  }
+  if (keys.hit('ArrowUp', 'KeyW')) move(-1);
+  if (keys.hit('ArrowDown', 'KeyS')) move(1);
+  const row = rows[menu.row];
+  if (row && row.slider) {
+    const step = (keys.hit('ArrowRight', 'KeyD') ? 0.1 : 0) - (keys.hit('ArrowLeft', 'KeyA') ? 0.1 : 0);
+    if (step) setVolume(row.slider, volumeOf(row.slider) + step);
+    if (m.clicked && hovered === menu.row && m.x >= SLIDER.x - 4) {
+      setVolume(row.slider, (m.x - SLIDER.x) / SLIDER.w);
+    }
+  }
+  if (keys.hit('Enter', 'NumpadEnter', 'Space') || (m.clicked && hovered === menu.row)) choose(game, row);
+  if (!view.started && keys.hit('KeyT')) game.actions.newGame({ test: true });
+  if (keys.hit('KeyF', 'Escape', 'KeyO')) {
+    if (menu.page !== rootOf(game)) openPage(game, rootOf(game));
+    else if (view.started) game.actions.closeMenu();
+  }
+}
+
+export function drawMenu(game, t) {
+  const { ctx, view } = game;
+  const font = game.assets.font;
+  const menu = view.menu;
+  const page = PAGES[menu.page];
+  const rows = menuRows(game);
+  const top = rows[0].y;
+  const bottom = rows[rows.length - 1].y + ROW_H;
+  if (view.started) {
+    // In the game the menu is a panel on top of whatever the player was looking at.
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = '#05050a';
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    ctx.globalAlpha = 1;
+    rect(ctx, X - 14, top - 34, W + 28, bottom - top + 66, COL.panel, COL.steel[1]);
+  } else {
+    font.draw(ctx, 'CRITICAL ST8', VIEW_W / 2, 26, COL.text, { align: 'c', scale: 5 });
+    font.draw(ctx, 'ONE SHIP  ·  THREE POSTS  ·  FIVE SECTORS', VIEW_W / 2, 68, COL.ion[1], { align: 'c' });
+  }
+  if (page.title) font.draw(ctx, page.title, X, top - 20, COL.ochre[2]);
+  rows.forEach((row, i) => {
+    const picked = i === menu.row;
+    const asking = picked && menu.confirm === row.id;
+    const ink = row.off ? COL.faint : picked ? COL.white : COL.text;
+    rect(
+      ctx,
+      row.x,
+      row.y,
+      row.w,
+      row.h,
+      picked ? '#1c2140' : '#141420',
+      asking ? COL.ember[1] : picked ? COL.ochre[2] : COL.line,
+    );
+    font.draw(ctx, row.label, row.x + 8, row.y + 5, ink);
+    if (row.slider) {
+      const v = volumeOf(row.slider);
+      bar(ctx, SLIDER.x, row.y + 5, SLIDER.w, v, picked ? COL.ochre[2] : COL.steel[2]);
+      font.draw(ctx, Math.round(v * 100) + '%', row.x + row.w - 8, row.y + 5, ink, { align: 'r' });
+    } else if (row.right)
+      font.draw(ctx, row.right, row.x + row.w - 8, row.y + 5, row.off ? COL.faint : COL.dim, { align: 'r' });
+  });
+  // One line below the rows: a question to confirm, a message, or how to work the menu.
+  const row = rows[menu.row];
+  const asking = row && menu.confirm === row.id;
+  const sliding = row && row.slider;
+  const hint = sliding ? 'LEFT AND RIGHT CHANGE THE LEVEL' : 'ARROWS AND ENTER, OR THE MOUSE';
+  const line = asking ? row.confirm : menu.note || hint + (menu.page === 'title' ? '  ·  H  CONTROLS' : '  ·  F  BACK');
+  font.draw(ctx, line, VIEW_W / 2, bottom + 12, asking ? COL.ember[2] : menu.note ? COL.ochre[2] : COL.faint, {
+    align: 'c',
+  });
+  if (!view.started) {
+    font.draw(ctx, 'EARLY VERSION  ·  ONLINE PLAY COMES LATER', VIEW_W / 2, 344, COL.faint, { align: 'c' });
+    void t;
+  }
+}

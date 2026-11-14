@@ -395,19 +395,43 @@ test('fuel burns with throttle, and an empty tank leaves the ship crawling', () 
 });
 
 // ---------- break-in game ----------
-import { createBreakin, flow, GW, GH } from '../src/sim/breakin.js';
+import { createBreakin, flow, mask, PIPE_GRID } from '../src/sim/breakin.js';
 
 test('every break-in puzzle starts unsolved and can be solved', () => {
   for (let seed = 1; seed <= 40; seed++) {
     const s = createState(seed),
       bk = createBreakin(s, { kind: 'wreck', difficulty: 1 + (seed % 3) });
-    assert.equal(bk.tiles.length, GW * GH);
+    const [w, h] = PIPE_GRID[1 + (seed % 3)];
+    assert.equal(bk.tiles.length, w * h, 'riskier wrecks have larger locks');
     assert.equal(flow(bk).solved, false, `seed ${seed} starts unsolved`);
     bk.tiles.forEach((t, i) => {
       t.rot = bk.solution[i];
     });
     assert.equal(flow(bk).solved, true, `seed ${seed} has a solution`);
   }
+});
+
+test('the lock of an easy wreck is small and needs only a few turns, and riskier wrecks are harder', () => {
+  // How many single turns it takes when every piece is turned the shortest way.
+  const turnsNeeded = (bk) =>
+    bk.tiles.reduce((sum, tile, i) => {
+      const want = mask({ type: tile.type, rot: bk.solution[i] });
+      const ways = [0, 1, 2, 3].filter((k) => mask({ type: tile.type, rot: (tile.rot + k) % 4 }) === want);
+      return sum + Math.min(...ways.map((k) => Math.min(k, 4 - k)));
+    }, 0);
+  const average = (difficulty) => {
+    let total = 0;
+    for (let seed = 1; seed <= 200; seed++) {
+      const turns = turnsNeeded(createBreakin(createState(seed), { kind: 'wreck', difficulty }));
+      assert.ok(turns >= 3, 'no lock is open or nearly open from the start');
+      total += turns;
+    }
+    return total / 200;
+  };
+  assert.deepEqual(PIPE_GRID[1], [5, 3], 'fifteen pieces');
+  const easy = average(1);
+  assert.ok(easy < 6.5, `an easy lock takes about six turns, not ${easy}`);
+  assert.ok(average(3) > easy + 1.5, 'the riskiest wrecks have clearly harder locks');
 });
 
 test('boarding a locked wreck opens the break-in game, and solving it opens the lock', () => {
@@ -424,7 +448,7 @@ test('boarding a locked wreck opens the break-in game, and solving it opens the 
   const turns = [];
   w.breakin.tiles.forEach((t, i) => {
     for (let r = t.rot; r !== w.breakin.solution[i]; r = (r + 1) % 4)
-      turns.push({ wreck: w.id, x: i % GW, y: Math.floor(i / GW), dir: 1 });
+      turns.push({ wreck: w.id, x: i % w.breakin.w, y: Math.floor(i / w.breakin.w), dir: 1 });
   });
   step(s, { hack: { 0: turns } }, DT);
   assert.equal(w.lock, 'open');

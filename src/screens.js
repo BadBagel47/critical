@@ -4,13 +4,14 @@
 import { VIEW_W, VIEW_H, COL } from './config.js';
 import { toast } from './events.js';
 import { toggleMute } from './audio.js';
+import { createMenu, openPage, drawMenu } from './menu.js';
 import { POSTS, playerById } from './sim/players.js';
 import { findDock } from './sim/things.js';
 import { isTrading } from './sim/stations.js';
 import { turretMount } from './sim/weapons.js';
 import { createEffects, drawFlash } from './render/effects.js';
 import { drawSpace, drawStars } from './render/space.js';
-import { drawHud, drawOverlay, drawHelp, drawTitle, drawToasts } from './render/hud.js';
+import { drawHud, drawOverlay, drawHelp, drawToasts } from './render/hud.js';
 import { drawBoarding, OX, OY } from './render/boarding.js';
 import { drawBreakin, breakinAction } from './render/breakin.js';
 import { drawMap, mapPoint, chartClick } from './render/map.js';
@@ -18,13 +19,15 @@ import { drawShop, shopClick } from './render/shop.js';
 import { drawEngineer, engineerClick, SYSTEM_KEYS } from './render/engineer.js';
 
 // What is kept about the screen. None of it is part of the game: two players look at the same game differently.
-//   panel  what the player has opened on top of their place in the game: 'map', 'lock', 'shop' or null
+//   panel  what the player has opened on top of their place in the game: 'map', 'lock', 'shop', 'menu' or null
+//   menu   which page of the menu is open and which row is picked, see menu.js
 export function createView(input) {
   return {
     started: false,
     playerId: 0,
     panel: null,
     shopTab: 'hull',
+    menu: createMenu(),
     help: false,
     wonSeen: false,
     engRow: 0,
@@ -40,6 +43,7 @@ export function createView(input) {
 export function modeOf(game) {
   const { state, view } = game;
   if (!view.started) return 'title';
+  if (view.panel === 'menu') return 'menu';
   const me = playerById(state, view.playerId);
   const docked = findDock(state, state.ship.docked);
   if (me.inside !== null) return view.panel === 'shop' && isTrading(docked) ? 'shop' : 'away';
@@ -208,7 +212,13 @@ function drawOnBoard(game) {
 }
 function drawTitleScreen(game, t) {
   drawStars(game.ctx, { x: t * 12, y: -t * 20 });
-  drawTitle(game.ctx, game.assets.font, game.assets, t);
+  drawMenu(game, t);
+}
+// The game menu lies on top of wherever the player is. The game goes on behind it.
+function drawGameMenu(game, t) {
+  if (game.me.inside !== null) drawAway(game);
+  else drawOnBoard(game);
+  drawMenu(game, t);
 }
 const drawAway = (game) => drawBoarding(game.ctx, game.state, game.view, game.assets);
 function drawLock(game) {
@@ -225,7 +235,8 @@ function drawShopScreen(game) {
 // pad: which gamepad layout applies (see input.js). cursor: the left stick moves a pointer.
 // toasts: where messages go so that they do not cover what the player is working with, as [y, x].
 export const SCREENS = {
-  title: { pad: 'title', draw: drawTitleScreen },
+  title: { pad: 'menu', draw: drawTitleScreen },
+  menu: { pad: 'menu', draw: drawGameMenu, toasts: [20] },
   captain: { pad: 'captain', input: captainInput, draw: drawOnBoard, toasts: [44] },
   gunner: { pad: 'gunner', input: gunnerInput, draw: drawOnBoard, toasts: [44] },
   engineer: { pad: 'engineer', cursor: true, input: engineerInput, draw: drawOnBoard, toasts: [44] },
@@ -246,10 +257,13 @@ export const SCREENS = {
 export function playerInput(game) {
   const { keys, state } = game;
   const out = {};
+  const mode = settle(game);
+  // In the menu the keys work the menu, and the player's post keeps running as it was set.
+  if (mode === 'menu') return out;
   if (keys.hit('KeyP', 'Escape')) out.pause = true;
   if (state.paused || state.over) return out;
   game.me = playerById(state, game.view.playerId);
-  const screen = SCREENS[settle(game)];
+  const screen = SCREENS[mode];
   if (screen.input) screen.input(game, out);
   return out;
 }
@@ -259,6 +273,12 @@ export function viewKeys(game, mode) {
   const { keys, state, view } = game;
   if (keys.hit('KeyH')) view.help = !view.help;
   if (keys.hit('KeyN')) toast(view, state, toggleMute() ? 'SOUND OFF' : 'SOUND ON', COL.text, 2);
+  if (mode === 'title' || mode === 'menu') return;
+  if (keys.hit('KeyO')) {
+    view.panel = 'menu';
+    openPage(game, 'main');
+    return;
+  }
   if (state.won && !view.wonSeen && keys.hit('Enter', 'NumpadEnter')) view.wonSeen = true;
   const canOpenMap = mode === 'map' || POSTS.includes(mode) || mode === 'crew';
   if (keys.hit('KeyM') && canOpenMap) view.panel = mode === 'map' ? null : 'map';
@@ -285,11 +305,16 @@ export function drawScreen(game, mode, t) {
   const screen = SCREENS[mode];
   game.me = playerById(state, view.playerId);
   screen.draw(game, t);
-  if (mode === 'title') return;
+  if (mode === 'title') {
+    if (view.help) drawHelp(ctx, font, 126);
+    return;
+  }
   drawToasts(ctx, font, view, state.time, ...screen.toasts);
   drawFlash(ctx, view.fx);
+  if (mode === 'menu') return;
   if (state.over) {
-    const lines = [`KILLS  ${state.kills}`, `TIME  ${fmtTime(state.time)}`, '', 'PRESS R TO TRY AGAIN'];
+    const what = game.loss ? game.loss.line : '';
+    const lines = [`KILLS  ${state.kills}`, `TIME  ${fmtTime(state.time)}`, '', what];
     drawOverlay(ctx, font, 'SHIP LOST', lines, COL.ember[2]);
   } else if (state.won && !view.wonSeen) {
     const score = `KILLS  ${state.kills}     CREDITS  ${state.credits}`;
