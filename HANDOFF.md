@@ -51,6 +51,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 
 - `npm test`: tester av spellogiken.
 - `npm run serve` och sedan `npm run smoke`: provkör spelet i en webbläsare. Kräver Playwright installerat globalt.
+- `node tests/outside.mjs`: kontrollerar att spelet och designsidan inte laddar något från andra tjänster, och visar vad som sparas i webbläsaren.
 
 ## Decisions
 
@@ -153,5 +154,11 @@ Grafik
 
 ## Lagar och regler
 
-- 2026-11-14: Spelet hanterar inga personuppgifter och laddar inget från andra tjänster. Det sparar en enda sak i webbläsaren: om ljudet är av eller på, efter att spelaren själv tryckt N.
-- 2026-11-14: Designsidan i `docs/design/` är nu nåbar på den publicerade adressen och laddar typsnitt från Google Fonts, vilket skickar besökarens IP-adress till Google. Se D-033.
+Genomgång 2026-11-14 (D-033). Agenten är ingen jurist, och inget här är juridisk rådgivning. Officiella källor är IMY (imy.se) för personuppgifter och PTS (pts.se) för kakor och liknande lagring.
+
+- Spelet och designsidan laddar inget från andra tjänster. Det kontrolleras med `node tests/outside.mjs`.
+- Designsidan laddade tidigare typsnitt från Google Fonts. De är borttagna och sidan använder systemets typsnitt.
+- Spelet hanterar inga personuppgifter: inga namn, konton eller formulär.
+- Spelet sparar en enda sak i webbläsaren: om ljudet är av eller på (`critical-muted`), och bara efter att spelaren själv tryckt N. Inga kakor. Regeln som kan beröras är lagen om elektronisk kommunikation, 9 kap. 28 §, om lagring i användarens utrustning. Lagring som behövs för något användaren själv har bett om brukar vara undantagen från samtycke. Agentens rekommendation är att behålla sparandet. Användaren har inte tagit ställning än.
+- Webbhotellet GitHub Pages får besökarnas IP-adresser, vilket följer av att sidan ligger där.
+- Ny genomgång behövs när onlineläget byggs (D-046): spelarnamn, anslutningar och Cloudflare som ny tjänst.

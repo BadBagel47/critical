@@ -4,15 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Designskiss för Critical ST8</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Figtree:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* Layout: one wide column. Pixel mockups carry the look; short blocks and tables carry the rules. */
 :root{
   --bg:#f2f3f8; --panel:#ffffff; --ink:#1b1f38; --muted:#565c7c; --rule:#d3d7e5; --accent:#2c5fae;
-  --display:"Bungee","Arial Black",Impact,sans-serif;
-  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  /* System fonts only: the page loads nothing from other services. */
+  --display:"Arial Black",Impact,"Helvetica Neue",sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){--bg:#0f1122; --panel:#181b34; --ink:#e9ebf7; --muted:#a4aac8; --rule:#2b3054; --accent:#7db4ff; color-scheme:dark}
