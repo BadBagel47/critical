@@ -210,6 +210,19 @@ Faktioner, stationsförsvar och trafik, agentens val som användaren inte har se
 - Pirater jagar närmaste fiende inom sikt och annars fregatten. Darts skjuter bara på fiender.
 - Sparningar gjorda före den här ändringen går inte att läsa in (`SAVE_VERSION` är 2).
 
+Bordning av stationer, besked från användaren (2026-11-14, inget av det är byggt än)
+- Tre lägen inne på ett ställe: lugnt (handelsgolv), lockdown (stället räknar besättningen som fiende: mörkt, roterande röda ljus, stängda dörrar, och man smyger) och larm (upptäckt). Ett larm ligger kvar tills man gått. Man kan inte gömma sig och vänta ut det.
+- Smygande gäller inte i vrak. Där räknar reaktorn ner.
+- Sövda vakter vaknar efter en stund. Den som går fram till en sövd vakt innan den vaknar kan oskadliggöra den. Vad knappen ska heta är inte bestämt.
+- En vakt som hittar en sövd vakt utlöser larmet direkt.
+- Alla tre rollerna har en bonus vid bordning: Gunner slåss bättre, Engineer hackar mainframen snabbare och når fler funktioner, Captain ger överblick (ser vakter och kameror en bit genom väggar, och hela gruppen får se det). Alla kan använda mainframen. Bonusen får inte ge mycket övertag.
+- Mainframen står längst in, på översta våningen där det finns flera. Man måste alltid ta sig förbi vakterna för att nå den.
+- Stationens egna turrets inomhus ska gå att smyga förbi och är bara aggressiva mot fiender. Spelarnas egna turrets är engångssaker.
+- En neutral bas ska gå att ta över inifrån, med stor risk: red alert, bounty hunters som anfaller skeppet och sjunkande anseende.
+- Anseende ska inte förlåtas med tiden. Man ska få jobba för det, främst genom uppdrag som tillhör faktioner och som kan ge plus hos en och minus hos en annan (F-118, D-073). Det som är byggt i dag förlåter fortfarande med tiden och ska ändras när uppdragen finns.
+- Faktioner ska kunna vara i krig med varandra (F-119).
+- Kvar att bestämma i D-117: hur en attack inifrån börjar på en neutral bas (agentens förslag: en öppen del och en del bara för personal), att ingen längre kastas ut när stationen blir fientlig, hur larm skiljer sig från lockdown i bild, hur oförstörbara turrets aldrig kan låsa spelet, hur hårt bounty hunters slår, och vad panelen på en ägd station ska kunna när stationer i dag lagar sig själva.
+
 Sparande, uppdrag och omgångar (2026-11-14)
 - En autosparfil vid dockning och fem manuella platser. Vid död laddas senaste sparfilen om. Byggt 2026-11-14 (F-079).
 - Hardcore mode: ett liv. Spelet sparar sig bara självt, det går inte att ladda eller exportera under en omgång, och omgångens sparning tas bort när skeppet går förlorat. Hur hardcore ska fungera i detalj är agentens val (F-096, 2026-11-14).
