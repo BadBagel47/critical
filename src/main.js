@@ -4,6 +4,8 @@ import { loadAssets } from './assets.js';
 import { createInput } from './input.js';
 import { initAudio, isMuted } from './audio.js';
 import { readEvents } from './events.js';
+import { sceneOf } from './scene.js';
+import { updateMusic } from './music.js';
 import { createView, settle, playerInput, viewKeys, drawScreen, SCREENS } from './screens.js';
 import { createState } from './sim/state.js';
 import { step, stepPlayers } from './sim/step.js';
@@ -124,6 +126,9 @@ function frame(now) {
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ctx.imageSmoothingEnabled = false;
   drawScreen(game, settle(game), now / 1000);
+  const { state, view } = game;
+  const scene = sceneOf(state, view.playerId, view.started);
+  updateMusic({ scene, sector: state.sector, paused: state.paused, won: state.won }, dt);
   keys.endFrame();
   requestAnimationFrame(frame);
 }

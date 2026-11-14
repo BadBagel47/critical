@@ -3,6 +3,7 @@
 let ac = null,
   master = null,
   engineGain = null,
+  musicGain = null,
   muted = false;
 const last = new Map();
 
@@ -36,6 +37,16 @@ export function initAudio() {
   filter.connect(engineGain);
   engineGain.connect(master);
   osc.start();
+}
+// Where music connects: its own volume under the master, so that muting silences it too.
+// Gives { context, out } once sound has started, and null before that.
+export function musicOutput() {
+  if (!ac) return null;
+  if (!musicGain) {
+    musicGain = ac.createGain();
+    musicGain.connect(master);
+  }
+  return { context: ac, out: musicGain };
 }
 export const isMuted = () => muted;
 export function toggleMute() {

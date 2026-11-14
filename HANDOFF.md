@@ -44,6 +44,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - [docs/design/img/](docs/design/img/): exempelskärmar och skeppsbilder.
 - [docs/design/tools/](docs/design/tools/): Python-skript som ritar bilderna. Kräver Pillow och typsnittet DejaVu Sans Bold. Kör `python3 frigate.py`, `python3 rot.py` och `python3 screens2.py`, samt `python3 ships2.py` för förslagen på nya skeppsklasser.
 - [tools/export_assets.py](tools/export_assets.py): gör spelets bilder av ritskripten, och typsnittet av DejaVu Sans Bold. Kör `npm run assets`.
+- [docs/music-brief.md](docs/music-brief.md): underlag för den agent som gör musiken (F-048). Säger vad som gäller, hur musiken kopplas in och vilka filer den får röra.
 
 ## Kod
 
@@ -60,6 +61,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
   - `balance.js`: siffror för spelets regler. Siffror för varje skeppsklass står i `kinds.js`.
 - `src/screens.js`: vad spelaren ser. Det finns alltid exakt ett läge, och varje läge är en rad i `SCREENS` som säger hur det ritas och vad tangenterna gör. Ett nytt läge läggs till där.
 - `src/main.js`: start och huvudloop. `src/events.js`: meddelanden, ljud och paneler som svar på det som hänt i spelet.
+- `src/scene.js`: vilket slags ögonblick spelaren är i (lugnt, varning, strid, bordning, station), för musiken. `src/music.js`: musikens fil, tom tills F-048 är gjord. Den anropas en gång per bildruta och kopplar sitt ljud till `musicOutput()` i `src/audio.js`.
 - `src/render/`: skärmarna. `looks.js` beskriver hur varje sorts sak och skepp ser ut, på samma sätt som `kinds.js` beskriver vad de är. `effects.js` och `particles.js` ritar effekterna. Allt här läser bara spelets tillstånd och ändrar det aldrig.
 - `assets/`: bilder och typsnitt som skapas av `tools/export_assets.py`.
 - Spelet ritas på 640 × 360 punkter. Text och ramar ritas på ett dubbelt så fint rutnät (typsnittet är dubbelt så stort och ritas i halv skala, se `src/font.js` och `HAIR` i `src/render/draw.js`). Bilden fyller alltid fönstret så långt formen 16:9 tillåter: den ritas i ett jämnt antal skärmpunkter per spelpunkt och webbläsaren passar sedan in den, se `resize()` i `src/main.js`.
