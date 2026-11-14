@@ -8,6 +8,8 @@ export function sprite(ctx, img, x, y, angle = 0, px = img.width / 2, py = img.h
   ctx.drawImage(img, -px, -py);
   ctx.restore();
 }
+// Borders are one pixel of the finer grid that text is drawn on, half a game pixel.
+export const HAIR = 0.5;
 export function rect(ctx, x, y, w, h, fill, stroke) {
   if (fill) {
     ctx.fillStyle = fill;
@@ -15,10 +17,10 @@ export function rect(ctx, x, y, w, h, fill, stroke) {
   }
   if (stroke) {
     ctx.fillStyle = stroke;
-    ctx.fillRect(x, y, w, 1);
-    ctx.fillRect(x, y + h - 1, w, 1);
-    ctx.fillRect(x, y, 1, h);
-    ctx.fillRect(x + w - 1, y, 1, h);
+    ctx.fillRect(x, y, w, HAIR);
+    ctx.fillRect(x, y + h - HAIR, w, HAIR);
+    ctx.fillRect(x, y, HAIR, h);
+    ctx.fillRect(x + w - HAIR, y, HAIR, h);
   }
 }
 // A text label in a box. Returns the x just right of the box.

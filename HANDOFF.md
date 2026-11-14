@@ -41,7 +41,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - [docs/design/index.html](docs/design/index.html): designskissen (utkast 3), på svenska. Samma sida finns som privat sida hos användaren: https://claude.ai/artifact/Ebx9u3e5cy33EHWXoViYJz
 - [docs/design/img/](docs/design/img/): exempelskärmar och skeppsbilder.
 - [docs/design/tools/](docs/design/tools/): Python-skript som ritar bilderna. Kräver Pillow och typsnittet DejaVu Sans Bold. Kör `python3 frigate.py`, `python3 rot.py` och `python3 screens2.py`.
-- [tools/export_assets.py](tools/export_assets.py): gör spelets bilder och pixeltypsnitt av ritskripten. Kör `npm run assets`.
+- [tools/export_assets.py](tools/export_assets.py): gör spelets bilder av ritskripten, och typsnittet av DejaVu Sans Bold. Kör `npm run assets`.
 
 ## Kod
 
@@ -60,7 +60,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - `src/main.js`: start och huvudloop. `src/events.js`: meddelanden, ljud och paneler som svar på det som hänt i spelet.
 - `src/render/`: skärmarna. `looks.js` beskriver hur varje sorts sak och skepp ser ut, på samma sätt som `kinds.js` beskriver vad de är. `effects.js` och `particles.js` ritar effekterna. Allt här läser bara spelets tillstånd och ändrar det aldrig.
 - `assets/`: bilder och typsnitt som skapas av `tools/export_assets.py`.
-- Skärmen är 640 × 360 punkter och förstoras bara i hela steg (1, 2, 3 gånger) till det största som ryms i fönstret, se `resize()` i `src/main.js`. Typsnittet är 9 punkter högt. F-077 och F-078 ändrar detta.
+- Spelet ritas på 640 × 360 punkter. Text och ramar ritas på ett dubbelt så fint rutnät (typsnittet är dubbelt så stort och ritas i halv skala, se `src/font.js` och `HAIR` i `src/render/draw.js`). Bilden fyller alltid fönstret så långt formen 16:9 tillåter: den ritas i ett jämnt antal skärmpunkter per spelpunkt och webbläsaren passar sedan in den, se `resize()` i `src/main.js`.
 - Koden formateras med Prettier: `npm run format`.
 
 ## Test

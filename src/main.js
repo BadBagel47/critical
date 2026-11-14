@@ -13,14 +13,21 @@ import { resetEffects, updateEffects, updateInside } from './render/effects.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-let scale = 1;
+let scale = 2;
 
+// The picture always fills the window, as far as its shape allows. It is drawn at a whole, even number of screen
+// pixels per game pixel, so that both the game's pixels and the finer text land on whole pixels, and the browser
+// then fits it to the window. When that fit is exact the pixels are left untouched, otherwise they are smoothed.
+const MAX_SCALE = 6;
 function resize() {
-  scale = Math.max(1, Math.floor(Math.min(window.innerWidth / VIEW_W, window.innerHeight / VIEW_H)));
+  const fit = Math.min(window.innerWidth / VIEW_W, window.innerHeight / VIEW_H);
+  const wanted = fit * (window.devicePixelRatio || 1);
+  scale = Math.max(2, Math.min(MAX_SCALE, 2 * Math.ceil(wanted / 2 - 0.01)));
   canvas.width = VIEW_W * scale;
   canvas.height = VIEW_H * scale;
-  canvas.style.width = canvas.width + 'px';
-  canvas.style.height = canvas.height + 'px';
+  canvas.style.width = Math.floor(VIEW_W * fit) + 'px';
+  canvas.style.height = Math.floor(VIEW_H * fit) + 'px';
+  canvas.style.imageRendering = Math.abs(wanted - scale) < 0.01 ? 'pixelated' : 'auto';
 }
 window.addEventListener('resize', resize);
 resize();

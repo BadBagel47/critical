@@ -8,58 +8,54 @@ Prioritet: Hög, Medel, Låg.
 **A** – standard model, medium level – Tester och verktyg
 - D-058 – Låt provkörningen klicka på namngivna knappar, lägg till kontroll av stavfel och typer, och kör testerna automatiskt vid varje sparning
 
-**B** – strong model, medium level – Skarpare text och bild som fyller fönstret
-- F-077 – Rita text och UI på ett dubbelt så fint rutnät medan skeppet och rymden är som nu, så att texten blir lättare att läsa
-- F-078 – Låt bilden fylla fönstret i stället för att hoppa mellan fasta storlekar, så att spelet inte blir litet i ett vanligt webbläsarfönster
-
-**C** – strong model, medium level – Större stationer
+**B** – strong model, medium level – Större stationer
 - F-065 – Rita stationerna större i rymdvyn och flytta dockning, kanoner och träffyta efter det, så att de känns som stora platser bredvid skeppet
 
-**D** – strong model, high level – Spara spelet
+**C** – strong model, high level – Spara spelet
 - F-079 – Spara och fortsätta en omgång i webbläsaren, och exportera och importera en sparfil, så att långa omgångar inte går förlorade
 
-**E** – strong model, high level – Faktioner och trafik
+**D** – strong model, high level – Faktioner och trafik
 - F-035 – Faktioner med egna stationer, områden och anseende, så att världen får sidor att förhålla sig till
 - F-069 – Lägg till freighter som skeppsklass, större och långsam, så att trafiken får ett eget skepp
 - F-066 – Låt andra skepp flyga fram till stationer, docka en stund och lämna, så att stationerna känns besökta
 - F-067 – Låt handelsskepp, patruller och pirater hoppa in och ut ur systemet och slåss med varandra, så att miljön känns levande
 
-**F** – strong model, high level – Sällsynta skepp
+**E** – strong model, high level – Sällsynta skepp
 - F-070 – Juggernaut som långsamt och tungt bestyckat krigsskepp, på patrull hos faktioner och i mycket sällsynta fall som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**G** – strong model, high level – Handel
+**F** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**H** – strong model, medium level – Butik med bilder
+**G** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**I** – strong model, high level – Värme
+**H** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**J** – strong model, high level – Slå ut och borda
+**I** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**K** – strong model, high level – Missiler och raketer
+**J** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**L** – strong model, high level – Kontakt med andra skepp
+**K** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**M** – strong model, high level – Asteroider och anomalier
+**L** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**N** – strong model, high level – En värld som förändras
+**M** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 
-**O** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**N** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**P** – strong model, high level – Musik och ljud
+**O** – strong model, high level – Musik och ljud
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - F-048 – Musik för de olika lägena
 
@@ -96,8 +92,6 @@ Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. D-
 | D-073 | Det ska gå att få uppdrag på stationer man kan besöka genom att prata med folk. Detta kräver mer genomgång innan vi inför. Hänger ihop med D-052. Från D-075: fraktjobb och passagerare med tidsgräns på en anslagstavla, uppdrag med berättelse från folk i baren | Väntar på användaren |
 | D-074 | Någon form av smuggelgods. Något man kan få i uppdrag att frakta som kan dra till sig pirater eller skepp som vill skydda sin faktion från handel med smuggelgods. Vi behöver titta närmare på hur detta funkar. Hänger ihop med F-068 (handel), D-073 (uppdrag) och F-035 (faktioner). Från D-075: patrullskepp skannar lasten, olaglig last ger böter och sämre anseende, och Engineer kan störa skanningen | Väntar på användaren |
 | F-035 | Faktioner med egna stationer och områden. Tillbaka från parkerat 2026-11-14. Från D-075: anseende per faktion som stiger när man skjuter pirater och sjunker när man anfaller handelsskepp | Ej påbörjad |
-| F-077 | Öka upplösningen lite på text och UI. Skeppet är bra | Ej påbörjad |
-| F-078 | Agentens förslag: låt bilden fylla fönstret i stället för att hoppa mellan fasta storlekar. I dag ritas spelet på 640 × 360 punkter och förstoras bara i hela steg | Ej påbörjad |
 | F-080 | Shoppen ska bli roligare med lite objektgrafik | Ej påbörjad |
 | F-081 | Från D-075: skepp som slås ut i stället för att sprängas, så att de kan bordas medan besättningen är kvar. Gunner väljer mellan att slå ut och förstöra | Ej påbörjad |
 | F-082 | Från D-075: anropa andra skepp och stationer. Be om bränsle eller hjälp, muta, kräva tribut. En ny uppgift för Captain | Ej påbörjad |
@@ -179,3 +173,5 @@ Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. D-
 | D-056 | Gemensam form för saker i rymden och för andra skepp. Saker, skeppsklasser och vapen beskrivs som data | 2026-11-14 |
 | D-057 | Koden är formaterad med en sak per rad och de längsta funktionerna är uppdelade, utan att spelet beter sig annorlunda | 2026-11-14 |
 | D-063 | Tester som vaktar att spelet är förutsägbart, även efter att det sparats och lästs in. Gäller varje ny funktion framöver | 2026-11-14 |
+| F-077 | Text och ramar ritas på ett dubbelt så fint rutnät, i samma storlek som förut. Skeppet och rymden är som de var | 2026-11-14 |
+| F-078 | Bilden fyller fönstret i stället för att hoppa mellan fasta storlekar | 2026-11-14 |

@@ -104,8 +104,17 @@ def pod():
 save(pod(), 'pod')
 
 # ---- bitmap font: white glyphs on transparent, one row ----
+# Text is drawn on a grid twice as fine as the rest of the game, so the font is twice the size and the
+# game draws it at half scale ("unit" below).
+from PIL import ImageFont  # noqa: E402
+FONT = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 16)
+def glyph(ch):
+    t = Image.new('1', (40, 32), 0); td = ImageDraw.Draw(t); td.fontmode = '1'; td.text((10, 4), ch, font=FONT, fill=1)
+    pts = [(x, y) for y in range(32) for x in range(40) if t.getpixel((x, y))]
+    x0 = min(p[0] for p in pts)
+    return [(x - x0, y) for x, y in pts], max(p[0] for p in pts) - x0 + 1
 chars = ''.join(chr(c) for c in range(33, 127)) + '·×°'
-glyphs = {c: S.glyph(c) for c in chars}
+glyphs = {c: glyph(c) for c in chars}
 ys = [y for pts, w in glyphs.values() for x, y in pts]
 y0, y1 = min(ys), max(ys); h = y1 - y0 + 1
 total = sum(w + 1 for pts, w in glyphs.values()) + 1
@@ -116,6 +125,6 @@ for c in chars:
     meta[c] = [x, w]; x += w + 1
 atlas.save(os.path.join(ROOT, 'assets', 'font.png'), optimize=True)
 cap = [y for x, y in glyphs['H'][0]]
-json.dump({'height': h, 'capTop': min(cap) - y0, 'capHeight': max(cap) - min(cap) + 1, 'space': 3, 'spacing': 1, 'glyphs': meta},
+json.dump({'unit': 0.5, 'height': h, 'capTop': min(cap) - y0, 'capHeight': max(cap) - min(cap) + 1, 'space': 6, 'spacing': 2, 'glyphs': meta},
           open(os.path.join(ROOT, 'assets', 'font.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
 print('exported', len(os.listdir(OUT)), 'sprites, font height', h)
