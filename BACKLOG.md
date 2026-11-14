@@ -11,19 +11,23 @@ Prioritet: Hög, Medel, Låg.
 **B** – strong model, high level – Skepp som reagerar på strider
 - F-129 – Skepp med intresse av en strid vid en bas ger sig in i den, och de andra håller sig undan eller lämnar platsen
 
-**C** – strong model, high level – Färg efter sida, och förslag på inomhusstilar
-- F-130 – Stationer och vrak får färg efter vems de är, så att man ser det utifrån
-- D-128 – Ta fram design på inomhusstilar för vrak, stationer och varje sida, med exempel på genererade planlösningar, och visa den innan något byggs
+**C** – strong model, high level – Förslag: utseende utanpå och inuti
+- D-128 – Ta fram design på vrak per skeppsklass, märken och påbyggnader per sida på stationer, och inomhusstilar med exempel på genererade planlösningar, och visa den innan något byggs
 
-**D** – strong model, high level – Större och genererade inomhusmiljöer (när designen i D-128 är godkänd)
+**D** – strong model, high level – Utsidan på stationer och vrak (när designen i D-128 är godkänd)
+- F-130 – Stationer får färg efter vems de är, och visar hur de behandlar er med ljusen på dockningsarmarna
+- F-131 – Stationer får egna märken, antenner och påbyggnader per sida
+- F-132 – Vrak får egna former, ett per skeppsklass
+
+**E** – strong model, high level – Större och genererade inomhusmiljöer (när designen i D-128 är godkänd)
 - F-127 – Varje vrak och station får en egen planlösning som följer objektets form och slumpas för varje omgång
 - D-101 – Gör inomhusmiljöerna mer utarbetade, så att stationer och vrak känns som platser
 
-**E** – strong model, high level – Smartare vakter i flera sorter (efter de genererade inomhusmiljöerna)
+**F** – strong model, high level – Smartare vakter i flera sorter (efter de genererade inomhusmiljöerna)
 - F-125 – Vakter som tar skydd, rycker fram och kringgår, så att striderna känns levande
 - F-126 – Flera typer av vakter, lättare i början och svårare längre fram
 
-**F** – strong model, high level – Lockdown och smygande (efter smartare vakter)
+**G** – strong model, high level – Lockdown och smygande (efter smartare vakter)
 - F-102 – Lockdown på fientliga ställen: mörkare, roterande röda ljus och stängda dörrar tills spelarna slår av det vid en kontrollpanel längst in
 - F-107 – Smygande tills man blir upptäckt av patrullerande vakter, och en tranq gun som söver vakter
 - F-108 – Kameror som sveper och utlöser larmet om man blir sedd
@@ -31,76 +35,76 @@ Prioritet: Hög, Medel, Låg.
 - F-116 – Spelarnas egna turrets är engångssaker som bara går att sätta ut när en strid pågår
 - F-120 – Spelet talar om för musiken när larmet har gått, så att musiken byter från smyg till larm
 
-**G** – strong model, high level – Roller vid bordning (när förslaget i docs/station-boarding.md är godkänt)
+**H** – strong model, high level – Roller vid bordning (när förslaget i docs/station-boarding.md är godkänt)
 - F-113 – Gunner slåss bättre, Engineer hackar och Captain ger gruppen något eget, så att det spelar roll vem som går in
 
-**H** – strong model, high level – Mainframe och egna stationer (när förslaget i docs/station-boarding.md är godkänt)
+**I** – strong model, high level – Mainframe och egna stationer (när förslaget i docs/station-boarding.md är godkänt)
 - F-109 – En mainframe-panel på alla stationer, som Engineer hackar hos fiender och som styr stationen hos ägaren
 - F-110 – Laga och uppgradera en station man äger från panelen
 
-**I** – strong model, high level – Ta över neutrala baser (efter gruppen om mainframen)
+**J** – strong model, high level – Ta över neutrala baser (efter gruppen om mainframen)
 - F-114 – Hacka en neutral bas med stor risk: red alert, bounty hunters som anfaller skeppet och sjunkande anseende
 
-**J** – strong model, high level – Anfall på egna stationer (efter gruppen om mainframen)
+**K** – strong model, high level – Anfall på egna stationer (efter gruppen om mainframen)
 - F-121 – Stationer kan falla även när man är i ett annat system, och varnar i tre nivåer när de anfalls
 - F-122 – Ett övertagande i steg: belägring, bordning och avgörande, som inte går att fuska sig ur genom att skjuta det dockade skeppet
 - F-123 – Regler för hur ofta det sker, och ordnade anfall från faktioner man är ovän med
 
-**K** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
+**L** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 - D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
 
-**L** – strong model, high level – Förslag: ekonomi och belöningar
+**M** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**M** – strong model, high level – Baser i två storlekar
+**N** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 
-**N** – strong model, high level – Sällsynta skepp
+**O** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**O** – strong model, high level – Handel
+**P** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**P** – strong model, medium level – Butik med bilder
+**Q** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**Q** – strong model, high level – Värme
+**R** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**R** – strong model, high level – Slå ut och borda
+**S** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**S** – strong model, high level – Missiler och raketer
+**T** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**T** – strong model, high level – Kontakt med andra skepp
+**U** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**U** – strong model, high level – Asteroider och anomalier
+**V** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**V** – strong model, high level – En värld som förändras
+**W** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**W** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**X** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**X** – strong model, high level – Ljudeffekter
+**Y** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**Y** – strong model, high level – Visuella effekter och feedback
+**Z** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md och väntar på att användaren lyssnar på docs/music/ och väljer introtema.
@@ -128,8 +132,10 @@ Väntar på användaren: D-117 (förslaget om bordning av stationer i docs/stati
 | F-125 | En lite mer avancerad logik även för attackerande vakter: att de kan gömma sig bakom saker och ta skydd, men inte heller bara vara defensiva. En mix som gör det mer levande. Agentens förslag: vakter går från skydd till skydd, kikar fram och skjuter, kringgår genom en annan dörr när de är flera, drar sig undan när de är skadade, och har olika läggning (försiktig eller framfusig) | Ej påbörjad |
 | F-126 | Flera typer av vakter. Kanske så att de är lättare i början och svårare ju längre man kommer. Agentens förslag på typer: väktare (lätt, slår larm), soldat (tar skydd), tung vakt (pansrad och långsam), tekniker (slår på utslagna turrets igen) och drönare (snabb, går nära). Vilka som finns beror på sektor, på hur farligt stället är och på vems det är | Ej påbörjad |
 | F-127 | Större invändiga baser och skepp, för en mer varierad miljö. Det blir tråkigt att alltid se samma innehåll. Formen på inomhusmiljön bör matcha formen på objektet man bordat, och planlösningen slumpas för varje spelomgång så att alla objekt har olika vägar och rum. I dag är alla insidor samma planlösning, en skärm stor. Agentens förslag: bygg insidan av färdiga rumsbitar längs ett skelett som följer objektets form (ett vrak är långt och smalt, en station är en ring med nav och armar), med tester som vaktar att allt går att nå. Kameran följer då spelaren | Ej påbörjad |
-| D-128 | Skepp och stationer borde se olika ut designmässigt. Ta fram design på inomhusstilar för vrak, stationer och varje sida (pirater och faktioner) och visa den för användaren innan den läggs in, tillsammans med exempel på genererade planlösningar. Oklart om användaren också menar utsidan. Besked 2026-11-14: utsidan får bara färg efter sida tills vidare (F-130). Designförslaget gäller insidan | Ej påbörjad |
-| F-130 | Stationer och vrak får färg efter vems de är, på samma sätt som faktionernas skepp har i dag. Användaren valde 2026-11-14 den enklaste av tre nivåer för utsidan tills vidare. Att lösa: stationens färg visar i dag hur den behandlar besättningen, så det behöver visas på annat sätt, till exempel med ljusen på dockningsarmarna | Ej påbörjad |
+| D-128 | Skepp och stationer borde se olika ut designmässigt. Ta fram design på inomhusstilar för vrak, stationer och varje sida (pirater och faktioner) och visa den för användaren innan den läggs in, tillsammans med exempel på genererade planlösningar. Oklart om användaren också menar utsidan. Besked 2026-11-14: designförslaget gäller också utsidan: vrak per skeppsklass och märken och påbyggnader per sida på stationer (F-130 till F-132) | Ej påbörjad |
+| F-130 | Stationer får färg efter vems de är, på samma sätt som faktionernas skepp har i dag. Stationens färg visar i dag hur den behandlar besättningen, så det visas i stället på annat sätt, till exempel med ljusen på dockningsarmarna. Användaren valde först bara detta (2026-11-14) men ångrade sig samma dag och valde agentens rekommendation, se F-131 och F-132 | Ej påbörjad |
+| F-131 | Stationer får egna märken, antenner, ljus och påbyggnader per sida, på dagens ringform. Valt av användaren 2026-11-14 enligt agentens rekommendation. Designen visas först (D-128) | Ej påbörjad |
+| F-132 | Vrak får egna former: ett vrak per skeppsklass som finns, alltså Gunboat och fraktskepp, och senare Juggernaut, så att insidan kan följa olika former. Valt av användaren 2026-11-14 enligt agentens rekommendation. Designen visas först (D-128). Stationer med egna former kommer med de stora baserna (F-103) | Ej påbörjad |
 | F-129 | Användarens anteckning 2026-11-14, meningen är inte avslutad: "när det blir strid vid en bas så borde skepp som inte är involverade eller har intresse av striden (det jag kan komma på är att man anfaller en faktion, och ett faktionskepp är i närheten, som då ger sig in i striden)". Agentens tolkning: skepp som har ett intresse av striden ger sig in i den, till exempel ett faktionsskepp i närheten när dess faktion anfalls, och skepp som inte har det håller sig undan eller lämnar platsen. I dag fortsätter fraktskepp med sitt, och patruller slåss bara mot den som redan är deras fiende. Besked 2026-11-14: tolkningen stämmer | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
 | F-068 | Handelssystem för goods. Att man kan köpa och sälja varor mellan olika stationer med olika priser. Det är inget som man själv kan använda, utan det är bara för att kunna tjäna pengar. Agentens förslag som användaren inte invänt mot: lastrum med begränsad plats som går att bygga ut, och priser som rör sig långsamt. Från D-075: prisnivåer per vara och station, och en kartvy som visar var det lönar sig | Ej påbörjad |
@@ -180,8 +186,6 @@ Väntar på användaren: D-117 (förslaget om bordning av stationer i docs/stati
 
 | ID | Vad | Status |
 |---|---|---|
-| F-131 | Utsidan, nivå två: samma grundform men egna märken, antenner, ljus och påbyggnader per sida på stationer, och olika skador på vrak. Sparad 2026-11-14 för att tas upp senare | Ej påbörjad |
-| F-132 | Utsidan, nivå tre: egna former. Ett vrak per skeppsklass (Gunboat, fraktskepp, senare Juggernaut) och stationer som är byggda på olika sätt, så att insidan kan följa olika former. Varje ny form visas för användaren först. Sparad 2026-11-14 för att tas upp senare | Ej påbörjad |
 | F-086 | Från D-075: namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma | Ej påbörjad |
 | F-087 | Från D-075: händelser som ändrar världen. En station byter ägare, priser rör sig, en sektor blir farligare | Ej påbörjad |
 | F-088 | Från D-075: tribut från övertagna stationer som ger inkomst över tid | Ej påbörjad |
