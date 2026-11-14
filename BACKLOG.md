@@ -5,9 +5,10 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – standard model, medium level – Ljud och handkontroll
-- F-041 – Ljud för skott, träffar, larm och motor
-- F-042 – Stöd för handkontroll
+**A** – standard model, medium level – Juridik och städning
+- D-033 – Ta bort Google Fonts från den publicerade designsidan och gå igenom vad spelet sparar i webbläsaren
+
+Övrigt väntar på användaren: provspelning och synpunkter på balans, besked i D-044 och D-045, och motorn för onlineläget (F-040).
 
 ## Hög
 
@@ -28,9 +29,7 @@ Inget just nu.
 
 | ID | Vad | Status |
 |---|---|---|
-| D-033 | Gå igenom GDPR och kakor innan onlineläget eller designsidan publiceras, bland annat typsnitt från Google Fonts och spelarnamn | Ej påbörjad |
-| F-041 | Ljud: skott, träffar, larm och motor | Ej påbörjad |
-| F-042 | Stöd för handkontroll | Ej påbörjad |
+| D-033 | Designsidan är nu publicerad och laddar typsnitt från Google Fonts. Ta bort dem, och gå igenom GDPR och kakor igen innan onlineläget byggs (spelarnamn, anslutningar) | Ej påbörjad |
 
 ## Parkerat
 
@@ -77,3 +76,5 @@ Inget just nu.
 | F-028 | Fler inbrottsspel: kod för stationer som bara Engineer-skärmen visar, och visarlås för fraktcontainrar | 2026-11-14 |
 | F-027 | Bordarnas utrustning i en egen flik: bättre gevär, cargo pack, suit armor, breaching charges, deployable turret, hacking kit och teleporter coils | 2026-11-14 |
 | F-029 | Fler skeppsuppgraderingar: afterburner, jump coils, tractor beam, point defense, targeting computer, repair drones och fuel tank | 2026-11-14 |
+| F-041 | Ljud för skott, träffar, larm, motor och paneler, skapat i webbläsaren utan ljudfiler. N slår av och på | 2026-11-14 |
+| F-042 | Stöd för handkontroll på alla poster, i bordning och i panelerna | 2026-11-14 |

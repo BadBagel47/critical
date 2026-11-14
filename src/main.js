@@ -11,6 +11,9 @@ import { drawBreakin, breakinAction } from './render/breakin.js';
 import { drawMap, mapPoint, chartClick } from './render/map.js';
 import { drawStation, stationClick } from './render/station.js';
 import { findDock } from './sim/dock.js';
+import { SHIP_GEOM } from './sim/balance.js';
+import { toWorld } from './sim/util.js';
+import { initAudio, playEvents, setEngine, toggleMute, isMuted } from './audio.js';
 import { drawEngineer, engineerClick, SYSTEM_KEYS } from './render/engineer.js';
 
 const canvas = document.getElementById('game');
@@ -26,7 +29,8 @@ window.addEventListener('resize', resize);
 resize();
 
 const input = createInput(canvas);
-const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [], hacking: false, map: false, station: false, stationTab: 'hull', wonSeen: false };
+input.onGesture = initAudio;
+const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [], hacking: false, map: false, station: false, stationTab: 'hull', wonSeen: false, padAim: 0 };
 let state = createState(Date.now() % 100000);
 let assets = null;
 
@@ -47,11 +51,17 @@ function commands() {
   const me = state.players[view.playerId];
   if (me.inside !== null) {
     // Away on a boarding: the player has no post on the ship.
-    const m = input.mouse, at = { x: m.x - OX, y: m.y - OY };
+    const m = input.mouse, pad = input.pad; let at = { x: m.x - OX, y: m.y - OY }, lob = at;
+    if (pad.used) {
+      // With a gamepad the right stick aims, from where the boarder stands.
+      const target = findDock(state, me.inside), av = target && target.interior.avatars.find((a) => a.player === me.id);
+      if (Math.hypot(pad.rx, pad.ry) > 0.35) view.padAim = Math.atan2(pad.rx, -pad.ry);
+      if (av) { at = { x: av.x + Math.sin(view.padAim) * 60, y: av.y - Math.cos(view.padAim) * 60 }; lob = { x: av.x + Math.sin(view.padAim) * 95, y: av.y - Math.cos(view.padAim) * 95 }; }
+    }
     cmds.away = { [me.id]: {
-      mx: (input.down('KeyD', 'ArrowRight') ? 1 : 0) - (input.down('KeyA', 'ArrowLeft') ? 1 : 0),
-      my: (input.down('KeyS', 'ArrowDown') ? 1 : 0) - (input.down('KeyW', 'ArrowUp') ? 1 : 0),
-      aim: at, fire: m.down || input.down('Space'), grenade: input.hit('KeyG') || m.rightClicked ? at : null,
+      mx: (input.down('KeyD', 'ArrowRight') ? 1 : 0) - (input.down('KeyA', 'ArrowLeft') ? 1 : 0) + pad.lx,
+      my: (input.down('KeyS', 'ArrowDown') ? 1 : 0) - (input.down('KeyW', 'ArrowUp') ? 1 : 0) + pad.ly,
+      aim: at, fire: m.down || input.down('Space') || pad.rt > 0.5, grenade: input.hit('KeyG') || m.rightClicked ? lob : null,
       use: input.down('KeyF'), usePressed: input.hit('KeyF'), charge: input.hit('KeyC'), deploy: input.hit('KeyT'),
     } };
     return cmds;
@@ -89,13 +99,19 @@ function commands() {
   }
   if (view.post === 'captain') {
     cmds.captain = {
-      throttle: (input.down('KeyW', 'ArrowUp') ? 1 : 0) - (input.down('KeyS', 'ArrowDown') ? 1 : 0),
-      turn: (input.down('KeyD', 'ArrowRight') ? 1 : 0) - (input.down('KeyA', 'ArrowLeft') ? 1 : 0),
+      throttle: (input.down('KeyW', 'ArrowUp') ? 1 : 0) - (input.down('KeyS', 'ArrowDown') ? 1 : 0) + input.pad.rt - input.pad.lt,
+      turn: (input.down('KeyD', 'ArrowRight') ? 1 : 0) - (input.down('KeyA', 'ArrowLeft') ? 1 : 0) + input.pad.lx,
       stop: input.hit('KeyX'), dock: input.hit('KeyE'), darts: input.hit('KeyR'), boost: input.down('ShiftLeft', 'ShiftRight'),
     };
   } else if (view.post === 'gunner') {
-    const m = input.mouse;
-    cmds.gunner = { aim: { x: view.cam.x + m.x - VIEW_W / 2, y: view.cam.y + m.y - VIEW_H / 2 }, fire: m.down || input.down('Space'), weapon: input.hit('KeyE') ? 1 : input.hit('KeyQ') ? -1 : null };
+    const m = input.mouse, pad = input.pad; let aim = { x: view.cam.x + m.x - VIEW_W / 2, y: view.cam.y + m.y - VIEW_H / 2 };
+    if (pad.used) {
+      // With a gamepad the right stick points the turret.
+      if (Math.hypot(pad.rx, pad.ry) > 0.35) view.padAim = Math.atan2(pad.rx, -pad.ry);
+      const mount = toWorld(state.ship, SHIP_GEOM.turret);
+      aim = { x: mount.x + Math.sin(view.padAim) * 220, y: mount.y - Math.cos(view.padAim) * 220 };
+    }
+    cmds.gunner = { aim, fire: m.down || input.down('Space') || pad.rt > 0.5, weapon: input.hit('KeyE') ? 1 : input.hit('KeyQ') ? -1 : null };
   } else {
     const e = { power: [], repair: null, tool: input.hit('KeyQ') ? { type: 'pulse' } : input.hit('KeyB') ? { type: 'buoy' } : null };
     if (input.hit('ArrowUp', 'KeyW')) view.engRow = (view.engRow + SYSTEM_KEYS.length - 1) % SYSTEM_KEYS.length;
@@ -118,6 +134,7 @@ function localKeys() {
     return;
   }
   if (input.hit('KeyH')) view.help = !view.help;
+  if (input.hit('KeyN')) view.toasts.push({ text: toggleMute() ? 'SOUND OFF' : 'SOUND ON', color: COL.text, until: state.time + 2 });
   if (state.players[view.playerId].inside !== null) { view.map = false; return; }
   if (input.hit('KeyM') && !view.hacking && !view.station) view.map = !view.map;
   if (state.won && !view.wonSeen && input.hit('Enter', 'NumpadEnter')) view.wonSeen = true;
@@ -125,6 +142,7 @@ function localKeys() {
   if (input.hit('Digit2')) view.post = 'gunner';
   if (input.hit('Digit3')) view.post = 'engineer';
   if (input.hit('Tab')) view.post = POSTS[(POSTS.indexOf(view.post) + 1) % POSTS.length];
+  if (input.hit('PadPrevPost')) view.post = POSTS[(POSTS.indexOf(view.post) + POSTS.length - 1) % POSTS.length];
   if (state.over && input.hit('KeyR')) {
     view.toasts = []; view.hacking = false; view.map = false; view.station = false; view.wonSeen = false; state = createState((state.seed * 7 + 13) % 100000); view.post = 'captain'; view.cam = { x: 0, y: 0 }; }
 }
@@ -154,11 +172,18 @@ function render(t) {
   if (state.over) drawOverlay(ctx, font, 'SHIP LOST', [`KILLS  ${state.kills}`, `TIME  ${Math.floor(state.time / 60)}:${String(Math.floor(state.time % 60)).padStart(2, '0')}`, '', 'PRESS R TO TRY AGAIN'], COL.ember[2]);
   else if (state.paused) drawOverlay(ctx, font, 'PAUSED', [`PAUSED BY ${state.pausedBy}`, '', 'PRESS P TO RESUME'], COL.text);
   if (view.help && !state.over) drawHelp(ctx, font);
+  // A pointer for gamepad players on the screens that are worked with clicks.
+  const pointer = view.station || view.hacking || (!away && (view.map || view.post === 'engineer'));
+  if (input.pad.used && pointer) { const m = input.mouse; ctx.fillStyle = COL.out; ctx.fillRect(Math.round(m.x) - 1, Math.round(m.y) - 5, 3, 11); ctx.fillRect(Math.round(m.x) - 5, Math.round(m.y) - 1, 11, 3); ctx.fillStyle = COL.white; ctx.fillRect(Math.round(m.x), Math.round(m.y) - 4, 1, 9); ctx.fillRect(Math.round(m.x) - 4, Math.round(m.y), 9, 1); }
 }
 
 let last = performance.now(), acc = 0;
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  // The gamepad buttons mean different things depending on what the player is doing.
+  const awayNow = state.players[view.playerId].inside !== null;
+  const mode = view.screen === 'title' ? 'title' : view.station || view.hacking ? 'panel' : awayNow ? 'away' : view.map ? 'map' : view.post;
+  input.pollPad(mode, mode === 'panel' || mode === 'map' || mode === 'engineer', dt);
   localKeys();
   if (view.screen === 'game') {
     acc += dt;
@@ -240,6 +265,8 @@ const TOAST = {
   powerLost: () => ['REACTOR DAMAGED  ·  POWER LOST', COL.ember[2]],
 };
 function toasts() {
+  playEvents(state.events);
+  setEngine(state.over || state.paused || state.ship.docked ? 0 : Math.abs(state.ship.throttle) * (state.ship.boosting ? 1.6 : 1));
   for (const e of state.events) {
     if (e.type === 'breakinOpened' && e.player === view.playerId) view.hacking = true;
     if (e.type === 'stationMenu' && e.player === view.playerId) { view.station = true; view.map = false; }
@@ -255,7 +282,7 @@ function toasts() {
 loadAssets().then((a) => {
   assets = a;
   // Debug handle used by the browser smoke test.
-  window.__critical = { get state() { return state; }, view, input, advance(seconds) { for (let i = 0; i < seconds / STEP; i++) step(state, {}, STEP); } };
+  window.__critical = { get state() { return state; }, view, input, audio: { isMuted }, advance(seconds) { for (let i = 0; i < seconds / STEP; i++) step(state, {}, STEP); } };
   requestAnimationFrame((now) => { last = now; frame(now); });
 }).catch((err) => {
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#bfc2cd'; ctx.font = '16px system-ui, sans-serif';

@@ -61,7 +61,9 @@ Spelet
 - Inget moment pausar spelet. En pausknapp fryser världen för alla.
 - Automatisk paus vid tappad anslutning sker först efter en stund. Gränsen prövas ut.
 - Publicering: GitHub Pages så länge, flytt till Cloudflare när nätverksmotorn byggs in (2026-11-14).
-- Styrning: tangentbord och mus. Agentens val, användaren har inte provat än.
+- Styrning: tangentbord och mus, eller handkontroll. Agentens val, användaren har inte provat än.
+- Ljudet skapas i webbläsaren utan ljudfiler. N slår av och på, och valet sparas i webbläsaren.
+- Handkontroll: vänster spak styr eller flyttar pekaren, höger spak siktar, avtryckarna gasar och skjuter, RB och LB byter post, START pausar och BACK öppnar kartan. Tabellen finns i `src/input.js`.
 - Onlineläget ska använda användarens egen motor, som byggs just nu och bygger på Cloudflares realtidstjänster. Målet är att ett gratiskonto ska räcka för det här kompisspelet (2026-11-14).
 
 Poster
@@ -151,4 +153,5 @@ Grafik
 
 ## Lagar och regler
 
-- 2026-11-14: Repot innehåller ingen kod som hanterar personuppgifter eller kakor. Designsidan laddar typsnitt från Google Fonts, vilket skickar besökarens IP-adress till Google om sidan publiceras. Se D-033.
+- 2026-11-14: Spelet hanterar inga personuppgifter och laddar inget från andra tjänster. Det sparar en enda sak i webbläsaren: om ljudet är av eller på, efter att spelaren själv tryckt N.
+- 2026-11-14: Designsidan i `docs/design/` är nu nåbar på den publicerade adressen och laddar typsnitt från Google Fonts, vilket skickar besökarens IP-adress till Google. Se D-033.

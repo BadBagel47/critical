@@ -218,6 +218,39 @@ await shot('11-lost');
 await page.keyboard.press('KeyR'); await page.waitForTimeout(200);
 check(await get('s.over') === false && await get('s.time') < 2, 'R starts a new run');
 
+// Sound: N switches it off and on without errors.
+await page.keyboard.press('KeyN'); await page.waitForTimeout(80);
+const mutedNow = await page.evaluate(() => window.__critical.audio.isMuted());
+await page.keyboard.press('KeyN'); await page.waitForTimeout(80);
+check(await page.evaluate(() => window.__critical.audio.isMuted()) === !mutedNow, 'N switches the sound off and on');
+
+// Gamepad: a stand-in controller drives the title screen, the Captain and the Gunner.
+const padPage = await browser.newPage({ viewport: { width: 1280, height: 720 }, ignoreHTTPSErrors: !!remote });
+padPage.on('pageerror', (e) => errors.push('gamepad page: ' + String(e)));
+await padPage.addInitScript(() => {
+  window.__pad = { connected: true, axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
+  navigator.getGamepads = () => [window.__pad];
+});
+await padPage.goto(url);
+await padPage.waitForFunction(() => window.__critical, null, { timeout: 10000 });
+const press = async (i, ms = 120) => { await padPage.evaluate((n) => { window.__pad.buttons[n] = { pressed: true, value: 1 }; }, i); await padPage.waitForTimeout(ms); await padPage.evaluate((n) => { window.__pad.buttons[n] = { pressed: false, value: 0 }; }, i); await padPage.waitForTimeout(60); };
+const pget = (expr) => padPage.evaluate(`(() => { const s = window.__critical.state, v = window.__critical.view; return ${expr}; })()`);
+await press(0);
+check(await pget('v.screen') === 'game', 'gamepad: A starts the game');
+await padPage.evaluate(() => { window.__critical.state.spawn.timer = 1e9; });
+await press(7, 1200);
+check(await pget('s.ship.throttle') > 0.7, 'gamepad: the right trigger raises the throttle');
+const h0 = await pget('s.ship.heading');
+await padPage.evaluate(() => { window.__pad.axes[0] = 1; }); await padPage.waitForTimeout(500); await padPage.evaluate(() => { window.__pad.axes[0] = 0; });
+check(await pget('s.ship.heading') !== h0, 'gamepad: the left stick turns the ship');
+await press(5);
+check(await pget('v.post') === 'gunner', 'gamepad: RB switches post');
+await padPage.evaluate(() => { window.__pad.axes[2] = 1; window.__pad.axes[3] = 0; }); await press(7, 400);
+check(await pget('s.bolts.length') > 0 || await pget('s.ship.fireCooldown') > 0, 'gamepad: the right stick aims and the trigger fires');
+await press(9);
+check(await pget('s.paused') === true, 'gamepad: START pauses');
+await padPage.close();
+
 await browser.close();
 if (errors.length) { console.log('\nFAILED\n' + errors.join('\n')); process.exit(1); }
 console.log('\nsmoke test passed');
