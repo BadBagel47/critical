@@ -12,70 +12,82 @@ Prioritet: Hög, Medel, Låg.
 **B** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**C** – strong model, high level – Lockdown och smygande
+**C** – strong model, high level – Förslag: hur bordning av stationer hänger ihop
+- D-117 – Bestäm lägena (lugnt, lockdown, larm), rollerna, mainframen och övertagande, så att delarna nedan går att bygga utan att krocka
+
+**D** – strong model, high level – Lockdown och smygande (efter D-117)
 - F-102 – Lockdown på fientliga ställen: mörkare, roterande röda ljus och stängda dörrar tills spelarna slår av det vid en kontrollpanel längst in
 - F-107 – Smygande tills man blir upptäckt av patrullerande vakter, och en tranq gun som söver vakter
 - F-108 – Kameror som sveper och utlöser larmet om man blir sedd
+- F-115 – Stationens egna turrets inomhus är något man smyger förbi, inte något man skjuter sönder
+- F-116 – Spelarnas egna turrets är engångssaker som bara går att sätta ut när en strid pågår
 
-**D** – strong model, high level – Laga övertagna stationer
-- F-110 – En panel på övertagna stationer där stationen lagas, med ett system som liknar skeppets
+**E** – strong model, high level – Roller vid bordning (efter D-117)
+- F-113 – Gunner slåss bättre, Engineer hackar och Captain ger gruppen något eget, så att det spelar roll vem som går in
 
-**E** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
+**F** – strong model, high level – Mainframe och egna stationer (efter D-117)
+- F-109 – En mainframe-panel på alla stationer, som Engineer hackar hos fiender och som styr stationen hos ägaren
+- F-110 – Laga och uppgradera en station man äger från panelen
+
+**G** – strong model, high level – Ta över neutrala baser (efter grupp F)
+- F-114 – Hacka en neutral bas med stor risk: red alert, bounty hunters som anfaller skeppet och sjunkande anseende
+
+**H** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
 
-**F** – strong model, high level – Förslag: ekonomi och belöningar
+**I** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**G** – strong model, high level – Baser i två storlekar
+**J** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 - D-101 – Gör inomhusmiljöerna mer utarbetade, så att stationer och vrak känns som platser
 
-**H** – strong model, high level – Sällsynta skepp
+**K** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**I** – strong model, high level – Handel
+**L** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**J** – strong model, medium level – Butik med bilder
+**M** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**K** – strong model, high level – Värme
+**N** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**L** – strong model, high level – Slå ut och borda
+**O** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**M** – strong model, high level – Missiler och raketer
+**P** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**N** – strong model, high level – Kontakt med andra skepp
+**Q** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**O** – strong model, high level – Asteroider och anomalier
+**R** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**P** – strong model, high level – En värld som förändras
+**S** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 
-**Q** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**T** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**R** – strong model, high level – Ljudeffekter
+**U** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
 Hos en annan agent: F-048 (musik) görs skilt från körningarna här, enligt docs/music-brief.md.
 
-Väntar på användaren: F-109 (mainframe-panel på stationer, vad man ska kunna göra där), D-095 (faktionernas riktiga namn), D-074 (smuggelgods) och D-093 (nya eller fler minigames) behöver ett samtal först. F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
+Väntar på användaren: D-095 (faktionernas riktiga namn), D-074 (smuggelgods) och D-093 (nya eller fler minigames) behöver ett samtal först. F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
 
 ## Hög
 
@@ -104,10 +116,15 @@ Väntar på användaren: F-109 (mainframe-panel på stationer, vad man ska kunna
 | F-102 | Lockdown mode, så att en fientlig station stänger dörrar till shop och armory tills spelarna tagit över kontrollen Tillägg 2026-11-14: när man går in för att loota på ett fientligt ställe ska det vara roterande röda ljus och hela stället mörkare än normalt, eftersom stället är i lockdown mode. Spelarna kan avbryta detta vid en kontrollpanel längst in. Den ligger på den högsta våningen på ställen med flera våningar. Påverkar musiken | Ej påbörjad |
 | F-107 | Stealth vid bordning: först är det smygande som gäller, tills man blir upptäckt av patrullerande vakter. Man kan växla till en tranq gun (som man kan köpa) och söva vakter för att undvika att bli upptäckt. Om en annan vakt upptäcker en sövd vakt går larmet direkt. Musiken behöver då skilja på smygande och larm | Ej påbörjad |
 | F-108 | Stationer har kameror som sveper, och som man måste undvika för att larmet inte ska gå | Ej påbörjad |
-| F-109 | Alla stationer har en panel där man kan ansluta till stationens mainframe. Vad man ska kunna göra där är inte bestämt. Agentens förslag: se stationens planritning, stänga av kameror och turrets en stund, öppna låsta dörrar, och hos vänliga stationer se priser och uppdrag | Ej påbörjad |
-| F-110 | Stationer man tagit över har en panel där man kan laga stationen, med ett system som liknar skeppets | Ej påbörjad |
+| F-109 | Alla stationer har en panel där man kan ansluta till stationens mainframe. Vad man ska kunna göra där är inte bestämt. Agentens förslag: se stationens planritning, stänga av kameror och turrets en stund, öppna låsta dörrar, och hos vänliga stationer se priser och uppdrag Tillägg 2026-11-14: Engineer är den som kan hacka mainframen. På en station man äger är inställningarna i panelen att reparera stationen, aktivera externa försvarsturrets igen om de blivit förstörda och sedan lagade, och slå av lockdown mode. Mainframen kan även uppgradera basens försvar. Agentens förslag: en och samma panel på alla stationer, med olika innehåll beroende på om man äger stationen, är fiende eller neutral | Ej påbörjad |
+| F-110 | Stationer man tagit över har en panel där man kan laga stationen, med ett system som liknar skeppets Tillägg 2026-11-14: se F-109 för vad panelen ska kunna. Agentens anmärkning: i dag lagar stationer sig själva med tiden, så det måste ändras för ägda stationer om panelen ska betyda något | Ej påbörjad |
 | F-111 | Gör dockning enklare: öka avståndet som krävs för att docka. I dag måste nosen vara 20 punkter från dockningsarmen | Ej påbörjad |
 | F-112 | Tydligare knappar som är context aware. När man kan docka, prata med en shop eller ansluta till en mainframe dyker en knapp upp som visar kortkommandot för enheter som har tangentbord, och en bra lösning för touch (symbol med text?). Viktigt för touchskärmar, hänger ihop med F-090 | Ej påbörjad |
+| F-113 | Roller vid bordning. Gunner får en extra boost med sina vapen, och det ska framgå för Gunnern att hen har en bonus när den är relevant. Engineer har redan en unik roll som den som kan hacka mainframen. Oklart vad Captain ska ge: någon form av boost för hela gruppen för att hen är ett moraliskt stöd? Det får inte bli mycket övertag, men ändå något som kan påverka lite. Agentens förslag för Captain: överblick i stället för styrka, hen ser vakter och kameror en bit genom väggar och alla i gruppen får se det | Ej påbörjad |
+| F-114 | En Engineer ska kunna försöka få access till en neutral bas mainframe. Det måste vara en stor risk. Att ta över en neutral bas ska vara svårt, och basen borde kunna kalla på hjälp av bounty hunters, som kommer in i systemet och börjar attackera skeppet, så att man måste avväga om det är värt risken. Då sjunker anseendet automatiskt, och tar man över basen sjunker det ytterligare om den är med i en faktion. Är den inte det är den nu en station man äger och har kontroll över. Om en neutral bas utsätts för en attack inifrån går red alert igång och vakterna blir aggressiva | Ej påbörjad |
+| F-115 | Interna turrets som tillhör basen eller skeppet kanske inte ska kunna bli förstörda, utan är något man får undvika. Det blir ett extra stealthmoment när man går in med stealth i början. De måste vara placerade så att spelarna har en chans att komma runt dem utan att bli upptäckta. De är bara aggressiva om man räknas som fiende, inte när man äger basen | Ej påbörjad |
+| F-116 | Turrets som spelarna satt upp själva är engångssaker som försvinner när striden är över. De går inte att sätta ut på vänliga baser, och inte heller på neutrala baser som inte är under attack. De kan med andra ord bara sättas ut när en attack pågår | Ej påbörjad |
+| D-117 | Bestäm hur bordning av stationer hänger ihop innan F-102, F-107 till F-110 och F-113 till F-116 byggs: lägena (lugnt, lockdown, larm), vad som gäller i vrak, hur en attack inifrån börjar på en neutral station, vad som händer med anseendet, och hur man aldrig låser sig. Agentens genomgång 2026-11-14 hittade tio saker att reda ut | Ej påbörjad |
 | F-103 | Stora baser med två våningar: 1,5 gånger större än dagens stationer, med annan design, mer vapen och starkare sköld till försvar. Dagens storlek är bra för små stationer. Design visas först | Ej påbörjad |
 | D-104 | Utredning om hur rewards, priser, ekonomi, händelser, reputation etc hänger ihop och påverkar världen och skeppet | Ej påbörjad |
 | D-071 | Vi behöver en lösning för eskortskepp. Från D-075, godkänt av användaren: eskorter som hyrs mot lön och tar enkla order (följ, anfall mitt mål, håll avstånd). Hyrs på stationer, och i baren när den finns (D-072) | Ej påbörjad |
