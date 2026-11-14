@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Designskiss för Critical ST8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Figtree:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: one wide column. Pixel mockups carry the look; short blocks and tables carry the rules. */
+:root{
+  --bg:#f2f3f8; --panel:#ffffff; --ink:#1b1f38; --muted:#565c7c; --rule:#d3d7e5; --accent:#2c5fae;
+  --display:"Bungee","Arial Black",Impact,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#0f1122; --panel:#181b34; --ink:#e9ebf7; --muted:#a4aac8; --rule:#2b3054; --accent:#7db4ff; color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#0f1122; --panel:#181b34; --ink:#e9ebf7; --muted:#a4aac8; --rule:#2b3054; --accent:#7db4ff; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55}
+main{max-width:1120px;margin:0 auto;padding:48px 20px 80px;display:flex;flex-direction:column;gap:56px}
+header{display:flex;flex-direction:column;gap:12px}
+.eyebrow{margin:0;font-size:.8rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(2.3rem,7vw,4.2rem);line-height:1;letter-spacing:.01em;text-wrap:balance}
+.lead{margin:0;max-width:62ch;font-size:1.2rem;color:var(--muted)}
+section{display:flex;flex-direction:column;gap:20px}
+h2{margin:0;font-size:1.5rem;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+h3{margin:0;font-size:1.05rem;font-weight:800}
+p{margin:0;max-width:65ch}
+.note{color:var(--muted)}
+figure{margin:0}
+img{display:block;max-width:100%;height:auto}
+.screen{border-radius:10px;border:1px solid var(--rule);background:#0a0c18;overflow:hidden}
+.screen img{width:100%}
+.legend{list-style:none;margin:20px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px 32px;counter-reset:n}
+.legend li{counter-increment:n;display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;font-size:.97rem}
+.legend li::before{content:counter(n);width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font-weight:800;font-size:.85rem;line-height:1}
+b{font-weight:800}
+.loop{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;counter-reset:s}
+.loop li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:8px;font-size:.97rem}
+.loop li::before{content:counter(s);font-family:var(--display);font-size:1.5rem;line-height:1;color:var(--accent)}
+.roles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.loop{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.narrow{max-width:760px}
+.roles figure{display:flex;flex-direction:column;gap:10px}
+.roles figcaption{font-size:.97rem}
+.dot{display:inline-block;width:.7em;height:.7em;border-radius:2px;margin-right:.45em;vertical-align:baseline}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:600px;font-size:.97rem}
+th,td{text-align:left;vertical-align:top;padding:12px 20px 12px 0;border-top:1px solid var(--rule)}
+thead th{border-top:0;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+tbody th{font-weight:800;white-space:nowrap}
+tbody tr:last-child th,tbody tr:last-child td{border-bottom:1px solid var(--rule)}
+.num tbody th{font-family:var(--display);font-weight:400;font-size:1.3rem;color:var(--accent);width:90px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px;align-items:start}
+.two>div{display:flex;flex-direction:column;gap:14px}
+ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:8px;max-width:65ch}
+.swatches{list-style:none;margin:0;padding:0;display:flex;flex-direction:row;flex-wrap:wrap;gap:10px 20px;max-width:none}
+.swatches li{display:flex;align-items:center;gap:8px;font-size:.92rem;font-weight:600}
+.swatches i{width:28px;height:28px;border-radius:4px;border:1px solid var(--rule)}
+.decide{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:24px}
+@media (max-width:640px){
+  body{font-size:16px}
+  main{padding-top:32px;gap:44px}
+  .roles{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="eyebrow">Designskiss, utkast 3</p>
+  <h1>Critical ST8</h1>
+  <p class="lead">Ett co-op-spel online där upp till tre spelare delar på ett rymdskepp. Det går också att spela ensam. Ni flyger, slåss, dockar och bordar vrak och stationer för att komma över bränsle, krediter och stjärnkartor. All text i spelet är på engelska.</p>
+</header>
+
+<section>
+  <h2>Ett varv i spelet</h2>
+  <ol class="loop">
+    <li><h3>Spana</h3><p>Använd scanner, sonder och bojar för att hitta vrak, stationer och pirater.</p></li>
+    <li><h3>Slå ut</h3><p>Strid i rymden. Ett utslaget skepp blir ett vrak som går att borda.</p></li>
+    <li><h3>Bryt er in</h3><p>Docka och klara ett inbrottsspel på tid.</p></li>
+    <li><h3>Borda</h3><p>En eller flera går in och lootar medan resten vaktar skeppet.</p></li>
+    <li><h3>Uppgradera</h3><p>Bygg om skeppet vid en station som har shipyard.</p></li>
+    <li><h3>Hoppa</h3><p>Använd en stjärnkarta för att hoppa till nästa sektor.</p></li>
+  </ol>
+  <p class="note">Inget av momenten pausar spelet. Världen fortsätter medan ni handlar, bryter er in och byter post.</p>
+</section>
+
+<section>
+  <h2>Ute i rymden</h2>
+  <figure>
+    <div class="screen"><img src="img/space.png" width="1920" height="1080" alt="Pixelskiss av rymden uppifrån: spelarnas grå fregatt skjuter mot plommonfärgade piratskepp och styr mot dockningsporten på ett stort mörkt vrak. Till vänster pekar en pil mot ett nödanrop."></div>
+    <ol class="legend">
+      <li><span><b>Fregatten.</b> Ert skepp. Hela besättningen delar samma bränsle, sköld och skrov.</span></li>
+      <li><span><b>Dockningshjälp.</b> Captain håller kursen mot porten på vraket.</span></li>
+      <li><span><b>Pirater.</b> Gunner sköter alla vapen medan Captain flyger.</span></li>
+      <li><span><b>Flikar.</b> Byt vy med en knapp. Den röda pricken betyder att Engineer-posten behöver tillsyn.</span></li>
+      <li><span><b>Minikarta.</b> I rymden har ni alltid fri sikt. Dimman finns bara på kartan.</span></li>
+      <li><span><b>Hoppmotorn.</b> Redo när ni har en karta och bränsle nog.</span></li>
+      <li><span><b>Nödanrop.</b> En pil visar riktning och avstånd. Ni väljer själva om ni åker dit.</span></li>
+    </ol>
+  </figure>
+</section>
+
+<section>
+  <h2>Posterna</h2>
+  <p>Tre poster som delas ut i lobbyn. Varje post har sin egen vy av samma värld.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Post</th><th>Sköter</th><th>Ansvar</th></tr></thead>
+      <tbody>
+        <tr><th><span class="dot" style="background:#5a9be0"></span>Captain</th><td>Flyger, dockar och skickar ut Darts.</td><td>Avgör när skeppet lägger ut och när det hoppar.</td></tr>
+        <tr><th><span class="dot" style="background:#dba445"></span>Gunner</th><td>Alla vapen.</td><td>Håller pirater borta, även när skeppet ligger dockat.</td></tr>
+        <tr><th><span class="dot" style="background:#58b0a0"></span>Engineer</th><td>Energi och reparationer. Scanner och sonder.</td><td>Väljer vad skeppet ska vara bra på just nu.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><b>Tre spelare:</b> en post var.</li>
+    <li><b>Två spelare:</b> Captain och Gunner. Engineer-posten delas och kan öppnas av båda.</li>
+    <li><b>En spelare:</b> börjar som Captain och växlar själv mellan posterna.</li>
+    <li>En post som lämnas fortsätter som den ställdes in.</li>
+    <li>Den som går in för att loota lämnar sin post ledig för någon annan. När personen är tillbaka på skeppet får den tillbaka posten.</li>
+    <li>Att hoppa in mitt i ett pågående spel kommer senare.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Engineer: energi och reparationer</h2>
+  <figure>
+    <div class="screen"><img src="img/engineer.png" width="1920" height="1080" alt="Pixelskiss av Engineer-vyn: en ritning av fregatten med skadepunkter, ett reparationsteam vid vänster vinge, och en panel där energin fördelas mellan vapen, sköld, motorer och reparation."></div>
+    <ol class="legend">
+      <li><span><b>Skadepunkter.</b> Skeppet visas som en ritning. Varje punkt kan vara hel, skadad eller kritisk.</span></li>
+      <li><span><b>Reparationsteamet.</b> En symbol som Engineer flyttar mellan punkterna. Den streckade linjen visar nästa punkt i kön.</span></li>
+      <li><span><b>Kritisk skada.</b> Här är motorerna nästan utslagna, men teamet är upptaget på annat håll.</span></li>
+      <li><span><b>Energin.</b> Fördelas mellan fyra system: vapen, sköld, motorer och reparation.</span></li>
+      <li><span><b>Reparation.</b> Mer energi hit lagar fortare, men tas från vapen, sköld eller fart.</span></li>
+      <li><span><b>Verktyg.</b> Scannerpuls, target scanner och sonder. Fler tillkommer med uppgraderingar.</span></li>
+    </ol>
+  </figure>
+</section>
+
+<section>
+  <h2>Kartan och stjärnkartorna</h2>
+  <figure>
+    <div class="screen"><img src="img/map.png" width="1920" height="1080" alt="Pixelskiss av den gemensamma kartan: dimma med upplysta cirklar runt skeppet, en vänlig station, en boj och en sond. Ute i dimman ligger en neutral station som sänder nödanrop. Till höger en panel med stjärnkartor."></div>
+    <ol class="legend">
+      <li><span><b>Skeppets radar.</b> En liten cirkel som alltid följer med.</span></li>
+      <li><span><b>Sond.</b> Flyger dit Engineer pekar och ser längs vägen.</span></li>
+      <li><span><b>Radarboj.</b> Ligger kvar tills pirater skjuter ner den.</span></li>
+      <li><span><b>Vänlig station.</b> Har inbyggd radar. Den här har också shipyard.</span></li>
+      <li><span><b>Ute i dimman.</b> Stillastående saker ni har sett ligger kvar som senast kända läge.</span></li>
+      <li><span><b>Sektorerna.</b> Linjer visar vart ni kan hoppa. Frågetecknen kräver en karta.</span></li>
+      <li><span><b>En stjärnkarta.</b> Visar vad hoppet kostar och antyder vad som väntar.</span></li>
+    </ol>
+  </figure>
+  <ul>
+    <li>Kartan är gemensam och kan öppnas av alla.</li>
+    <li>Skepp syns bara på kartan så länge någon eller något faktiskt ser dem.</li>
+    <li>Stjärnkartor hittas i vrak och stationer, eller köps.</li>
+    <li>Ett hopp kostar bränsle. Motorn tar en stund att ladda och alla måste vara ombord.</li>
+    <li>Sektorerna blir svårare. Den sista innehåller en Cruiser som boss.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Stationer</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Läge</th><th>Vad ni gör där</th></tr></thead>
+      <tbody>
+        <tr><th>Vänlig</th><td>Tankar gratis, lagar, handlar och får radartäckning.</td></tr>
+        <tr><th>Neutral</th><td>Tankar och handlar mot betalning.</td></tr>
+        <tr><th>Fientlig</th><td>Slåss, bryter er in och bordar. En station ni tar över blir vänlig.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><b>Shipyard.</b> Skeppet kan bara byggas om vid en station som har shipyard. Alla stationer har inte det.</li>
+    <li><b>Nödanrop.</b> En vänlig eller neutral station som anfalls av pirater kan kalla på hjälp.</li>
+    <li><b>Belöning.</b> En neutral station ni hjälper förblir neutral, men ger rabatt under en tid och låter er använda dess shipyard så länge.</li>
+    <li><b>Pirater</b> är fristående och aggressiva mot alla.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Bordning</h2>
+  <figure>
+    <div class="screen"><img src="img/boarding.png" width="1920" height="1080" alt="Pixelskiss av en bordning uppifrån: fregatten ligger dockad till vänster, och i vrakets korridor skjuter två bordare mot vakter och ett kanontorn. I rummen finns lootlådor, bränsleceller, en stjärnkarta bakom en låst dörr och en glödande reaktor."></div>
+    <ol class="legend">
+      <li><span><b>Fregatten.</b> Den som stannar sköter vapen, sköld och radar.</span></li>
+      <li><span><b>Dockningstunneln.</b> Enda vägen in och ut. Allt loot bärs hit.</span></li>
+      <li><span><b>Bordarna.</b> Samma vinkel och styrning som i rymden, fast till fots.</span></li>
+      <li><span><b>Låst dörr.</b> Det bästa lootet ligger bakom ett eget inbrottsspel.</span></li>
+      <li><span><b>Vakter och kanontorn.</b> Därför behöver bordarna egna vapen och granater.</span></li>
+      <li><span><b>Stjärnkarta.</b> Det mest värdefulla fyndet.</span></li>
+      <li><span><b>Reaktorn.</b> När nedräkningen är slut sprängs vraket.</span></li>
+      <li><span><b>Enemy alarm.</b> En uppgradering som varnar bordarna när pirater närmar sig skeppet.</span></li>
+    </ol>
+  </figure>
+  <ul>
+    <li>Vem som bordar bestämmer ni genom att prata. Spelet kräver ingen bekräftelse.</li>
+    <li>Så länge skeppet ligger dockat kan vem som helst gå in eller ut när som helst, till exempel för att hjälpa den som redan lootar.</li>
+    <li>Den som nästan dör teleporteras hem och kan inte gå in igen under samma bordning.</li>
+    <li>När alla är tillbaka på skeppet får alla tillbaka sitt förlorade liv.</li>
+    <li>Teleportern måste laddas om innan spelaren kan borda nästa gång. Ni väljer mellan att vänta och att skicka in färre.</li>
+    <li>Mål är olika svåra att borda. En scanner visar hur svårt det är innan ni går in.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Inbrottet</h2>
+  <p>Varje typ av mål har sitt eget inbrottsspel på tid. De andra håller skeppet stilla och pirater borta under tiden.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Mål</th><th>Inbrottsspel</th><th>Om ni misslyckas</th></tr></thead>
+      <tbody>
+        <tr><th>Utslaget skepp</th><td>Koppla förbi dockningslåset. Vrid brickorna så att strömmen når låset.</td><td>Vraket sprängs. Lootet försvinner och ert skepp tar skada.</td></tr>
+        <tr><th>Fientlig station</th><td>Knäck koden. En spelare ser koden och läser upp den, en annan matar in den.</td><td>Stationen slår tillbaka. Små utposter självförstörs i stället.</td></tr>
+        <tr><th>Fraktcontainer</th><td>Pricka låset. Stoppa visaren i rätt läge tre gånger i rad.</td><td>Larmet går och lockar dit pirater.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Skeppet och dess klasser</h2>
+  <figure>
+    <div class="screen"><img src="img/frigate.png" width="1620" height="1068" alt="Fregatten i tre uppgraderingssteg, från grundskrov till fullt uppgraderad med tung laser, raketkapslar, sköldbubbla och Darts, samt alla skeppsklasser i samma skala."></div>
+  </figure>
+  <ul>
+    <li>Spelarskeppet är alltid samma fregatt. Det ni köper byggs på utanpå och syns.</li>
+    <li>Loot ger bränsle och krediter. Bränslet driver skeppet och betalar hoppen.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Slots och uppgraderingar</h2>
+  <ul>
+    <li><b>Hardpoints</b> sitter utanpå skrovet och syns: vapen, fighter bay och pansar. Stora saker tar två.</li>
+    <li><b>System slots</b> sitter inuti: larm, scanner och liknande.</li>
+    <li>Fler slots går att köpa, och kan hittas som sällsynt loot.</li>
+    <li>Uppgraderingar ger posterna fler reglage, så de börjar enkla och växer.</li>
+  </ul>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Uppgradering</th><th>Post</th><th>Vad den gör</th></tr></thead>
+      <tbody>
+        <tr><th>Enemy alarm</th><td>Alla</td><td>Varnar för pirater. Nivåerna ger längre räckvidd, och till sist når larmet bordarna.</td></tr>
+        <tr><th>Scanner pulse</th><td>Engineer</td><td>Avslöjar allt nära skeppet en kort stund. Senare även loot, vakter och hur svårt ett mål är att borda.</td></tr>
+        <tr><th>Target scanner</th><td>Engineer</td><td>Visar exakt liv på andra skepp och stationer.</td></tr>
+        <tr><th>Fighter bay</th><td>Captain</td><td>Skickar ut Darts för hand. Senare startar de själva när larmet går.</td></tr>
+        <tr><th>Afterburner</th><td>Captain</td><td>Kort fartökning som drar bränsle.</td></tr>
+        <tr><th>Jump drive</th><td>Captain</td><td>Kortare laddtid och billigare hopp.</td></tr>
+        <tr><th>Tractor beam</th><td>Captain</td><td>Drar in lösa lådor och bärgar en bordare som hamnat utanför.</td></tr>
+        <tr><th>Point defense</th><td>Gunner</td><td>Skjuter ner inkommande raketer automatiskt.</td></tr>
+        <tr><th>Targeting computer</th><td>Gunner</td><td>Visar var du ska sikta mot rörliga mål.</td></tr>
+        <tr><th>Power core</th><td>Engineer</td><td>Fler energisteg att fördela.</td></tr>
+        <tr><th>Repair drones</th><td>Engineer</td><td>Lagar skrovet långsamt av sig själva.</td></tr>
+        <tr><th>Fuel tank</th><td>Alla</td><td>Rymmer mer bränsle, så ni når längre.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Bordarnas utrustning</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Pryl</th><th>Vad den gör</th></tr></thead>
+      <tbody>
+        <tr><th>Vapen och granater</th><td>Behövs mot vakter och kanontorn, och går att uppgradera.</td></tr>
+        <tr><th>Cargo pack</th><td>Du bär fler saker per vända.</td></tr>
+        <tr><th>Teleporter</th><td>Kortare laddtid mellan bordningarna.</td></tr>
+        <tr><th>Breaching charge</th><td>Spränger en låst dörr utan inbrottsspel, men väcker alla vakter.</td></tr>
+        <tr><th>Hacking kit</th><td>Ger längre tid i inbrottsspelen.</td></tr>
+        <tr><th>Deployable turret</th><td>Ett litet torn du ställer ut som håller en korridor.</td></tr>
+        <tr><th>Suit armor</th><td>Tål mer innan teleporten slår till.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Stilen</h2>
+  <div class="two">
+    <ul>
+      <li><b>En pixelstil för hela spelet,</b> ute som inne, alltid uppifrån.</li>
+      <li><b>Dämpade färger som grund.</b> Stål för era skepp, plommon för pirater.</li>
+      <li><b>Stark färg betyder något.</b> Bara glas, motorer, skott och loot lyser.</li>
+      <li><b>Mörk kontur</b> runt allt, och ljus som faller uppifrån.</li>
+      <li><b>Hela skeppet vrids som en bild.</b> Pixlarna ritas inte om i ett rutnät.</li>
+      <li><b>Samma pixelstorlek överallt.</b> Bildytan i skisserna är 640 × 360.</li>
+    </ul>
+    <figure><div class="screen"><img src="img/rotation.png" width="1320" height="750" alt="Jämförelse av två sätt att vrida ett pixelskepp. När hela skeppet vrids behåller det formen, när det ritas om i rutnätet blir det grötigt."></div></figure>
+  </div>
+  <ul class="swatches">
+    <li><i style="background:#8a8ea0"></i>Stål</li>
+    <li><i style="background:#7c4f74"></i>Plommon</li>
+    <li><i style="background:#dba445"></i>Ockra</li>
+    <li><i style="background:#5a9be0"></i>Glas</li>
+    <li><i style="background:#9be4ee"></i>Jonljus</li>
+    <li><i style="background:#96d66e"></i>Syragrönt</li>
+    <li><i style="background:#d0563a"></i>Glöd</li>
+    <li><i style="background:#0b0b14"></i>Rymd</li>
+  </ul>
+  <p class="note">Allt på sidan är ritat från grunden. Bilderna visar upplägget och tonen, inte färdig grafik.</p>
+</section>
+
+<section class="two">
+  <div>
+    <h2>Paus</h2>
+    <ul>
+      <li>En pausknapp fryser världen för alla och visar vem som pausade.</li>
+      <li>Tappar någon anslutningen pausas spelet först efter en stund, så att en svajig uppkoppling inte ger ständiga avbrott.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Första spelbara versionen</h2>
+    <p>Alla tre posterna finns med från början, och det går att växla fritt mellan dem. En fregatt, en sorts pirat och ett vrak att docka med.</p>
+    <p>Därefter kommer bordningen, sedan inbrottsspelet, och sist uppgraderingar, stationer och hopp.</p>
+  </div>
+</section>
+
+<section class="two">
+  <div>
+    <h2>Framtida utveckling</h2>
+    <ul>
+      <li>Faktioner med egna stationer och områden.</li>
+      <li>Pirater som bordar er, där ni försvarar skeppet mot vågor i samma läge som bordningen.</li>
+      <li>Paus och start som kräver allas godkännande.</li>
+      <li>Att hoppa in mitt i ett pågående spel.</li>
+      <li>Autopilot på lediga poster.</li>
+      <li>Fler skeppsklasser som fungerar olika, till exempel Interceptorn.</li>
+    </ul>
+  </div>
+  <div class="decide" style="align-self:start">
+    <h2>Att bestämma</h2>
+    <ul>
+      <li>Ska ni kunna hoppa tillbaka till gamla sektorer?</li>
+      <li>Blir lootet kvar på platsen när någon teleporteras hem?</li>
+    </ul>
+  </div>
+</section>
+</main>
+</body>
+</html>
