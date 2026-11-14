@@ -12,7 +12,8 @@ Ingen människa har provspelat än, så känsla och balans är otestade. Onlinel
 
 ## Nästa steg
 
-1. Fortsätt enligt "Proposed runs" i BACKLOG.md. Testläget (F-051) kommer först, så att användaren kan prova allt.
+1. Fortsätt enligt "Proposed runs" i BACKLOG.md. Den tekniska översynen kommer först, eftersom den gör allt som följer lättare att bygga.
+   - Starta gärna en ny session för varje körning. Allt som behövs står i repot.
 2. Användaren provspelar och ger synpunkter.
 3. Prata igenom vad spelet går ut på (D-052).
 4. Onlineläget (F-040) väntar på användarens motor.
@@ -161,6 +162,14 @@ Grafik
 
 - Klar 2026-11-14: `badbagel47.github.io` är tillåten i användarens molnmiljö, så att agenten kan kontrollera den publicerade sidan.
 - Klar 2026-11-14: användaren slog på GitHub Pages för repot (Deploy from a branch, main, rot).
+
+## Teknisk bedömning
+
+2026-11-14, efter drygt trettio byggda funktioner:
+- Bra: spellogiken är skild från bild och inmatning, hela tillståndet går att spara och läsa in mitt i en omgång med identiskt förlopp efteråt, och testerna körs innan något sparas.
+- Bör åtgärdas före fler funktioner: se F-059, D-055, D-056 och D-057.
+- Inför onlineläget: se D-060 till D-063. De tre första behöver besked om hur användarens motor fungerar, om den räknar ut spelet på servern eller bara förmedlar meddelanden, och vilka gränser den har.
+- Effekter och ljud läser bara av spelet och behöver aldrig skickas över nätet.
 
 ## Lagar och regler
 

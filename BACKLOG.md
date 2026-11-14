@@ -5,22 +5,39 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**A** – strong model, high level – Teknisk översyn
+- F-059 – Lägg posterna i spellogiken och ta bort antagandet om en enda spelare, så att onlineläget går att bygga
+- D-055 – Gör skärmlägena till ett enda tydligt läge i taget, så att nya lägen blir enkla att lägga till
+- D-056 – Ge alla saker i rymden en gemensam form, så att en ny sort inte kräver ändringar i sex filer
+- D-057 – Städa upp den tätt skrivna koden utan att ändra hur spelet beter sig
+- D-063 – Håll spelet förutsägbart, med testet som vaktar det
+
+**B** – standard model, medium level – Tester och verktyg
+- D-058 – Låt provkörningen klicka på namngivna knappar, lägg till kontroll av stavfel och typer, och kör testerna automatiskt vid varje sparning
+
+**C** – strong model, high level – Missiler och raketer
+- F-064 – Homing missiles som nytt vapen, och raketer som släpper målet om de missar. Båda kan träffa annat som ligger i banan
+
+**D** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**B** – strong model, high level – Anomalier
+**E** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**C** – strong model, high level – Musik och ljud
+**F** – strong model, high level – Musik och ljud
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - F-048 – Musik för de olika lägena
 
-Väntar på användaren: D-052 (storyläge eller grund för vad spelet går ut på) behöver ett samtal först. Dessutom provspelning, besked i D-044 och D-045, och motorn för onlineläget (F-040).
+Väntar på användaren: D-060, D-061 och D-062 (nätverksförberedelser) behöver besked om hur motorn fungerar. D-052 (storyläge) behöver ett samtal först. Dessutom provspelning, besked i D-044 och D-045, och motorn för onlineläget (F-040).
 
 ## Hög
 
 | ID | Vad | Status |
 |---|---|---|
+| F-059 | Posterna ska finnas i spellogiken, inte bara på den egna skärmen. Ta bort antagandet om en enda spelare. Förutsättning för onlineläget oavsett motor | Ej påbörjad |
+| D-055 | Skärmlägena (karta, butik, inbrott, bordning, hjälp) hålls i dag isär med enskilda flaggor. Gör dem till ett enda tydligt läge i taget | Ej påbörjad |
+| D-056 | Gemensam form för saker i rymden (vrak, stationer, containrar, pirater, bärgningsgods), så att rörelse, ritning, karta och kollision inte skrivs om för varje ny sort | Ej påbörjad |
+| D-057 | Städa upp den tätt skrivna koden, bland annat 46 rader längre än 220 tecken, utan att ändra hur spelet beter sig | Ej påbörjad |
 | F-050 | Justerade nivåer för vapen, sköld, motorer och engineering så att det känns att det är svårt i början och att det ska vara värt att uppgradera | Ej påbörjad |
 
 ## Medel
@@ -28,6 +45,12 @@ Väntar på användaren: D-052 (storyläge eller grund för vad spelet går ut p
 | ID | Vad | Status |
 |---|---|---|
 | F-030 | Automatisk paus när någon varit frånkopplad en stund | Ej påbörjad |
+| D-058 | Tester och verktyg: provkörningen ska klicka på namngivna knappar i stället för fasta koordinater. Lägg till kontroll av stavfel och typer utan byggsteg. Kör testerna automatiskt vid varje sparning, vilket kräver en engångsåtgärd från användaren | Ej påbörjad |
+| D-060 | Nätverksförberedelse: dela upp spelets tillstånd i tre lager. Det som aldrig ändras skickas en gång, det som ändras sällan skickas vid ändring, och det som rör sig skickas ofta. Mätt 2026-11-14: hela tillståndet är omkring 25 kB, varav 3 kB ändras hela tiden | Väntar på användaren |
+| D-061 | Nätverksförberedelse: ge allt ett eget id. Skott, raketer och effekter saknar det i dag | Väntar på användaren |
+| D-062 | Nätverksförberedelse: skicka skott som händelser (var och när de avfyrades) i stället för som positioner | Väntar på användaren |
+| D-063 | Nätverksförberedelse: håll spelet förutsägbart. Samma start och samma kommandon ska ge exakt samma förlopp. Testet som vaktar det finns, och varje ny funktion måste klara det | Ej påbörjad |
+| F-064 | Homing missiles (nytt vapen) och rockets som uppgraderingar. De ska söka sig mot mål. Missiler är mer rörliga medan raketer kan justera sin bana något, men missar den sitt mål så släpper den målet helt. Missar dessa vapen sitt mål så ska de kunna träffa andra som är i vägen för deras bana. I dag finns bara raketer, och de är för rörliga jämfört med det här | Ej påbörjad |
 | F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer | Ej påbörjad |
 | F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
