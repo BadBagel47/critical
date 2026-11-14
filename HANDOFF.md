@@ -22,6 +22,8 @@ Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra för
 
 Ett co-op-spel online där upp till tre spelare delar på ett rymdskepp. Det ska också gå att spela ensam. Främst ett hobbyprojekt som inte är tänkt att släppas i någon spelbutik.
 
+Världen ska vara av samma typ som i Escape Velocity med efterföljare och Endless Sky, fast med egna idéer och multiplayer (2026-11-14). Spelen används bara som inspiration för idéer och spelmekanik. Inget innehåll, ingen text, grafik eller kod hämtas därifrån.
+
 ## Arbetssätt
 
 Idéer spånas i chatten och samlas i designskissen. Det som ska byggas läggs i BACKLOG.md och körs i grupper efter godkännande.

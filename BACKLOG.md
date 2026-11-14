@@ -39,7 +39,7 @@ Prioritet: Hög, Medel, Låg.
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - F-048 – Musik för de olika lägena
 
-Väntar på användaren: F-070 (Jaggernaut) behöver besked om vems skepp det är. D-071 (eskortskepp), D-072 (två våningar) och D-073 (uppdrag) behöver ett samtal först, liksom D-052 (storyläge). D-060, D-061 och D-062 (nätverksförberedelser) behöver besked om hur motorn fungerar. Dessutom besked i D-044 och D-045, och motorn för onlineläget (F-040).
+Väntar på användaren: F-070 (Jaggernaut) behöver besked om vems skepp det är. D-071 (eskortskepp), D-072 (två våningar), D-073 (uppdrag) och D-074 (smuggelgods) behöver ett samtal först, liksom D-052 (storyläge). D-075 (idéer från Escape Velocity och Endless Sky) väntar på att användaren väljer bland kandidaterna. D-060, D-061 och D-062 (nätverksförberedelser) behöver besked om hur motorn fungerar. Dessutom besked i D-044 och D-045, och motorn för onlineläget (F-040).
 
 ## Hög
 
@@ -74,12 +74,43 @@ Väntar på användaren: F-070 (Jaggernaut) behöver besked om vems skepp det ä
 | D-071 | Vi behöver en lösning för eskortskepp. Öppet: vad som menas, till exempel skepp som följer och skyddar spelaren, skydd för freighters eller eskortuppdrag | Väntar på användaren |
 | D-072 | Baser ska ha två våningar med olika funktioner. Vi funderar lite på hur detta kan göras bra | Väntar på användaren |
 | D-073 | Det ska gå att få uppdrag på stationer man kan besöka genom att prata med folk. Detta kräver mer genomgång innan vi inför. Hänger ihop med D-052 | Väntar på användaren |
+| D-074 | Någon form av smuggelgods. Något man kan få i uppdrag att frakta som kan dra till sig pirater eller skepp som vill skydda sin faktion från handel med smuggelgods. Vi behöver titta närmare på hur detta funkar. Hänger ihop med F-068 (handel), D-073 (uppdrag) och F-035 (faktioner, parkerad) | Väntar på användaren |
+| D-075 | Se vad som finns i Escape Velocity med efterföljare och Endless Sky som kan vara värt att titta på hos oss. Det är den typen av värld spelet siktar mot, fast med egna idéer och multiplayer. Kandidaterna står under "Kandidater till D-075". De som väljs blir egna punkter | Väntar på användaren |
 | D-052 | Någon form av storyläge, eller åtminstone grund för vad spelet går ut på, behöver ses över | Väntar på användaren |
 | F-040 | Onlinespel för upp till tre spelare via användarens motor, som bygger på Cloudflares realtidstjänster. Målet är att gratiskontot ska räcka | Väntar på motorn |
 | D-031 | Hoppa tillbaka till gamla sektorer. Beslut tills vidare: det går, och sektorn är som den lämnades | Beslutat tills vidare |
 | D-043 | Lägga ut medan någon är kvar inne. Beslut tills vidare: det går, och alla som är inne teleporteras hem på vanligt sätt | Beslutat tills vidare |
 | D-044 | Neutrala shipyards. Beslut tills vidare: bara öppna en stund efter ett besvarat nödanrop. Det är agentens läsning av användarens ord och bör bekräftas | Väntar på användaren |
 | D-045 | Nödanrop som ingen svarar på. Beslut tills vidare: inga följder. Alternativet är att stationen faller och blir fientlig | Väntar på användaren |
+
+### Kandidater till D-075
+
+Agentens förslag 2026-11-14, hämtade ur minnet av spelen. Bara idéer och spelmekanik, inget innehåll, ingen text, grafik eller kod från spelen.
+
+Stöder det som redan är önskat
+- Trafik per sektor: varje sektor har sin egen blandning av handelsskepp, patruller och pirater som också slåss med varandra (F-066, F-067, F-069)
+- Eskorter som hyrs i baren mot lön, och enkla order till dem: följ, anfall mitt mål, håll avstånd (D-071)
+- Baren och anslagstavlan: fraktjobb och passagerare med tidsgräns på en tavla, uppdrag med berättelse från folk i baren (D-072, D-073)
+- Tullskanning: patrullskepp skannar lasten, och olaglig last ger böter och sämre anseende. Engineer kan få störa skanningen (D-074)
+- Prisnivåer per vara och station, och en kartvy som visar var det lönar sig att köpa och sälja (F-068)
+- Anseende per faktion som stiger när man skjuter pirater och sjunker när man anfaller handelsskepp (F-035, parkerad)
+
+Nytt
+- Skepp som slås ut i stället för att sprängas, så att de kan bordas medan besättningen är kvar. Gunner väljer mellan att slå ut och förstöra
+- Anropa andra skepp och stationer: be om bränsle eller hjälp, muta, kräva tribut. En ny uppgift för Captain
+- Skepp i nöd som ber om bränsle eller reparation och betalar eller minns det
+- Värme som en andra resurs bredvid energi: vapen och motorer blir varma, och Engineer måste kyla
+- Asteroidbrytning: skjut sönder asteroider och dra in malm att sälja
+- Ammunition som köps till missiler och raketer (F-064)
+- Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
+- Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
+- Tribut från övertagna stationer som ger inkomst över tid
+- Fler och mindre system i ett nät av hoppvägar i stället för fem sektorer i rad
+- Skepp, vapen och varor beskrivna som data i stället för kod, så att nytt innehåll blir billigt att lägga till (D-056)
+
+Passar sämre
+- Köpa nya skepp och bygga en egen flotta. Beslutet är att spelarskeppet alltid är samma fregatt
+- Banklån och dagar som går när man landar. Spelet går i realtid utan paus
 
 ## Låg
 
