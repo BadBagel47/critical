@@ -241,6 +241,89 @@ const alarm = {
   },
 };
 
+// Boarding, alarm, the alternative: a chase that raises the pulse without any alarm sounds.
+// A sequencer-like arpeggio drives it, and it is built in four sections of eight bars that each add something:
+//   A  the arpeggio and a steady kick
+//   B  the chords move, a backbeat and a dark pad come in
+//   C  half time: the drums thin out while the arpeggio climbs an octave
+//   D  everything, with a long melody on top and a turn back to the start
+/** @type {[number, string][][]} */
+const CHASE_CHORDS = [
+  [
+    [0, 'min'],
+    [0, 'min'],
+    [0, 'min'],
+    [0, 'min'],
+  ],
+  [
+    [0, 'min'],
+    [-4, 'maj'],
+    [-2, 'maj'],
+    [-5, 'min'],
+  ],
+  [
+    [0, 'min'],
+    [-4, 'maj'],
+    [0, 'min'],
+    [-4, 'maj'],
+  ],
+  [
+    [0, 'min'],
+    [-4, 'maj'],
+    [-2, 'maj'],
+    [-5, 'maj'],
+  ],
+];
+// Which note of the chord (root, third, fifth, octave) each sixteenth plays. Two shapes, chosen anew each bar.
+const RUNS = [
+  [0, 1, 2, 1, 0, 2, 3, 2, 0, 1, 2, 1, 3, 2, 1, 2],
+  [0, 2, 3, 2, 1, 2, 3, 2, 0, 2, 3, 2, 1, 3, 2, 1],
+];
+// The melody on top in the last section: [step in a two-bar phrase, note of the chord + octaves, length].
+const SOAR = [
+  [0, 2, 6],
+  [6, 1, 4],
+  [10, 0, 6],
+  [16, 2, 8],
+  [24, 3, 8],
+];
+const chase = {
+  name: 'chase',
+  bpm: 146,
+  notes(step, { colour }) {
+    const { bar, pos } = at(step);
+    const root = colour.root;
+    const cycle = bar % 32;
+    const part = Math.floor(cycle / 8);
+    const c = CHASE_CHORDS[part][Math.floor(cycle / 2) % 4];
+    const tones = [...triad(c), c[0] + 12];
+    const out = [];
+    const up = part === 2 && cycle >= 20 ? 12 : 0;
+    const run = RUNS[rand(bar, 11) < 0.5 ? 0 : 1];
+    out.push({ v: 'pluck', m: root + 12 + up + tones[run[pos]], d: 1, g: pos % 4 === 0 ? 0.5 : 0.32 });
+    if (pos === 0 && cycle % 2 === 0 && part > 0) out.push(...chord('dark', triad(c), root, 2 * BAR, 0.45));
+    if (part === 2) {
+      if (pos === 0) out.push({ v: 'kick', m: 36, d: 1, g: 0.85 });
+      if (pos === 8) out.push({ v: 'snare', m: 38, d: 1, g: 0.55 });
+      if (cycle === 23 && pos >= 8) out.push({ v: 'snare', m: 38, d: 1, g: 0.25 + pos / 32 });
+      if (pos === 0 && cycle % 2 === 0) out.push({ v: 'sub', m: root - 12 + c[0], d: 2 * BAR, g: 0.5 });
+      return out;
+    }
+    const kicks = part === 0 ? [0, 8] : [0, 6, 8, 10];
+    const g = part === 0 ? 0.7 : 0.9;
+    const drums = tense(pos, step, { kicks, hats: part === 3 ? 1 : 2, fill: part > 0 && cycle % 8 === 7, g });
+    out.push(...drums.filter((n) => part > 0 || n.v !== 'snare'));
+    if (pos % 2 === 0)
+      out.push({ v: 'bass', m: root - 12 + c[0] + (part === 3 && pos === 14 ? 12 : 0), d: 1.6, g: 0.6 });
+    if (part === 3) {
+      for (const [at2, tone, d] of SOAR) {
+        if ((cycle % 2) * BAR + pos === at2) out.push({ v: 'lead', m: root + 12 + tones[tone], d, g: 0.45, e: true });
+      }
+    }
+    return out;
+  },
+};
+
 // Station: warm and calm, a safe place. Soft keys over major seventh chords, a round bass,
 // and now and then the title theme in a warm major key on a bell.
 const station = {
@@ -346,4 +429,4 @@ const lost = {
   },
 };
 
-export const PIECES = { title, space, warning, combat, boarding, alarm, station, won, lost };
+export const PIECES = { title, space, warning, combat, boarding, alarm, chase, station, won, lost };

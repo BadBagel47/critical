@@ -152,3 +152,14 @@ test('combat has no cheerful four on the floor and no major tonic', () => {
     if (pad[0].m === c.colour.root) assert.equal(pad[1].m - pad[0].m, 3, 'the tonic chord is minor');
   }
 });
+
+test('the alternative alarm raises the pulse without any alarm sounds, and keeps changing', () => {
+  const c = { colour: colourOf(2), theme: THEMES[0] };
+  const bars = Array.from({ length: 32 }, (_, bar) =>
+    Array.from({ length: BAR }, (_, pos) => PIECES.chase.notes(bar * BAR + pos, c)).flat(),
+  );
+  assert.ok(bars.flat().every((n) => n.v !== 'siren'));
+  assert.ok(new Set(bars.map((b) => JSON.stringify(b))).size >= 20);
+  assert.ok(PIECES.chase.bpm > PIECES.boarding.bpm);
+  assert.equal(wanted({ scene: 'chase' }), 'chase');
+});

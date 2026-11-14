@@ -110,3 +110,4 @@ Flera agenter arbetar i repot samtidigt. För att det inte ska krocka:
 ## Öppna frågor till användaren
 
 - Vilket av de tre förslagen ska bli introtemat?
+- Vilken larmmusik ska användas: A med siren eller B, en jakt utan larmljud? Användaren var inte nöjd med A (2026-11-14). Valet sätts i `ALARM` i `src/music.js`.

@@ -8,7 +8,17 @@ export function wanted(info) {
   return info.scene in INTENSITY ? info.scene : 'space';
 }
 
-export const INTENSITY = { title: 0, station: 0, lost: 0, space: 1, warning: 2, boarding: 2, combat: 3, alarm: 4 };
+export const INTENSITY = {
+  title: 0,
+  station: 0,
+  lost: 0,
+  space: 1,
+  warning: 2,
+  boarding: 2,
+  combat: 3,
+  alarm: 4,
+  chase: 4,
+};
 
 // Seconds a calmer moment must last before the music follows it down.
 export const HOLD = { combat: 7, warning: 5, alarm: 3 };
