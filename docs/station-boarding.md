@@ -1,8 +1,8 @@
 # Bordning av stationer: samlat förslag (D-117)
 
-Det här är ett förslag att säga ja eller nej till. Inget av det är byggt. Det samlar det användaren har bestämt (2026-11-14) och agentens förslag på det som var kvar, så att delarna F-102, F-107 till F-110 och F-113 till F-116 kan byggas utan att krocka.
+**Godkänt av användaren 2026-11-14.** Inget av det är byggt än. Det samlar det användaren har bestämt (2026-11-14) och agentens förslag på det som var kvar, så att delarna F-102, F-107 till F-110 och F-113 till F-116 kan byggas utan att krocka.
 
-Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **Förslag** är agentens och gäller först när användaren har sagt ja.
+Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **Förslag** är agentens. Användaren har godkänt förslagen i sin helhet, och siffrorna är startvärden att provspela med.
 
 ## 1. Tre lägen inne på ett ställe
 
@@ -172,7 +172,7 @@ Scenen `boarding` delas i två: `boarding` för smygande under lockdown och bord
 - En faktion ni är ovän med ska också kunna anfalla. Den är mer organiserad och mer aggressiv än pirater. Anseendet och hur utbredd faktionen är i systemet ska påverka.
 - Det får inte gå att fuska sig ur ett övertagande genom att bara skjuta sönder skeppet som har dockat.
 
-**Förslag: ett anfall i tre steg, likadant vare sig ni är på plats eller inte.**
+**Bestämt 2026-11-14: ett anfall i tre steg, likadant vare sig ni är på plats eller inte.** Det byggs i två omgångar: först uträkningen för alla tre stegen, sedan möjligheten att själv gå in och försvara.
 
 | Steg | Vad som händer | Vad som avgör |
 |---|---|---|
@@ -208,13 +208,13 @@ Meddelandet säger vilken station, vem som anfaller, nivån och ungefär hur lå
 | En faktion ni är ovän med | Oftare ju sämre anseendet är och ju fler stationer faktionen har i sektorn och i grannsektorerna. Helst mot stationer ni tagit från den | En ordnad styrka: fler skepp, alltid minst en Gunboat (senare Juggernaut), ett eget bordningsskepp, och de går rakt på det yttre försvaret i stället för att jaga er |
 
 - En faktion anfaller bara när anseendet är "fientlig". Vid "stängd" nöjer den sig med att hålla er ute.
-- En station som faller blir angriparens. Halva det försvar ni köpt finns kvar, så den är svårare att ta tillbaka än den var att ta första gången.
+- **Bestämt 2026-11-14:** en station som faller blir angriparens. Halva det försvar ni köpt finns kvar, så den är svårare att ta tillbaka än den var att ta första gången, och ni får tillbaka den halvan om ni tar den igen.
 
 ## 15. Byggordning
 
 | Steg | Innehåll | Punkter |
 |---|---|---|
-| Före | Större och genererade inomhusmiljöer som följer objektets form, och smartare vakter i flera sorter. Smygandet bygger på dem: rundor, skydd och vägar förbi turrets hör till planlösningen | D-128, F-127, D-101, F-125, F-126 |
+| Före (bestämt 2026-11-14) | Större och genererade inomhusmiljöer som följer objektets form, och smartare vakter i flera sorter. Smygandet bygger på dem: rundor, skydd och vägar förbi turrets hör till planlösningen | D-128, F-127, D-101, F-125, F-126 |
 | 1 | Lägena, ljuset, vakter som patrullerar och ser, tranq gun, TAKE DOWN, kameror, turrets som smygs förbi | F-102, F-107, F-108, F-115, F-116 |
 | 2 | Rollernas bonusar | F-113 |
 | 3 | Mainframen med hack i nivåer, och panelen för ägda stationer | F-109, F-110 |
@@ -223,8 +223,11 @@ Meddelandet säger vilken station, vem som anfaller, nivån och ungefär hur lå
 
 Steg 1 är störst och bör provspelas innan resten byggs. Stora baser med två våningar (F-103, D-072) kan komma före eller efter. Planlösningen i avsnitt 3 är gjord för att fungera med båda.
 
-## 16. Frågor som är kvar
+## 16. Frågor
 
-1. **Besvarad 2026-11-14:** stationer ska kunna falla även när ni är i ett annat system, se avsnitt 14.
-2. **Besvarad 2026-11-14:** den som har en egen flotta kommer själv, och den som inte har det sätter ett pris på besättningen. En station utan faktion har inga skepp, så prissumman är dess sätt att slå tillbaka, både när den tas över och när den skjuts till fiende utifrån. En faktion svarar med sina patruller och med anfall på besättningens stationer (avsnitt 14), aldrig med bounty hunters.
-3. Siffrorna i förslaget är startvärden att provspela med. De som finns är: 30 sekunder som en sövd vakt sover, sex pilar till tranq gun, en sekund för att bli upptäckt, 20 sekunder som en turret är utslagen, 25 procent mer skada för Gunner, dubbel hackfart för Engineer, åtta rutors överblick för Captain, 60 sekunder som kameror är avstängda från mainframen, 40 i sänkt anseende när larmet går på en neutral bas och 10 hos alla andra vid övertagande, en prissumma på 300 krediter, en grupp bounty hunters på två Fighters och en Gunboat var tredje till fjärde minut i högst tre omgångar, och tiderna för anfall i avsnitt 14. Alla är lätta att ändra efter provspelning.
+Alla frågor är besvarade (2026-11-14):
+1. Stationer kan falla även när besättningen är i ett annat system, se avsnitt 14.
+2. Den som har en egen flotta kommer själv, och den som inte har det sätter ett pris på besättningen. Stationer utan faktion sätter alltså prissumma. Faktioner svarar med egna skepp och anfall, aldrig med bounty hunters.
+3. Siffrorna i förslaget är startvärden att provspela med: 30 sekunder som en sövd vakt sover, sex pilar till tranq gun, en sekund för att bli upptäckt, 20 sekunder som en turret är utslagen, 25 procent mer skada för Gunner, dubbel hackfart för Engineer, åtta rutors överblick för Captain, 60 sekunder som kameror är avstängda från mainframen, 40 i sänkt anseende när larmet går på en neutral bas och 10 hos alla andra vid övertagande, en prissumma på 300 krediter, en grupp bounty hunters på två Fighters och en Gunboat var tredje till fjärde minut i högst tre omgångar, och tiderna för anfall i avsnitt 14.
+4. Insidorna och vakterna görs före lockdown och smygande.
+5. Anfall på egna stationer sker i tre steg och byggs i två omgångar, och en station som faller behåller halva försvaret.

@@ -12,7 +12,7 @@ Sedan dess är koden omgjord i grunden utan att spelet beter sig annorlunda (den
 
 Världen har fått sidor och liv: tre faktioner med egna stationer och anseende, fraktskepp och patruller som hoppar in, dockar och hoppar ut, stationer med kanontorn och sköld som försvarar sig och kan falla till piraterna, och en extra sköld för dockade skepp.
 
-Dockningen är enklare, och en knapp dyker upp nere till höger när det finns något att göra (docka, gå ombord, handla, skära upp ett lås). Den visar tangenten, handkontrollens knapp eller en symbol för pekskärm. Ett samlat förslag för hur bordning av stationer ska fungera, med lockdown, smygande, roller, mainframe och övertagande, ligger i docs/station-boarding.md och väntar på användarens ja.
+Dockningen är enklare, och en knapp dyker upp nere till höger när det finns något att göra (docka, gå ombord, handla, skära upp ett lås). Den visar tangenten, handkontrollens knapp eller en symbol för pekskärm. Ett samlat förslag för hur bordning av stationer ska fungera, med lockdown, smygande, roller, mainframe och övertagande, ligger i docs/station-boarding.md och är godkänt av användaren.
 
 Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-089 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
@@ -48,7 +48,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - [docs/design/img/](docs/design/img/): exempelskärmar och skeppsbilder.
 - [docs/design/tools/](docs/design/tools/): Python-skript som ritar bilderna. Kräver Pillow och typsnittet DejaVu Sans Bold. Kör `python3 frigate.py`, `python3 rot.py` och `python3 screens2.py`, samt `python3 ships2.py` för förslagen på nya skeppsklasser.
 - [tools/export_assets.py](tools/export_assets.py): gör spelets bilder av ritskripten, och typsnittet av DejaVu Sans Bold. Kör `npm run assets`.
-- [docs/station-boarding.md](docs/station-boarding.md): samlat förslag för bordning av stationer (D-117): lockdown, smygande, roller, mainframe och övertagande. Säger vad användaren har bestämt och vad som är agentens förslag. Väntar på användarens ja.
+- [docs/station-boarding.md](docs/station-boarding.md): samlat förslag för bordning av stationer (D-117): lockdown, smygande, roller, mainframe och övertagande. Säger vad användaren har bestämt och vad som är agentens förslag. Godkänt av användaren 2026-11-14.
 - [docs/music-brief.md](docs/music-brief.md): underlag för den agent som gör musiken (F-048). Säger vad som gäller, hur musiken kopplas in och vilka filer den får röra.
 
 ## Kod
@@ -235,7 +235,8 @@ Bordning av stationer, besked från användaren (2026-11-14, inget av det är by
 - Inomhusmiljöerna ska bli större och mer varierade: formen bör matcha objektet man bordat, och planlösningen slumpas för varje omgång så att alla objekt har olika vägar och rum. Skepp och stationer ska se olika ut. Vakter ska finnas i flera typer, lättare i början och svårare längre fram, och slåss mer levande med skydd och framryckning (F-125 till F-127, D-128, 2026-11-14).
 - När det blir strid vid en bas ger sig skepp som har ett intresse av striden in i den, till exempel ett faktionsskepp i närheten när dess faktion anfalls. Skepp utan intresse håller sig undan eller lämnar platsen (F-129, 2026-11-14).
 - Utsidan (2026-11-14, användaren valde först bara färg men ändrade sig samma dag): vrak får egna former, ett per skeppsklass som finns (Gunboat och fraktskepp, senare Juggernaut). Stationer får färg, märken och påbyggnader per sida på dagens ringform, och egna former först med de stora baserna (F-103). Hur en station behandlar besättningen visas då på annat sätt än med färgen, till exempel med ljusen på dockningsarmarna. Designen visas först (D-128, F-130 till F-132). Användaren har godkänt ljusen på armarna som indikation, och vill att armarna fälls ut när ett skepp dockar (F-133).
-- Det samlade förslaget ligger i docs/station-boarding.md och väntar på ja. Det som då var kvar att bestämma: hur en attack inifrån börjar på en neutral bas (agentens förslag: en öppen del och en del bara för personal), att ingen längre kastas ut när stationen blir fientlig, hur larm skiljer sig från lockdown i bild, hur oförstörbara turrets aldrig kan låsa spelet, hur hårt bounty hunters slår, och vad panelen på en ägd station ska kunna när stationer i dag lagar sig själva.
+- Användaren har godkänt hela förslaget i docs/station-boarding.md (2026-11-14). Sista beskeden: större och genererade insidor och smartare vakter görs före lockdown och smygande, anfall på egna stationer sker i tre steg och byggs i två omgångar (först uträkningen, sedan att själv gå in och försvara), och en station som faller behåller halva försvaret.
+- Det som var kvar att bestämma när förslaget skrevs, och som nu är avgjort i dokumentet: hur en attack inifrån börjar på en neutral bas (agentens förslag: en öppen del och en del bara för personal), att ingen längre kastas ut när stationen blir fientlig, hur larm skiljer sig från lockdown i bild, hur oförstörbara turrets aldrig kan låsa spelet, hur hårt bounty hunters slår, och vad panelen på en ägd station ska kunna när stationer i dag lagar sig själva.
 
 Sparande, uppdrag och omgångar (2026-11-14)
 - En autosparfil vid dockning och fem manuella platser. Vid död laddas senaste sparfilen om. Byggt 2026-11-14 (F-079).
