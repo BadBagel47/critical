@@ -940,7 +940,7 @@ test('three misses on a cargo pod set off an alarm that brings pirates', () => {
   assert.ok(s.vessels.length > 0, 'and pirates are on their way');
 });
 
-test('a station under attack calls for help, and a neutral one repays it with a discount and its shipyard', () => {
+test('a station under attack calls for help, and a neutral one repays it with a discount', () => {
   const s = quiet(createState(1));
   s.sector = 0;
   s.charts.push(1);
@@ -952,8 +952,9 @@ test('a station under attack calls for help, and a neutral one repays it with a 
   assert.ok(st.shipyard, 'this neutral station has a shipyard');
   atStation(s, st);
   s.credits = 1000;
-  step(s, { shop: [{ action: 'buy', item: 'armor' }] }, DT);
-  assert.equal(s.ship.mods.armor, undefined, 'closed to strangers');
+  step(s, { shop: [{ action: 'buy', item: 'emit' }] }, DT);
+  assert.equal(s.ship.mods.emit, 1, 'a neutral shipyard is open to anyone who pays');
+  assert.equal(s.credits, 1000 - CATALOG.emit.price, 'at the full price');
   s.ship.docked = null;
   s.ship.x = st.x + 2500;
   s.ship.y = st.y;
@@ -976,7 +977,7 @@ test('a station under attack calls for help, and a neutral one repays it with a 
   atStation(s, st);
   const before = s.credits;
   step(s, { shop: [{ action: 'buy', item: 'armor' }] }, DT);
-  assert.equal(s.ship.mods.armor, 1, 'the shipyard is open now');
+  assert.equal(s.ship.mods.armor, 1);
   assert.equal(before - s.credits, Math.round(CATALOG.armor.price * B.FAVOR_DISCOUNT), 'at a discount');
   run(s, {}, B.FAVOR_TIME + 1);
   assert.equal(st.favor, 0, 'the favour runs out');

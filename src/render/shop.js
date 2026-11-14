@@ -147,11 +147,7 @@ export function drawShop(ctx, font, state, st, tab, mouse) {
   }
   rect(ctx, PX + 12, PY + PH - 28, PW - 24, 1, COL.line);
   const closed = tab !== 'armory' && !yardOpen(st);
-  const note = closed
-    ? st.shipyard
-      ? 'THIS SHIPYARD ONLY WORKS FOR CREWS IT OWES  ·  ANSWER ITS DISTRESS CALL'
-      : 'NO SHIPYARD AT THIS STATION  ·  THE ARMORY IS OPEN'
-    : null;
+  const note = closed ? 'NO SHIPYARD AT THIS STATION  ·  THE ARMORY IS OPEN' : null;
   font.draw(
     ctx,
     note || (hover && hover.desc) || 'CLICK TO BUY  ·  F TO LEAVE THE PANEL  ·  E UNDOCKS FROM THE CAPTAIN POST',

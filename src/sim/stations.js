@@ -59,8 +59,8 @@ export function takeOver(state, st) {
 }
 
 // ---------- trade ----------
-// A neutral shipyard only works for crews it owes a favour. Friendly yards are always open.
-export const yardOpen = (st) => st.shipyard && (st.align === 'friendly' || st.favor > 0);
+// Every shipyard at a trading station is open. A station that owes the crew a favour gives a discount.
+export const yardOpen = (st) => st.shipyard;
 export const discount = (st) => (st.favor > 0 ? B.FAVOR_DISCOUNT : 1);
 
 // What each service costs right now, and how much of it the ship needs. Used by the shop screen too.
@@ -125,8 +125,7 @@ function shop(state, st, order) {
   if (order.action === 'buy') {
     // Boarding gear is sold at any trading station. Everything else needs an open shipyard.
     if (CATALOG[order.item] && CATALOG[order.item].tab !== 'armory') {
-      if (!st.shipyard) return refuse(state, 'NO SHIPYARD HERE');
-      if (!yardOpen(st)) return refuse(state, 'THE SHIPYARD IS CLOSED TO STRANGERS');
+      if (!yardOpen(st)) return refuse(state, 'NO SHIPYARD HERE');
     }
     buyUpgrade(state, order.item, discount(st));
     return;

@@ -36,7 +36,7 @@ const TOAST = {
   codeChanged: () => ['THE STATION CODE CHANGED', WARM],
   distress: (e) => [`DISTRESS CALL FROM ${e.name}`, LOOT],
   distressSaved: (e) => [
-    e.favor ? `${e.name} OWES YOU  ·  DISCOUNT AND SHIPYARD FOR A WHILE` : `${e.name} IS SAFE  ·  +${e.reward} CREDITS`,
+    e.favor ? `${e.name} OWES YOU  ·  DISCOUNT FOR A WHILE` : `${e.name} IS SAFE  ·  +${e.reward} CREDITS`,
     GOOD,
   ],
   distressOver: (e) => [`${e.name} WAS RAIDED`, COL.dim],

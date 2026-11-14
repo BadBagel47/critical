@@ -1,7 +1,9 @@
-"""Design sheet for the new ship classes: the Freighter and the Juggernaut, two proposals each.
+"""Design sheet for the new ship classes: the Freighter and the Juggernaut.
+
+Earlier proposals that were not chosen are kept as functions here, but are not shown on the sheet.
 
 Usage: python3 ships2.py   (writes ../img/new-ships.png; needs Pillow and DejaVu Sans Bold)
-All ships point up. Each proposal is drawn in the colours of the sides that would fly it.
+All ships point up. Each ship is drawn in the colours of the sides that would fly it.
 """
 import os
 from PIL import Image, ImageDraw
@@ -130,37 +132,85 @@ def juggernaut_b(c):
     return S.sprite(w, h, parts, ramps(c), det)
 
 
+def juggernaut_c(c):
+    """Beetle: a domed shell split down the middle, a broad neck shield, and two horns over a small head."""
+    w, h, m = 96, 132, 48
+    parts = [
+        (2, 'p', [(m - 13, 14), (m - 21, 0), (m - 17, 0), (m - 8, 12)]),                       # horns
+        (2, 'p', [(m, 4), (m - 9, 6), (m - 13, 14), (m - 10, 20), (m, 20)]),                   # head
+        (4, 'p', [(m, 8), (m - 6, 9), (m - 7, 14), (m, 16)]),                                  # bridge glass
+        (2, 'e', [m - 37, 14, m + 37, 60]), (1, 'e', [m - 33, 17, m + 33, 56]),                # neck shield
+        (2, 'p', [(m - 42, 52), (m - 48, 56), (m - 48, 66), (m - 42, 68)]),                    # side fins
+        (2, 'p', [(m - 42, 86), (m - 48, 90), (m - 48, 100), (m - 42, 100)]),
+        (2, 'e', [m - 45, 36, m + 45, 126]), (1, 'e', [m - 41, 40, m + 41, 122]),              # shell
+        (2, 'p', [(m, 118), (m - 16, 118), (m - 22, 124), (m - 14, 128), (m, 128)]),           # tail and engines
+        (5, 'r', [m - 19, 126, m - 12, 128]), (5, 'r', [m - 8, 128, m, 130]),
+        (6, 'r', [m - 18, 129, m - 13, 130]), (6, 'r', [m - 7, 131, m, 131]),
+        (5, 'e', [m - 28, 24, m - 18, 34]), (5, 'e', [m - 36, 62, m - 26, 72]), (5, 'e', [m - 32, 94, m - 22, 104]),   # guns
+        (3, 'p', [(m - 20, 44), (m - 30, 50), (m - 30, 52), (m - 20, 46)]),                    # accent marks
+        (3, 'r', [m - 40, 76, m - 39, 90]),
+    ]
+
+    def det(px, ln):
+        ln((m - 1, 42), (m - 1, 120), c['hull2'][0])                                           # the split down the back
+        for y, half in ((58, 38), (78, 40), (98, 34)):                                         # plate seams, curved
+            ln((m - half, y - 3), (m - half + 10, y), c['hull'][0]); ln((m - half + 10, y), (m - 2, y + 1), c['hull'][0])
+        ln((m - 26, 20), (m - 12, 18), c['hull'][0])
+        px([(m - 10, 28), (m - 12, 66), (m - 12, 88), (m - 14, 108), (m - 38, 80)], c['hull'][3])
+        px([(m - 4, 50), (m - 4, 70), (m - 4, 90), (m - 4, 110)], c['accent'][2])
+    return S.sprite(w, h, parts, ramps(c), det)
+
+
+def juggernaut_d(c):
+    """Armadillo: overlapping armour bands from a blunt head to a rounded tail, with guns between the bands."""
+    w, h, m = 92, 126, 46
+    parts = [
+        (2, 'e', [m - 26, 0, m + 26, 40]), (1, 'e', [m - 22, 3, m + 22, 36]),                  # blunt head
+        (4, 'p', [(m, 8), (m - 7, 10), (m - 8, 16), (m, 18)]),                                 # bridge glass
+        (2, 'e', [m - 34, 82, m + 34, 124]),                                                   # rounded tail
+        (5, 'r', [m - 18, 120, m - 10, 123]), (5, 'r', [m - 6, 122, m, 125]),                  # engines
+        (6, 'r', [m - 17, 124, m - 11, 124]), (6, 'r', [m - 5, 126, m, 126]),
+    ]
+    # Five bands, each a little wider than the gap it covers, alternating light and dark.
+    for i, (y, half) in enumerate(((22, 34), (40, 42), (58, 45), (76, 43), (94, 36))):
+        parts += [(2, 'e', [m - half, y, m + half, y + 26]), (1 if i % 2 == 0 else 2, 'e', [m - half + 3, y + 2, m + half - 3, y + 22])]
+    parts += [
+        (5, 'e', [m - 14, 4, m - 6, 12]),                                                      # guns
+        (5, 'e', [m - 36, 48, m - 27, 57]), (5, 'e', [m - 38, 84, m - 29, 93]), (5, 'e', [m - 5, 64, m + 5, 74]),
+        (3, 'r', [m - 1, 30, m, 60]), (3, 'r', [m - 1, 80, m, 112]),                           # accent line down the back
+    ]
+
+    def det(px, ln):
+        px([(m - 20, 32), (m - 24, 50), (m - 24, 70), (m - 22, 88), (m - 16, 106)], c['hull'][3])
+        px([(m - 10, 46), (m - 10, 82), (m - 10, 100)], c['hull2'][3])
+    return S.sprite(w, h, parts, ramps(c), det)
+
+
 SCALE = 3
 def sheet():
     game = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'assets', 'sprites')
     known = [(n, Image.open(os.path.join(game, n + '.png')).convert('RGBA')) for n in ('fighter', 'gunboat', 'frigate', 'cruiser')]
+    chosen = ('FREIGHTER  ·  CHOSEN', [('TRADER', freighter_a(TRADER)), ('PIRATE', freighter_a(PIRATE))])
     rows = [
-        ('FREIGHTER A  ·  SPINE HAULER', [('TRADER', freighter_a(TRADER)), ('PIRATE', freighter_a(PIRATE))]),
-        ('FREIGHTER B  ·  BULK HAULER', [('TRADER', freighter_b(TRADER)), ('PIRATE', freighter_b(PIRATE))]),
-        ('JUGGERNAUT A  ·  ARMOURED WEDGE', [('PATROL', juggernaut_a(PATROL)), ('PIRATE', juggernaut_a(PIRATE))]),
-        ('JUGGERNAUT B  ·  HAMMERHEAD', [('PATROL', juggernaut_b(PATROL)), ('PIRATE', juggernaut_b(PIRATE))]),
+        ('JUGGERNAUT C  ·  BEETLE', [('PATROL', juggernaut_c(PATROL)), ('PIRATE', juggernaut_c(PIRATE))]),
+        ('JUGGERNAUT D  ·  ARMADILLO', [('PATROL', juggernaut_d(PATROL)), ('PIRATE', juggernaut_d(PIRATE))]),
     ]
-    W, H = 640, 470
+    W, H = 640, 400
     im = Image.new('RGBA', (W, H), S.rgb(S.BG) + (255,)); d = ImageDraw.Draw(im)
-    S.txt(d, 8, 6, 'NEW SHIP CLASSES  ·  TWO PROPOSALS EACH  ·  SAME SCALE AS THE SHIPS IN THE GAME', S.STEEL[3])
+    S.txt(d, 8, 6, 'NEW SHIP CLASSES  ·  SAME SCALE AS THE SHIPS IN THE GAME', S.STEEL[3])
+    def place(x, y, title, variants, color):
+        S.txt(d, x, y, title, color)
+        for label, sp in variants:
+            im.alpha_composite(sp, (x, y + 12)); S.txt(d, x + sp.width // 2, y + 16 + sp.height, label, S.STEEL[1], 'c'); x += sp.width + 10
+        return x
     # The ships already in the game, for size.
     x = 8
     S.txt(d, x, 22, 'IN THE GAME TODAY', S.STEEL[1])
     for name, sp in known:
         im.alpha_composite(sp, (x, 34 + 168 - sp.height)); S.txt(d, x + sp.width // 2, 34 + 172, name.upper(), S.STEEL[1], 'c'); x += sp.width + 10
-    # The proposals: freighters on the top half, juggernauts below.
-    x = 280
-    for title, variants in rows[:2]:
-        S.txt(d, x, 22, title, S.OCHRE[2])
-        for label, sp in variants:
-            im.alpha_composite(sp, (x, 34)); S.txt(d, x + sp.width // 2, 34 + sp.height + 4, label, S.STEEL[1], 'c'); x += sp.width + 8
-        x += 16
-    x = 8
-    for title, variants in rows[2:]:
-        S.txt(d, x, 232, title, S.OCHRE[2])
-        for label, sp in variants:
-            im.alpha_composite(sp, (x, 244)); S.txt(d, x + sp.width // 2, 244 + sp.height + 4, label, S.STEEL[1], 'c'); x += sp.width + 8
-        x += 22
+    place(300, 22, *chosen, S.ACID[2])
+    x = place(8, 232, *rows[0], S.OCHRE[2])
+    place(x + 30, 232, *rows[1], S.OCHRE[2])
     out = im.resize((W * SCALE, H * SCALE), Image.NEAREST)
     out.save(os.path.join(S.OUT_DIR, 'new-ships.png'), optimize=True)
     return out

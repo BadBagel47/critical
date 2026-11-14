@@ -97,7 +97,7 @@ Poster
 - Den som går in för att loota lämnar sin post ledig för någon annan och får tillbaka den när den är ombord igen.
 - Första versionen har alla tre posterna och fritt byte mellan dem.
 - En post som lämnas fortsätter som den ställdes in. Gasen ligger därför kvar när Captain lämnar sin post, så att en ensam spelare kan flyga och skjuta.
-- Agentens val som användaren inte har sett än (2026-11-14): en post kan bara hållas av en spelare i taget. Två spelare byter post genom att be om varandras poster inom några sekunder. Den som kommer tillbaka från en bordning får sin gamla post om den är ledig, annars en annan ledig post.
+- En post kan bara hållas av en spelare i taget. Två spelare byter post genom att be om varandras poster inom några sekunder. Den som kommer tillbaka från en bordning får sin gamla post om den är ledig, annars en annan ledig post. Godkänt av användaren 2026-11-14, så länge det går att göra intuitivt utan att kladda ner UI.
 
 Värld
 - Sektorer som nås med stjärnkartor som hittas eller köps. Hopp kostar bränsle.
@@ -105,7 +105,9 @@ Värld
 - Fri sikt i rymden. Fog of war finns bara på kartan. Stillastående objekt ligger kvar som senast kända läge, skepp syns bara medan de ses.
 - Stationer är vänliga, neutrala eller fientliga. Gratis tankning hos vänliga, betalning hos neutrala.
 - Skeppet kan bara byggas om vid en station med shipyard.
-- En vänlig eller neutral station som anfalls kan sända nödanrop. En neutral station som får hjälp förblir neutral men ger rabatt och tillgång till sin shipyard under en tid.
+- En vänlig eller neutral station som anfalls kan sända nödanrop. En neutral station som får hjälp förblir neutral men ger rabatt under en tid.
+- Neutrala shipyards är alltid öppna mot betalning, till samma priser som hos vänliga så länge spelet testas (D-044, 2026-11-14).
+- En station som inte överlever ett anfall ska bli fientlig (D-045, 2026-11-14, inte byggt än).
 - Pirater är fristående och aggressiva mot alla.
 - Faktioner ska in (F-035, tillbaka från parkerat 2026-11-14).
 - Värme blir en andra resurs bredvid energi, med uppgraderingar som kyler bättre (F-084, 2026-11-14).
@@ -140,9 +142,9 @@ Stationer, vapen och sektorer, agentens val som användaren inte har sett än (2
 - Spelet är vunnet när Cruisern i The Maw är förstörd. Det går att flyga vidare efteråt.
 
 Nödanrop, lås och utrustning, agentens val som användaren inte har sett än (2026-11-14)
-- Ett neutralt shipyard är bara öppet för den som stationen står i skuld till, alltså en stund efter ett besvarat nödanrop. Det är agentens läsning av användarens ord "får nyttja shipyard under denna tid om en sådan finns" (se D-044). Vänliga och övertagna stationer har alltid öppet.
-- Ett besvarat nödanrop ger 40 procent rabatt och öppet shipyard i tre minuter hos en neutral station. En vänlig station betalar 100 krediter.
-- Ett nödanrop som ingen svarar på får inga följder. Piraterna ger sig av (se D-045).
+- Ett neutralt shipyard var först bara öppet efter ett besvarat nödanrop. Det ändrades 2026-11-14, se Värld.
+- Ett besvarat nödanrop ger 40 procent rabatt i tre minuter hos en neutral station. En vänlig station betalar 100 krediter.
+- Ett nödanrop som ingen svarar på får i dag inga följder. Piraterna ger sig av. Det ska ändras, se D-045.
 - Nödanropet visar var stationen ligger, även om den inte är hittad.
 - Stationslåset är en kod som bara syns på Engineer-skärmen och som byts var sextonde sekund. Ensam får man växla mellan låset och Engineer-posten.
 - Fraktcontainrar (cargo pods) har ingen insida. När låset är uppe tas lasten direkt ombord och containern försvinner.
@@ -168,12 +170,30 @@ Karta, agentens val som användaren inte har sett än (2026-11-14)
 - Pilarna i skärmkanten visar bara pirater inom sikt och vrak som redan hittats.
 - Kartan öppnas med M av vem som helst. Verktygen används från Engineer-posten.
 
+Faktioner, platshållare som ska ses över i D-095 (2026-11-14)
+- Tre faktioner. Man börjar som neutral hos alla. Piraterna står utanför.
+- THE CHARTER: ett handelsförbund med rika stationer och bra priser. Betalar för frakt och eskort.
+- THE WARDENS: en ordningsmakt som patrullerar med tunga skepp och har de bästa varven. Skannar efter smuggelgods.
+- THE DRIFTERS: fria bärgare och nybyggare i utkanten. Billiga reparationer, köper allt och bryr sig inte om smuggelgods.
+- Dåligt anseende ger först högre priser, sedan stängda stationer, sedan patruller som anfaller. Det ska alltid gå att höja ett lågt anseende.
+
+Sparande, uppdrag och omgångar (2026-11-14)
+- En autosparfil vid dockning och fem manuella platser. Vid död laddas senaste sparfilen om. Hardcore mode med ett liv är en egen punkt (F-096).
+- Varje omgång ska vara genererad: systemen, en röd tråd av berättelse och frivilliga sidouppdrag. Kartans storlek väljs vid start. Ingen färdigskriven story från början till slut.
+- Uppdrag: alla sorter, högst fem samtidigt för stunden. Vissa har tidsgräns och betalar mer.
+- Det får aldrig gå att låsa sig, till exempel utan pengar eller bränsle (D-100).
+- Små stationer har en våning, större har två. Samma gäller för fientliga.
+- Mobil är viktigt (F-090).
+- Onlineläget: spelare ansluter med rumskod eller länk. Motorns gränser är inte kända än.
+
 Skepp och uppgraderingar
 - Spelarskeppet är alltid samma fregatt. Uppgraderingar syns på skrovet.
 - Två sorters slots: hardpoints och system slots. Båda kan köpas eller hittas som loot.
 - Fighter bay är en uppgradering. Darts är den minsta skeppsklassen.
 - Skeppsklasser: Dart, Fighter, Interceptor, Gunboat, Frigate, Cruiser.
 - Två nya skeppsklasser ska in: Freighter, lite större och långsam (F-069), och Juggernaut, ett ovanligt krigsskepp som är långsamt och tungt bestyckat (F-070). Juggernaut patrullerar hos faktioner och dyker i mycket sällsynta fall upp som pirat (2026-11-14).
+- Freighterns design är vald: en ryggrad med containrar, förslag A. Juggernauten ska ha en rundare form som en bepansrad skalbagge och vara mindre än Cruisern. Två förslag väntar på val (D-094, 2026-11-14).
+- Stationernas storlek är godkänd. Stora baser med två våningar blir 1,5 gånger större, med annan design, mer vapen och starkare sköld (F-103, 2026-11-14).
 - Nya skepp designas och visas för användaren innan de läggs in i spelet (2026-11-14). Förslagen ritas av `docs/design/tools/ships2.py`.
 
 Grafik
@@ -183,7 +203,7 @@ Grafik
 
 ## Miljö och begränsningar
 
-- 2026-11-14: Skarpare text och fönsterfyllnad (F-077, F-078) är bara provade i en automatisk webbläsare i tre fönsterstorlekar, inte på en riktig skärm. På en full-HD-skärm ritas bilden i 2560 × 1440 och krymps, vilket kostar mer grafikkraft än förut. Om det hackar: sänk `MAX_SCALE` i `src/main.js`.
+- 2026-11-14: Skarpare text och fönsterfyllnad (F-077, F-078) flyter på användarens dator. De är i övrigt bara provade i en automatisk webbläsare i tre fönsterstorlekar. På en full-HD-skärm ritas bilden i 2560 × 1440 och krymps, vilket kostar mer grafikkraft än förut. Om det hackar: sänk `MAX_SCALE` i `src/main.js`.
 
 - 2026-11-14: Agenten kan klona och pusha via git. GitHub-verktygen (gh och GitHub-kopplingen) fungerade inte i sessionen, så agenten kunde inte läsa eller ändra repoinställningar, till exempel GitHub Pages.
 - 2026-11-14, senare session: GitHub-kopplingen fungerar för att läsa pull requests och issues. Kommandot gh finns inte. Sessionen fick bara pusha till sin egen gren (claude/), inte direkt till main. Därför finns nu automatisk merge, se Engångsåtgärder.
@@ -216,7 +236,7 @@ Genomgång 2026-11-14 (D-033). Agenten är ingen jurist, och inget här är juri
 - Spelet och designsidan laddar inget från andra tjänster. Det kontrolleras med `node tests/outside.mjs`.
 - Designsidan laddade tidigare typsnitt från Google Fonts. De är borttagna och sidan använder systemets typsnitt.
 - Spelet hanterar inga personuppgifter: inga namn, konton eller formulär.
-- Spelet sparar en enda sak i webbläsaren: om ljudet är av eller på (`critical-muted`), och bara efter att spelaren själv tryckt N. Inga kakor. Regeln som kan beröras är lagen om elektronisk kommunikation, 9 kap. 28 §, om lagring i användarens utrustning. Lagring som behövs för något användaren själv har bett om brukar vara undantagen från samtycke. Agentens rekommendation är att behålla sparandet. Användaren har inte tagit ställning än.
+- Spelet sparar en enda sak i webbläsaren: om ljudet är av eller på (`critical-muted`), och bara efter att spelaren själv tryckt N. Inga kakor. Regeln som kan beröras är lagen om elektronisk kommunikation, 9 kap. 28 §, om lagring i användarens utrustning. Lagring som behövs för något användaren själv har bett om brukar vara undantagen från samtycke. Användaren bedömer att det är okej (2026-11-14).
 - Webbhotellet GitHub Pages får besökarnas IP-adresser, vilket följer av att sidan ligger där.
-- Sparade omgångar (F-079) blir ny lagring i webbläsaren. Den görs på spelarens egen begäran och innehåller inga personuppgifter, så samma bedömning som för ljudinställningen bör gälla. Agentens rekommendation: spara först när spelaren själv väljer det, och säg det på startskärmen. Användaren har inte tagit ställning än.
+- Sparade omgångar (F-079) blir ny lagring i webbläsaren. Den görs på spelarens egen begäran och innehåller inga personuppgifter, så samma bedömning som för ljudinställningen bör gälla. Användaren bedömer att det är okej (2026-11-14).
 - Ny genomgång behövs när onlineläget byggs (D-046): spelarnamn, anslutningar och Cloudflare som ny tjänst.
