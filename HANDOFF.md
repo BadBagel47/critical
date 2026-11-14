@@ -6,12 +6,13 @@ Project language: English (all text in the game and README)
 
 ## Nuläge
 
-Spelet är i designstadiet. Det finns ingen spelbar kod än. Repot innehåller designskissen, exempelskärmarna och skripten som ritar dem.
+Första spelbara versionen finns: en ensam spelare flyger fregatten, skjuter pirater, sköter energi och reparationer, byter fritt mellan de tre posterna och kan docka med vrak. Bordning, loot, karta och stationer saknas än.
 
 ## Nästa steg
 
-1. Användaren avgör var spelet publiceras (D-004) och ger besked om motorn (F-040).
-2. Bygg första spelbara versionen enligt "Proposed runs" i BACKLOG.md. Den byggs för en ensam spelare först, och onlineläget kopplas in när motorn finns.
+1. Användaren slår på GitHub Pages (se Engångsåtgärder).
+2. Fortsätt enligt "Proposed runs" i BACKLOG.md.
+3. Onlineläget (F-040) väntar på användarens motor.
 
 ## Mål
 
@@ -23,13 +24,29 @@ Idéer spånas i chatten och samlas i designskissen. Det som ska byggas läggs i
 
 ## Publicering
 
-Ingen publicering än. Var spelet publiceras avgörs i D-004.
+GitHub Pages direkt från main, rotmappen. Spelet har inget byggsteg, så det som ligger på main är det som publiceras. Adress: https://badbagel47.github.io/critical/
+
+Pages var inte påslaget 2026-11-14, så inget är publicerat än. Flytt till Cloudflare sker när nätverksmotorn byggs in.
 
 ## Dokumentkarta
 
 - [docs/design/index.html](docs/design/index.html): designskissen (utkast 3), på svenska. Samma sida finns som privat sida hos användaren: https://claude.ai/artifact/Ebx9u3e5cy33EHWXoViYJz
 - [docs/design/img/](docs/design/img/): exempelskärmar och skeppsbilder.
 - [docs/design/tools/](docs/design/tools/): Python-skript som ritar bilderna. Kräver Pillow och typsnittet DejaVu Sans Bold. Kör `python3 frigate.py`, `python3 rot.py` och `python3 screens2.py`.
+- [tools/export_assets.py](tools/export_assets.py): gör spelets bilder och pixeltypsnitt av ritskripten. Kör `npm run assets`.
+
+## Kod
+
+- `index.html` och `src/`: spelet. Ren JavaScript utan byggsteg.
+- `src/sim/`: spellogiken, helt skild från bild och inmatning. Varje post skickar kommandon till `step()`. Det är här nätverksmotorn ska kopplas in.
+- `src/sim/balance.js`: alla siffror för fart, skada och liknande.
+- `src/render/`: skärmarna.
+- `assets/`: bilder och typsnitt som skapas av `tools/export_assets.py`.
+
+## Test
+
+- `npm test`: tester av spellogiken.
+- `npm run serve` och sedan `npm run smoke`: provkör spelet i en webbläsare. Kräver Playwright installerat globalt.
 
 ## Decisions
 
@@ -39,6 +56,8 @@ Spelet
 - All text i spelet är på engelska.
 - Inget moment pausar spelet. En pausknapp fryser världen för alla.
 - Automatisk paus vid tappad anslutning sker först efter en stund. Gränsen prövas ut.
+- Publicering: GitHub Pages så länge, flytt till Cloudflare när nätverksmotorn byggs in (2026-11-14).
+- Styrning: tangentbord och mus. Agentens val, användaren har inte provat än.
 - Onlineläget ska använda användarens egen motor, som byggs just nu och bygger på Cloudflares realtidstjänster. Målet är att ett gratiskonto ska räcka för det här kompisspelet (2026-11-14).
 
 Poster
@@ -48,6 +67,7 @@ Poster
 - Engineer fördelar energi mellan vapen, sköld, motorer och reparation, och flyttar en reparationssymbol mellan skadepunkter på en bild av skeppet.
 - Den som går in för att loota lämnar sin post ledig för någon annan och får tillbaka den när den är ombord igen.
 - Första versionen har alla tre posterna och fritt byte mellan dem.
+- En post som lämnas fortsätter som den ställdes in. Gasen ligger därför kvar när Captain lämnar sin post, så att en ensam spelare kan flyga och skjuta.
 
 Värld
 - Sektorer som nås med stjärnkartor som hittas eller köps. Hopp kostar bränsle.
@@ -83,7 +103,7 @@ Grafik
 ## Engångsåtgärder
 
 - Klar 2026-11-14: `badbagel47.github.io` är tillåten i användarens molnmiljö, så att agenten kan kontrollera den publicerade sidan.
-- Väntar: användaren slår på GitHub Pages för repot (Deploy from a branch, main, rot), om det blir valet i D-004.
+- Väntar: användaren slår på GitHub Pages för repot på https://github.com/BadBagel47/critical/settings/pages (Deploy from a branch, main, rot).
 
 ## Lagar och regler
 

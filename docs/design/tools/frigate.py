@@ -21,8 +21,8 @@ UP = {
  'boost':  [(5,'r',[18,88,23,96]), (6,'r',[19,97,22,98])],
  'armor':  [(9,'p',[(30,15),(27,25),(27,33),(30,31)]), (9,'p',[(13,59),(10,66),(10,73),(14,66)])],
 }
-def frigate(ups=()):
-    parts = list(BASE)
+def frigate(ups=(), turret=True):
+    parts = list(BASE) if turret else list(BASE[:-1])
     for u in ('fins', 'armor', 'rockets', 'twin', 'boost', 'bay', 'emit', 'laser'):
         if u in ups: parts += UP[u]
     def det(px, ln):
@@ -31,7 +31,8 @@ def frigate(ups=()):
         ln((12, 68), (12, 82), S.STEEL2[0]); ln((16, 58), (22, 58), S.STEEL2[0]); ln((18, 70), (18, 86), S.STEEL2[0])
         px([(27, y) for y in range(56, 70, 3)] + [(27, y) for y in range(76, 88, 3)], S.OCHRE[3]); px([(22, 38), (23, 36)], S.OCHRE[3])
         px([(30, 52), (34, 52), (30, 92), (34, 92), (20, 62), (15, 76)], S.STEEL[3]); px([(23, 75), (23, 77)], S.OCHRE[2]); px([(8, 66), (8, 72), (8, 78)], S.DARK[3])
-        px([(35, 18)], S.DARK[3]); px([(28, 97), (33, 97)], S.DARK[3])
+        if turret: px([(35, 18)], S.DARK[3])
+        px([(28, 97), (33, 97)], S.DARK[3])
         if 'bay' in ups: px([(30, 76), (30, 80), (30, 84)], S.ION[2]); ln((31, 75), (35, 75), S.DARK[2]); px([(33, 79), (34, 80), (33, 81)], S.STEEL[1])
         if 'rockets' in ups: px([(3, y) for y in range(66, 80, 3)] + [(5, y) for y in range(66, 80, 3)], S.EMBER[1])
         if 'fins' in ups: ln((23, 37), (19, 31), S.ION[1]); ln((23, 92), (19, 96), S.ION[1])

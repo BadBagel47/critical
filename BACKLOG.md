@@ -5,50 +5,21 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – strong model, high level – Projektgrund
-- D-004 – Slå fast var spelet publiceras, så att det går att prova efter varje körning
-- F-005 – Sätt upp spelet så att det öppnas i webbläsaren och går att spela ensam
-
-**B** – strong model, high level – Flyga och slåss
-- D-013 – Exportera skepp och figurer från ritskripten som färdiga bilder till spelet
-- F-006 – Captain flyger fregatten i rymden
-- F-007 – Gunner siktar och skjuter med pulslasern
-- F-010 – En första pirat att slåss mot
-
-**C** – strong model, high level – Engineer och postbyten
-- F-008 – Engineer fördelar energi och styr reparationer
-- F-009 – Fritt byte mellan de tre posterna, även för en ensam spelare
-- F-012 – Pausknapp som fryser spelet för alla
-
-**D** – standard model, medium level – Vrak och dockning
-- F-011 – Ett vrak att docka med, med dockningshjälp
-
-**E** – strong model, high level – Bordning
+**A** – strong model, high level – Bordning
 - F-014 – Gå in i vraket uppifrån och slåss mot vakter och kanontorn
 - F-015 – Teleportern som räddar den som nästan dör
 - F-017 – Loot som ger bränsle och krediter
 
-**F** – standard model, medium level – Inbrottsspel
+**B** – standard model, medium level – Inbrottsspel
 - F-016 – Koppla förbi dockningslåset på tid innan ni kommer in i ett vrak
 
-**G** – strong model, high level – Karta och scanner
+**C** – strong model, high level – Karta och scanner
 - F-018 – Gemensam karta där dimman lyfts av det ni ser
 - F-019 – Scannerpuls, sonder och radarbojar som avslöjar mer av kartan
 
 ## Hög
 
-| ID | Vad | Status |
-|---|---|---|
-| D-004 | Välj var spelet publiceras. Tekniken är bestämd: webbspel, och onlineläget går via användarens motor på Cloudflare (se F-040). Kvar att avgöra: Cloudflare Pages eller GitHub Pages. Förslag: GitHub Pages direkt från main, och ett spel utan byggsteg så att det som sparas är det som publiceras. | Väntar på användaren |
-| F-005 | Projektgrund: spelet öppnas i webbläsaren och går att spela ensam. Spellogiken hålls skild från nätverket så att motorn kan kopplas in senare | Ej påbörjad |
-| F-006 | Captain: flyg fregatten i rymden uppifrån. Hela skeppet vrids som en bild | Ej påbörjad |
-| F-007 | Gunner: sikta och skjut med pulslaser | Ej påbörjad |
-| F-008 | Engineer: fördela energi mellan vapen, sköld, motorer och reparation, och flytta reparationssymbolen mellan skadepunkter | Ej påbörjad |
-| F-009 | Växla fritt mellan de tre posterna | Ej påbörjad |
-| F-010 | Pirater: en första fiendetyp (Fighter) | Ej påbörjad |
-| F-011 | Vrak att docka med | Ej påbörjad |
-| F-012 | Pausknapp som fryser världen för alla och visar vem som pausade | Ej påbörjad |
-| D-013 | Grafik in i spelet: exportera sprites från ritskripten | Ej påbörjad |
+Inget just nu.
 
 ## Medel
 
@@ -80,6 +51,8 @@ Prioritet: Hög, Medel, Låg.
 | ID | Vad | Status |
 |---|---|---|
 | D-033 | Gå igenom GDPR och kakor innan onlineläget eller designsidan publiceras, bland annat typsnitt från Google Fonts och spelarnamn | Ej påbörjad |
+| F-041 | Ljud: skott, träffar, larm och motor | Ej påbörjad |
+| F-042 | Stöd för handkontroll | Ej påbörjad |
 
 ## Parkerat
 
@@ -99,3 +72,13 @@ Prioritet: Hög, Medel, Låg.
 | D-001 | Spelidé och designskiss, utkast 3 | 2026-11-14 |
 | D-002 | Grafisk stil, skeppsklasser och fregattens uppgraderingssteg | 2026-11-14 |
 | D-003 | Namn: Critical ST8 | 2026-11-14 |
+| D-004 | Teknik och publicering: webbspel utan byggsteg, GitHub Pages nu och Cloudflare när nätverksmotorn byggs in | 2026-11-14 |
+| F-005 | Projektgrund: spelet öppnas i webbläsaren och går att spela ensam | 2026-11-14 |
+| F-006 | Captain: flyg fregatten i rymden uppifrån | 2026-11-14 |
+| F-007 | Gunner: sikta och skjut med pulslaser | 2026-11-14 |
+| F-008 | Engineer: fördela energi och styr reparationer | 2026-11-14 |
+| F-009 | Växla fritt mellan de tre posterna | 2026-11-14 |
+| F-010 | Pirater: en första fiendetyp (Fighter) | 2026-11-14 |
+| F-011 | Vrak att docka med, med dockningshjälp | 2026-11-14 |
+| F-012 | Pausknapp som fryser världen och visar vem som pausade | 2026-11-14 |
+| D-013 | Grafik in i spelet: sprites och pixeltypsnitt exporteras från ritskripten | 2026-11-14 |

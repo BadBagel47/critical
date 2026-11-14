@@ -1,0 +1,12 @@
+{
+  "name": "critical-st8",
+  "private": true,
+  "type": "module",
+  "description": "Critical ST8, a co-op space game for up to three players",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "serve": "python3 -m http.server 8080",
+    "smoke": "node tests/smoke.mjs",
+    "assets": "python3 tools/export_assets.py"
+  }
+}
