@@ -296,3 +296,5 @@ Väntar på användaren: D-095 (faktionernas riktiga namn), D-074 (smuggelgods) 
 | F-150 | Engineers tangenter i rymdvyn följer hur systemen ligger: vänster och höger går i sidled mellan systemen, upp och ner höjer och sänker energin. På panelen, där systemen ligger i en kolumn, är det som förut | 2026-11-14 |
 | F-154 | I testläget är allt som ligger samlat vid starten utmärkt på kartan från början, och dimman är lyft över området, så att piratstationen och resten inte behöver letas upp | 2026-11-14 |
 | B-155 | Dubbla sikten: där spelet ritar ett eget sikte (Gunner, bordning och Engineer över kartan) syntes också datorns egen muspekare. Den döljs nu där | 2026-11-14 |
+| B-156 | R skickade inte ut Darts när uppgraderingen Dart Autolaunch var installerad och inga fiender fanns: de kallades hem igen i samma ögonblick. Nu stannar Darts ute tills Captain kallar hem dem. Texten säger också att de inte går att skicka ut medan skeppet ligger dockat | 2026-11-14 |
+| B-157 | Skeppet skakade i hög fart på skärmar som uppdateras fortare än spelet räknar. Kameran flyttades en gång per bildruta i stället för en gång per steg i spelet. Nu rör de sig i takt | 2026-11-14 |

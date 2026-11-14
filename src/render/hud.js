@@ -166,7 +166,9 @@ function drawCaptainPanel(ctx, font, state) {
   font.draw(ctx, String(Math.round(speedOf(ship))), 208, 343, COL.text);
   if (has(ship, 'bay')) {
     const out = ship.dartsOut;
-    const text = out ? `DARTS OUT  ${state.darts.length}  ·  R RECALL` : `DARTS  ${ship.dartStock}  ·  R LAUNCH`;
+    // Darts cannot leave the bay while the ship is docked.
+    const launch = ship.docked ? 'UNDOCK TO LAUNCH' : 'R LAUNCH';
+    const text = out ? `DARTS OUT  ${state.darts.length}  ·  R RECALL` : `DARTS  ${ship.dartStock}  ·  ${launch}`;
     label(ctx, font, 306, 333, text, { fg: out ? COL.ion[2] : COL.text, border: out ? COL.ion[0] : COL.line });
   }
   const keys = has(ship, 'boost')

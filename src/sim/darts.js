@@ -14,8 +14,11 @@ function decide(state, cmd, dt, hostilesNear) {
       ship.dartsOut = true;
       ship.dartQuiet = 0;
     } else {
+      // They are called home once, at the moment it has been quiet for a while after a fight. Darts that the
+      // Captain sends out when all is calm stay out until the Captain calls them back.
+      const before = ship.dartQuiet;
       ship.dartQuiet += dt;
-      if (ship.dartQuiet > 5 && ship.dartsOut) ship.dartsOut = false;
+      if (before <= B.DART_QUIET && ship.dartQuiet > B.DART_QUIET && ship.dartsOut) ship.dartsOut = false;
     }
   }
   if (ship.docked) ship.dartsOut = false;

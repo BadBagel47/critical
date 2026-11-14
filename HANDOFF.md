@@ -324,6 +324,7 @@ Grafik
   - Förutsägbarheten gäller inom en och samma webbläsare. Olika webbläsare kan räkna vinklar med olika avrundning, så om nätverksmotorn bygger på att alla räknar själva behövs egna vinkelfunktioner. Det hör till D-060 till D-062.
 - Inför onlineläget: se D-060 till D-062. De behöver besked om hur användarens motor fungerar, om den räknar ut spelet på servern eller bara förmedlar meddelanden, och vilka gränser den har.
 - Effekter och ljud läser bara av spelet och behöver aldrig skickas över nätet.
+- Kameran flyttas en gång per steg i spelet, inte en gång per bildruta (B-157, 2026-11-14). Annars glider den mot skeppet på skärmar som uppdateras fortare än spelets 60 steg per sekund, och skeppet ser ut att skaka. Bilden uppdateras alltså 60 gånger per sekund även på snabbare skärmar. Mjukare rörelse där kräver att bilden räknas fram mellan stegen, vilket inte är gjort.
 
 ## Lagar och regler
 

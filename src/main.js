@@ -187,12 +187,15 @@ function runGame(dt) {
   let first = true;
   while (acc >= STEP) {
     stepPlayers(state, { [view.playerId]: first ? playerInput(game) : heldInput() }, STEP);
+    // The camera moves once for every step of the game, never more and never less. Moved once for every
+    // frame instead, it would drift against the ship on frames with no step or with two, and at speed the
+    // ship would look as if it shook.
+    followShip();
     first = false;
     acc -= STEP;
   }
   readEvents(game);
   state.events.length = 0;
-  followShip();
   // Effects follow real time and only watch the game. They never change it.
   updateEffects(view.fx, state, view, dt);
   const place = findThing(state, playerById(state, view.playerId).inside);

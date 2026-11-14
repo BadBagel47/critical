@@ -932,6 +932,24 @@ test("darts launch on the captain's order, fight pirates and come home again", (
   assert.equal(s.ship.dartStock, B.DART_COUNT);
 });
 
+test('with autolaunch the Captain can still send the darts out when all is calm, and they stay out', () => {
+  const s = quiet(createState(1));
+  s.ship.x = s.ship.y = 9000;
+  s.ship.mods.bay = 1;
+  s.ship.mods.auto = 1;
+  s.ship.dartStock = B.DART_COUNT;
+  run(s, {}, 30);
+  assert.equal(s.ship.dartsOut, false, 'nothing to launch for');
+  step(s, { captain: { darts: true } }, DT);
+  run(s, {}, 12);
+  assert.equal(s.ship.dartsOut, true, 'the order stands, though it is quiet');
+  assert.equal(s.darts.length, B.DART_COUNT);
+  step(s, { captain: { darts: true } }, DT);
+  run(s, {}, 8);
+  assert.equal(s.ship.dartsOut, false);
+  assert.equal(s.darts.length, 0, 'and they come home when called');
+});
+
 test('with autolaunch the darts go out by themselves when pirates show up', () => {
   const s = quiet(createState(1));
   s.ship.x = 5000;

@@ -186,6 +186,8 @@ export const B = {
   DART_SPEED: 175,
   DART_TURN: 3.6,
   DART_DMG: 3,
+  // seconds of quiet after a fight before autolaunch calls the Darts home
+  DART_QUIET: 5,
   DART_COOLDOWN: 0.35,
   DART_RANGE: 430,
   DART_REGEN: 40,
