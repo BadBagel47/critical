@@ -27,7 +27,7 @@ export function createState(seed = 1) {
   const s = {
     seed, rng: seed >>> 0, time: 0, paused: false, pausedBy: null, over: false,
     ship: createShip(), pirates: [], bolts: [], fx: [], wrecks: [], rocks: [],
-    spawn: { timer: B.FIRST_WAVE_DELAY, wave: 0 }, kills: 0, credits: 0, nextId: 1, events: [],
+    spawn: { timer: B.FIRST_WAVE_DELAY * B.PIRATE_PACE[1], wave: 0 }, kills: 0, credits: 0, nextId: 1, events: [],
     // People on board. `inside` is the id of the wreck a player is boarding, or null when on the ship.
     players: [{ id: 0, name: 'PLAYER 1', hp: B.CREW_HP, inside: null, lockedOut: null, tele: 0 }],
     map: createMap(), known: [], probes: [], buoys: [],

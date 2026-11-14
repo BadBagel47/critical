@@ -92,6 +92,10 @@ Bordning, agentens val som användaren inte har sett än (2026-11-14)
 - Skeppet kan inte lägga ut medan någon är kvar inne.
 - Bränsle förbrukas av gasen. Tom tank ger ett skepp som nästan står still.
 
+Balans, agentens val (2026-11-14)
+- Piratvågorna kommer glesare ju färre som är ombord, så att en ensam spelare hinner lämna skeppet. Ensam är det drygt en minut mellan vågorna.
+- Provat med en simulerad spelare, inte av en människa: den som stannar vid vapnen klarar sig, och ett obevakat skepp går förlorat på drygt två minuter.
+
 Karta, agentens val som användaren inte har sett än (2026-11-14)
 - Scannerpuls, sonder och radarbojar finns från start tills butiken är byggd. Enligt designen ska de sedan köpas.
 - Sonder och bojar fylls på av sig själva med tiden.

@@ -172,7 +172,8 @@ function stepPirates(state, dt) {
   state.spawn.timer -= dt;
   if (state.spawn.timer <= 0) {
     if (state.pirates.length < B.MAX_PIRATES) spawnWave(state);
-    state.spawn.timer = Math.max(B.WAVE_INTERVAL_MIN, B.WAVE_INTERVAL - state.spawn.wave * 1.5);
+    const pace = B.PIRATE_PACE[Math.min(3, state.players.length)] || 1;
+    state.spawn.timer = Math.max(B.WAVE_INTERVAL_MIN, B.WAVE_INTERVAL - state.spawn.wave * 1.2) * pace;
   }
   for (const p of state.pirates) {
     const dx = ship.x - p.x, dy = ship.y - p.y, d = Math.hypot(dx, dy);
