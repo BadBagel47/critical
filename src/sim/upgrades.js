@@ -100,6 +100,14 @@ export const CATALOG = {
     price: 200,
     desc: 'SLOWLY REPAIR THE SHIP ON THEIR OWN',
   },
+  dockfield: {
+    tab: 'system',
+    name: 'DOCKING FIELD',
+    slot: 'system',
+    size: 1,
+    price: 150,
+    desc: 'A STRONGER EXTRA SHIELD WHILE DOCKED',
+  },
   slotS: {
     tab: 'system',
     name: 'EXTRA SYSTEM SLOT',
@@ -131,6 +139,7 @@ export const has = (ship, id) => level(ship, id) > 0;
 export const hullMax = (ship) => B.HULL_MAX + (has(ship, 'armor') ? 80 : 0);
 export const shieldMax = (ship) => B.SHIELD_MAX + (has(ship, 'emit') ? 50 : 0);
 export const powerTotal = (ship) => B.POWER_TOTAL + (has(ship, 'core') ? 2 : 0);
+export const dockShieldMax = (ship) => B.DOCK_SHIELD + (has(ship, 'dockfield') ? B.DOCK_SHIELD_MORE : 0);
 export const fuelMax = (ship) => B.FUEL_MAX + (has(ship, 'tank') ? B.TANK_FUEL : 0);
 export const jumpCharge = (ship) => (has(ship, 'jumpcoil') ? B.COIL_CHARGE : B.JUMP_CHARGE);
 export const jumpFuel = (ship) => (has(ship, 'jumpcoil') ? B.COIL_FUEL : B.JUMP_FUEL);

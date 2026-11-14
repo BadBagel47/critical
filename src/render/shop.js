@@ -1,10 +1,11 @@
 // The shop panel at a station desk: services on the left, and three tabs of things to buy on the right.
 // The world keeps running behind it.
 import { VIEW_W, VIEW_H, COL } from '../config.js';
-import { servicePrices, yardOpen, discount } from '../sim/stations.js';
+import { servicePrices, yardOpen, priceFactor } from '../sim/stations.js';
+import { CREW, FACTIONS, moodOf } from '../sim/sides.js';
 import { CATALOG, TABS, TAB_NAME, itemsOf, blockedReason, priceOf, level, slotsUsed } from '../sim/upgrades.js';
 import { rect } from './draw.js';
-import { ALIGN_COL } from './looks.js';
+import { MOOD_COL } from './looks.js';
 
 const PW = 520,
   PH = 284,
@@ -19,7 +20,7 @@ export function shopRows(state, st, tab) {
   const rows = [],
     prices = servicePrices(state, st),
     ship = state.ship,
-    k = discount(st);
+    k = priceFactor(state, st);
   const cost = (p) => (p === 0 ? 'FREE' : p + ' CR');
   TABS.forEach((t, i) =>
     rows.push({
@@ -94,7 +95,13 @@ export function shopClick(state, st, tab, mx, my) {
   return row.enabled ? { order: row.order } : null;
 }
 
+// Whose station it is.
+const whose = (st) => (st.side === CREW ? 'YOUR STATION' : FACTIONS[st.side] ? FACTIONS[st.side].name : 'FREE STATION');
+
 export function drawShop(ctx, font, state, st, tab, mouse) {
+  const mood = moodOf(state, st.side);
+  const owes = st.favor > 0 ? `  ·  THEY OWE YOU  ·  40% OFF FOR ${fmt(st.favor)}` : '';
+  const about = owes || (mood === 'wary' ? '  ·  PRICES ARE UP' : '');
   const ship = state.ship;
   ctx.globalAlpha = 0.6;
   ctx.fillStyle = '#05050a';
@@ -105,10 +112,10 @@ export function drawShop(ctx, font, state, st, tab, mouse) {
   font.draw(ctx, st.name, PX + 12, PY + 12, COL.text, { scale: 2 });
   font.draw(
     ctx,
-    st.align.toUpperCase() + ' STATION' + (st.favor > 0 ? `  ·  THEY OWE YOU  ·  40% OFF FOR ${fmt(st.favor)}` : ''),
+    whose(st) + '  ·  ' + mood.toUpperCase() + about,
     PX + 12,
     PY + 32,
-    st.favor > 0 ? COL.acid[2] : ALIGN_COL[st.align],
+    st.favor > 0 ? COL.acid[2] : MOOD_COL[mood],
   );
   font.draw(ctx, 'CREDITS  ' + state.credits, PX + PW - 12, PY + 12, COL.ochre[2], { align: 'r' });
   font.draw(

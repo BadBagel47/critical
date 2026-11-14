@@ -10,6 +10,8 @@ Spelet går att spela ensam från start till mål. Du flyger fregatten, skjuter 
 
 Sedan dess är koden omgjord i grunden utan att spelet beter sig annorlunda (den tekniska översynen), texten är skarpare, bilden fyller fönstret och stationerna är dubbelt så stora. Spelet har en meny (O) där man sparar, laddar och ställer ljudnivåer, det sparar sig självt vid dockning, det finns ett hardcore-läge, och inbrottet i vrak är lättare. Musiken görs av en annan agent enligt docs/music-brief.md.
 
+Världen har fått sidor och liv: tre faktioner med egna stationer och anseende, fraktskepp och patruller som hoppar in, dockar och hoppar ut, stationer med kanontorn och sköld som försvarar sig och kan falla till piraterna, och en extra sköld för dockade skepp.
+
 Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-089 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
 ## Nästa steg
@@ -55,7 +57,10 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
   - `players.js`: besättningen och posterna. Här avgörs vem som får göra vad.
   - `kinds.js`: allt som finns i rymden beskrivet som data, både saker (`THINGS`) och skeppsklasser (`SHIPS`). En ny sort börjar här.
   - `things.js`: saker som står still (stenar, vrak, stationer, containrar, bärgningsgods, bojar). De ligger i `state.things`.
-  - `vessels.js`: andra skepp än fregatten. De ligger i `state.vessels`. Hur en klass flyger och slåss är dess "brain".
+  - `vessels.js`: andra skepp än fregatten. De ligger i `state.vessels`. Hur en klass flyger och slåss är dess "brain". Ett skepp med ett ärende flyger sina `legs` i tur och ordning.
+  - `sides.js`: vem som står på vems sida, och vad varje sida tycker om besättningen (anseendet i `state.standing`). Allt som kan skjuta eller bli skjutet har en `side`: besättningen, piraterna, en faktion, eller en station som står för sig själv.
+  - `stations.js`: stationerna. Hur en station behandlar besättningen (`align`, `closed`) räknas fram ur dess sida och anseendet i varje steg, så ändra sidan eller anseendet och aldrig `align` direkt. Här finns också försvaret och piratanfallen.
+  - `traffic.js`: faktionernas skepp som hoppar in, gör sitt ärende och hoppar ut.
   - `weapons.js`: fregattens vapen som data. Ett nytt vapen är en ny rad i `WEAPONS`.
   - `posts.js`, `ship.js`, `shots.js`: de tre posterna, fregatten och skotten.
   - `balance.js`: siffror för spelets regler. Siffror för varje skeppsklass står i `kinds.js`.
@@ -71,7 +76,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 
 ## Test
 
-- `npm test`: tester av spellogiken, besättningen, sakerna som data och förutsägbarheten.
+- `npm test`: tester av spellogiken, besättningen, sakerna som data och förutsägbarheten. Faktioner, stationsförsvar, dockningssköld och trafik testas i `tests/sides.test.js`.
   - `tests/determinism.test.js` kör en lång inspelad omgång med tre spelare (`tests/tour.js`) och kontrollerar att samma start och samma kommandon ger exakt samma spel, även efter att spelet sparats som text och lästs in igen. Varje ny funktion måste klara det (D-063).
   - `tests/style.test.js` vaktar radlängd och att spellogiken inte beror på något utanför `src/sim/`.
 - `npm run lint`: letar efter stavfel i namn, sådant som aldrig används och liknande. `npm run types`: kontrollerar typer utan byggsteg. `npm run check` kör tester, lint och typer i ett svep.
@@ -114,9 +119,11 @@ Värld
 - Skeppet kan bara byggas om vid en station med shipyard.
 - En vänlig eller neutral station som anfalls kan sända nödanrop. En neutral station som får hjälp förblir neutral men ger rabatt under en tid.
 - Neutrala shipyards är alltid öppna mot betalning, till samma priser som hos vänliga så länge spelet testas (D-044, 2026-11-14).
-- En station som inte överlever ett anfall ska bli fientlig (D-045, 2026-11-14, inte byggt än).
+- En station som inte överlever ett anfall blir fientlig (D-045, byggt 2026-11-14): den faller till piraterna och måste tas över för att bli vänlig igen.
+- Anseendet hör till den faktion som stationen tillhör. Hos en station utan faktion gäller anseendet just den stationen (2026-11-14).
+- Baser har turrets och sköld, och dockade skepp får en liten extra sköld som syns på sköldmätaren och går att uppgradera (F-098, F-099, byggt 2026-11-14).
 - Pirater är fristående och aggressiva mot alla.
-- Faktioner ska in (F-035, tillbaka från parkerat 2026-11-14).
+- Faktioner finns (F-035, byggt 2026-11-14). Namn och karaktär är platshållare, se D-095.
 - Värme blir en andra resurs bredvid energi, med uppgraderingar som kyler bättre (F-084, 2026-11-14).
 - Omgången ska gå att spara, och sparfilen ska gå att exportera och importera (F-079, 2026-11-14).
 - Varor (goods) som köps och säljs mellan stationer är bara till för att tjäna pengar. Spelaren kan inte använda dem själv (F-068, 2026-11-14).
@@ -139,7 +146,7 @@ Bordning, agentens val som användaren inte har sett än (2026-11-14)
 
 Stationer, vapen och sektorer, agentens val som användaren inte har sett än (2026-11-14)
 - Fem fasta sektorer: Kestrel Drift, Ash Belt, Hollow Reach, The Narrows och The Maw. Stationer säljer kartan till nästa sektor, och kartor kan ligga i valv.
-- En neutral station blir fientlig efter sex träffar från skeppet. Den varnar först.
+- En station som besättningen skjuter på i lugn och ro blir avvaktande efter två träffar, stänger efter fem och öppnar eld efter åtta. Den varnar vid varje träff.
 - En fientlig station tas över från en terminal i dess valv. Misslyckas inbrottet slår stationen tillbaka med två Fighters, och låset får ett nytt pussel.
 - En övertagen station får shipyard.
 - Stationerna är dubbelt så stora som förut, 192 punkter tvärs över mot fregattens 108 på längden. Storleken är agentens val (F-065, 2026-11-14).
@@ -152,7 +159,7 @@ Stationer, vapen och sektorer, agentens val som användaren inte har sett än (2
 Nödanrop, lås och utrustning, agentens val som användaren inte har sett än (2026-11-14)
 - Ett neutralt shipyard var först bara öppet efter ett besvarat nödanrop. Det ändrades 2026-11-14, se Värld.
 - Ett besvarat nödanrop ger 40 procent rabatt i tre minuter hos en neutral station. En vänlig station betalar 100 krediter.
-- Ett nödanrop som ingen svarar på får i dag inga följder. Piraterna ger sig av. Det ska ändras, se D-045.
+- Ett nödanrop som ingen svarar på avgörs av stationens eget försvar: den klarar sig eller faller till piraterna, se avsnittet om faktioner nedan.
 - Nödanropet visar var stationen ligger, även om den inte är hittad.
 - Stationslåset är en kod som bara syns på Engineer-skärmen och som byts var sextonde sekund. Ensam får man växla mellan låset och Engineer-posten.
 - Fraktcontainrar (cargo pods) har ingen insida. När låset är uppe tas lasten direkt ombord och containern försvinner.
@@ -175,7 +182,7 @@ Balans, agentens val (2026-11-14)
 Karta, agentens val som användaren inte har sett än (2026-11-14)
 - Scannerpuls, sonder och radarbojar finns från start tills butiken är byggd. Enligt designen ska de sedan köpas.
 - Sonder och bojar fylls på av sig själva med tiden.
-- Pilarna i skärmkanten visar bara pirater inom sikt och vrak som redan hittats.
+- Pilarna i skärmkanten visar bara fiender inom sikt och vrak som redan hittats.
 - Kartan öppnas med M av vem som helst. Verktygen används från Engineer-posten.
 
 Faktioner, platshållare som ska ses över i D-095 (2026-11-14)
@@ -184,6 +191,24 @@ Faktioner, platshållare som ska ses över i D-095 (2026-11-14)
 - THE WARDENS: en ordningsmakt som patrullerar med tunga skepp och har de bästa varven. Skannar efter smuggelgods.
 - THE DRIFTERS: fria bärgare och nybyggare i utkanten. Billiga reparationer, köper allt och bryr sig inte om smuggelgods.
 - Dåligt anseende ger först högre priser, sedan stängda stationer, sedan patruller som anfaller. Det ska alltid gå att höja ett lågt anseende.
+
+Faktioner, stationsförsvar och trafik, agentens val som användaren inte har sett än (2026-11-14)
+- Var faktionerna finns: Kestrel Yard i första sektorn är besättningens egen, Drift Post står för sig själv, Ash Depot är Drifters, Hollow Market är Charter och Narrows Dock är Wardens. Övriga stationer är piraternas. Faktionerna syns oftast i sina hemsektorer.
+- Färger: Charter gult, Wardens blått, Drifters rostbrunt, pirater lila med röda märken. Stationens egen färg visar fortfarande hur den behandlar besättningen (vänlig, neutral, fientlig), inte vems den är.
+- Anseendet går från -100 till 100 och börjar på 0. Vänlig från 50 (gratis bränsle, billig reparation), avvaktande från -20 (priser gånger 1,5), stängd från -50 (ingen handel, ingen släpps in), fientlig från -80 (stationer och skepp öppnar eld).
+- Anseendet sjunker av att skjuta på den som inte är fiende: 10 per träff på en station, 2 per träff på ett skepp och 25 för ett förstört skepp. Har det väl gått till eld faller det till botten.
+- Anseendet stiger av att skjuta ner pirater (0,5 hos alla per pirat), av att rädda en station ur ett anfall (20 hos dess sida), och av sig självt med tiden upp till avvaktande. Från botten tar det ungefär sju minuter till stängd och tjugo till avvaktande. Så finns det alltid en väg tillbaka. Ingen förlåter medan besättningen ligger dockad vid en av deras fientliga stationer.
+- Skott som går snett mitt i en strid räknas inte: besättningens skott går förbi en station eller ett skepp som själv har fiender nära. I lugn och ro träffar de, och det är ett anfall.
+- Andras skott träffar bara deras fiender. Faktionerna slåss inte med varandra, alla slåss med pirater.
+- Bara besättningens egna nedskjutningar ger belöning, räknas som kills och höjer anseendet.
+- Stationer: fyra kanontorn, sköld 200 som börjar laddas efter fem sekunder utan träffar, skrov 1500 som lagas efter tjugo. En träff på ett kanontorn slår ut tornet. En piratstations kanoner gör dubbel skada, så att de fortfarande är farliga för fregatten.
+- Piratanfall: fyra skepp, fler i senare sektorer, och från andra sektorn är ett av dem en Gunboat. Provat i simulering utan hjälp från besättningen: i första sektorn håller stationen nästan alltid, i andra faller den i ungefär fyra fall av tio, och i fjärde faller den nästan alltid. Tacken (rabatt eller krediter) kommer bara om besättningen själv träffat någon av angriparna.
+- Besättningens egen varvsstation anfalls aldrig, så att det alltid finns någonstans att tanka och laga. En station som fallit till piraterna tas över som andra piratstationer och blir då besättningens.
+- En station som besättningen själv skjutit ner till noll tystnar bara. Den byter inte ägare.
+- Dockningsskölden är 40, och 90 med uppgraderingen Docking Field (150 krediter, en system slot). Den laddas på fyra sekunder och försvinner när skeppet lägger ut.
+- Trafik: ett nytt skepp eller en patrull var tjugonde till fyrtiofemte sekund, högst fem samtidigt, två av tre är fraktskepp. Fraktskepp besöker en eller två stationer i 12 till 25 sekunder var. Patruller är två skepp som går en runda förbi stationerna. Ingen trafik kommer till en sektor där piraterna har alla stationer.
+- Pirater jagar närmaste fiende inom sikt och annars fregatten. Darts skjuter bara på fiender.
+- Sparningar gjorda före den här ändringen går inte att läsa in (`SAVE_VERSION` är 2).
 
 Sparande, uppdrag och omgångar (2026-11-14)
 - En autosparfil vid dockning och fem manuella platser. Vid död laddas senaste sparfilen om. Byggt 2026-11-14 (F-079).
@@ -234,7 +259,7 @@ Grafik
 - Saker och skepp beskrivs som data. En ny skeppsklass eller en ny sorts sak behöver en rad i `src/sim/kinds.js` och en i `src/render/looks.js`, och ett nytt beteende om den ska bete sig på ett nytt sätt.
 - Översynen ändrade inte hur spelet beter sig. Sex långa inspelade omgångar gav samma resultat steg för steg före och efter.
 - Kvar att känna till:
-  - Alla andra skepp räknas som pirater. Vem som är fiende till vem (sidor) behövs för faktioner och vänlig trafik (F-035).
+  - Sidor finns sedan F-035: varje skepp, station och skott har en `side`, och `enemies()` i `src/sim/sides.js` avgör vem som slåss med vem.
   - Darts ligger kvar för sig i `state.darts` och är inte skepp i `state.vessels`. Det bör ändras när eskorter byggs (D-071).
   - Skärmarna för Engineer, inbrott och butik är formaterade men inte omskrivna. Butiken görs om i F-080.
   - Förutsägbarheten gäller inom en och samma webbläsare. Olika webbläsare kan räkna vinklar med olika avrundning, så om nätverksmotorn bygger på att alla räknar själva behövs egna vinkelfunktioner. Det hör till D-060 till D-062.

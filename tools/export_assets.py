@@ -8,6 +8,7 @@ import json, math, os, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'docs', 'design', 'tools'))
 import style as S, frigate as FR, screens as SC  # noqa: E402  (importing renders the design images too)
+import ships2 as NEW  # noqa: E402  (the new ship classes)
 from PIL import Image, ImageDraw  # noqa: E402
 
 OUT = os.path.join(ROOT, 'assets', 'sprites'); os.makedirs(OUT, exist_ok=True)
@@ -55,6 +56,31 @@ def overlay(up):
             if a[x, y] != b[x, y]: o[x, y] = b[x, y] if b[x, y][3] else (0, 0, 0, 0)
     return out
 for up, name in (('rockets', 'rockets'), ('emit', 'emit'), ('laser', 'heavy'), ('bay', 'bay'), ('armor', 'armor')): save(overlay(up), 'mod_' + name)
+
+# ---- ships of the factions ----
+# Each faction flies the same classes in its own colours: hull, darker hull, accent, glass and engine glow.
+RUST = ['#4a2f26', '#6e4434', '#8f5d44', '#b98562']
+FACTION = {
+    'charter': dict(hull=S.STEEL, hull2=S.STEEL2, accent=S.OCHRE, glass=S.GLASS, glow=S.ION),
+    'wardens': dict(hull=S.STEEL, hull2=S.STEEL2, accent=S.GLASS, glass=S.ION, glow=S.ION),
+    'drifters': dict(hull=RUST, hull2=S.DARK, accent=S.BONE, glass=S.GLASS, glow=S.ION),
+}
+def recolour(im, c):
+    """A pirate ship in a faction's colours: every pirate colour is swapped for the matching faction colour."""
+    swap = {}
+    for old, new in ((S.PLUM, c['hull']), (S.PLUM2, c['hull2']), (S.BONE, c['accent']), (S.ACID, c['glass']), (S.EMBER, c['glow'])):
+        for a, b in zip(old, new): swap[S.rgb(a)] = S.rgb(b)
+    out = im.copy(); px = out.load()
+    for y in range(out.height):
+        for x in range(out.width):
+            r, g, b, a = px[x, y]
+            if a and (r, g, b) in swap: px[x, y] = swap[(r, g, b)] + (a,)
+    return out
+save(NEW.freighter_a(NEW.TRADER), 'freighter')
+for side, colours in FACTION.items():
+    save(NEW.freighter_a(colours), 'freighter_' + side)
+    save(recolour(S.FI.transpose(Image.FLIP_TOP_BOTTOM), colours), 'fighter_' + side)
+    save(recolour(S.GB.transpose(Image.FLIP_TOP_BOTTOM), colours), 'gunboat_' + side)
 
 # ---- stations, one sprite per allegiance ----
 TEAL = ['#2e6b5f', '#3f8f80', '#58b0a0', '#a0e0d0']

@@ -5,6 +5,10 @@ import { rand } from './util.js';
 export function damageShip(state, dmg, at) {
   const ship = state.ship;
   ship.lastHit = state.time;
+  // A docked ship has an extra shield from what it is docked at. That one is used up first.
+  const extra = Math.min(ship.dockShield, dmg);
+  ship.dockShield -= extra;
+  dmg -= extra;
   const absorbed = Math.min(ship.shield, dmg);
   ship.shield -= absorbed;
   const rest = dmg - absorbed;

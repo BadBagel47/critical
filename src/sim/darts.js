@@ -2,6 +2,7 @@
 import { B } from './balance.js';
 import { forward, headingTo, turnToward, angleDiff, toWorld, dist, TAU } from './util.js';
 import { has } from './upgrades.js';
+import { CREW, enemies } from './sides.js';
 
 // The Captain sends the Darts out and calls them home. With autolaunch they go out when hostile ships
 // show up, and come home when it has been quiet for a while.
@@ -53,6 +54,7 @@ function pickTarget(state) {
   let target = null;
   let best = B.DART_RANGE;
   for (const v of state.vessels) {
+    if (!enemies(state, v.side, CREW)) continue;
     const d = dist(v.x, v.y, ship.x, ship.y);
     if (d < best) {
       best = d;
@@ -84,7 +86,7 @@ function attack(state, d, target) {
       vx: f.x * 420,
       vy: f.y * 420,
       ttl: 0.7,
-      owner: 'player',
+      side: CREW,
       dmg: B.DART_DMG,
       small: true,
     });

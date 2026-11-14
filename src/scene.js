@@ -12,6 +12,7 @@ import { findDock } from './sim/things.js';
 import { isTrading } from './sim/stations.js';
 import { visionSources, isVisible } from './sim/map.js';
 import { has } from './sim/upgrades.js';
+import { CREW, enemies } from './sim/sides.js';
 import { dist } from './sim/util.js';
 
 // How long after the last hit the ship still counts as in a fight, in seconds.
@@ -23,11 +24,13 @@ export function sceneOf(state, playerId, started = true) {
   const ship = state.ship;
   const me = playerById(state, playerId);
   if (me.inside !== null) return isTrading(findDock(state, me.inside)) ? 'station' : 'boarding';
-  const close = state.vessels.some((v) => dist(v.x, v.y, ship.x, ship.y) < B.VISION_SHIP + 100);
+  // Only ships that are the crew's enemies make for a warning or a fight.
+  const foes = state.vessels.filter((v) => enemies(state, v.side, CREW));
+  const close = foes.some((v) => dist(v.x, v.y, ship.x, ship.y) < B.VISION_SHIP + 100);
   if (close || state.time - ship.lastHit < UNDER_FIRE) return 'combat';
   // A warning needs something that tells the crew: a ship in sight, the enemy alarm, or a distress call.
   const sources = visionSources(state);
-  const inSight = state.vessels.some((v) => isVisible(state, v.x, v.y, sources));
+  const inSight = foes.some((v) => isVisible(state, v.x, v.y, sources));
   const alarm = has(ship, 'alarm') && state.alarm.count > 0;
   if (inSight || alarm || state.raid) return 'warning';
   if (isTrading(findDock(state, ship.docked))) return 'station';

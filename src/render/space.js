@@ -6,11 +6,12 @@ import { nodeStatus, dockCandidate, shipNose, speedOf } from '../sim/ship.js';
 import { dockTargets, portsOf } from '../sim/things.js';
 import { isVisible, visionSources } from '../sim/map.js';
 import { playerById } from '../sim/players.js';
-import { has, level, shieldMax, jumpCharge } from '../sim/upgrades.js';
+import { has, level, shieldMax, dockShieldMax, jumpCharge } from '../sim/upgrades.js';
 import { toWorld, dist, headingTo } from '../sim/util.js';
 import { sprite, dashed, brackets } from './draw.js';
 import { drawNebula, drawRipples } from './effects.js';
-import { THING_LOOK, lookOf, hpBar } from './looks.js';
+import { THING_LOOK, lookOf, spriteOfVessel, hpBar, SIDE_COL } from './looks.js';
+import { CREW, PIRATE, enemies } from '../sim/sides.js';
 
 // Three layers of stars that move at different speeds, always the same ones.
 const STARS = (() => {
@@ -72,10 +73,17 @@ export function drawStars(ctx, cam, fx = null, sector = 0) {
 }
 
 // ---------- shots ----------
-const BOLT_COL = { crew: COL.ochre, dart: COL.ion, pirate: COL.acid };
+// Shots are coloured by who fired them: the crew, its Darts, the pirates, and everyone else.
+const BOLT_COL = {
+  crew: COL.ochre,
+  dart: COL.ion,
+  pirate: COL.acid,
+  other: [COL.steel[1], COL.steel[2], COL.steel[3], '#ffffff'],
+};
+const boltKind = (b) => (b.side === CREW ? (b.small ? 'dart' : 'crew') : b.side === PIRATE ? 'pirate' : 'other');
 function drawBolt(ctx, b) {
   const k = b.small ? 0.6 : 1;
-  const col = BOLT_COL[b.owner !== 'player' ? 'pirate' : b.small ? 'dart' : 'crew'];
+  const col = BOLT_COL[boltKind(b)];
   ctx.save();
   ctx.translate(b.x, b.y);
   ctx.rotate(headingTo(b.vx, b.vy));
@@ -147,11 +155,12 @@ function drawEffect(ctx, f) {
     circle(ctx, f.x, f.y, f.size * (0.5 + u * 0.7));
     ctx.fill();
     ctx.globalCompositeOperation = 'source-over';
-  } else if (f.type === 'jump') {
+  } else if (f.type === 'jump' || f.type === 'warp') {
+    // The crew's own jump is a wide ring. Another ship jumping in or out is a small one.
     ctx.globalAlpha = 1 - u;
     ctx.strokeStyle = COL.ion[3];
     ctx.lineWidth = 3;
-    circle(ctx, f.x, f.y, 20 + u * 260);
+    circle(ctx, f.x, f.y, f.type === 'jump' ? 20 + u * 260 : 6 + u * 70);
     ctx.stroke();
   } else {
     const s = f.type === 'shield' ? 5 : 3;
@@ -227,6 +236,16 @@ function drawShield(ctx, state, fx) {
     ctx.globalAlpha = 1;
   }
   if (fx && ship.shield > 0) drawRipples(ctx, fx);
+  // The extra shield that a docked ship is lent is a second, wider ring.
+  if (ship.dockShield > 0) {
+    ctx.globalAlpha = 0.15 + 0.25 * (ship.dockShield / dockShieldMax(ship));
+    ctx.strokeStyle = COL.ion[3];
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 50, 68, 0, 0, 7);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
 }
 
 function drawShip(ctx, state, img, fx) {
@@ -260,21 +279,25 @@ function drawVessel(ctx, v, env) {
   const c = SHIPS[v.kind];
   const ship = env.state.ship;
   ctx.globalAlpha = 0.5;
-  ctx.fillStyle = COL.ember[1];
+  ctx.fillStyle = v.side === PIRATE ? COL.ember[1] : COL.ion[1];
   for (const g of look.glow) {
     const p = toWorld(v, g);
     circle(ctx, p.x, p.y, g.r);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
-  sprite(ctx, env.img[look.sprite], v.x, v.y, v.heading);
+  sprite(ctx, spriteOfVessel(v, env.img), v.x, v.y, v.heading);
   if (look.turrets) {
     for (const mount of c.guns) {
       const m = toWorld(v, mount);
       sprite(ctx, env.img.turret_guard, m.x, m.y, headingTo(ship.x - m.x, ship.y - m.y));
     }
   }
-  if (env.scan || look.alwaysBar) hpBar(ctx, v.x, v.y - c.radius - 12, look.bar, v.hp / v.hpMax);
+  // Enemies show their health to a ship with a target scanner. Others only show that they have been hurt.
+  const y = v.y - c.radius - 12;
+  if (!enemies(env.state, v.side, CREW)) {
+    if (v.hp < v.hpMax) hpBar(ctx, v.x, y, look.bar, v.hp / v.hpMax, SIDE_COL[v.side] || COL.steel[3]);
+  } else if (env.scan || look.alwaysBar) hpBar(ctx, v.x, y, look.bar, v.hp / v.hpMax);
   if (!env.aimHelp) return;
   // The targeting computer marks where a shot fired now would meet the ship.
   const t = dist(v.x, v.y, ship.x, ship.y) / B.BOLT_SPEED;
@@ -356,6 +379,7 @@ function drawArrows(ctx, font, state, cam) {
   const sources = visionSources(state);
   const alarm = B.ALARM_RANGE[level(ship, 'alarm')];
   for (const v of state.vessels) {
+    if (!enemies(state, v.side, CREW)) continue;
     const known = isVisible(state, v.x, v.y, sources) || dist(v.x, v.y, ship.x, ship.y) < alarm;
     if (known) edgeMarker(ctx, font, cam, v.x, v.y, COL.ember[1]);
   }

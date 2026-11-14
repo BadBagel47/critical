@@ -9,7 +9,8 @@ import { createStation } from './stations.js';
 import { jumpCharge, jumpFuel } from './upgrades.js';
 import { rand, randRange, TAU, dist } from './util.js';
 
-// links: the sectors that can be reached from here. stations: [allegiance, shipyard, distance out, name].
+// links: the sectors that can be reached from here. stations: [side, shipyard, distance out, name].
+// A station's side is 'crew', 'pirate', a faction, or null for one that stands on its own.
 const SECTORS = [
   {
     name: 'KESTREL DRIFT',
@@ -18,8 +19,8 @@ const SECTORS = [
     hint: 'QUIET  ·  A FRIENDLY SHIPYARD',
     wrecks: 3,
     stations: [
-      ['friendly', true, 330, 'KESTREL YARD'],
-      ['neutral', false, 1500, 'DRIFT POST'],
+      ['crew', true, 330, 'KESTREL YARD'],
+      [null, false, 1500, 'DRIFT POST'],
     ],
   },
   {
@@ -29,8 +30,8 @@ const SECTORS = [
     hint: 'RICH IN FUEL  ·  ONE HOSTILE STATION',
     wrecks: 3,
     stations: [
-      ['neutral', true, 900, 'ASH DEPOT'],
-      ['hostile', false, 1700, 'CINDER HOLD'],
+      ['drifters', true, 900, 'ASH DEPOT'],
+      ['pirate', false, 1700, 'CINDER HOLD'],
     ],
   },
   {
@@ -40,8 +41,8 @@ const SECTORS = [
     hint: 'MANY WRECKS  ·  PIRATE PATROLS',
     wrecks: 5,
     stations: [
-      ['neutral', true, 1000, 'HOLLOW MARKET'],
-      ['hostile', false, 1800, 'REACH FORT'],
+      ['charter', true, 1000, 'HOLLOW MARKET'],
+      ['pirate', false, 1800, 'REACH FORT'],
     ],
   },
   {
@@ -51,9 +52,9 @@ const SECTORS = [
     hint: 'GUNBOATS  ·  TWO HOSTILE STATIONS',
     wrecks: 3,
     stations: [
-      ['neutral', true, 950, 'NARROWS DOCK'],
-      ['hostile', false, 1500, 'IRON GATE'],
-      ['hostile', false, 2000, 'BLACK PIER'],
+      ['wardens', true, 950, 'NARROWS DOCK'],
+      ['pirate', false, 1500, 'IRON GATE'],
+      ['pirate', false, 2000, 'BLACK PIER'],
     ],
   },
   {
@@ -63,7 +64,7 @@ const SECTORS = [
     boss: 'cruiser',
     hint: 'THE PIRATE CRUISER WAITS HERE',
     wrecks: 3,
-    stations: [['hostile', false, 1400, 'MAW BASTION']],
+    stations: [['pirate', false, 1400, 'MAW BASTION']],
   },
 ];
 
@@ -122,6 +123,7 @@ function clearTraffic(s, raidDelay) {
   s.things = s.things.filter((t) => THINGS[t.kind].persist);
   s.raid = null;
   s.raidTimer = randRange(s, raidDelay[0], raidDelay[1]);
+  s.traffic = { timer: randRange(s, 8, 20) };
 }
 
 // Fill the world with a fresh sector around the origin.
@@ -142,10 +144,11 @@ export function generateSector(s, id) {
   }
   // Each trading station sells the chart to one of the sectors you can jump to from here.
   const onward = sec.links.filter((l) => l !== 0);
-  spec.stations.forEach(([align, yard, d, name], i) => {
+  spec.stations.forEach(([side, yard, d, name], i) => {
     const p = at(base + 1.1 + i * 2.3 + randRange(s, -0.2, 0.2), d);
-    const st = createStation(s, p.x, p.y, align, yard, name);
-    if (align !== 'hostile') st.chart = onward[i % Math.max(1, onward.length)] ?? null;
+    // The crew's own yard in the first sector is their home.
+    const st = createStation(s, p.x, p.y, side, yard, name, side === 'crew');
+    if (side !== 'pirate') st.chart = onward[i % Math.max(1, onward.length)] ?? null;
     addThing(s, st);
   });
   for (let i = 0; i < 3; i++) {

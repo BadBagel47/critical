@@ -8,7 +8,7 @@ import { POSTS, playerById, holderOf } from '../sim/players.js';
 import { findDock, findThing, nameOf } from '../sim/things.js';
 import { isTrading } from '../sim/stations.js';
 import { currentSector } from '../sim/sectors.js';
-import { has, hullMax, shieldMax, fuelMax, jumpCharge } from '../sim/upgrades.js';
+import { has, hullMax, shieldMax, dockShieldMax, fuelMax, jumpCharge } from '../sim/upgrades.js';
 import { dist } from '../sim/util.js';
 import { rect, label, bar } from './draw.js';
 import { drawMiniMap } from './map.js';
@@ -50,7 +50,7 @@ export function alarmText(state) {
   if (!has(state.ship, 'alarm') || state.alarm.count === 0) return null;
   const n = state.alarm.count;
   const eta = Math.round(state.alarm.eta);
-  return `ENEMY ALARM  ·  ${n} ${n === 1 ? 'PIRATE' : 'PIRATES'}  ·  ${eta > 0 ? eta + ' S OUT' : 'HERE'}`;
+  return `ENEMY ALARM  ·  ${n} ${n === 1 ? 'HOSTILE' : 'HOSTILES'}  ·  ${eta > 0 ? eta + ' S OUT' : 'HERE'}`;
 }
 
 export function drawBars(ctx, font, state, x = 8, y = 314) {
@@ -65,6 +65,12 @@ export function drawBars(ctx, font, state, x = 8, y = 314) {
     font.draw(ctx, name, x + 4, y + 5 + i * 12, COL.dim);
     bar(ctx, x + 46, y + 5 + i * 12, 84, frac, color);
   });
+  // A docked ship is lent an extra shield. It shows as a bright line on top of the shield bar.
+  if (ship.dockShield > 0) {
+    const w = Math.round(82 * (ship.dockShield / dockShieldMax(ship)));
+    rect(ctx, x + 47, y + 15, w, 1.5, COL.ion[3]);
+    font.draw(ctx, '+', x + 38, y + 17, COL.ion[3]);
+  }
 }
 
 export function drawToasts(ctx, font, view, time, y = 44, x = VIEW_W / 2) {
@@ -101,6 +107,7 @@ function dockedLine(state, me) {
     return { text: `${inside} INSIDE  ·  E UNDOCKS AND TELEPORTS ${who} HOME`, ...WARM };
   }
   if (isTrading(t)) return { text: `DOCKED AT ${t.name}  ·  F GO ABOARD  ·  E UNDOCK`, ...CALM };
+  if (t.closed) return { text: `DOCKED AT ${t.name}  ·  THEY WILL NOT LET YOU ABOARD  ·  E UNDOCK`, ...WARM };
   const what = nameOf(t);
   const kind = THINGS[t.kind];
   if (t.lock !== 'open' && t.breakin && t.breakin.started) {

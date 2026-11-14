@@ -11,6 +11,15 @@ export const B = {
   TURN_SMOOTH: 6,
   THROTTLE_RATE: 0.9,
   ENGINE_POWER: [0.3, 0.6, 0.85, 1.0, 1.25],
+  // standing with factions and free stations, from -100 to 100. At or above `friendly` a side is friendly.
+  // At or below each of the others it turns wary (higher prices), closed (no trade) and hostile (opens fire).
+  // A bad standing mends by itself up to `mends`, which is still wary.
+  STANDING: { friendly: 50, wary: -20, closed: -50, hostile: -80, mends: -30 },
+  // what moves the standing: shooting a station or a ship, destroying a ship, answering a distress call,
+  // destroying a pirate, and how fast a bad standing mends by itself, per second.
+  STANDING_LOSS: { stationHit: 10, shipHit: 2, shipKill: 25 },
+  STANDING_GAIN: { rescue: 20, pirate: 0.5, forgive: 0.05 },
+  WARY_PRICE: 1.5,
   // how long a player's wish for a post that someone else holds stands, so that two players can swap
   SWAP_TIME: 6,
   // power
@@ -113,11 +122,24 @@ export const B = {
   BUOY_DRAIN: 10,
   // stations
   STATION_RANGE: 460,
+  // A station with enemy ships this close is in a fight, and takes no offence at stray shots from the crew.
+  STATION_FIGHT: 900,
+  // The same goes for a ship with one of its enemies this close.
+  SHIP_FIGHT: 700,
   STATION_GUN_HP: 45,
-  STATION_GUN_COOLDOWN: 1.1,
-  STATION_GUN_DMG: 7,
+  STATION_GUN_COOLDOWN: 2.2,
+  // Pirate strongholds are better armed than the stations that trade.
+  STATION_GUN_DMG: 3,
+  PIRATE_STATION_GUN_DMG: 6,
+  STATION_GUN_SPREAD: 0.1,
   STATION_VISION: 700,
-  STATION_ANGER: 6,
+  // every station has a hull and a shield. The shield comes back after a pause, the hull and guns more slowly.
+  STATION_HP: 1500,
+  STATION_SHIELD: 200,
+  STATION_SHIELD_DELAY: 5,
+  STATION_SHIELD_RECHARGE: 5,
+  STATION_REPAIR_DELAY: 20,
+  STATION_REPAIR: 2,
   FUEL_PRICE: { friendly: 0, neutral: 1 },
   REPAIR_PRICE: { friendly: 0.25, neutral: 0.5 },
   ROCKET_PRICE: { friendly: 2, neutral: 4 },
@@ -169,10 +191,22 @@ export const B = {
   DIAL_STAGES: 3,
   DIAL_MISSES: 3,
   POD_CREDITS: [60, 140],
+  // traffic: seconds between arrivals, how many faction ships at most, how long a freighter stays docked,
+  // and how many of the arrivals are freighters rather than patrols
+  TRAFFIC_GAP: [20, 45],
+  TRAFFIC_MAX: 5,
+  TRAFFIC_VISIT: [12, 25],
+  TRAFFIC_FREIGHTERS: 0.65,
+  // the extra shield a docked ship gets, and how fast it builds up
+  DOCK_SHIELD: 40,
+  DOCK_SHIELD_MORE: 50,
+  DOCK_SHIELD_RECHARGE: 10,
   // distress calls
   RAID_FIRST: [110, 180],
   RAID_GAP: [150, 250],
   RAID_TIME: 150,
+  // how many raiders come, plus one more in the two most dangerous kinds of sector
+  RAID_SIZE: 4,
   FAVOR_TIME: 180,
   FAVOR_DISCOUNT: 0.6,
   RAID_REWARD: 100,

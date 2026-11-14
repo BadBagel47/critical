@@ -7,12 +7,14 @@ import { toWorld, forward, headingTo, dist } from '../sim/util.js';
 import { hullMax, jumpCharge } from '../sim/upgrades.js';
 import { Particles } from './particles.js';
 import { lookOf } from './looks.js';
+import { CREW, PIRATE } from '../sim/sides.js';
 
 const FIRE = ['#fff3c4', COL.ochre[3], COL.ochre[2], COL.ember[1], COL.ember[0]];
 const SMOKE = ['#6b6f82', '#44475a', '#2a2c3a'];
 const ION = [COL.ion[3], COL.ion[2], COL.ion[1], COL.ion[0]];
 const ACID = [COL.acid[3], COL.acid[2], COL.acid[1]];
 const EMBER = [COL.ember[3], COL.ember[2], COL.ember[1], COL.ember[0]];
+const STEEL = ['#ffffff', COL.steel[3], COL.steel[2], COL.steel[1]];
 const SECTOR_TINT = [
   ['#141a3c', '#1c2450'],
   ['#2a1a16', '#3a2418'],
@@ -118,6 +120,10 @@ function watchBlasts(fx, state, near) {
     } else if (f.type === 'shield') {
       p.burst(f.x, f.y, 5, { speed: 50, life: 0.35, drag: 3, size0: 2, size1: 1, colors: ION });
       if (away < 80) fx.ripples.push({ a: headingTo(f.x - ship.x, f.y - ship.y) - ship.heading, t: 0 });
+    } else if (f.type === 'warp') {
+      // Another ship jumping in or out.
+      p.ring(f.x, f.y, 6, 90, 0.6, COL.ion[3], 3);
+      p.burst(f.x, f.y, 14, { speed: 90, life: 0.5, drag: 2, size0: 2, size1: 1, colors: ION });
     } else if (f.type === 'jump') {
       fx.flash = 1;
       fx.warp = 0.7;
@@ -132,7 +138,7 @@ function watchShots(fx, state, near) {
   const p = fx.space;
   for (const b of state.bolts) {
     if (!once(fx, b) || !near(b)) continue;
-    const colors = b.owner === 'player' ? (b.small ? ION : FIRE) : ACID;
+    const colors = b.side === CREW ? (b.small ? ION : FIRE) : b.side === PIRATE ? ACID : STEEL;
     p.add({ x: b.x, y: b.y, life: 0.09, size0: b.small ? 6 : 11, size1: 3, glow: true, colors });
     const look = { angle: Math.atan2(b.vy, b.vx), spread: 0.7, speed: 90, life: 0.15, drag: 4, size0: 1.5, size1: 1 };
     p.burst(b.x, b.y, 2, { ...look, colors });
@@ -258,7 +264,7 @@ function otherTrails(fx, state, near, dt) {
         drag: 1.5,
         size0: exhaust.size,
         size1: 1,
-        colors: EMBER,
+        colors: e.side === PIRATE ? EMBER : ION,
       });
     });
     if (e.hp < e.hpMax * 0.5) {

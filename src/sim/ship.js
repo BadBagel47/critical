@@ -20,6 +20,7 @@ export function createShip() {
     boosting: false,
     hull: B.HULL_MAX,
     shield: B.SHIELD_MAX,
+    dockShield: 0,
     lastHit: -99,
     ramCooldown: 0,
     fuel: B.FUEL_START,

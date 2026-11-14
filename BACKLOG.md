@@ -8,69 +8,58 @@ Prioritet: Hög, Medel, Låg.
 **A** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**B** – strong model, high level – Stationer som försvarar sig
-- F-098 – Ge baserna turrets och en sköld, så att de kan stå emot ett anfall en stund
-- D-045 – Låt en station som inte överlever ett anfall bli fientlig, så att nödanropen får betydelse
-- F-099 – Ge dockade skepp en liten extra sköld som syns på sköldmätaren och går att uppgradera, så att man får en bättre chans att loota
-
-**C** – strong model, high level – Faktioner och trafik
-- F-035 – Tre faktioner med egna stationer, områden och anseende, så att världen får sidor att förhålla sig till
-- F-069 – Lägg in freightern enligt vald design, större och långsam, så att trafiken får ett eget skepp
-- F-066 – Låt andra skepp flyga fram till stationer, docka en stund och lämna, så att stationerna känns besökta
-- F-067 – Låt handelsskepp, patruller och pirater hoppa in och ut ur systemet och slåss med varandra, så att miljön känns levande
-
-**D** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
+**B** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
 
-**E** – strong model, high level – Förslag: ekonomi och belöningar
+**C** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**F** – strong model, high level – Baser i två storlekar
+**D** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 - D-101 – Gör inomhusmiljöerna mer utarbetade, så att stationer och vrak känns som platser
 - F-102 – Lockdown: en fientlig station håller dörrarna till shop och armory stängda tills spelarna tagit över
 
-**G** – strong model, high level – Sällsynta skepp
+**E** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**H** – strong model, high level – Handel
+**F** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**I** – strong model, medium level – Butik med bilder
+**G** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**J** – strong model, high level – Värme
+**H** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**K** – strong model, high level – Slå ut och borda
+**I** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**L** – strong model, high level – Missiler och raketer
+**J** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**M** – strong model, high level – Kontakt med andra skepp
+**K** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**N** – strong model, high level – Asteroider och anomalier
+**L** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**O** – strong model, high level – En värld som förändras
+**M** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 
-**P** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**N** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**Q** – strong model, high level – Ljudeffekter
+**O** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
 Hos en annan agent: F-048 (musik) görs skilt från körningarna här, enligt docs/music-brief.md.
@@ -95,15 +84,10 @@ Väntar på användaren: D-095 (faktionernas riktiga namn), D-074 (smuggelgods) 
 | F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer. Musiken skapas med kod, det passar spelstilen. Görs av en annan agent enligt docs/music-brief.md | Ej påbörjad |
 | F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
-| F-066 | Det vore trevligt om andra skepp kan besöka stationer. Att de åker fram, dockar en stund, och sedan lämnar. Från D-075: varje sektor har sin egen blandning av handelsskepp, patruller och pirater | Ej påbörjad |
-| F-067 | Vänliga skepp kan hyperjumpa in och ut ur systemet. De kan stanna en stund och sedan antingen flyga till något annat ställe, eller hoppa vidare. Detta för att miljön ska kännas mer levande. Från D-075: skeppen slåss också med varandra, och pirater anfaller freighters | Ej påbörjad |
 | F-068 | Handelssystem för goods. Att man kan köpa och sälja varor mellan olika stationer med olika priser. Det är inget som man själv kan använda, utan det är bara för att kunna tjäna pengar. Agentens förslag som användaren inte invänt mot: lastrum med begränsad plats som går att bygga ut, och priser som rör sig långsamt. Från D-075: prisnivåer per vara och station, och en kartvy som visar var det lönar sig | Ej påbörjad |
-| F-069 | Skeppstypen freighter. Lite större långsamma skepp. Design vald 2026-11-14: förslag A, en ryggrad med containrar (D-094) | Ej påbörjad |
 | F-070 | Skeppstyp Juggernaut. Ett ovanligt krigsskepp som är långsamt och tungt bestyckat. Patrullerar hos faktioner och dyker i väldigt sällsynta fall upp som pirat. Kräver F-035. Design vald 2026-11-14: förslag E, ett kantigt ägg med smala änden fram, pansarplåtar och monterade kanontorn, mindre än Cruisern | Ej påbörjad |
 | D-095 | Genomgång av faktionerna: riktiga namn och karaktär i stället för platshållarna, och hur anseende höjs och sänks | Väntar på användaren |
 | D-097 | Plan över droprates och hur de påverkas av olika skepp | Ej påbörjad |
-| F-098 | Låt baser ha turrets som de kan försvara sig med. Ge dem även en sköld | Ej påbörjad |
-| F-099 | Skepp som dockar kan få en liten extraboost i sköld. Sköldmätaren kan få ett tillägg som visar detta. Detta för att man ska få en bättre chans att loota. Detta kan också vara något som går att köpa uppgradering till | Ej påbörjad |
 | D-100 | Vi måste reda ut så att man inte kan hamna i en softlock och inte göra progress för att man har slut på pengar eller bränsle etc | Ej påbörjad |
 | D-101 | Jobba fram mer utstuderade inomhusmiljöer | Ej påbörjad |
 | F-102 | Lockdown mode, så att en fientlig station stänger dörrar till shop och armory tills spelarna tagit över kontrollen | Ej påbörjad |
@@ -113,7 +97,6 @@ Väntar på användaren: D-095 (faktionernas riktiga namn), D-074 (smuggelgods) 
 | D-072 | Baser ska ha två våningar med olika funktioner. Vi funderar lite på hur detta kan göras bra. Agentens första tanke: nedre våningen med luftsluss, services och shipyard, övre med armory och en bar, hiss eller trappa emellan. Besked 2026-11-14: tanken är godkänd. Små stationer får en våning, större får två. Samma gäller för fientliga | Ej påbörjad |
 | D-073 | Det ska gå att få uppdrag på stationer man kan besöka genom att prata med folk. Detta kräver mer genomgång innan vi inför. Hänger ihop med D-052. Från D-075: fraktjobb och passagerare med tidsgräns på en anslagstavla, uppdrag med berättelse från folk i baren. Besked 2026-11-14: alla sorter (frakt, passagerare, prisjakt, eskort, räddning). Max fem samtidiga för stunden. Vissa har tidsgräns och betalar mer. Ett misslyckat uppdrag kostar lönen och lite anseende hos den faktion som stationen tillhör. Är stationen neutral är det anseendet hos just den stationen som påverkas | Ej påbörjad |
 | D-074 | Någon form av smuggelgods. Något man kan få i uppdrag att frakta som kan dra till sig pirater eller skepp som vill skydda sin faktion från handel med smuggelgods. Vi behöver titta närmare på hur detta funkar. Hänger ihop med F-068 (handel), D-073 (uppdrag) och F-035 (faktioner). Från D-075: patrullskepp skannar lasten, olaglig last ger böter och sämre anseende, och Engineer kan störa skanningen. Besked 2026-11-14: Engineer ska kunna påverka skanningen med ett aktivt minigame medan den pågår. Det får inte vara svårt, men ska vara roligt. Utforskas mer innan det byggs | Väntar på användaren |
-| F-035 | Faktioner med egna stationer och områden. Tillbaka från parkerat 2026-11-14. Från D-075: anseende per faktion som stiger när man skjuter pirater och sjunker när man anfaller handelsskepp. Besked 2026-11-14: tre faktioner med platshållarnamn (se HANDOFF, Decisions). Man börjar som neutral hos alla. Dåligt anseende ger högre priser, sedan stängda stationer, sedan patruller som anfaller. Det måste gå att höja ett lågt anseende, till exempel genom att skjuta pirater, svara på nödanrop, göra uppdrag eller betala böter. Neutrala stationer hör inte till någon faktion och har var sitt eget anseende gentemot spelarna | Ej påbörjad |
 | F-080 | Shoppen ska bli roligare med lite objektgrafik | Ej påbörjad |
 | F-081 | Från D-075: skepp som slås ut i stället för att sprängas, så att de kan bordas medan besättningen är kvar. Gunner väljer mellan att slå ut och förstöra | Ej påbörjad |
 | F-082 | Från D-075: anropa andra skepp och stationer. Be om bränsle eller hjälp, muta, kräva tribut. En ny uppgift för Captain | Ej påbörjad |
@@ -129,7 +112,6 @@ Väntar på användaren: D-095 (faktionernas riktiga namn), D-074 (smuggelgods) 
 | F-038 | Hoppa in mitt i ett pågående spel. Agentens råd 2026-11-14: bra att ha, eftersom samma sak behövs när någon tappar anslutningen och kommer tillbaka. Besked 2026-11-14: görs i samband med nätverkskoden | Väntar på motorn |
 | D-031 | Hoppa tillbaka till gamla sektorer. Beslut tills vidare: det går, och sektorn är som den lämnades | Beslutat tills vidare |
 | D-043 | Lägga ut medan någon är kvar inne. Beslut tills vidare: det går, och alla som är inne teleporteras hem på vanligt sätt | Beslutat tills vidare |
-| D-045 | Nödanrop som ingen svarar på. Besked 2026-11-14: låt stationen bli fientlig om den inte överlever. Byggs ihop med F-098, så att stationen har en chans att klara sig själv | Ej påbörjad |
 
 ## Låg
 
@@ -138,6 +120,7 @@ Väntar på användaren: D-095 (faktionernas riktiga namn), D-074 (smuggelgods) 
 | F-086 | Från D-075: namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma | Ej påbörjad |
 | F-087 | Från D-075: händelser som ändrar världen. En station byter ägare, priser rör sig, en sektor blir farligare | Ej påbörjad |
 | F-088 | Från D-075: tribut från övertagna stationer som ger inkomst över tid | Ej påbörjad |
+| B-106 | Texter på kartan hamnar över varandra när två saker ligger nära, till exempel ett vrak intill en station | Ej påbörjad |
 | D-046 | Gå igenom GDPR och lagring i webbläsaren igen när onlineläget byggs: spelarnamn, anslutningar och Cloudflare som ny tjänst | Ej påbörjad |
 
 ## Parkerat
@@ -206,3 +189,10 @@ Väntar på användaren: D-095 (faktionernas riktiga namn), D-074 (smuggelgods) 
 | F-096 | Hardcore mode: ett enda liv. Spelet sparar sig bara självt, och när skeppet går förlorat tas omgångens sparning bort | 2026-11-14 |
 | D-094 | Design på nya skepp: Freighter enligt förslag A och Juggernaut enligt förslag E är valda. Ritskriptet är docs/design/tools/ships2.py | 2026-11-14 |
 | D-058 | Provkörningen klickar på namngivna knappar. Kontroll av stavfel och typer finns (`npm run lint`, `npm run types`). Alla kontroller körs av sig själva på GitHub vid varje sparning | 2026-11-14 |
+| F-098 | Stationer har fyra kanontorn och en sköld. Skölden tar träffarna först och laddas om, och kanoner och skrov lagas efter en stund utan träffar. Stationer skjuter på sina fiender, också på pirater | 2026-11-14 |
+| D-045 | En station som faller i ett piratanfall blir piraternas och fientlig tills besättningen tar över den. Anfallen skadar nu stationen på riktigt, och den kan klara sig själv. Besättningens egen varvsstation i första sektorn anfalls aldrig | 2026-11-14 |
+| F-099 | Ett dockat skepp får en extra sköld som tar de första träffarna och syns som en egen linje på sköldmätaren. Uppgraderingen Docking Field gör den starkare | 2026-11-14 |
+| F-035 | Tre faktioner med platshållarnamn (Charter, Wardens, Drifters), egna stationer, hemsektorer och färger. Anseende per faktion, och per station för stationer utan faktion: avvaktande ger högre priser, stängt ger ingen handel, fientligt ger eld. Anseendet syns på kartan och i butiken | 2026-11-14 |
+| F-069 | Freightern finns i spelet enligt vald design: stor, långsam och obeväpnad, i faktionernas färger. Den lämnar tre bärgningsgods om den förstörs | 2026-11-14 |
+| F-066 | Fraktskepp flyger fram till stationer, lägger sig med nosen mot en dockningsarm, ligger kvar en stund och lämnar. De håller sig undan armen som fregatten använder | 2026-11-14 |
+| F-067 | Fraktskepp och patruller från faktionerna hoppar in och ut ur sektorn, högst fem åt gången. Patruller, stationer och pirater slåss med varandra. Bara besättningens egna nedskjutningar ger belöning | 2026-11-14 |

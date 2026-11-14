@@ -1,27 +1,18 @@
-// Shots in flight, and the frigate bumping into things.
+// Shots in flight, and the frigate bumping into things. A shot carries the side that fired it.
+// Everyone's shots hit their enemies. The crew's shots also hit those who are not enemies, but only when all
+// is calm around them: a stray shot in the middle of a fight passes by.
 import { B, SHIP_GEOM } from './balance.js';
 import { damageShip } from './damage.js';
-import { hurtVessel, classOf } from './vessels.js';
-import { boltHitsStation } from './stations.js';
+import { CREW, enemies } from './sides.js';
+import { hurtVessel, classOf, struckByCrew } from './vessels.js';
+import { damageStation, struckBy } from './stations.js';
 import { has } from './upgrades.js';
 import { forward, headingTo, turnToward, toWorld, dist, rand } from './util.js';
 
-// What happens when the crew's shots hit a thing, for the kinds that care.
-const WHEN_SHOT = { station: boltHitsStation };
 const spark = (state, b, dur) => state.fx.push({ type: 'hit', x: b.x, y: b.y, t: 0, dur });
 
-function boltMeetsShips(state, b) {
+function boltMeetsFrigate(state, b) {
   const ship = state.ship;
-  if (b.owner === 'player') {
-    for (const v of state.vessels) {
-      if (v.hp <= 0 || dist(b.x, b.y, v.x, v.y) >= classOf(v).radius) continue;
-      b.ttl = 0;
-      spark(state, b, 0.2);
-      hurtVessel(state, v, b.dmg);
-      return;
-    }
-    return;
-  }
   // Point defense gets one try at each shot that comes close.
   if (has(ship, 'pd') && !b.pd && dist(b.x, b.y, ship.x, ship.y) < B.PD_RANGE) {
     b.pd = true;
@@ -46,15 +37,27 @@ function boltMeetsShips(state, b) {
   }
 }
 
+function boltMeetsShips(state, b) {
+  for (const v of state.vessels) {
+    if (v.hp <= 0 || dist(b.x, b.y, v.x, v.y) >= classOf(v).radius) continue;
+    if (b.side === CREW ? !struckByCrew(state, v) : !enemies(state, b.side, v.side)) continue;
+    b.ttl = 0;
+    spark(state, b, 0.2);
+    hurtVessel(state, v, b.dmg, b.side);
+    return;
+  }
+  if (enemies(state, b.side, CREW)) boltMeetsFrigate(state, b);
+}
+
 function boltMeetsThings(state, b, solids) {
   for (const c of solids) {
     if (Math.abs(b.x - c.x) >= c.r || Math.abs(b.y - c.y) >= c.r || dist(b.x, b.y, c.x, c.y) >= c.r) continue;
-    // Hostile station guns sit on the ring, so their own shots must be able to leave.
-    if (c.thing.kind === 'station' && b.owner === 'pirate') continue;
+    const station = c.thing.kind === 'station' ? c.thing : null;
+    // A station lets through the shots that are not meant for it, those of its own guns among them.
+    if (station && !struckBy(state, station, b.side)) continue;
     b.ttl = 0;
     spark(state, b, 0.15);
-    const react = WHEN_SHOT[c.thing.kind];
-    if (react && b.owner === 'player') react(state, c.thing, b);
+    if (station) damageStation(state, station, b.dmg, b, b.side);
     return;
   }
 }
@@ -81,14 +84,17 @@ export function stepRockets(state, dt, solids) {
     r.vy = f.y * B.ROCKET_SPEED;
     r.x += r.vx * dt;
     r.y += r.vy * dt;
-    const near = state.vessels.some((v) => dist(v.x, v.y, r.x, r.y) < classOf(v).radius + 6);
-    const wall = solids.some((c) => dist(c.x, c.y, r.x, r.y) < c.r);
+    const near = state.vessels.some((v) => dist(v.x, v.y, r.x, r.y) < classOf(v).radius + 6 && struckByCrew(state, v));
+    const wall = solids.find((c) => dist(c.x, c.y, r.x, r.y) < c.r);
     if (r.ttl > 0 && !near && !wall) continue;
     r.ttl = 0;
     state.fx.push({ type: 'boom', x: r.x, y: r.y, t: 0, dur: 0.5, size: B.ROCKET_RADIUS });
     for (const v of state.vessels) {
-      if (dist(v.x, v.y, r.x, r.y) < B.ROCKET_RADIUS + classOf(v).radius) hurtVessel(state, v, B.ROCKET_DMG);
+      if (dist(v.x, v.y, r.x, r.y) >= B.ROCKET_RADIUS + classOf(v).radius) continue;
+      if (struckByCrew(state, v)) hurtVessel(state, v, B.ROCKET_DMG, CREW);
     }
+    const station = wall && wall.thing.kind === 'station' ? wall.thing : null;
+    if (station && struckBy(state, station, CREW)) damageStation(state, station, B.ROCKET_DMG, r, CREW);
     state.events.push({ type: 'rocketHit' });
   }
   state.rockets = state.rockets.filter((r) => r.ttl > 0);

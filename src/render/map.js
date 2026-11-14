@@ -6,7 +6,8 @@ import { currentSector, jumpBlocked } from '../sim/sectors.js';
 import { playerById } from '../sim/players.js';
 import { has, jumpCharge, jumpFuel } from '../sim/upgrades.js';
 import { rect, label } from './draw.js';
-import { THING_LOOK, lookOf } from './looks.js';
+import { THING_LOOK, lookOf, SIDE_COL, MOOD_COL } from './looks.js';
+import { CREW, FACTIONS, enemies, moodOf, standingOf } from '../sim/sides.js';
 
 export const MAP = { x: 12, y: 12, size: 336 };
 const CELL = MAP.size / MAP_N;
@@ -171,12 +172,14 @@ function drawMapContents(ctx, font, state, sources) {
     ctx.fill();
   }
   // Other ships show only while something sees them.
+  // Enemies are marked in red, and everyone else in the colour of their side.
   let hostiles = 0;
   for (const v of state.vessels) {
     if (!isVisible(state, v.x, v.y, sources)) continue;
     const p = toMap(v.x, v.y);
-    diamond(ctx, p.x, p.y, lookOf(v).mapSize, COL.ember[1]);
-    hostiles++;
+    const foe = enemies(state, v.side, CREW);
+    diamond(ctx, p.x, p.y, lookOf(v).mapSize, foe ? COL.ember[1] : SIDE_COL[v.side] || COL.steel[3]);
+    if (foe) hostiles++;
   }
   drawOwnShip(ctx, state.ship);
   return hostiles;
@@ -226,7 +229,12 @@ function drawSidePanel(ctx, font, state, post, mouse, hostiles) {
     rect(ctx, x, y, 6, 6, color, COL.out);
     font.draw(ctx, text, x + 10, y, COL.dim);
   });
-  font.draw(ctx, 'THINGS THAT STAND STILL STAY AS LAST SEEN.', left, 82, COL.faint);
+  // What each faction thinks of the crew: the name in the colour of its mood, and the standing as a number.
+  let fx = left;
+  for (const side of Object.keys(FACTIONS)) {
+    const text = `${FACTIONS[side].short} ${Math.round(standingOf(state, side))}`;
+    fx += font.draw(ctx, text, fx, 82, MOOD_COL[moodOf(state, side)]) + 12;
+  }
   font.draw(ctx, 'STAR CHARTS', left, 104, COL.text);
   font.draw(ctx, `JUMP COSTS ${jumpFuel(ship)} FUEL`, VIEW_W - 12, 104, COL.dim, { align: 'r' });
   rect(ctx, left, 116, PW - 24, 1, COL.line);
@@ -241,7 +249,7 @@ function drawSidePanel(ctx, font, state, post, mouse, hostiles) {
   const toolNote = engineer ? 'CLICK THE MAP TO SEND A PROBE' : 'TAKE THE ENGINEER POST (3) TO USE THE TOOLS';
   font.draw(ctx, toolNote, left, 310, engineer ? COL.engineer : COL.faint);
   if (hostiles) {
-    const text = `${hostiles} ${hostiles === 1 ? 'PIRATE' : 'PIRATES'} IN SIGHT`;
+    const text = `${hostiles} ${hostiles === 1 ? 'HOSTILE' : 'HOSTILES'} IN SIGHT`;
     label(ctx, font, left, 324, text, { fg: COL.ember[2], border: COL.ember[0] });
   }
   font.draw(ctx, 'M  CLOSE', VIEW_W - 12, 344, COL.dim, { align: 'r' });
@@ -320,7 +328,10 @@ export function drawMiniMap(ctx, state, x, y) {
     if (look && look.dot) dot(known.x, known.y, look.dot.size, look.dot.size, look.dot.color(known));
   }
   for (const b of state.things) if (b.kind === 'buoy') dot(b.x, b.y, 2, 3, COL.engineer);
-  for (const v of state.vessels) if (isVisible(state, v.x, v.y, sources)) dot(v.x, v.y, 2, 2, COL.ember[1]);
+  for (const v of state.vessels) {
+    if (!isVisible(state, v.x, v.y, sources)) continue;
+    dot(v.x, v.y, 2, 2, enemies(state, v.side, CREW) ? COL.ember[1] : SIDE_COL[v.side] || COL.steel[3]);
+  }
   ctx.restore();
   rect(ctx, x + size / 2 - 1, y + size / 2 - 1, 3, 3, COL.captain);
 }

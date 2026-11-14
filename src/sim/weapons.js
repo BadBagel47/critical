@@ -5,8 +5,11 @@
 //   charges  it uses ship.charge, so the charge is not cleared while it is selected
 //   work     called every step while the weapon is selected
 import { B, SHIP_GEOM, WING_MOUNTS } from './balance.js';
+import { THINGS } from './kinds.js';
 import { shipNose } from './ship.js';
-import { hurtVessel, classOf } from './vessels.js';
+import { hurtVessel, classOf, struckByCrew } from './vessels.js';
+import { damageStation, struckBy } from './stations.js';
+import { CREW } from './sides.js';
 import { has } from './upgrades.js';
 import { forward, headingTo, toWorld, dist, randRange } from './util.js';
 
@@ -33,7 +36,7 @@ function workPulse(state, ship, ctl) {
       vx: d.x * B.BOLT_SPEED + ship.vx,
       vy: d.y * B.BOLT_SPEED + ship.vy,
       ttl: B.BOLT_TTL,
-      owner: 'player',
+      side: CREW,
       dmg,
     });
   };
@@ -68,15 +71,15 @@ function fireHeavy(state) {
   const across = (x, y) => Math.abs((x - nose.x) * f.y - (y - nose.y) * f.x);
   const inBeam = (x, y, width) => along(x, y) > 0 && along(x, y) < B.HEAVY_RANGE && across(x, y) < width;
   for (const v of state.vessels) {
-    if (inBeam(v.x, v.y, B.HEAVY_WIDTH / 2 + classOf(v).radius)) hurtVessel(state, v, B.HEAVY_DMG);
+    if (inBeam(v.x, v.y, B.HEAVY_WIDTH / 2 + classOf(v).radius) && struckByCrew(state, v))
+      hurtVessel(state, v, B.HEAVY_DMG);
   }
-  for (const t of state.things) {
-    for (const gun of t.guns || []) {
-      const w = toWorld(t, gun);
-      if (gun.hp <= 0 || !inBeam(w.x, w.y, 14)) continue;
-      gun.hp -= B.HEAVY_DMG;
-      state.fx.push({ type: 'boom', x: w.x, y: w.y, t: 0, dur: 0.5, size: 16 });
-    }
+  // A station in the way takes the beam on its shield, and then on the first gun it crosses, or its hull.
+  for (const st of state.things) {
+    if (st.kind !== 'station' || !struckBy(state, st, CREW)) continue;
+    if (!inBeam(st.x, st.y, B.HEAVY_WIDTH / 2 + THINGS.station.hit[0].r)) continue;
+    const gun = st.guns.map((g) => toWorld(st, g)).find((w, i) => st.guns[i].hp > 0 && inBeam(w.x, w.y, 14));
+    damageStation(state, st, B.HEAVY_DMG, gun || { x: st.x, y: st.y }, CREW);
   }
   state.events.push({ type: 'heavyShot' });
 }

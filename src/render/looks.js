@@ -3,23 +3,53 @@
 import { COL } from '../config.js';
 import { B } from '../sim/balance.js';
 import { toWorld } from '../sim/util.js';
+import { FACTIONS, moodOf } from '../sim/sides.js';
 import { sprite, rect, bar } from './draw.js';
 
 export const ALIGN_COL = { friendly: COL.engineer, neutral: COL.steel[3], hostile: COL.ember[1] };
+// The colour each side flies, and the colour for what a side thinks of the crew.
+export const SIDE_COL = { charter: COL.ochre[2], wardens: COL.captain, drifters: '#b98562', pirate: COL.ember[1] };
+export const MOOD_COL = {
+  friendly: COL.engineer,
+  neutral: COL.steel[3],
+  wary: COL.ochre[2],
+  closed: COL.ember[2],
+  hostile: COL.ember[1],
+};
 export const RISK = ['', 'LOW', 'MEDIUM', 'HIGH'];
 const risk = (difficulty) => 'BOARDING RISK  ' + RISK[difficulty];
-export const hpBar = (ctx, x, y, w, frac) => bar(ctx, x - w / 2, y, w, frac, COL.ember[1], 4);
+export const hpBar = (ctx, x, y, w, frac, color = COL.ember[1]) => bar(ctx, x - w / 2, y, w, frac, color, 4);
 const blink = (state, rate, offset = 0) => Math.floor(state.time * rate + offset) % 2 === 1;
 
 // ---------- things ----------
 // `env` is { img, state, scan }: the sprites, the game, and whether the ship has a target scanner.
 function drawStation(ctx, st, env) {
   sprite(ctx, env.img['station_' + st.align], st.x, st.y, st.heading);
+  // Pirate strongholds have their own guns. Everyone else mounts the same turrets as the frigate.
+  const pirate = st.side === 'pirate';
   for (const gun of st.guns) {
     if (gun.hp <= 0) continue;
     const p = toWorld(st, gun);
-    sprite(ctx, env.img.turret_guard, p.x, p.y, gun.heading);
-    if (env.scan) hpBar(ctx, p.x, p.y - 14, 16, gun.hp / B.STATION_GUN_HP);
+    if (pirate) sprite(ctx, env.img.turret_guard, p.x, p.y, gun.heading);
+    else sprite(ctx, env.img.turret_pulse, p.x, p.y, gun.heading, 6, 10.5);
+    // Only the guns of an enemy are targets worth a health bar.
+    if (env.scan && st.align === 'hostile') hpBar(ctx, p.x, p.y - 14, 16, gun.hp / B.STATION_GUN_HP);
+  }
+  // The shield shows for a moment when it is hit.
+  const since = env.state.time - st.lastHit;
+  if (st.shield > 0 && since < 0.6) {
+    ctx.globalAlpha = 0.6 * (1 - since / 0.6);
+    ctx.strokeStyle = COL.ion[2];
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(st.x, st.y, 100, 0, 7);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  // With a target scanner, or while it is being hit, a station shows how its shield and hull are holding.
+  if (env.scan || since < 6) {
+    bar(ctx, st.x - 30, st.y + 104, 60, st.shield / B.STATION_SHIELD, COL.ion[1], 4);
+    bar(ctx, st.x - 30, st.y + 109, 60, st.hp / B.STATION_HP, COL.steel[2], 4);
   }
 }
 
@@ -50,6 +80,16 @@ function drawBuoy(ctx, b, env) {
   ctx.fillRect(b.x - 0.5, b.y - 10, 1, 1);
 }
 
+// The line under a station's name on the map: whose it is, what it offers and how it treats the crew.
+const MOOD_NOTE = { wary: 'WARY OF YOU', closed: 'CLOSED TO YOU' };
+function aboutStation(k, env) {
+  if (k.align === 'hostile') return env.scan ? risk(3) : 'HOSTILE';
+  const owner = FACTIONS[k.side] ? FACTIONS[k.side].short : null;
+  const note = MOOD_NOTE[moodOf(env.state, k.side)];
+  const parts = [owner, k.shipyard ? 'SHIPYARD' : null, note].filter(Boolean);
+  return parts.length ? parts.join('  ·  ') : k.align.toUpperCase();
+}
+
 // Marks on the big map. `k` is what the map remembers about the thing, `p` where it is on the screen.
 function markStation(ctx, font, k, p, env) {
   const color = ALIGN_COL[k.align];
@@ -59,9 +99,7 @@ function markStation(ctx, font, k, p, env) {
   rect(ctx, x - 2, y - 2, 5, 5, COL.out);
   rect(ctx, x, y, 1, 1, color);
   font.draw(ctx, k.name, p.x + 8, p.y - 8, color);
-  const what =
-    k.align === 'hostile' ? (env.scan ? risk(3) : 'HOSTILE') : k.shipyard ? 'SHIPYARD' : k.align.toUpperCase();
-  font.draw(ctx, what, p.x + 8, p.y + 2, COL.dim);
+  font.draw(ctx, aboutStation(k, env), p.x + 8, p.y + 2, COL.dim);
 }
 function markWreck(ctx, font, k, p, env) {
   rect(ctx, Math.round(p.x) - 3, Math.round(p.y) - 3, 6, 6, COL.ochre[2], COL.out);
@@ -118,6 +156,16 @@ const FIGHTER_LOOK = {
 };
 export const SHIP_LOOK = {
   fighter: FIGHTER_LOOK,
+  freighter: {
+    sprite: 'freighter',
+    glow: [
+      { x: -12, y: 66, r: 4 },
+      { x: 4, y: 66, r: 5 },
+    ],
+    exhaust: { y: 66, rate: 12, width: 22, size: 2 },
+    bar: 40,
+    mapSize: 4,
+  },
   gunboat: {
     sprite: 'gunboat',
     glow: [{ x: 0, y: 28, r: 5 }],
@@ -140,3 +188,8 @@ export const SHIP_LOOK = {
 };
 // A class without a look of its own is drawn as a fighter, so that new data never breaks the screen.
 export const lookOf = (vessel) => SHIP_LOOK[vessel.kind] || FIGHTER_LOOK;
+// A ship is drawn in the colours of its side when there is a picture of that, and as the plain class otherwise.
+export function spriteOfVessel(vessel, img) {
+  const base = lookOf(vessel).sprite;
+  return img[base + '_' + vessel.side] || img[base];
+}

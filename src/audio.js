@@ -136,6 +136,7 @@ function noise(dur, gain = 0.3, cutoff = 1200, delay = 0) {
 const SOUNDS = {
   shot: [0.05, () => tone(900, 420, 0.07, 'square', 0.12)],
   pirateShot: [0.06, () => tone(360, 190, 0.09, 'sawtooth', 0.08)],
+  otherShot: [0.08, () => tone(520, 300, 0.07, 'square', 0.05)],
   rifle: [0.05, () => tone(700, 380, 0.05, 'square', 0.1)],
   heavyShot: [
     0.2,

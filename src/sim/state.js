@@ -40,10 +40,13 @@ export function createState(seed = 1, options = {}) {
     map: null,
     known: [],
     alarm: { count: 0, eta: null },
+    // What each faction thinks of the crew, from -100 to 100. Free stations get an entry of their own.
+    standing: { charter: 0, wardens: 0, drifters: 0 },
     // Pirate waves and raids on stations.
     spawn: { timer: 0, wave: 0 },
     raid: null,
     raidTimer: 0,
+    traffic: { timer: 0 },
     // Sectors, the star charts the crew holds, and a jump being charged.
     sectors: createSectors(),
     sector: 0,

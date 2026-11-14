@@ -1,15 +1,22 @@
 // Ships other than the crew's frigate. They live in state.vessels and share one shape:
 // { id, kind, side, x, y, vx, vy, heading, hp, hpMax, cool, ... } plus whatever their brain keeps track of.
 // What a class of ship is like is read from SHIPS in kinds.js. How it behaves is its brain, below.
+// Which side a ship is on decides whom it fights: pirates fight everyone, and the ships of a faction
+// fight pirates, and the crew only when the crew has made an enemy of that faction.
 import { B } from './balance.js';
 import { SHIPS } from './kinds.js';
+import { CREW, PIRATE, enemies, changeStanding, thankForPirate } from './sides.js';
 import { addThing, thingsOf, findThing } from './things.js';
 import { currentSector, createWreck } from './sectors.js';
 import { forward, headingTo, angleDiff, turnToward, toWorld, dist, rand, randRange, TAU } from './util.js';
 
 export const classOf = (v) => SHIPS[v.kind];
+export const pirates = (state) => state.vessels.filter((v) => v.side === PIRATE);
+const pirateCount = (state) => state.vessels.reduce((n, v) => n + (v.side === PIRATE ? 1 : 0), 0);
 const pace = (state) => B.PIRATE_PACE[Math.min(3, state.players.length)] || 1;
 export const firstWaveDelay = (state) => B.FIRST_WAVE_DELAY * pace(state);
+// How far a ship looks for someone to fight.
+const SIGHT = 700;
 
 // What a brain keeps track of from the start.
 const dogfighter = (state) => ({
@@ -25,10 +32,12 @@ const START = {
   gunboat: dogfighter,
   // Each gun on a cruiser has its own timer, staggered so they do not fire as one.
   cruiser: (state, c) => ({ mode: 'approach', timer: 0, cool: 1, launch: 10, guns: c.guns.map((_, i) => i * 0.4) }),
+  trader: () => ({ cool: 0 }),
 };
 
 // A new ship of the given kind. Fighters and gunboats start facing the frigate.
-export function makeVessel(state, kind, x, y) {
+// `legs` is the errand of a ship that has somewhere to go, see stepErrand.
+export function makeVessel(state, kind, x, y, side = PIRATE) {
   const c = SHIPS[kind];
   const ship = state.ship;
   const hp = Math.round(c.hp * (c.tierHp ? 1 + B.TIER_HP * currentSector(state).tier : 1));
@@ -36,7 +45,7 @@ export function makeVessel(state, kind, x, y) {
   return {
     id: state.nextId++,
     kind,
-    side: 'pirate',
+    side,
     x,
     y,
     vx: 0,
@@ -45,20 +54,49 @@ export function makeVessel(state, kind, x, y) {
     hp,
     hpMax: hp,
     raid: null,
+    legs: null,
+    hold: 0,
+    gone: false,
     ...START[c.brain](state, c),
   };
 }
 
-// Damage a ship, and handle what happens when it is destroyed.
-export function hurtVessel(state, v, dmg) {
+// Whether a shot from the crew lands on a ship. Enemies are always hit. So is anyone else when all is calm,
+// and that is an attack on them. But a ship that is busy fighting its own enemies is spared the crew's
+// stray shots: they pass it by.
+export function struckByCrew(state, v) {
+  if (enemies(state, CREW, v.side)) return true;
+  return !state.vessels.some(
+    (o) => o.hp > 0 && enemies(state, v.side, o.side) && dist(o.x, o.y, v.x, v.y) < B.SHIP_FIGHT,
+  );
+}
+
+// Damage a ship, and handle what happens when it is destroyed. `by` is the side that did it.
+export function hurtVessel(state, v, dmg, by = CREW) {
   if (v.hp <= 0) return;
   v.hp -= dmg;
-  if (v.hp > 0) return;
   const c = SHIPS[v.kind];
-  state.kills++;
-  state.credits += c.bounty;
+  const crew = by === CREW;
+  // Shooting at someone who is not an enemy costs their good will.
+  if (crew && v.side !== PIRATE) changeStanding(state, v.side, -B.STANDING_LOSS.shipHit);
+  if (crew && state.raid && v.raid === state.raid.id) state.raid.helped = true;
+  if (v.hp > 0) return;
   state.fx.push({ type: 'boom', x: v.x, y: v.y, t: 0, dur: c.boom.dur, size: c.boom.size });
-  state.events.push({ type: 'kill', id: v.id, kind: v.kind, name: c.name, bounty: c.bounty });
+  if (crew && v.side === PIRATE) {
+    // Only the crew's own kills count, and pay.
+    state.kills++;
+    state.credits += c.bounty;
+    thankForPirate(state);
+  } else if (crew) changeStanding(state, v.side, -B.STANDING_LOSS.shipKill);
+  state.events.push({
+    type: 'kill',
+    id: v.id,
+    kind: v.kind,
+    name: c.name,
+    bounty: crew && v.side === PIRATE ? c.bounty : 0,
+    by,
+    side: v.side,
+  });
   if (c.leavesWreck && thingsOf(state, 'wreck').length < B.MAX_WRECKS) {
     const wreck = createWreck(state, v.x, v.y, Math.min(3, 1 + currentSector(state).tier));
     wreck.heading = v.heading;
@@ -79,7 +117,7 @@ export function hurtVessel(state, v, dmg) {
   }
 }
 
-// ---------- waves ----------
+// ---------- pirate waves ----------
 function spawnWave(state) {
   const ship = state.ship;
   const tier = currentSector(state).tier;
@@ -88,7 +126,7 @@ function spawnWave(state) {
   const a = rand(state) * TAU;
   // From the second sector on, some waves bring a gunboat.
   const gunboat = tier >= 1 && state.spawn.wave >= 2 && rand(state) < 0.2 + 0.12 * tier;
-  for (let i = 0; i < n && state.vessels.length < B.MAX_PIRATES; i++) {
+  for (let i = 0; i < n && pirateCount(state) < B.MAX_PIRATES; i++) {
     const d = randRange(state, 520, 620);
     const aa = a + i * 0.25;
     const kind = gunboat && i === 0 ? 'gunboat' : 'fighter';
@@ -100,12 +138,58 @@ function spawnWave(state) {
 function stepWaves(state, dt) {
   state.spawn.timer -= dt;
   if (state.spawn.timer > 0) return;
-  if (state.vessels.length < B.MAX_PIRATES) spawnWave(state);
+  if (pirateCount(state) < B.MAX_PIRATES) spawnWave(state);
   state.spawn.timer = Math.max(B.WAVE_INTERVAL_MIN, B.WAVE_INTERVAL - state.spawn.wave * 1.2) * pace(state);
 }
 
+// ---------- whom a ship fights ----------
+// The nearest enemy within reach: another ship, or the frigate when the crew is an enemy.
+function nearestEnemy(state, v, reach) {
+  const ship = state.ship;
+  let best = null;
+  let bestD = reach;
+  if (!state.over && enemies(state, v.side, CREW)) {
+    const d = dist(v.x, v.y, ship.x, ship.y);
+    if (d < bestD) {
+      best = ship;
+      bestD = d;
+    }
+  }
+  for (const o of state.vessels) {
+    if (o === v || o.hp <= 0 || !enemies(state, v.side, o.side)) continue;
+    const d = dist(v.x, v.y, o.x, o.y);
+    if (d < bestD) {
+      best = o;
+      bestD = d;
+    }
+  }
+  return best;
+}
+
+// What a ship goes for, or null when it has nobody to fight.
+//   raiders   the station they are raiding, unless an enemy comes close
+//   pirates   the nearest enemy, and otherwise the frigate, which they hunt wherever it is
+//   others    the nearest enemy in sight
+function pickTarget(state, v) {
+  if (v.raid && state.raid && state.raid.id === v.raid) {
+    const st = findThing(state, state.raid.station);
+    return nearestEnemy(state, v, 380) || (st ? { x: st.x, y: st.y, vx: 0, vy: 0 } : state.ship);
+  }
+  const enemy = nearestEnemy(state, v, SIGHT);
+  return enemy || (v.side === PIRATE ? state.ship : null);
+}
+
+// The way to a target: how far, and the heading that leads it.
+function aimAt(v, target) {
+  const dx = target.x - v.x;
+  const dy = target.y - v.y;
+  const d = Math.hypot(dx, dy);
+  const lead = Math.min(1.2, d / B.PIRATE_BOLT_SPEED) * 0.8;
+  return { target, dx, dy, d, lead, at: headingTo(dx + target.vx * lead, dy + target.vy * lead) };
+}
+
 // ---------- brains ----------
-function pirateBolt(state, x, y, heading, dmg) {
+function fireBolt(state, v, x, y, heading, dmg) {
   const f = forward(heading);
   state.bolts.push({
     x: x + f.x * 14,
@@ -113,14 +197,14 @@ function pirateBolt(state, x, y, heading, dmg) {
     vx: f.x * B.PIRATE_BOLT_SPEED,
     vy: f.y * B.PIRATE_BOLT_SPEED,
     ttl: B.PIRATE_BOLT_TTL,
-    owner: 'pirate',
+    side: v.side,
     dmg,
   });
-  state.events.push({ type: 'pirateShot' });
+  state.events.push({ type: v.side === PIRATE ? 'pirateShot' : 'otherShot' });
 }
 
 // Each brain gets the ship, its class and where its target is, and answers with the heading and speed it wants.
-// `aim` is { dx, dy, d, lead, at }: the way to the target, how far, and the heading that leads it.
+// `aim` is { target, dx, dy, d, lead, at }: the way to the target, how far, and the heading that leads it.
 const BRAINS = {
   // Fighters come in, fire a short burst when lined up, break off to one side and come around again.
   fighter(state, v, c, aim, dt) {
@@ -150,7 +234,7 @@ const BRAINS = {
     if (v.burst > 0) {
       v.burstTimer -= dt;
       if (v.burstTimer <= 0) {
-        pirateBolt(state, v.x, v.y, v.heading, c.dmg);
+        fireBolt(state, v, v.x, v.y, v.heading, c.dmg);
         v.burst--;
         v.burstTimer = c.burstGap;
         if (v.burst === 0) v.cool = c.cooldown;
@@ -163,22 +247,22 @@ const BRAINS = {
   gunboat(state, v, c, aim) {
     const want = aim.d < 290 ? headingTo(aim.dx, aim.dy) + v.veer * 1.5 : aim.at;
     if (v.cool <= 0 && aim.d < c.range && !state.over) {
-      pirateBolt(state, v.x, v.y, aim.at + randRange(state, -0.05, 0.05), c.dmg);
+      fireBolt(state, v, v.x, v.y, aim.at + randRange(state, -0.05, 0.05), c.dmg);
       v.cool = c.cooldown;
     }
     return { want, speed: c.speed };
   },
 
-  // The cruiser circles slowly, fires all its guns at the frigate and launches fighters now and then.
+  // The cruiser circles slowly, fires all its guns at its target and launches fighters now and then.
   cruiser(state, v, c, aim, dt) {
-    const ship = state.ship;
+    const t = aim.target;
     const close = aim.d < 340;
     v.guns = v.guns.map((timer, i) => {
       timer -= dt;
       if (timer > 0 || aim.d >= c.range || state.over) return timer;
       const m = toWorld(v, c.guns[i]);
-      const tx = ship.x + ship.vx * aim.lead - m.x;
-      const ty = ship.y + ship.vy * aim.lead - m.y;
+      const tx = t.x + t.vx * aim.lead - m.x;
+      const ty = t.y + t.vy * aim.lead - m.y;
       const f = forward(headingTo(tx, ty) + randRange(state, -0.04, 0.04));
       state.bolts.push({
         x: m.x + f.x * 8,
@@ -186,7 +270,7 @@ const BRAINS = {
         vx: f.x * B.PIRATE_BOLT_SPEED,
         vy: f.y * B.PIRATE_BOLT_SPEED,
         ttl: 2,
-        owner: 'pirate',
+        side: v.side,
         dmg: c.dmg,
       });
       return c.cooldown;
@@ -194,8 +278,8 @@ const BRAINS = {
     v.launch -= dt;
     if (v.launch <= 0) {
       v.launch = c.launchEvery;
-      for (let i = 0; i < 2 && state.vessels.length < B.MAX_PIRATES + 2; i++) {
-        state.vessels.push(makeVessel(state, 'fighter', v.x + (i ? 30 : -30), v.y));
+      for (let i = 0; i < 2 && pirateCount(state) < B.MAX_PIRATES + 2; i++) {
+        state.vessels.push(makeVessel(state, 'fighter', v.x + (i ? 30 : -30), v.y, v.side));
       }
     }
     return {
@@ -205,19 +289,27 @@ const BRAINS = {
   },
 };
 
-// Where a ship's target is. Raiders go for the station they are raiding, unless the frigate gets close.
-function takeAim(state, v) {
-  const ship = state.ship;
-  let target = ship;
-  if (v.raid && state.raid && state.raid.id === v.raid && dist(v.x, v.y, ship.x, ship.y) > 380) {
-    const st = findThing(state, state.raid.station);
-    if (st) target = { x: st.x, y: st.y, vx: 0, vy: 0 };
-  }
-  const dx = target.x - v.x;
-  const dy = target.y - v.y;
+// A ship with somewhere to go flies its legs one after another. Each leg is { x, y, hold, face, jump }:
+// fly there, stay for `hold` seconds facing `face`, and at a leg marked `jump` leave the sector.
+function stepErrand(state, v, c, dt) {
+  const leg = v.legs && v.legs[0];
+  if (!leg) return { want: v.heading, speed: 0 };
+  const dx = leg.x - v.x;
+  const dy = leg.y - v.y;
   const d = Math.hypot(dx, dy);
-  const lead = Math.min(1.2, d / B.PIRATE_BOLT_SPEED) * 0.8;
-  return { dx, dy, d, lead, at: headingTo(dx + target.vx * lead, dy + target.vy * lead) };
+  // Slow down on the way in, so that the ship stops on the spot instead of circling it.
+  if (d > 6) return { want: headingTo(dx, dy), speed: Math.min(c.speed, 10 + d * 0.9) };
+  if (leg.jump) {
+    v.gone = true;
+    state.fx.push({ type: 'warp', x: v.x, y: v.y, t: 0, dur: 0.7 });
+    return { want: v.heading, speed: 0 };
+  }
+  v.hold += dt;
+  if (v.hold >= leg.hold) {
+    v.legs.shift();
+    v.hold = 0;
+  }
+  return { want: leg.face ?? v.heading, speed: 0 };
 }
 
 export function stepVessels(state, dt) {
@@ -225,11 +317,12 @@ export function stepVessels(state, dt) {
   // A cruiser adds fighters to the list while it is being walked, and they get their turn in the same step.
   for (const v of state.vessels) {
     const c = SHIPS[v.kind];
-    const aim = takeAim(state, v);
     v.cool -= dt;
-    let { want, speed } = BRAINS[c.brain](state, v, c, aim, dt);
+    // A ship that can fight goes for its target. Without one, or without guns, it gets on with its errand.
+    const target = BRAINS[c.brain] ? pickTarget(state, v) : null;
+    let { want, speed } = target ? BRAINS[c.brain](state, v, c, aimAt(v, target), dt) : stepErrand(state, v, c, dt);
     // Keep some distance to other ships.
-    if (!c.aloof) {
+    if (!c.aloof && speed > 0) {
       for (const o of state.vessels) {
         if (o === v) continue;
         const od = dist(o.x, o.y, v.x, v.y);
@@ -254,6 +347,7 @@ export function stepAlarm(state, range) {
   let count = 0;
   let eta = null;
   for (const v of state.vessels) {
+    if (!enemies(state, v.side, CREW)) continue;
     const d = dist(v.x, v.y, ship.x, ship.y);
     if (d > range) continue;
     count++;

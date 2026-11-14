@@ -202,6 +202,36 @@ await page.evaluate(() => {
   s.ship.docked = null;
 });
 
+// Traffic: ships of the factions jump in, go about their business and leave the crew alone.
+await page.evaluate(() => {
+  const c = window.__critical,
+    s = c.state,
+    st = c.stations.find((x) => x.home);
+  s.spawn.timer = 1e9;
+  s.raidTimer = 1e9;
+  s.vessels = [];
+  s.bolts = [];
+  s.ship.x = st.x;
+  s.ship.y = st.y + 260;
+  s.ship.heading = 0;
+  s.ship.vx = s.ship.vy = 0;
+  s.ship.throttle = 0;
+  for (let i = 0; i < 60 && s.vessels.length < 4; i++) {
+    s.traffic.timer = 0;
+    c.advance(0.05);
+  }
+  s.traffic.timer = 1e9;
+  s.ship.hull = 100;
+  c.advance(25);
+});
+await page.waitForTimeout(200);
+check((await get("s.vessels.filter((v) => v.side !== 'pirate').length")) >= 3, 'ships of the factions jump in');
+check((await get('s.alarm.count')) === 0 && (await get('s.ship.hull')) >= 100, 'and they leave the crew alone');
+await shot('09b-traffic');
+await page.evaluate(() => {
+  window.__critical.state.traffic.timer = 30;
+});
+
 // Station: dock at the friendly yard, open the panel, refuel and buy upgrades.
 await page.evaluate(() => {
   const s = window.__critical.state,
@@ -224,6 +254,7 @@ check(
     (await get("window.__critical.stations.find((x) => x.align === 'friendly').interior.trade")) === true,
   'F walks aboard a friendly station',
 );
+check((await get('s.ship.dockShield')) > 0, 'a docked ship gets an extra shield');
 await page.waitForTimeout(400);
 await shot('12a-station-floor');
 await page.evaluate(() => {
@@ -283,12 +314,12 @@ await page.evaluate(() => {
 await page.evaluate(() => {
   const s = window.__critical.state,
     st = window.__critical.stations.find((x) => x.align === 'neutral');
+  // The pirates hold it now. Its guns are knocked out so that the test has time to work.
+  st.side = 'pirate';
   st.align = 'hostile';
   st.lock = 'locked';
-  st.guns = [
-    { x: -54, y: -54, hp: 45, heading: 0, cool: 9 },
-    { x: 54, y: 54, hp: 45, heading: 0, cool: 9 },
-  ];
+  for (const g of st.guns) g.hp = 0;
+  st.lastHit = s.time + 1e6;
   s.ship.x = st.x;
   s.ship.y = st.y + 140;
   s.ship.docked = st.id;

@@ -229,6 +229,11 @@ export function tryBoard(state, playerId) {
   if (!player || player.inside !== null || !ship.docked) return false;
   const wreck = findDock(state, ship.docked);
   if (!wreck) return false;
+  // A station that will not deal with the crew lets nobody aboard.
+  if (wreck.kind === 'station' && wreck.closed) {
+    state.events.push({ type: 'stationClosed', player: playerId, name: wreck.name });
+    return false;
+  }
   // Friendly and neutral stations are open to walk into. No lock, no teleporter needed.
   if (isTrading(wreck)) {
     if (!wreck.interior) wreck.interior = createInterior(state, wreck);
@@ -764,7 +769,9 @@ function blowUp(state, wreck) {
 // A station does not blow up. It fights back: fighters scramble and the lock resets.
 function fightBack(state, st) {
   st.breakin = null;
-  for (let i = 0; i < 2; i++) state.vessels.push(makeVessel(state, 'fighter', st.x + (i ? 130 : -130), st.y - 130));
+  for (let i = 0; i < 2; i++) {
+    state.vessels.push(makeVessel(state, 'fighter', st.x + (i ? 130 : -130), st.y - 130, st.side));
+  }
   state.events.push({ type: 'stationFightsBack', name: st.name });
 }
 

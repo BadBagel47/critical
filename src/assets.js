@@ -30,6 +30,16 @@ const SPRITES = [
   'part',
   'rocket',
   'pod',
+  'freighter',
+  'freighter_charter',
+  'fighter_charter',
+  'gunboat_charter',
+  'freighter_wardens',
+  'fighter_wardens',
+  'gunboat_wardens',
+  'freighter_drifters',
+  'fighter_drifters',
+  'gunboat_drifters',
 ];
 
 function loadImage(url) {

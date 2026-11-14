@@ -84,6 +84,7 @@ test('gunner shoots only with weapon power, and bolts kill a pirate', () => {
     burstTimer: 0,
     cool: 1e9,
     veer: 1,
+    side: 'pirate',
   });
   // Aim ahead of the target, the way a player has to.
   const aim = (st) => {
@@ -181,6 +182,9 @@ test('pause freezes the world for everyone', () => {
 
 test('pirates arrive, attack and can destroy an idle ship', () => {
   const s = createState(3);
+  // Far from any station, so that nobody else shoots the pirates.
+  s.ship.x = 6000;
+  s.ship.y = 6000;
   run(s, {}, 240);
   assert.ok(s.spawn.wave >= 3);
   assert.ok(s.ship.hull < B.HULL_MAX, 'ship took damage');
@@ -562,6 +566,7 @@ test('a buoy keeps watching until pirates shoot it down', () => {
     burstTimer: 0,
     cool: 1e9,
     veer: 1,
+    side: 'pirate',
   });
   run(s, {}, 1.5);
   assert.ok(buoys(s).length === 0 || buoys(s)[0].hp < B.BUOY_HP);
@@ -585,10 +590,15 @@ import {
   teleCooldown,
   itemsOf,
 } from '../src/sim/upgrades.js';
-import { servicePrices, turnHostile } from '../src/sim/stations.js';
+import { servicePrices, takeOver } from '../src/sim/stations.js';
 import { jumpBlocked } from '../src/sim/sectors.js';
 
 const station = (s, align) => stations(s).find((x) => x.align === align);
+// The side of a station falls out with the crew for good, and the station turns on them.
+function turnHostile(s, st) {
+  s.standing[st.side] = -100;
+  step(s, {}, DT);
+}
 function atStation(s, st) {
   s.ship.docked = st.id;
   s.ship.vx = s.ship.vy = 0;
@@ -693,7 +703,11 @@ test('a hostile station is broken into, boarded and taken over from its terminal
   run(s, { away: { 0: { use: true } } }, B.TAKEOVER_TIME + 0.2);
   assert.equal(st.align, 'friendly');
   assert.equal(st.shipyard, true);
-  assert.equal(st.guns.length, 0);
+  assert.equal(st.side, 'crew', "the station is the crew's own now");
+  assert.ok(
+    st.guns.every((g) => g.hp > 0),
+    'and its guns are theirs',
+  );
 });
 
 // ---------- weapons and darts ----------
@@ -714,6 +728,7 @@ const target = (s, x, y, kind = 'fighter', hp = 24) => {
     burstTimer: 0,
     cool: 1e9,
     veer: 1,
+    side: 'pirate',
     guns: [9, 9, 9],
     launch: 1e9,
   };
@@ -1023,17 +1038,61 @@ test('a station under attack calls for help, and a neutral one repays it with a 
   assert.equal(st.favor, 0, 'the favour runs out');
 });
 
-test('a distress call that nobody answers just ends', () => {
+// A raid on the free station in the first sector, with the frigate far away.
+function raidFarAway() {
   const s = quiet(createState(1));
+  s.traffic.timer = 1e9;
   s.raidTimer = 0.1;
   s.ship.x = 9000;
   s.ship.y = 9000;
   run(s, {}, 0.5);
-  assert.ok(s.raid);
-  run(s, {}, B.RAID_TIME + 1);
+  const st = stations(s).find((x) => x.id === s.raid.station);
+  return { s, st };
+}
+
+test('a station that nobody helps fights for itself, and is not grateful when it wins', () => {
+  const { s, st } = raidFarAway();
+  assert.equal(st.home, false, "the crew's own yard is never raided");
+  const credits = s.credits;
+  const seen = [];
+  for (let i = 0; i < 200 * 60 && s.raid; i++) {
+    step(s, {}, DT);
+    seen.push(...s.events.map((e) => e.type));
+    s.events.length = 0;
+    s.traffic.timer = 1e9;
+  }
+  assert.equal(s.raid, null, 'the raid ends');
+  assert.ok(seen.includes('distressHeld'), 'the station held out by itself');
+  assert.equal(st.align, 'neutral');
+  assert.equal(st.favor, 0);
+  assert.equal(s.credits, credits, 'no reward for a crew that did not come');
+});
+
+test('a station that loses the fight falls to the pirates, and can be taken back', () => {
+  const { s, st } = raidFarAway();
+  // Weaken it so much that the raiders are sure to win.
+  st.shield = 0;
+  st.hp = 20;
+  for (const g of st.guns) g.hp = 0;
+  const seen = [];
+  for (let i = 0; i < 120 * 60 && st.side !== 'pirate'; i++) {
+    step(s, {}, DT);
+    seen.push(...s.events.map((e) => e.type));
+    s.events.length = 0;
+  }
+  assert.equal(st.side, 'pirate');
+  assert.equal(st.align, 'hostile');
+  assert.equal(st.lock, 'locked');
+  assert.ok(seen.includes('stationFell'));
+  assert.ok(
+    st.guns.every((g) => g.hp > 0),
+    'the pirates man its guns',
+  );
+  run(s, {}, 1);
   assert.equal(s.raid, null);
-  assert.equal(s.vessels.length, 0, 'the raiders are gone');
-  assert.ok(stations(s).every((st) => st.favor === 0));
+  takeOver(s, st);
+  assert.equal(st.side, 'crew');
+  assert.equal(st.align, 'friendly');
 });
 
 // ---------- more upgrades and boarding gear ----------
@@ -1092,7 +1151,7 @@ test('point defense stops some incoming fire, and repair drones mend the ship', 
     s.ship.power.shields = 0;
     if (pd) s.ship.mods.pd = 1;
     for (let i = 0; i < 200; i++) {
-      s.bolts.push({ x: 6000, y: 5800, vx: 0, vy: 290, ttl: 1.5, owner: 'pirate', dmg: 1 });
+      s.bolts.push({ x: 6000, y: 5800, vx: 0, vy: 290, ttl: 1.5, side: 'pirate', dmg: 1 });
       run(s, {}, 0.1);
     }
     run(s, {}, 2);

@@ -37,14 +37,16 @@ export const THINGS = {
       { x: -96, y: 0 },
       { x: 96, y: 0 },
     ],
-    // Where a hostile station has its guns: on two of the pads on the ring.
+    // Where a station has its guns: on the four pads on the ring.
     guns: [
       { x: -54, y: -54 },
+      { x: 54, y: -54 },
       { x: 54, y: 54 },
+      { x: -54, y: 54 },
     ],
     lock: 'code',
     inside: true,
-    onMap: (st) => ({ align: st.align, shipyard: st.shipyard, name: st.name }),
+    onMap: (st) => ({ align: st.align, side: st.side, shipyard: st.shipyard, name: st.name }),
     label: 'STATION',
     persist: true,
   },
@@ -66,6 +68,7 @@ export const THINGS = {
 
 // Ship classes, other than the crew's own frigate.
 //   brain     how it flies and fights (see vessels.js)
+//   length    from nose to stern in pixels, for the classes that dock at stations
 //   tierHp    it gets tougher in later sectors
 //   salvage   what it leaves behind: a fixed count, or one piece with some chance, worth `value` credits
 //   aloof     it does not swerve to keep its distance to other ships
@@ -103,6 +106,22 @@ export const SHIPS = {
     salvage: { count: 2, value: [20, 40] },
     // A destroyed gunboat is left drifting as a wreck that can be boarded.
     leavesWreck: true,
+  },
+  // A slow cargo ship that carries containers on a spine. Unarmed. Sprite is 64 x 140.
+  freighter: {
+    name: 'FREIGHTER',
+    brain: 'trader',
+    hp: 140,
+    radius: 26,
+    length: 140,
+    speed: 55,
+    turn: 0.7,
+    dmg: 0,
+    cooldown: 0,
+    bounty: 0,
+    boom: { size: 50, dur: 0.9 },
+    salvage: { count: 3, value: [15, 35] },
+    aloof: true,
   },
   // Sprite is 96 x 168.
   cruiser: {
