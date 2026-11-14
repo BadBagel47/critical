@@ -214,6 +214,7 @@ Meddelandet säger vilken station, vem som anfaller, nivån och ungefär hur lå
 
 | Steg | Innehåll | Punkter |
 |---|---|---|
+| Före | Större och genererade inomhusmiljöer som följer objektets form, och smartare vakter i flera sorter. Smygandet bygger på dem: rundor, skydd och vägar förbi turrets hör till planlösningen | D-128, F-127, D-101, F-125, F-126 |
 | 1 | Lägena, ljuset, vakter som patrullerar och ser, tranq gun, TAKE DOWN, kameror, turrets som smygs förbi | F-102, F-107, F-108, F-115, F-116 |
 | 2 | Rollernas bonusar | F-113 |
 | 3 | Mainframen med hack i nivåer, och panelen för ägda stationer | F-109, F-110 |
