@@ -144,18 +144,30 @@ def flat_alarm(im, ox, oy, t):
     return im
 
 
-def mood(im, ox, oy, kind, t):
+# Where the people and the loot are in the room that is used to show lockdown and alarm (the pirates' room).
+PLAYER = (2 * T + 8, 3 * T + 12)
+GUARD = (7 * T + 8, 4 * T + 14)
+LOOT = (9 * T + 8, 2 * T + 10)
+
+
+def mood(im, ox, oy, kind, t, clear=True):
     """The same room in lockdown, with the alarm on, and with a louder alarm where every lamp flashes.
     `t` is the time in seconds, for the pictures that move.
 
     The light is worked out the way real light behaves: the room is multiplied by a map of how much light
     falls on each spot, in which colour. What is black stays black, and a red light makes things red instead of
-    laying a red haze over them. The lamps themselves then get a glow added on top."""
+    laying a red haze over them. The lamps themselves then get a glow added on top.
+
+    With `clear` the dark is made readable in three ways: the darkest tones are lifted apart before the light
+    is worked out, the way eyes get used to the dark. The player carries a lamp that lights what is near. And
+    what matters, guards and loot, has a small light of its own."""
     w, h = COLS * T, ROWS * T
     cx, cy = 5 * T, T + 6
     beat = t * 2 % 1 < 0.5
     box = (ox, oy, ox + w, oy + h)
     scene = im.crop(box).convert('RGB')
+    if clear:
+        scene = scene.point([round(255 * (v / 255) ** 0.62) for v in range(256)] * 3)
     black = lambda: Image.new('RGB', (w, h), (0, 0, 0))
 
     def beam(layer, angle, colour, spread):
@@ -195,6 +207,11 @@ def mood(im, ox, oy, kind, t):
             add(pool, x, y + 8, 40, (60, 18, 8))
             add(pool, x, y + 8, 22, (80, 40, 16))
             pool(glow, x, y, 8, (90, 40, 14))
+    if clear:
+        # The player's own lamp, the visor of the guard and the glint of the loot.
+        add(pool, *PLAYER, 34, (46, 46, 54)); add(pool, *PLAYER, 20, (50, 50, 56))
+        add(pool, *GUARD, 11, (20, 44, 22))
+        add(pool, *LOOT, 11, (54, 40, 14))
     # Light that falls on something is counted twice, so that a strong lamp can light a dark floor.
     lit = ImageChops.multiply(scene, light)
     scene = ImageChops.add(ImageChops.add(ImageChops.multiply(scene, Image.new('RGB', (w, h), ambient)), ImageChops.add(lit, lit)), glow)
@@ -222,23 +239,25 @@ def mood_gif():
     W, H = 8 + cw * 4, 20 + ROWS * T + 34
     base = Image.new('RGBA', (W, H), S.rgb(S.BG) + (255,))
     d = ImageDraw.Draw(base)
-    S.txt(d, 8, 6, 'LOCKDOWN AND ALARM  ·  THE SAME ROOM, LIT THE WAY REAL LIGHT WORKS: DARK STAYS DARK, AND LIGHT IS ADDED ON TOP', S.STEEL[3])
-    views = (('LOCKDOWN', 'DARK, ONE SLOW RED LIGHT', 'lockdown'),
-             ('ALARM  ·  CALMER', 'RED LIGHT THAT SWELLS AND FADES', 'alarm'),
-             ('ALARM  ·  LOUDER', 'LAMPS FLASH, FAST BEAMS', 'alarm2'),
-             ('BEFORE  ·  A SHEET OF RED', 'MILKY: THE BLACKS ARE LOST', 'flat'))
-    for i, (name, note, kind) in enumerate(views):
+    S.txt(d, 8, 6, 'LOCKDOWN AND ALARM  ·  THE SAME LIGHT, BEFORE AND AFTER THE DARK IS MADE EASIER TO READ', S.STEEL[3])
+    views = (('LOCKDOWN  ·  BEFORE', 'HARD TO SEE IN THE DARK', 'lockdown', False),
+             ('LOCKDOWN  ·  CLEARER', 'YOUR LAMP, AND WHAT MATTERS', 'lockdown', True),
+             ('ALARM  ·  BEFORE', 'THE DARK SWALLOWS IT', 'alarm2', False),
+             ('ALARM  ·  CLEARER', 'SAME LIGHT, MORE TO SEE', 'alarm2', True))
+    me = S.person(S.STEEL, S.OCHRE, S.GLASS).rotate(-90, resample=Image.NEAREST)
+    for i, (name, note, kind, clear) in enumerate(views):
         x = 8 + i * cw
         base = room(base, x, 20, STYLES['PIRATES'], seed=8)
+        base.alpha_composite(me, (x + PLAYER[0] - 8, 20 + PLAYER[1] - 8))
         d = ImageDraw.Draw(base)
-        S.txt(d, x + COLS * T // 2, 20 + ROWS * T + 5, name, S.STEEL[1] if kind == 'flat' else S.EMBER[2], 'c')
+        S.txt(d, x + COLS * T // 2, 20 + ROWS * T + 5, name, S.EMBER[2] if clear else S.STEEL[1], 'c')
         S.txt(d, x + COLS * T // 2, 20 + ROWS * T + 17, note, S.STEEL[1], 'c')
     frames = []
     count, step = 24, 0.125
     for f in range(count):
         im = base.copy()
-        for i, (_, _, kind) in enumerate(views):
-            im = flat_alarm(im, 8 + i * cw, 20, f * step) if kind == 'flat' else mood(im, 8 + i * cw, 20, kind, f * step)
+        for i, (_, _, kind, clear) in enumerate(views):
+            im = mood(im, 8 + i * cw, 20, kind, f * step, clear)
         frames.append(im.convert('RGB').resize((W * 2, H * 2), Image.NEAREST))
     # One palette for all frames, so that the colours do not flicker from frame to frame.
     strip = Image.new('RGB', (W * 2, H * 2 * 6))
@@ -267,7 +286,7 @@ def style_sheet():
     d = ImageDraw.Draw(im)
     S.txt(d, 8, y - 10, 'THE SAME ROOM IN THREE STATES', S.STEEL[3])
     pirates = STYLES['PIRATES']
-    for i, (name, kind) in enumerate((('CALM  ·  AFTER YOU HAVE TAKEN IT', None), ('LOCKDOWN  ·  DARK, A RED LIGHT SWEEPS', 'lockdown'), ('ALARM  ·  RED, FLASHING, SIREN', 'alarm'))):
+    for i, (name, kind) in enumerate((('CALM  ·  AFTER YOU HAVE TAKEN IT', None), ('LOCKDOWN  ·  DARK, A RED LIGHT SWEEPS', 'lockdown'), ('ALARM  ·  LAMPS FLASH, BEAMS SPIN, SIREN', 'alarm2'))):
         x = 8 + i * cw
         im = room(im, x, y, pirates, seed=8)
         if kind:
