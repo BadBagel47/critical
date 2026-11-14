@@ -63,6 +63,7 @@ Spelet
 - Inget moment pausar spelet. En pausknapp fryser världen för alla.
 - Automatisk paus vid tappad anslutning sker först efter en stund. Gränsen prövas ut.
 - Publicering: GitHub Pages så länge, flytt till Cloudflare när nätverksmotorn byggs in (2026-11-14).
+- Testläge: T på startskärmen, eller `?test` sist i adressen, startar spelet med alla uppgraderingar, all utrustning, alla stjärnkartor och 5000 krediter (2026-11-14).
 - Styrning: tangentbord och mus, eller handkontroll. Agentens val, användaren har inte provat än.
 - Ljudet skapas i webbläsaren utan ljudfiler. N slår av och på, och valet sparas i webbläsaren.
 - Handkontroll: vänster spak styr eller flyttar pekaren, höger spak siktar, avtryckarna gasar och skjuter, RB och LB byter post, START pausar och BACK öppnar kartan. Tabellen finns i `src/input.js`.

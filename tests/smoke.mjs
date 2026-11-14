@@ -218,6 +218,20 @@ await shot('11-lost');
 await page.keyboard.press('KeyR'); await page.waitForTimeout(200);
 check(await get('s.over') === false && await get('s.time') < 2, 'R starts a new run');
 
+// Test mode: T on the title screen starts with everything unlocked.
+const testPage = await browser.newPage({ viewport: { width: 1280, height: 720 }, ignoreHTTPSErrors: !!remote });
+testPage.on('pageerror', (e) => errors.push('test mode page: ' + String(e)));
+await testPage.goto(url);
+await testPage.waitForFunction(() => window.__critical, null, { timeout: 10000 });
+await testPage.waitForTimeout(200);
+if (shots) await testPage.screenshot({ path: `${shots}/18-title.png` });
+await testPage.keyboard.press('KeyT'); await testPage.waitForTimeout(300);
+const tget = (expr) => testPage.evaluate(`(() => { const s = window.__critical.state, v = window.__critical.view; return ${expr}; })()`);
+check(await tget('v.screen') === 'game' && await tget('s.test') === true, 'T starts test mode');
+check(await tget('Object.keys(s.ship.mods).length') > 20 && await tget('s.credits') === 5000, 'test mode has everything installed and credits to spend');
+if (shots) await testPage.screenshot({ path: `${shots}/19-test-mode.png` });
+await testPage.close();
+
 // Sound: N switches it off and on without errors.
 await page.keyboard.press('KeyN'); await page.waitForTimeout(80);
 const mutedNow = await page.evaluate(() => window.__critical.audio.isMuted());

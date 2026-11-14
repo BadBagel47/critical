@@ -857,3 +857,17 @@ test('a hacking kit gives more time in a break-in', () => {
   for (const s of [a, b]) { s.ship.docked = s.wrecks[0].id; step(s, { system: { board: [0] } }, DT); }
   assert.ok(b.wrecks[0].breakin.total > a.wrecks[0].breakin.total * 1.3);
 });
+
+// ---------- test mode ----------
+test('test mode starts with everything installed, room for it, credits and all charts', () => {
+  const s = createState(1, { test: true });
+  assert.equal(s.test, true);
+  for (const id of Object.keys(CATALOG)) assert.ok(['INSTALLED', 'MAXED', 'OWNED'].includes(blockedReason(s, id)), id + ' is in place');
+  assert.ok(slotsUsed(s.ship, 'hard') <= s.ship.slots.hard && slotsUsed(s.ship, 'system') <= s.ship.slots.system);
+  assert.equal(s.ship.hull, hullMax(s.ship)); assert.equal(s.ship.fuel, fuelMax(s.ship));
+  assert.equal(s.ship.rockets, B.ROCKET_LOAD); assert.equal(s.ship.dartStock, B.DART_COUNT);
+  assert.equal(s.charts.length, s.sectors.length);
+  assert.deepEqual(weaponsOf(s.ship), ['pulse', 'heavy', 'rockets']);
+  assert.equal(createState(1).test, false, 'a normal game is unchanged');
+  run(s, { captain: { throttle: 1, boost: true, darts: false }, gunner: { aim: { x: 0, y: -200 }, fire: true } }, 5);
+});

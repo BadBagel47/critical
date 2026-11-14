@@ -79,7 +79,7 @@ function dockedLine(state) {
 export function drawHud(ctx, state, view, assets, dock) {
   const { font } = assets, ship = state.ship;
   drawTabs(ctx, font, view);
-  label(ctx, font, VIEW_W - 8, 8, 'CREDITS  ' + state.credits, { anchor: 'r', fg: COL.ochre[2] });
+  label(ctx, font, VIEW_W - 8, 8, (state.test ? 'TEST MODE   ' : '') + 'CREDITS  ' + state.credits, { anchor: 'r', fg: COL.ochre[2] });
   label(ctx, font, VIEW_W - 8, 24, `${currentSector(state).name}   KILLS  ${state.kills}   ${fmtTime(state.time)}`, { anchor: 'r', fg: COL.dim });
   // Status lines at the top centre, most urgent first.
   const lines = [];
@@ -154,6 +154,7 @@ export function drawTitle(ctx, font, assets, t) {
   font.draw(ctx, 'CRITICAL ST8', VIEW_W / 2, 30, COL.text, { align: 'c', scale: 5 });
   font.draw(ctx, 'ONE SHIP  ·  THREE POSTS  ·  FIVE SECTORS  ·  SOLO BUILD', VIEW_W / 2, 72, COL.ion[1], { align: 'c' });
   drawHelp(ctx, font, 106);
-  if (Math.floor(t * 2) % 2 === 0) font.draw(ctx, 'PRESS ENTER TO LAUNCH', VIEW_W / 2, 306, COL.ochre[2], { align: 'c', scale: 2 });
-  font.draw(ctx, 'EARLY VERSION  ·  ONLINE PLAY COMES LATER', VIEW_W / 2, 340, COL.faint, { align: 'c' });
+  if (Math.floor(t * 2) % 2 === 0) font.draw(ctx, 'PRESS ENTER TO LAUNCH', VIEW_W / 2, 302, COL.ochre[2], { align: 'c', scale: 2 });
+  font.draw(ctx, 'PRESS T FOR TEST MODE  ·  EVERYTHING UNLOCKED FROM THE START', VIEW_W / 2, 326, COL.ion[1], { align: 'c' });
+  font.draw(ctx, 'EARLY VERSION  ·  ONLINE PLAY COMES LATER', VIEW_W / 2, 344, COL.faint, { align: 'c' });
 }

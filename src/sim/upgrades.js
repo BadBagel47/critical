@@ -62,6 +62,19 @@ export function blockedReason(state, id, discount = 1) {
   return null;
 }
 
+// Test mode: everything is installed from the start, with slots to hold it all and plenty of credits.
+export function applyTestLoadout(state) {
+  const ship = state.ship;
+  for (const id of Object.keys(CATALOG)) ship.mods[id] = CATALOG[id].levels || 1;
+  ship.slots.hard = Math.max(ship.slots.hard + 2, slotsUsed(ship, 'hard'));
+  ship.slots.system = Math.max(ship.slots.system + 2, slotsUsed(ship, 'system'));
+  ship.hull = hullMax(ship); ship.shield = shieldMax(ship); ship.fuel = fuelMax(ship);
+  ship.rockets = B.ROCKET_LOAD; ship.dartStock = B.DART_COUNT;
+  state.credits = 5000; state.charts = state.sectors.map((s) => s.id);
+  for (const p of state.players) p.hp = crewHpMax(ship);
+  state.test = true;
+}
+
 export function buyUpgrade(state, id, discount = 1) {
   const reason = blockedReason(state, id, discount);
   if (reason) { state.events.push({ type: 'cannotBuy', reason }); return false; }

@@ -5,9 +5,6 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – strong model, high level – Testläge
-- F-051 – Ett testläge där man har alla saker från början, så att allt går att prova direkt
-
 **B** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
@@ -30,7 +27,6 @@ Väntar på användaren: D-052 (storyläge eller grund för vad spelet går ut p
 
 | ID | Vad | Status |
 |---|---|---|
-| F-051 | Testläge där man har alla saker från början så att de kan testas | Ej påbörjad |
 | F-050 | Justerade nivåer för vapen, sköld, motorer och engineering så att det känns att det är svårt i början och att det ska vara värt att uppgradera | Ej påbörjad |
 
 ## Medel
@@ -104,3 +100,4 @@ Väntar på användaren: D-052 (storyläge eller grund för vad spelet går ut p
 | F-041 | Ljud för skott, träffar, larm, motor och paneler, skapat i webbläsaren utan ljudfiler. N slår av och på | 2026-11-14 |
 | F-042 | Stöd för handkontroll på alla poster, i bordning och i panelerna | 2026-11-14 |
 | D-033 | Google Fonts borttaget från den publicerade designsidan. Genomgång av vad spelet laddar och sparar, med en kontroll som går att köra om | 2026-11-14 |
+| F-051 | Testläge där man har alla saker från början: T på startskärmen, eller ?test i adressen | 2026-11-14 |

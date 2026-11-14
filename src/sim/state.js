@@ -1,5 +1,6 @@
 import { B, SHIP_GEOM } from './balance.js';
 import { createSectors, generateSector, createWreck } from './sectors.js';
+import { applyTestLoadout } from './upgrades.js';
 
 export { createWreck };
 
@@ -24,9 +25,10 @@ export function createShip() {
   };
 }
 
-export function createState(seed = 1) {
+// `options.test` starts the game with everything unlocked, for trying things out.
+export function createState(seed = 1, options = {}) {
   const s = {
-    seed, rng: seed >>> 0, time: 0, paused: false, pausedBy: null, over: false, won: false,
+    seed, rng: seed >>> 0, time: 0, paused: false, pausedBy: null, over: false, won: false, test: false,
     ship: createShip(), pirates: [], bolts: [], rockets: [], beams: [], darts: [], fx: [],
     wrecks: [], rocks: [], stations: [], pods: [], map: null, known: [], probes: [], buoys: [],
     raid: null, raidTimer: 0, salvage: [],
@@ -36,5 +38,6 @@ export function createState(seed = 1) {
     sectors: createSectors(), sector: 0, charts: [0], jump: null, alarm: { count: 0, eta: null },
   };
   generateSector(s, 0);
+  if (options.test) applyTestLoadout(s);
   return s;
 }

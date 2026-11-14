@@ -6,7 +6,7 @@ const PAD_BUTTONS = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'BACK', 'START'
 // What each button means in each situation, as the keyboard key it stands in for. CLICK presses the cursor.
 const PAD_KEYS = {
   all: { START: 'KeyP', BACK: 'KeyM', B: 'KeyF' },
-  title: { A: 'Enter', START: 'Enter' },
+  title: { A: 'Enter', START: 'Enter', Y: 'KeyT' },
   captain: { A: 'KeyE', X: 'KeyX', Y: 'KeyR', L3: 'ShiftLeft', RB: 'Tab', LB: 'PadPrevPost' },
   gunner: { RIGHT: 'KeyE', LEFT: 'KeyQ', RB: 'Tab', LB: 'PadPrevPost' },
   engineer: { UP: 'ArrowUp', DOWN: 'ArrowDown', LEFT: 'ArrowLeft', RIGHT: 'ArrowRight', X: 'KeyQ', Y: 'KeyB', A: 'CLICK', RB: 'Tab', LB: 'PadPrevPost' },

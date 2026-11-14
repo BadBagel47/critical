@@ -31,7 +31,9 @@ resize();
 const input = createInput(canvas);
 input.onGesture = initAudio;
 const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [], hacking: false, map: false, station: false, stationTab: 'hull', wonSeen: false, padAim: 0 };
-let state = createState(Date.now() % 100000);
+// Test mode can be started from the title screen with T, or by adding ?test to the address.
+let testMode = /[?&]test\b/.test(window.location.search);
+let state = createState(Date.now() % 100000, { test: testMode });
 let assets = null;
 
 const dockedWreck = () => findDock(state, state.ship.docked);
@@ -130,7 +132,11 @@ function commands() {
 
 function localKeys() {
   if (view.screen === 'title') {
-    if (input.hit('Enter', 'NumpadEnter', 'Space') || input.mouse.clicked) { view.screen = 'game'; input.endFrame(); }
+    const test = input.hit('KeyT');
+    if (test || input.hit('Enter', 'NumpadEnter', 'Space') || input.mouse.clicked) {
+      if (test && !state.test) { testMode = true; state = createState(Date.now() % 100000, { test: true }); }
+      view.screen = 'game'; input.endFrame();
+    }
     return;
   }
   if (input.hit('KeyH')) view.help = !view.help;
@@ -144,7 +150,7 @@ function localKeys() {
   if (input.hit('Tab')) view.post = POSTS[(POSTS.indexOf(view.post) + 1) % POSTS.length];
   if (input.hit('PadPrevPost')) view.post = POSTS[(POSTS.indexOf(view.post) + POSTS.length - 1) % POSTS.length];
   if (state.over && input.hit('KeyR')) {
-    view.toasts = []; view.hacking = false; view.map = false; view.station = false; view.wonSeen = false; state = createState((state.seed * 7 + 13) % 100000); view.post = 'captain'; view.cam = { x: 0, y: 0 }; }
+    view.toasts = []; view.hacking = false; view.map = false; view.station = false; view.wonSeen = false; state = createState((state.seed * 7 + 13) % 100000, { test: testMode }); view.post = 'captain'; view.cam = { x: 0, y: 0 }; }
 }
 
 function render(t) {
