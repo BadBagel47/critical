@@ -252,14 +252,15 @@ const HELP = [
   ['', 'V  OPEN AND FOLD AWAY THE PANEL     Q  SCANNER PULSE     B  DROP A BUOY     ON THE MAP  CLICK FOR A PROBE'],
   ['BOARDING', 'W A S D  MOVE     MOUSE  AIM     CLICK  FIRE     G  GRENADE     F  USE     C  CHARGE     T  TURRET'],
   ['', 'O  MENU: SAVE, LOAD AND SOUND     N  ALL SOUND ON AND OFF     A GAMEPAD WORKS TOO'],
+  ['TEST MODE', '7  PIRATE FIGHTERS     8  PIRATE GUNBOAT     9  A RAID ON A STATION     0  REMOVE ALL PIRATES'],
 ];
 export function drawHelp(ctx, font, y0 = 96) {
-  rect(ctx, 30, y0 - 18, 580, 186, COL.panel, COL.line);
+  rect(ctx, 30, y0 - 18, 580, 202, COL.panel, COL.line);
   font.draw(ctx, 'CONTROLS', 42, y0 - 6, COL.text);
   HELP.forEach(([who, text], i) => {
     const y = y0 + 14 + i * 16;
     if (who) font.draw(ctx, who, 42, y, COL[who.toLowerCase()] || COL.text);
     font.draw(ctx, text, 110, y, COL.dim);
   });
-  font.draw(ctx, 'A POST YOU LEAVE KEEPS DOING WHAT YOU SET IT TO.', 42, y0 + 150, COL.faint);
+  font.draw(ctx, 'A POST YOU LEAVE KEEPS DOING WHAT YOU SET IT TO.', 42, y0 + 166, COL.faint);
 }

@@ -16,6 +16,7 @@ import { thingsOf, portsOf, solidCircles } from '../src/sim/things.js';
 import { hurtVessel, makeVessel } from '../src/sim/vessels.js';
 import { weaponsOf } from '../src/sim/weapons.js';
 import { SHIPS, HULLS } from '../src/sim/kinds.js';
+import { summon } from '../src/sim/testing.js';
 import { createWreck, jumpBlocked } from '../src/sim/sectors.js';
 import { B, SHIP_GEOM } from '../src/sim/balance.js';
 import { headingTo } from '../src/sim/util.js';
@@ -1368,6 +1369,37 @@ test('a test game has one of everything that can be docked with close to the sta
   const usual = createState(4);
   assert.equal(stations(usual).length, 2, 'an ordinary game is laid out as before');
   assert.ok(stations(usual).some((st) => near(st) > 1200));
+});
+
+test('a test game has no pirates of its own, and they can be called in', () => {
+  const s = createState(6, { test: true });
+  const pirates = () => s.vessels.filter((v) => v.side === 'pirate').length;
+  run(s, {}, 400);
+  assert.equal(pirates(), 0, 'no waves come by themselves');
+  assert.equal(s.raid, null, 'and no raids');
+  assert.equal(s.spawn.wave, 0);
+  assert.equal(summon(s, 'fighters'), 'THREE PIRATE FIGHTERS');
+  assert.equal(pirates(), 3);
+  assert.ok(s.events.some((e) => e.type === 'wave'));
+  summon(s, 'gunboat');
+  assert.equal(s.vessels.filter((v) => v.kind === 'gunboat' && v.side === 'pirate').length, 1);
+  summon(s, 'raid');
+  assert.ok(s.raid, 'a raid starts when asked for');
+  assert.ok(pirates() > 5);
+  assert.equal(summon(s, 'raid'), 'A RAID IS ALREADY ON');
+  summon(s, 'clear');
+  assert.equal(pirates(), 0);
+  assert.equal(s.raid, null);
+  summon(s, 'traffic');
+  run(s, {}, 0.1);
+  assert.ok(
+    s.vessels.some((v) => v.side !== 'pirate'),
+    'traffic comes at once',
+  );
+  assert.equal(summon(s, 'nothing'), null);
+  const usual = createState(6);
+  assert.equal(summon(usual, 'fighters'), null, 'nothing can be called in in an ordinary game');
+  assert.equal(usual.vessels.length, 0);
 });
 
 test('test mode starts with everything installed, room for it, credits and all charts', () => {

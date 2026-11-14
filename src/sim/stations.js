@@ -298,7 +298,7 @@ function stepRepairs(st, time, dt) {
 // ---------- distress calls ----------
 // Now and then pirates raid a station that trades, and it calls for help. The crew's own yard is left alone,
 // so that there is always somewhere to refuel and repair.
-function startRaid(state) {
+export function startRaid(state) {
   const ship = state.ship;
   const open = thingsOf(state, 'station').filter((st) => st.align !== 'hostile' && !st.home && st.id !== ship.docked);
   if (!open.length) {
@@ -342,6 +342,8 @@ function thankCrew(state, st) {
 function stepRaids(state, dt) {
   const ship = state.ship;
   if (!state.raid) {
+    // A test game has no raids unless they are asked for, see testing.js.
+    if (state.test) return;
     state.raidTimer -= dt;
     if (state.raidTimer <= 0) startRaid(state);
     return;

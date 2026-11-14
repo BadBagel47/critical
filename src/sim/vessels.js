@@ -141,6 +141,8 @@ function spawnWave(state) {
 }
 
 function stepWaves(state, dt) {
+  // A test game has no pirates unless they are asked for, see testing.js.
+  if (state.test) return;
   state.spawn.timer -= dt;
   if (state.spawn.timer > 0) return;
   if (pirateCount(state) < B.MAX_PIRATES) spawnWave(state);

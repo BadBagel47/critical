@@ -4,6 +4,7 @@ import { createState } from '../src/sim/state.js';
 import { stepPlayers } from '../src/sim/step.js';
 import { addPlayer } from '../src/sim/players.js';
 import { thingsOf, findThing } from '../src/sim/things.js';
+import { summon } from '../src/sim/testing.js';
 
 export const DT = 1 / 60;
 const BUY = [
@@ -114,7 +115,11 @@ function inputs(state, i) {
     if (t >= 55 && t < 55.2) walk({ mx: 0, my: 0, fire: false, usePressed: at(55.1) });
     if (at(58)) captain.captain = { dock: true };
   } else if (t < 80) {
-    if (at(61)) state.spawn.timer = 0;
+    // Pirates: a wave is due at once. A test game has none of its own, so there they are called in.
+    if (at(61)) {
+      if (state.test) summon(state, 'fighters');
+      else state.spawn.timer = 0;
+    }
     fly();
   } else if (t < 105) {
     // A trading station: buy things at the desks, walk around, leave.

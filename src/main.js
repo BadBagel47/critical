@@ -11,6 +11,7 @@ import { updateMusic } from './music.js';
 import { createView, settle, playerInput, viewKeys, drawScreen, buttonsOf, SCREENS } from './screens.js';
 import { createState } from './sim/state.js';
 import { step, stepPlayers } from './sim/step.js';
+import { summon } from './sim/testing.js';
 import { findThing, thingsOf } from './sim/things.js';
 import { playerById } from './sim/players.js';
 import { resetEffects, updateEffects, updateInside } from './render/effects.js';
@@ -135,6 +136,11 @@ game.actions = {
   },
   // The game saves itself every time the ship docks.
   autosave: () => save(AUTO),
+  // In a test game: call in pirates, a raid or traffic, and say what came.
+  summon(what) {
+    const came = summon(game.state, what);
+    if (came) toast(game.view, game.state, 'TEST  ·  ' + came, COL.ochre[2], 3);
+  },
 };
 
 // What R does once the ship is lost. A hardcore run is over for good and takes its saves with it.

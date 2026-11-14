@@ -83,6 +83,10 @@ const PAGES = {
         { id: 'load', label: 'LOAD GAME', right: hard, off: !!hard, run: () => openPage(game, 'load') },
         { id: 'sound', label: 'SOUND', run: () => openPage(game, 'sound') },
         { id: 'export', label: 'EXPORT THIS GAME TO A FILE', right: hard, off: !!hard, run: a.exportGame },
+        // Only a test game has this.
+        ...(state.test
+          ? [{ id: 'testing', label: 'TEST  ·  CALL IN SHIPS', run: () => openPage(game, 'testing') }]
+          : []),
         { id: 'quit', label: 'QUIT TO THE TITLE SCREEN', confirm: quit, run: a.quit },
       ];
     },
@@ -100,6 +104,22 @@ const PAGES = {
       const leave = game.view.started ? 'THE GAME YOU ARE IN IS LEFT  ·  CHOOSE AGAIN TO LOAD' : null;
       const slots = [AUTO, ...MANUAL].map((slot) => slotRow(game, slot, game.actions.load, false, leave));
       return [...slots, { id: 'import', label: 'IMPORT A SAVE FILE', run: game.actions.importGame }, back(game)];
+    },
+  },
+  // What a test game can call in. Each is on a key too, so that it can be done without opening the menu.
+  testing: {
+    title: 'TEST  ·  CALL IN SHIPS',
+    rows(game) {
+      const call = (id, label, key) => ({ id, label, right: 'KEY ' + key, run: () => game.actions.summon(id) });
+      return [
+        call('fighters', 'THREE PIRATE FIGHTERS', 7),
+        call('gunboat', 'A PIRATE GUNBOAT AND A FIGHTER', 8),
+        call('raid', 'A RAID ON A STATION', 9),
+        call('clear', 'REMOVE ALL PIRATES', 0),
+        { id: 'cruiser', label: 'THE PIRATE CRUISER', run: () => game.actions.summon('cruiser') },
+        { id: 'traffic', label: 'FACTION TRAFFIC', run: () => game.actions.summon('traffic') },
+        back(game),
+      ];
     },
   },
   sound: {
