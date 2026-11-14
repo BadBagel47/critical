@@ -32,7 +32,6 @@ Inget just nu.
 | F-030 | Automatisk paus när någon varit frånkopplad en stund | Ej påbörjad |
 | F-040 | Onlinespel för upp till tre spelare via användarens motor, som bygger på Cloudflares realtidstjänster. Målet är att gratiskontot ska räcka | Väntar på motorn |
 | D-031 | Avgör om man ska kunna hoppa tillbaka till gamla sektorer. Just nu går det | Väntar på användaren |
-| D-032 | Avgör om lootet blir kvar på platsen när någon teleporteras hem. Just nu blir det kvar | Väntar på användaren |
 | D-043 | Avgör om skeppet ska kunna lägga ut medan någon är kvar inne. Just nu går det inte | Väntar på användaren |
 
 ## Låg
@@ -61,6 +60,7 @@ Inget just nu.
 | D-001 | Spelidé och designskiss, utkast 3 | 2026-11-14 |
 | D-002 | Grafisk stil, skeppsklasser och fregattens uppgraderingssteg | 2026-11-14 |
 | D-003 | Namn: Critical ST8 | 2026-11-14 |
+| D-032 | Lootet blir kvar på platsen när någon teleporteras hem | 2026-11-14 |
 | D-004 | Teknik och publicering: webbspel utan byggsteg, GitHub Pages nu och Cloudflare när nätverksmotorn byggs in | 2026-11-14 |
 | F-005 | Projektgrund: spelet öppnas i webbläsaren och går att spela ensam | 2026-11-14 |
 | F-006 | Captain: flyg fregatten i rymden uppifrån | 2026-11-14 |

@@ -86,11 +86,11 @@ Bordning
 - Vem som bordar bestäms genom att spelarna pratar. Vem som helst kan gå in eller ut medan skeppet ligger dockat.
 - Den som nästan dör teleporteras hem och kan inte gå in igen under samma bordning. När alla är tillbaka får alla tillbaka sitt liv.
 - Teleportern måste vara laddad för att spelaren ska kunna borda nästa gång.
+- Det som bärs blir kvar på platsen när någon teleporteras hem, så att en annan bordare kan plocka upp det (2026-11-14).
 - Mål är olika svåra att borda. En scanner visar det.
 - Varje typ av mål har ett eget inbrottsspel på tid.
 
 Bordning, agentens val som användaren inte har sett än (2026-11-14)
-- Det som bärs blir kvar på platsen när någon teleporteras hem (se D-032).
 - Valvdörren i ett vrak öppnas genom att hålla in F bredvid den, inte med ett eget inbrottsspel.
 - Reaktorn räknar ner från första steget in. Vid noll sprängs vraket, alla teleporteras hem, ett dockat skepp skadas och ett nytt vrak dyker upp på annat håll.
 - Skeppet kan inte lägga ut medan någon är kvar inne.
