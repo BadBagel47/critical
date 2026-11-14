@@ -56,6 +56,17 @@ Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **F
 - Skott från vanliga vapen hörs och utlöser larmet. Tranq gun är tyst.
 - Att bli upptäckt är inget misslyckande. Då blir det strid, som i dag.
 
+**Larmade dörrar (F-158, idé från användaren 2026-11-14).** Vissa dörrar är larmade. Den som öppnar en sådan utlöser larmet. Radarn visar vilka dörrar som är larmade.
+
+**Förslag** på resten, inte bestämt:
+- Larmade dörrar sitter på genvägar och på sidorum med loot. Det finns alltid en väg till mainframen utan larmad dörr, så att larmet aldrig är påtvingat.
+- De syns också utan radar: en liten lampa i dörrkarmen som man ser när man står nära. Radarn visar dem på håll och genom väggar. Annars blir det gissning för den som saknar radar.
+- Engineer kan koppla ur en larmad dörr på plats. Det tar några sekunder, och under tiden står hen stilla och oskyddad.
+- Vakter går igenom larmade dörrar utan att larmet går.
+- Planritningen från hack nivå 1 visar också de larmade dörrarna.
+- När larmet väl har gått spelar dörrarna ingen roll längre.
+- Larmade dörrar finns bara där smygande gäller, alltså inte i vrak.
+
 ## 5. Vakter, tranq gun och TAKE DOWN
 
 - **Bestämt:** vakter patrullerar. En tranq gun som köps i armory söver dem. Sövda vakter vaknar efter en stund. Den som går fram till en sövd vakt innan den vaknar kan oskadliggöra den, och knappen heter **TAKE DOWN**.
