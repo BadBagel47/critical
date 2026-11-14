@@ -70,7 +70,7 @@ Prioritet: Hög, Medel, Låg.
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - F-048 – Musik för de olika lägena
 
-Väntar på användaren: D-072 (två våningar), D-073 (uppdrag), D-074 (smuggelgods), D-089 (nät av system) och D-052 (storyläge) behöver ett samtal först. D-060, D-061 och D-062 (nätverksförberedelser) behöver besked om hur motorn fungerar. Dessutom besked i D-044 och D-045, och motorn för onlineläget (F-040).
+Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. D-072 (två våningar), D-073 (uppdrag), D-074 (smuggelgods), D-089 (nät av system) och D-052 (storyläge) behöver ett samtal först. D-060, D-061 och D-062 (nätverksförberedelser) behöver besked om hur motorn fungerar. Dessutom besked i D-044 och D-045, och motorn för onlineläget (F-040).
 
 ## Hög
 
@@ -116,6 +116,7 @@ Väntar på användaren: D-072 (två våningar), D-073 (uppdrag), D-074 (smuggel
 | F-083 | Från D-075: skepp i nöd som ber om bränsle eller reparation och betalar eller minns det | Ej påbörjad |
 | F-084 | Från D-075: värme som en andra resurs bredvid energi. Vapen och motorer blir varma, och Engineer måste kyla. Användaren: det där med värme är riktigt bra, då kan vi även göra uppgraderingar som kyler systemen bättre | Ej påbörjad |
 | F-085 | Från D-075: asteroidbrytning. Skjut sönder asteroider och dra in malm att sälja | Ej påbörjad |
+| F-090 | Spela på mobil och surfplatta med pekskärm, i liggande format. I dag finns bara tangentbord, mus och handkontroll, så spelet går inte att styra med fingrarna. Användaren frågade 2026-11-14 och har inte bestämt om det ska byggas | Väntar på användaren |
 | D-089 | Från D-075: fler och mindre system i ett nät av hoppvägar i stället för fem sektorer i rad. Stor ändring av världen som behöver pratas igenom först | Väntar på användaren |
 | D-052 | Någon form av storyläge, eller åtminstone grund för vad spelet går ut på, behöver ses över | Väntar på användaren |
 | F-040 | Onlinespel för upp till tre spelare via användarens motor, som bygger på Cloudflares realtidstjänster. Målet är att gratiskontot ska räcka | Väntar på motorn |
