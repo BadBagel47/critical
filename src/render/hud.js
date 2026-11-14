@@ -55,7 +55,12 @@ export function drawHud(ctx, state, view, assets, dock) {
   // One line of status at the top centre, most urgent first.
   let top = null;
   const tele = state.players[0].tele;
-  if (dock && dock.docked) top = { text: tele > 0 ? `DOCKED  ·  TELEPORTER CHARGING  ${Math.ceil(tele)} S  ·  E UNDOCK` : 'DOCKED  ·  F BOARD  ·  E UNDOCK', color: COL.ion[2], border: COL.ion[0] };
+  if (dock && dock.docked) {
+    const w = state.wrecks.find((x) => x.id === ship.docked), locked = w && w.lock !== 'open';
+    const text = locked ? (w.breakin && w.breakin.started ? `DOCKED  ·  F BACK TO THE LOCK  ·  0:${String(Math.max(0, Math.ceil(w.breakin.time))).padStart(2, '0')}` : 'DOCKED  ·  F BYPASS THE LOCK  ·  E UNDOCK')
+      : tele > 0 ? `DOCKED  ·  TELEPORTER CHARGING  ${Math.ceil(tele)} S  ·  E UNDOCK` : 'DOCKED  ·  F BOARD  ·  E UNDOCK';
+    top = { text, color: locked && w.breakin && w.breakin.started ? COL.ochre[2] : COL.ion[2], border: locked && w.breakin && w.breakin.started ? COL.ochre[0] : COL.ion[0] };
+  }
   else if (dock && dock.ready) top = { text: view.post === 'captain' ? 'PRESS E TO DOCK' : 'IN POSITION TO DOCK', color: COL.ion[3], border: COL.ion[1] };
   else if (dock && dock.tooFast) top = { text: 'TOO FAST TO DOCK', color: COL.ochre[2], border: COL.ochre[0] };
   else if (dock && view.post === 'captain') top = { text: 'DOCKING  ·  HOLD COURSE', color: COL.ion[2], border: COL.ion[0] };
@@ -92,7 +97,7 @@ export function drawOverlay(ctx, font, title, lines, color = COL.text) {
 }
 
 const HELP = [
-  ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  THIS HELP     F  BOARD WHEN DOCKED'],
+  ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  THIS HELP     F  BREAK IN AND BOARD WHEN DOCKED'],
   ['CAPTAIN', 'W S  THROTTLE     A D  TURN     X  FULL STOP     E  DOCK AND UNDOCK'],
   ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE'],
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW'],

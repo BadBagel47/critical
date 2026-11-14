@@ -159,7 +159,7 @@ test('the ship cannot fly through a wreck, and ramming hurts', () => {
 // ---------- boarding ----------
 import { createInterior, tryBoard, tileAt, TILE, IW, IH, blocked } from '../src/sim/boarding.js';
 
-function dockAt(s, w = s.wrecks[0]) { s.ship.docked = w.id; s.ship.vx = s.ship.vy = 0; return w; }
+function dockAt(s, w = s.wrecks[0]) { s.ship.docked = w.id; s.ship.vx = s.ship.vy = 0; w.lock = 'open'; return w; }
 function boarded(seed = 1) {
   const s = quiet(createState(seed)), w = dockAt(s);
   step(s, { system: { board: [0] } }, DT);
@@ -292,4 +292,46 @@ test('fuel burns with throttle, and an empty tank leaves the ship crawling', () 
   s.ship.fuel = 0;
   run(s, { captain: { throttle: 1 } }, 15);
   assert.ok(speedOf(s.ship) < full * 0.4);
+});
+
+// ---------- break-in game ----------
+import { createBreakin, flow, GW, GH } from '../src/sim/breakin.js';
+
+test('every break-in puzzle starts unsolved and can be solved', () => {
+  for (let seed = 1; seed <= 40; seed++) {
+    const s = createState(seed), bk = createBreakin(s, { difficulty: 1 + (seed % 3) });
+    assert.equal(bk.tiles.length, GW * GH);
+    assert.equal(flow(bk).solved, false, `seed ${seed} starts unsolved`);
+    bk.tiles.forEach((t, i) => { t.rot = bk.solution[i]; });
+    assert.equal(flow(bk).solved, true, `seed ${seed} has a solution`);
+  }
+});
+
+test('boarding a locked wreck opens the break-in game, and solving it opens the lock', () => {
+  const s = quiet(createState(1)), w = s.wrecks[0];
+  s.ship.docked = w.id;
+  step(s, { system: { board: [0] } }, DT);
+  assert.equal(s.players[0].inside, null, 'still locked out');
+  assert.ok(w.breakin && w.breakin.started);
+  const t0 = w.breakin.time;
+  run(s, {}, 1);
+  assert.ok(w.breakin.time < t0, 'the clock runs');
+  // Turn every tile to its solution with rotate commands.
+  const turns = [];
+  w.breakin.tiles.forEach((t, i) => { for (let r = t.rot; r !== w.breakin.solution[i]; r = (r + 1) % 4) turns.push({ wreck: w.id, x: i % GW, y: Math.floor(i / GW), dir: 1 }); });
+  step(s, { hack: { 0: turns } }, DT);
+  assert.equal(w.lock, 'open');
+  step(s, { system: { board: [0] } }, DT);
+  assert.equal(s.players[0].inside, w.id);
+});
+
+test('running out of time blows the wreck up and hurts the docked ship', () => {
+  const s = quiet(createState(1)), w = s.wrecks[0];
+  s.ship.docked = w.id;
+  step(s, { system: { board: [0] } }, DT);
+  const before = s.ship.hull + s.ship.shield;
+  run(s, {}, w.breakin.total + 1);
+  assert.ok(!s.wrecks.includes(w));
+  assert.equal(s.ship.docked, null);
+  assert.ok(s.ship.hull + s.ship.shield < before);
 });

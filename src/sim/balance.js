@@ -30,6 +30,8 @@ export const B = {
   GUARD_HP: 30, GUARD_SPEED: 46, GUARD_SIGHT: 170, GUARD_COOLDOWN: 1.15, GUARD_DMG: 8, GUARD_BOLT_SPEED: 185,
   TURRET_HP: 45, TURRET_SIGHT: 220, TURRET_TURN: 2.6, TURRET_COOLDOWN: 0.85, TURRET_DMG: 9, TURRET_BOLT_SPEED: 210,
   DOOR_CUT_TIME: 3, REACTOR_TIME: [0, 170, 150, 130], WRECK_BLAST_DMG: 60,
+  // break-in game, seconds per difficulty
+  BREAKIN_TIME: [0, 60, 50, 42],
 };
 
 // Frigate geometry in ship-local pixels: x right, y back (the nose is at negative y).

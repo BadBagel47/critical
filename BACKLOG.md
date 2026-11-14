@@ -5,10 +5,7 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – standard model, medium level – Inbrottsspel
-- F-016 – Koppla förbi dockningslåset på tid innan ni kommer in i ett vrak
-
-**B** – strong model, high level – Karta och scanner
+**A** – strong model, high level – Karta och scanner
 - F-018 – Gemensam karta där dimman lyfts av det ni ser
 - F-019 – Scannerpuls, sonder och radarbojar som avslöjar mer av kartan
 
@@ -20,7 +17,6 @@ Inget just nu.
 
 | ID | Vad | Status |
 |---|---|---|
-| F-016 | Inbrottsspel för vrak: koppla förbi dockningslåset | Ej påbörjad |
 | F-018 | Gemensam karta med fog of war | Ej påbörjad |
 | F-019 | Scanner pulse, sonder och radarbojar | Ej påbörjad |
 | F-020 | Stationer: vänlig, neutral och fientlig, tankning och shipyard | Ej påbörjad |
@@ -78,3 +74,4 @@ Inget just nu.
 | F-014 | Bordning uppifrån: gå in och ut, vakter, kanontorn, granater och en låst valvdörr | 2026-11-14 |
 | F-015 | Teleporter: hem vid nästan död, inte in igen samma bordning, liv åter när alla är tillbaka, laddning före nästa bordning | 2026-11-14 |
 | F-017 | Loot: bränsleceller och lådor med krediter, högst tre saker per vända | 2026-11-14 |
+| F-016 | Inbrottsspel för vrak: vrid rörbitar så att strömmen når dockningslåset innan tiden är ute | 2026-11-14 |

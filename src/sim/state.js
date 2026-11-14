@@ -18,7 +18,7 @@ export function createShip() {
 }
 
 export function createWreck(s, x, y, difficulty) {
-  return { id: s.nextId++, x, y, heading: randRange(s, 0, TAU), difficulty, interior: null };
+  return { id: s.nextId++, x, y, heading: randRange(s, 0, TAU), difficulty, interior: null, lock: 'locked', breakin: null };
 }
 
 export function createState(seed = 1) {

@@ -6,7 +6,7 @@ Project language: English (all text in the game and README)
 
 ## Nuläge
 
-Spelet går att spela ensam: flyga fregatten, skjuta pirater, sköta energi och reparationer, byta fritt mellan de tre posterna, docka med vrak och borda dem uppifrån för att hämta bränsle och krediter. Inbrottsspel, karta, stationer och uppgraderingar saknas än. Ingen människa har provspelat än, så balansen är otestad.
+Spelet går att spela ensam: flyga fregatten, skjuta pirater, sköta energi och reparationer, byta fritt mellan de tre posterna, docka med vrak och borda dem uppifrån för att hämta bränsle och krediter. Vraken har ett inbrottsspel på tid som måste klaras före bordning. Karta, stationer och uppgraderingar saknas än. Ingen människa har provspelat än, så balansen är otestad.
 
 ## Nästa steg
 

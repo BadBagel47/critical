@@ -7,6 +7,7 @@ import { step } from './sim/step.js';
 import { drawSpace, drawStars } from './render/space.js';
 import { drawHud, drawOverlay, drawHelp, drawTitle, drawToasts } from './render/hud.js';
 import { drawBoarding, OX, OY } from './render/boarding.js';
+import { drawBreakin, breakinTile } from './render/breakin.js';
 import { drawEngineer, engineerClick, SYSTEM_KEYS } from './render/engineer.js';
 
 const canvas = document.getElementById('game');
@@ -22,9 +23,11 @@ window.addEventListener('resize', resize);
 resize();
 
 const input = createInput(canvas);
-const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [] };
+const view = { screen: 'title', post: 'captain', help: false, cam: { x: 0, y: 0 }, mouse: input.mouse, engRow: 0, player: 'PLAYER 1', playerId: 0, toasts: [], hacking: false };
 let state = createState(Date.now() % 100000);
 let assets = null;
+
+const dockedWreck = () => (state.ship.docked ? state.wrecks.find((w) => w.id === state.ship.docked) : null);
 
 function snapCam() {
   const s = state.ship, lead = 0.3;
@@ -49,7 +52,16 @@ function commands() {
     } };
     return cmds;
   }
-  if (input.hit('KeyF') && state.ship.docked) cmds.system.board = [me.id];
+  const wreck = dockedWreck();
+  if (view.hacking && (!wreck || wreck.lock === 'open')) view.hacking = false;
+  if (view.hacking) {
+    // At the break-in panel: clicks turn tiles, and the player's post is left alone.
+    if (input.hit('KeyF')) { view.hacking = false; return cmds; }
+    const m = input.mouse, t = m.clicked || m.rightClicked ? breakinTile(m.x, m.y) : null;
+    if (t) cmds.hack = { [me.id]: [{ wreck: wreck.id, x: t.x, y: t.y, dir: m.rightClicked ? -1 : 1 }] };
+    return cmds;
+  }
+  if (input.hit('KeyF') && wreck) cmds.system.board = [me.id];
   if (view.post === 'captain') {
     cmds.captain = {
       throttle: (input.down('KeyW', 'ArrowUp') ? 1 : 0) - (input.down('KeyS', 'ArrowDown') ? 1 : 0),
@@ -87,7 +99,7 @@ function localKeys() {
   if (input.hit('Digit3')) view.post = 'engineer';
   if (input.hit('Tab')) view.post = POSTS[(POSTS.indexOf(view.post) + 1) % POSTS.length];
   if (state.over && input.hit('KeyR')) {
-    view.toasts = []; state = createState((state.seed * 7 + 13) % 100000); view.post = 'captain'; view.cam = { x: 0, y: 0 }; }
+    view.toasts = []; view.hacking = false; state = createState((state.seed * 7 + 13) % 100000); view.post = 'captain'; view.cam = { x: 0, y: 0 }; }
 }
 
 function render(t) {
@@ -102,6 +114,8 @@ function render(t) {
   if (state.players[view.playerId].inside !== null) drawBoarding(ctx, state, view, assets);
   else if (view.post === 'engineer') drawEngineer(ctx, state, view, assets);
   else { const dock = drawSpace(ctx, state, view, assets); drawHud(ctx, state, view, assets, dock); }
+  const dw = dockedWreck();
+  if (view.hacking && dw && dw.breakin && dw.lock !== 'open' && !state.over) drawBreakin(ctx, font, dw, input.mouse);
   drawToasts(ctx, font, view, state.time, state.players[view.playerId].inside !== null ? 26 : 44);
   if (state.over) drawOverlay(ctx, font, 'SHIP LOST', [`KILLS  ${state.kills}`, `TIME  ${Math.floor(state.time / 60)}:${String(Math.floor(state.time % 60)).padStart(2, '0')}`, '', 'PRESS R TO TRY AGAIN'], COL.ember[2]);
   else if (state.paused) drawOverlay(ctx, font, 'PAUSED', [`PAUSED BY ${state.pausedBy}`, '', 'PRESS P TO RESUME'], COL.text);
@@ -149,11 +163,14 @@ const TOAST = {
   crewInside: () => ['CREW STILL INSIDE  ·  CANNOT UNDOCK', COL.ochre[2]],
   doorOpen: () => ['VAULT OPEN', COL.ochre[3]],
   wreckExploded: () => ['THE WRECK BLEW UP', COL.ember[2]],
+  lockOpen: () => ['LOCK BYPASSED  ·  F TO BOARD', COL.acid[2]],
+  lockFailed: () => ['BYPASS FAILED', COL.ember[2]],
   noPower: () => ['NO FREE POWER  ·  LOWER ANOTHER SYSTEM FIRST', COL.ochre[2]],
   powerLost: () => ['REACTOR DAMAGED  ·  POWER LOST', COL.ember[2]],
 };
 function toasts() {
   for (const e of state.events) {
+    if (e.type === 'breakinOpened' && e.player === view.playerId) view.hacking = true;
     const make = TOAST[e.type]; if (!make) continue;
     const [text, color] = make(e);
     if (view.toasts.some((t) => t.text === text)) continue;

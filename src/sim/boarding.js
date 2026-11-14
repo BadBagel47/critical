@@ -2,6 +2,7 @@
 import { B } from './balance.js';
 import { createWreck } from './state.js';
 import { damageShip } from './damage.js';
+import { createBreakin, stepBreakin } from './breakin.js';
 import { clamp, forward, headingTo, angleDiff, turnToward, dist, rand, randRange, TAU } from './util.js';
 
 export const TILE = 16, IW = 32, IH = 18;
@@ -86,6 +87,13 @@ export function tryBoard(state, playerId) {
   if (!player || player.inside !== null || !ship.docked) return false;
   const wreck = state.wrecks.find((w) => w.id === ship.docked);
   if (!wreck) return false;
+  if (wreck.lock !== 'open') {
+    // The docking lock has to be bypassed first. Opening the panel starts the clock.
+    if (!wreck.breakin) wreck.breakin = createBreakin(state, wreck);
+    wreck.breakin.started = true;
+    state.events.push({ type: 'breakinOpened', player: playerId, wreck: wreck.id });
+    return false;
+  }
   if (player.tele > 0) { state.events.push({ type: 'teleCharging', player: playerId, left: player.tele }); return false; }
   if (player.lockedOut === wreck.id) { state.events.push({ type: 'lockedOut', player: playerId }); return false; }
   if (!wreck.interior) wreck.interior = createInterior(state, wreck);
@@ -259,7 +267,7 @@ function stepInterior(state, wreck, cmds, dt) {
 
 function blowUp(state, wreck) {
   const it = wreck.interior, ship = state.ship;
-  for (const av of [...it.avatars]) leave(state, it, av, true);
+  if (it) for (const av of [...it.avatars]) leave(state, it, av, true);
   for (const p of state.players) if (p.lockedOut === wreck.id) p.lockedOut = null;
   state.fx.push({ type: 'boom', x: wreck.x, y: wreck.y, t: 0, dur: 1.3, size: 90 });
   state.wrecks = state.wrecks.filter((w) => w !== wreck);
@@ -278,7 +286,10 @@ function blowUp(state, wreck) {
 export function stepBoarding(state, cmds, dt) {
   for (const id of (cmds && cmds.system && cmds.system.board) || []) tryBoard(state, id);
   for (const p of state.players) p.tele = Math.max(0, p.tele - dt);
-  for (const w of [...state.wrecks]) if (w.interior && (w.interior.timer !== null)) stepInterior(state, w, cmds, dt);
+  for (const w of [...state.wrecks]) {
+    if (stepBreakin(state, w, cmds, dt) === 'failed') { blowUp(state, w); continue; }
+    if (w.interior && w.interior.timer !== null) stepInterior(state, w, cmds, dt);
+  }
   // Everyone gets their health back once the whole crew is on the ship again.
   if (!anyoneInside(state)) for (const p of state.players) p.hp = B.CREW_HP;
 }
