@@ -87,7 +87,7 @@ Spelet
 - Publicering: GitHub Pages så länge, flytt till Cloudflare när nätverksmotorn byggs in (2026-11-14).
 - Testläge: T på startskärmen, eller `?test` sist i adressen, startar spelet med alla uppgraderingar, all utrustning, alla stjärnkartor och 5000 krediter (2026-11-14).
 - Styrning: tangentbord och mus, eller handkontroll. Agentens val, användaren har inte provat än.
-- Ljudet skapas i webbläsaren utan ljudfiler. N slår av och på, och valet sparas i webbläsaren.
+- Ljudet skapas i webbläsaren utan ljudfiler. N slår av och på, och valet sparas i webbläsaren. Varje spelare ska kunna ställa nivån på ljudeffekter och musik var för sig i inställningarna (F-105, 2026-11-14, inte byggt än).
 - Handkontroll: vänster spak styr eller flyttar pekaren, höger spak siktar, avtryckarna gasar och skjuter, RB och LB byter post, START pausar och BACK öppnar kartan. Tabellen finns i `src/input.js`.
 - Onlineläget ska använda användarens egen motor, som byggs just nu och bygger på Cloudflares realtidstjänster. Målet är att ett gratiskonto ska räcka för det här kompisspelet (2026-11-14).
 

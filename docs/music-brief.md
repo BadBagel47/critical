@@ -16,7 +16,8 @@ Ljudeffekterna (F-049) ingår inte. De ligger kvar som en egen punkt.
 - Musiken får aldrig ändra spelets tillstånd. Den får läsa det den får skickat till sig, inget mer.
 - Musiken ligger utanför `src/sim/`. Där får man använda `Math.random()` och verklig tid fritt. Inne i `src/sim/` är det förbjudet, och ett test vaktar det.
 - Ljudet kan först starta efter en knapptryckning eller ett klick. Det sköter `initAudio()` i `src/audio.js` redan. Före det finns ingen ljudmotor, och musiken måste tåla det.
-- N slår av och på allt ljud. Valet sparas i webbläsaren under `critical-muted`. Musiken ska följa det, och gör det av sig själv om den kopplas in som beskrivs nedan.
+- Tangenten N slår av och på allt ljud. Valet sparas i webbläsaren under `critical-muted`. Musiken ska följa det, och gör det av sig själv om den kopplas in som beskrivs nedan.
+- Varje spelare ska kunna ställa nivån på ljudeffekter och musik var för sig i spelets inställningar (F-105). Det byggs inte av musikagenten. Nivån för musik kommer att sättas på `out` från `musicOutput()`, så musiken behöver inte göra något annat än att koppla allt sitt ljud dit.
 - All text i spelet är på engelska. Kod, kommentarer och commits är på engelska.
 - All musik komponeras från grunden. Inga melodier från befintliga spel, filmer eller låtar, inte heller "i samma stil som" en namngiven låt så nära att den går att känna igen.
 
@@ -90,6 +91,5 @@ Flera agenter arbetar i repot samtidigt. För att det inte ska krocka:
 
 ## Öppna frågor till användaren
 
-- Ska musiken ha en egen volym eller en egen av-knapp, skild från ljudeffekterna? I dag styr N allt ljud.
 - Hur mycket melodi, och hur mycket stämning?
 - Ska förlusten av skeppet (`lost`) och segern (`won`) ha egna stycken?

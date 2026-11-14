@@ -11,75 +11,78 @@ Prioritet: Hög, Medel, Låg.
 **B** – standard model, medium level – Lättare inbrott i vrak
 - B-092 – Gör rörspelet lättare med 15 rutor i stället för 28 och färre som behöver vridas, med samma tid som nu, så att det går att hinna. Större vrak får svårare lås
 
-**C** – strong model, high level – Spara spelet
+**C** – standard model, medium level – Inställningar för ljud
+- F-105 – En inställningsskärm där varje spelare ställer nivån på ljudeffekter och musik var för sig, sparat i den egna webbläsaren, så att musiken går att sänka utan att effekterna försvinner
+
+**D** – strong model, high level – Spara spelet
 - F-079 – En autosparfil vid dockning, fem manuella platser, och export och import av sparfil. Vid död laddas senaste sparfilen om, så att långa omgångar inte går förlorade
 - F-096 – Hardcore mode med ett enda liv, för den som vill ha det svårare
 
-**D** – strong model, high level – Pekskärm
+**E** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**E** – strong model, high level – Stationer som försvarar sig
+**F** – strong model, high level – Stationer som försvarar sig
 - F-098 – Ge baserna turrets och en sköld, så att de kan stå emot ett anfall en stund
 - D-045 – Låt en station som inte överlever ett anfall bli fientlig, så att nödanropen får betydelse
 - F-099 – Ge dockade skepp en liten extra sköld som syns på sköldmätaren och går att uppgradera, så att man får en bättre chans att loota
 
-**F** – strong model, high level – Faktioner och trafik
+**G** – strong model, high level – Faktioner och trafik
 - F-035 – Tre faktioner med egna stationer, områden och anseende, så att världen får sidor att förhålla sig till
 - F-069 – Lägg in freightern enligt vald design, större och långsam, så att trafiken får ett eget skepp
 - F-066 – Låt andra skepp flyga fram till stationer, docka en stund och lämna, så att stationerna känns besökta
 - F-067 – Låt handelsskepp, patruller och pirater hoppa in och ut ur systemet och slåss med varandra, så att miljön känns levande
 
-**G** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
+**H** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
 
-**H** – strong model, high level – Förslag: ekonomi och belöningar
+**I** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**I** – strong model, high level – Baser i två storlekar
+**J** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 - D-101 – Gör inomhusmiljöerna mer utarbetade, så att stationer och vrak känns som platser
 - F-102 – Lockdown: en fientlig station håller dörrarna till shop och armory stängda tills spelarna tagit över
 
-**J** – strong model, high level – Unika skepp
+**K** – strong model, high level – Unika skepp
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**K** – strong model, high level – Handel
+**L** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**L** – strong model, medium level – Butik med bilder
+**M** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**M** – strong model, high level – Värme
+**N** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**N** – strong model, high level – Slå ut och borda
+**O** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**O** – strong model, high level – Missiler och raketer
+**P** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**P** – strong model, high level – Kontakt med andra skepp
+**Q** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**Q** – strong model, high level – Asteroider och anomalier
+**R** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**R** – strong model, high level – En värld som förändras
+**S** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 
-**S** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**T** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**T** – strong model, high level – Ljudeffekter
+**U** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
 Hos en annan agent: F-048 (musik) görs skilt från körningarna här, enligt docs/music-brief.md.
@@ -105,6 +108,7 @@ Väntar på användaren: D-094 (design på nya skepp) behöver ett val mellan Ju
 | D-062 | Nätverksförberedelse: skicka skott som händelser (var och när de avfyrades) i stället för som positioner | Väntar på användaren |
 | F-064 | Homing missiles (nytt vapen) och rockets som uppgraderingar. De ska söka sig mot mål. Missiler är mer rörliga medan raketer kan justera sin bana något, men missar den sitt mål så släpper den målet helt. Missar dessa vapen sitt mål så ska de kunna träffa andra som är i vägen för deras bana. I dag finns bara raketer, och de är för rörliga jämfört med det här. Från D-075: ammunition som köps på stationer | Ej påbörjad |
 | F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer. Musiken skapas med kod, det passar spelstilen. Görs av en annan agent enligt docs/music-brief.md | Ej påbörjad |
+| F-105 | Varje spelare kan ändra sin nivå på ljudeffekter och musik i spelets inställningar. I dag finns ingen inställningsskärm, bara tangenten N som slår av och på allt ljud | Ej påbörjad |
 | F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
 | F-066 | Det vore trevligt om andra skepp kan besöka stationer. Att de åker fram, dockar en stund, och sedan lämnar. Från D-075: varje sektor har sin egen blandning av handelsskepp, patruller och pirater | Ej påbörjad |
