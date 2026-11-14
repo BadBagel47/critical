@@ -8,7 +8,7 @@ Project language: English (all text in the game and README)
 
 Spelet går att spela ensam från start till mål. Du flyger fregatten, skjuter pirater, sköter energi och reparationer, byter fritt mellan de tre posterna, dockar med vrak och stationer, bryter dig in, bordar uppifrån och hämtar bränsle, krediter, stjärnkartor och slots. Vid stationer köps uppgraderingar som syns på skeppet och utrustning för bordarna. Stationer som anfalls sänder nödanrop, och varje sorts mål har sitt eget inbrottsspel. Det finns fem sektorer som nås med stjärnkartor, och i den sista väntar en Cruiser som boss.
 
-Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-073 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
+Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-089 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
 ## Nästa steg
 
@@ -50,6 +50,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - `src/sim/balance.js`: alla siffror för fart, skada och liknande.
 - `src/render/`: skärmarna. `effects.js` och `particles.js` ritar effekterna. De läser bara spelets tillstånd och ändrar det aldrig, så de påverkar inte ett kommande onlineläge.
 - `assets/`: bilder och typsnitt som skapas av `tools/export_assets.py`.
+- Skärmen är 640 × 360 punkter och förstoras bara i hela steg (1, 2, 3 gånger) till det största som ryms i fönstret, se `resize()` i `src/main.js`. Typsnittet är 9 punkter högt. F-077 och F-078 ändrar detta.
 
 ## Test
 
@@ -89,6 +90,9 @@ Värld
 - Skeppet kan bara byggas om vid en station med shipyard.
 - En vänlig eller neutral station som anfalls kan sända nödanrop. En neutral station som får hjälp förblir neutral men ger rabatt och tillgång till sin shipyard under en tid.
 - Pirater är fristående och aggressiva mot alla.
+- Faktioner ska in (F-035, tillbaka från parkerat 2026-11-14).
+- Värme blir en andra resurs bredvid energi, med uppgraderingar som kyler bättre (F-084, 2026-11-14).
+- Omgången ska gå att spara, och sparfilen ska gå att exportera och importera (F-079, 2026-11-14).
 - Varor (goods) som köps och säljs mellan stationer är bara till för att tjäna pengar. Spelaren kan inte använda dem själv (F-068, 2026-11-14).
 
 Bordning
@@ -151,7 +155,7 @@ Skepp och uppgraderingar
 - Två sorters slots: hardpoints och system slots. Båda kan köpas eller hittas som loot.
 - Fighter bay är en uppgradering. Darts är den minsta skeppsklassen.
 - Skeppsklasser: Dart, Fighter, Interceptor, Gunboat, Frigate, Cruiser.
-- Två nya skeppsklasser ska in: Freighter, lite större och långsam (F-069), och Jaggernaut, ett ovanligt krigsskepp som är långsamt och tungt bestyckat (F-070) (2026-11-14).
+- Två nya skeppsklasser ska in: Freighter, lite större och långsam (F-069), och Juggernaut, ett ovanligt krigsskepp som är långsamt och tungt bestyckat (F-070). Juggernaut patrullerar hos faktioner och dyker i mycket sällsynta fall upp som pirat (2026-11-14).
 
 Grafik
 - En pixelstil för hela spelet, alltid uppifrån, med dämpade färger. Stark färg används bara för ljus, skott och loot.
@@ -185,4 +189,5 @@ Genomgång 2026-11-14 (D-033). Agenten är ingen jurist, och inget här är juri
 - Spelet hanterar inga personuppgifter: inga namn, konton eller formulär.
 - Spelet sparar en enda sak i webbläsaren: om ljudet är av eller på (`critical-muted`), och bara efter att spelaren själv tryckt N. Inga kakor. Regeln som kan beröras är lagen om elektronisk kommunikation, 9 kap. 28 §, om lagring i användarens utrustning. Lagring som behövs för något användaren själv har bett om brukar vara undantagen från samtycke. Agentens rekommendation är att behålla sparandet. Användaren har inte tagit ställning än.
 - Webbhotellet GitHub Pages får besökarnas IP-adresser, vilket följer av att sidan ligger där.
+- Sparade omgångar (F-079) blir ny lagring i webbläsaren. Den görs på spelarens egen begäran och innehåller inga personuppgifter, så samma bedömning som för ljudinställningen bör gälla. Agentens rekommendation: spara först när spelaren själv väljer det, och säg det på startskärmen. Användaren har inte tagit ställning än.
 - Ny genomgång behövs när onlineläget byggs (D-046): spelarnamn, anslutningar och Cloudflare som ny tjänst.
