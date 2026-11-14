@@ -17,6 +17,7 @@ import { drawBreakin, breakinAction, breakinButtons } from './render/breakin.js'
 import { drawMap, mapPoint, chartClick, mapButtons } from './render/map.js';
 import { drawShop, shopClick, shopButtons } from './render/shop.js';
 import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS } from './render/engineer.js';
+import { drawActions, actionButtons } from './render/actions.js';
 
 // What is kept about the screen. None of it is part of the game: two players look at the same game differently.
 //   panel  what the player has opened on top of their place in the game: 'map', 'lock', 'shop', 'menu' or null
@@ -104,7 +105,7 @@ function gunnerInput(game, out) {
   }
   out.gunner = {
     aim,
-    fire: m.down || keys.down('Space') || keys.pad.rt > 0.5,
+    fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5,
     weapon: keys.hit('KeyE') ? 1 : keys.hit('KeyQ') ? -1 : null,
   };
 }
@@ -190,7 +191,7 @@ function awayInput(game, out) {
     mx: axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx,
     my: axis(keys, ['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']) + keys.pad.ly,
     aim,
-    fire: m.down || keys.down('Space') || keys.pad.rt > 0.5,
+    fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5,
     grenade: keys.hit('KeyG') || m.rightClicked ? lob : null,
     use: keys.down('KeyF'),
     usePressed: keys.hit('KeyF'),
@@ -277,10 +278,12 @@ export const SCREENS = {
   },
   away: { pad: 'away', input: awayInput, draw: drawAway, toasts: [42] },
 };
-// What can be clicked right now, by name.
+// What can be clicked right now, by name: what the screen itself offers, and what there is to do here.
 export function buttonsOf(game) {
-  const screen = SCREENS[settle(game)];
-  return screen.buttons ? screen.buttons(game) : [];
+  const mode = settle(game);
+  const screen = SCREENS[mode];
+  game.me = game.view.started ? playerById(game.state, game.view.playerId) : null;
+  return [...(screen.buttons ? screen.buttons(game) : []), ...actionButtons(game, mode)];
 }
 
 // What this player asks the game for in one step. See crewCommands in sim/players.js.
@@ -354,6 +357,7 @@ export function drawScreen(game, mode, t) {
   if (state.paused && !state.over) {
     drawOverlay(ctx, font, 'PAUSED', [`PAUSED BY ${state.pausedBy}`, '', 'PRESS P TO RESUME'], COL.text);
   }
+  drawActions(ctx, game, mode, screen.pad);
   if (view.help && !state.over) drawHelp(ctx, font);
   if (keys.pad.used && screen.cursor) drawPointer(ctx, keys.mouse);
 }

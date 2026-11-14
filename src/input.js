@@ -50,12 +50,25 @@ const PAD_KEYS = {
   away: { A: 'KeyF', X: 'KeyC', Y: 'KeyT', RB: 'KeyG' },
 };
 const dead = (v) => (Math.abs(v) < 0.2 ? 0 : v);
+// The gamepad button that stands in for a key in the given layout, or null. The layout's own button comes
+// before one that works everywhere.
+export function padButtonFor(layout, code) {
+  for (const map of [PAD_KEYS[layout] || {}, PAD_KEYS.all]) {
+    const name = Object.keys(map).find((button) => map[button] === code);
+    if (name) return name;
+  }
+  return null;
+}
 
 export function createInput(canvas) {
   const input = {
     keys: new Set(),
     padKeys: new Set(),
+    // Keys held by something on the screen, such as a button that is being pressed.
+    virtual: new Set(),
     pressed: new Set(),
+    // The player uses a touch screen: the last press came from a finger, or the device has no mouse.
+    touch: !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches),
     mouse: {
       x: VIEW_W / 2,
       y: VIEW_H / 2,
@@ -77,6 +90,7 @@ export function createInput(canvas) {
     if (!e.repeat) input.pressed.add(e.code);
     input.keys.add(e.code);
     input.pad.used = false;
+    input.touch = false;
     gesture();
   });
   window.addEventListener('keyup', (e) => input.keys.delete(e.code));
@@ -92,8 +106,10 @@ export function createInput(canvas) {
     input.mouse.moved = true;
     input.pad.used = false;
   };
-  canvas.addEventListener('mousemove', place);
-  canvas.addEventListener('mousedown', (e) => {
+  // Pointer events cover the mouse and fingers alike, and tell which of them it was.
+  canvas.addEventListener('pointermove', place);
+  canvas.addEventListener('pointerdown', (e) => {
+    input.touch = e.pointerType === 'touch';
     place(e);
     if (e.button === 0) {
       input.mouse.down = true;
@@ -103,11 +119,13 @@ export function createInput(canvas) {
     canvas.focus();
     gesture();
   });
-  window.addEventListener('mouseup', (e) => {
+  const release = (e) => {
     if (e.button === 0) input.mouse.down = false;
-  });
+  };
+  window.addEventListener('pointerup', release);
+  window.addEventListener('pointercancel', release);
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-  input.down = (...codes) => codes.some((c) => input.keys.has(c) || input.padKeys.has(c));
+  input.down = (...codes) => codes.some((c) => input.keys.has(c) || input.padKeys.has(c) || input.virtual.has(c));
   input.hit = (...codes) => codes.some((c) => input.pressed.has(c));
   input.endFrame = () => {
     input.pressed.clear();

@@ -52,8 +52,12 @@ export const B = {
   PIRATE_BOLT_SPEED: 290,
   PIRATE_BOLT_TTL: 1.5,
   // docking
-  DOCK_RANGE: 20,
+  // how near a port the nose has to be, how slow the ship has to go, and how fast a docked ship is
+  // pulled the last bit in to the port and turned to face it
+  DOCK_RANGE: 48,
   DOCK_SPEED: 32,
+  DOCK_PULL: 70,
+  DOCK_TURN: 1.6,
   DOCK_GUIDE_RANGE: 320,
   // collisions
   RAM_SPEED: 60,

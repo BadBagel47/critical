@@ -3,7 +3,8 @@
 
 // Things: what stands still or drifts. The order here is the order they are stored and handled in.
 //   hit      circles, in the thing's own pixels, that the frigate and shots run into
-//   ports    where the frigate's nose can dock, in the thing's own pixels
+//   ports    where the frigate's nose can dock, in the thing's own pixels. A docked ship points at the middle
+//            of the thing, or at `toward` for a port that has one
 //   lock     the break-in game that opens it (see breakin.js)
 //   inside   it has an interior that the crew can board
 //   onMap    the map remembers it as last seen, together with these extra fields
@@ -21,7 +22,7 @@ export const THINGS = {
       { x: 0, y: 0, r: 28 },
       { x: 0, y: 40, r: 26 },
     ],
-    ports: [{ x: -33, y: 10 }],
+    ports: [{ x: -33, y: 10, toward: { x: 0, y: 10 } }],
     lock: 'pipes',
     inside: true,
     onMap: () => ({}),

@@ -1,8 +1,9 @@
 // The crew's frigate: how it starts, and values worked out from its state.
 import { B, SHIP_GEOM } from './balance.js';
+import { THINGS } from './kinds.js';
 import { dockTargets, portsOf } from './things.js';
 import { powerTotal } from './upgrades.js';
-import { clamp, toWorld, dist } from './util.js';
+import { clamp, toWorld, dist, headingTo } from './util.js';
 
 export function nodeStatus(hp) {
   return hp >= 70 ? 'ok' : hp >= 30 ? 'damaged' : 'critical';
@@ -84,13 +85,46 @@ export function fireInterval(ship) {
   return power > 0 ? B.FIRE_INTERVAL / power : Infinity;
 }
 
-// The thing the ship could dock with right now, if any.
-export function dockCandidate(state) {
+// The port the ship could dock at right now, if any: the nearest one within reach of the nose.
+export function dockPort(state) {
   const ship = state.ship;
   if (ship.docked || speedOf(ship) > B.DOCK_SPEED) return null;
   const nose = shipNose(ship);
+  let best = null;
+  let bestD = B.DOCK_RANGE;
   for (const t of dockTargets(state)) {
-    for (const p of portsOf(t)) if (dist(nose.x, nose.y, p.x, p.y) <= B.DOCK_RANGE) return t;
+    for (const p of portsOf(t)) {
+      const d = dist(nose.x, nose.y, p.x, p.y);
+      if (d <= bestD) {
+        best = { thing: t, port: p };
+        bestD = d;
+      }
+    }
   }
-  return null;
+  return best;
+}
+// The thing the ship could dock with right now, if any.
+export function dockCandidate(state) {
+  const at = dockPort(state);
+  return at ? at.thing : null;
+}
+
+// Where a docked ship comes to rest: its nose at the port nearest to it, pointing at what it is docked to.
+// Null when the ship is nowhere near a port, which only happens when something else has put it there.
+export function dockPose(ship, thing) {
+  const nose = shipNose(ship);
+  let best = null;
+  let bestD = B.DOCK_RANGE * 3;
+  for (const local of THINGS[thing.kind].ports) {
+    const p = toWorld(thing, local);
+    const d = dist(nose.x, nose.y, p.x, p.y);
+    if (d < bestD) {
+      best = { p, inward: toWorld(thing, local.toward || { x: 0, y: 0 }) };
+      bestD = d;
+    }
+  }
+  if (!best) return null;
+  const heading = headingTo(best.inward.x - best.p.x, best.inward.y - best.p.y);
+  const reach = toWorld({ x: 0, y: 0, heading }, SHIP_GEOM.nose);
+  return { x: best.p.x - reach.x, y: best.p.y - reach.y, heading };
 }

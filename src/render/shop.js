@@ -169,7 +169,7 @@ export function drawShop(ctx, font, state, st, tab, mouse) {
   const note = closed ? 'NO SHIPYARD AT THIS STATION  ·  THE ARMORY IS OPEN' : null;
   font.draw(
     ctx,
-    note || (hover && hover.desc) || 'CLICK TO BUY  ·  F TO LEAVE THE PANEL  ·  E UNDOCKS FROM THE CAPTAIN POST',
+    note || (hover && hover.desc) || 'CLICK WHAT YOU WANT TO BUY',
     PX + 12,
     PY + PH - 18,
     note ? COL.ochre[2] : hover && hover.desc ? COL.text : COL.dim,

@@ -362,6 +362,20 @@ function explode(state, it, g) {
 
 // ---------- what a boarder does ----------
 const atAirlockDoor = (it, av) => av.x < TILE * 2.2 && Math.abs(av.y - it.entry.y) < TILE * 1.5;
+// What there is to work with where a boarder stands, for the screen to show: the airlock, a desk,
+// the terminal, or the vault door (`cut` when they are near enough to cut it and not only to blow it).
+export function useTarget(it, av) {
+  if (atAirlockDoor(it, av)) return { type: 'airlock' };
+  if (it.trade) {
+    const desk = it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20);
+    return desk ? { type: 'desk', desk } : null;
+  }
+  if (it.terminal && it.doorOpen && dist(av.x, av.y, it.terminal.x, it.terminal.y) < 16) return { type: 'terminal' };
+  if (it.doorOpen) return null;
+  const door = it.rooms[it.vault].door;
+  const away = dist(av.x, av.y, door.x, door.y);
+  return away < 28 ? { type: 'door', door, cut: away < 22 } : null;
+}
 const openVault = (it) => {
   it.doorOpen = true;
   it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));

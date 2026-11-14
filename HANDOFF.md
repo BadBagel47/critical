@@ -12,6 +12,8 @@ Sedan dess är koden omgjord i grunden utan att spelet beter sig annorlunda (den
 
 Världen har fått sidor och liv: tre faktioner med egna stationer och anseende, fraktskepp och patruller som hoppar in, dockar och hoppar ut, stationer med kanontorn och sköld som försvarar sig och kan falla till piraterna, och en extra sköld för dockade skepp.
 
+Dockningen är enklare, och en knapp dyker upp nere till höger när det finns något att göra (docka, gå ombord, handla, skära upp ett lås). Den visar tangenten, handkontrollens knapp eller en symbol för pekskärm. Ett samlat förslag för hur bordning av stationer ska fungera, med lockdown, smygande, roller, mainframe och övertagande, ligger i docs/station-boarding.md och väntar på användarens ja.
+
 Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-089 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
 ## Nästa steg
@@ -46,6 +48,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - [docs/design/img/](docs/design/img/): exempelskärmar och skeppsbilder.
 - [docs/design/tools/](docs/design/tools/): Python-skript som ritar bilderna. Kräver Pillow och typsnittet DejaVu Sans Bold. Kör `python3 frigate.py`, `python3 rot.py` och `python3 screens2.py`, samt `python3 ships2.py` för förslagen på nya skeppsklasser.
 - [tools/export_assets.py](tools/export_assets.py): gör spelets bilder av ritskripten, och typsnittet av DejaVu Sans Bold. Kör `npm run assets`.
+- [docs/station-boarding.md](docs/station-boarding.md): samlat förslag för bordning av stationer (D-117): lockdown, smygande, roller, mainframe och övertagande. Säger vad användaren har bestämt och vad som är agentens förslag. Väntar på användarens ja.
 - [docs/music-brief.md](docs/music-brief.md): underlag för den agent som gör musiken (F-048). Säger vad som gäller, hur musiken kopplas in och vilka filer den får röra.
 
 ## Kod
@@ -66,6 +69,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
   - `balance.js`: siffror för spelets regler. Siffror för varje skeppsklass står i `kinds.js`.
 - `src/screens.js`: vad spelaren ser. Det finns alltid exakt ett läge, och varje läge är en rad i `SCREENS` som säger hur det ritas och vad tangenterna gör. Ett nytt läge läggs till där.
 - `src/main.js`: start och huvudloop, och det menyn kan göra (nytt spel, spara, ladda, exportera, importera). `src/events.js`: meddelanden, ljud och paneler som svar på det som hänt i spelet.
+- `src/actions.js`: vad spelaren kan göra just där hen är (docka, gå ombord, handla, skära upp ett lås), som högst två handlingar med var sin tangent. `src/render/actions.js` ritar dem som knappar och låter ett klick eller tryck på en knapp fungera som tangenten. En ny sak att göra läggs till i `actions.js` och får en symbol i `ICON`. Mus och fingrar läses med samma händelser i `src/input.js`, som också vet om senaste trycket kom från en pekskärm. Resten av pekstyrningen är F-090.
 - `src/menu.js`: startskärmen och spelmenyn bakom O, som sidor av rader. En ny rad eller sida läggs till i `PAGES`.
 - `src/saves.js`: sparade spel. En sparning är hela spelets tillstånd som text. `SAVE_VERSION` måste höjas när tillståndet byter form, och ett test i `tests/saves.test.js` säger till när det behövs. Sparningar från en äldre version nekas då i stället för att gå sönder.
 - `src/scene.js`: vilket slags ögonblick spelaren är i (lugnt, varning, strid, bordning, station), för musiken. `src/music.js`: musiken. Den anropas en gång per bildruta och kopplar sitt ljud till `musicOutput()` i `src/audio.js`. Delarna ligger i `src/music/`: `theory.js` (toner, introtemat och varje sektors färg), `pieces.js` (ett stycke per scen, som rena funktioner), `director.js` (vilket stycke som ska spela, med tröghet), `synth.js` (instrumenten) och `engine.js` (spelar och tonar mellan styckena). Lyssningssidan är `docs/music/index.html`.
@@ -76,7 +80,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 
 ## Test
 
-- `npm test`: tester av spellogiken, besättningen, sakerna som data och förutsägbarheten. Faktioner, stationsförsvar, dockningssköld och trafik testas i `tests/sides.test.js`.
+- `npm test`: tester av spellogiken, besättningen, sakerna som data och förutsägbarheten. Vilka knappar som erbjuds var testas i `tests/actions.test.js`. Faktioner, stationsförsvar, dockningssköld och trafik testas i `tests/sides.test.js`.
   - `tests/determinism.test.js` kör en lång inspelad omgång med tre spelare (`tests/tour.js`) och kontrollerar att samma start och samma kommandon ger exakt samma spel, även efter att spelet sparats som text och lästs in igen. Varje ny funktion måste klara det (D-063).
   - `tests/style.test.js` vaktar radlängd och att spellogiken inte beror på något utanför `src/sim/`.
 - `npm run lint`: letar efter stavfel i namn, sådant som aldrig används och liknande. `npm run types`: kontrollerar typer utan byggsteg. `npm run check` kör tester, lint och typer i ett svep.
@@ -97,6 +101,8 @@ Spelet
 - Publicering: GitHub Pages så länge, flytt till Cloudflare när nätverksmotorn byggs in (2026-11-14).
 - Testläge: T på startskärmen, eller `?test` sist i adressen, startar spelet med alla uppgraderingar, all utrustning, alla stjärnkartor och 5000 krediter (2026-11-14).
 - Styrning: tangentbord och mus, eller handkontroll. Agentens val, användaren har inte provat än.
+- Knappar som visar vad man kan göra (F-112, 2026-11-14): en knapp dyker upp när det finns något att göra, med kortkommandot för tangentbord och en lösning för touch. Agentens utformning, som användaren har godkänt i ord men inte sett: knapparna ligger nere till höger, högst två åt gången med huvudsaken störst. Tangentbord visar tangenten som en ruta följd av ordet, handkontroll visar kontrollens knapp, och pekskärm visar en rund knapp med symbol och ordet under. Text finns alltid med.
+- Dockning ska vara enkel (F-111, 2026-11-14). Agentens val: nosen behöver vara 48 punkter från dockningsarmen (förut 20), närmaste arm väljs, och skeppet dras in och vrids rätt av sig självt på ungefär en sekund. Farten får fortfarande vara högst 32.
 - Ljudet skapas i webbläsaren utan ljudfiler. N slår av och på allt ljud. Varje spelare ställer nivån på ljudeffekter och musik var för sig under SOUND i menyn, och valen sparas i webbläsaren (F-105, 2026-11-14).
 - Handkontroll: vänster spak styr eller flyttar pekaren, höger spak siktar, avtryckarna gasar och skjuter, RB och LB byter post, START pausar och BACK öppnar kartan. Tabellen finns i `src/input.js`.
 - Onlineläget ska använda användarens egen motor, som byggs just nu och bygger på Cloudflares realtidstjänster. Målet är att ett gratiskonto ska räcka för det här kompisspelet (2026-11-14).
@@ -213,7 +219,7 @@ Faktioner, stationsförsvar och trafik, agentens val som användaren inte har se
 Bordning av stationer, besked från användaren (2026-11-14, inget av det är byggt än)
 - Tre lägen inne på ett ställe: lugnt (handelsgolv), lockdown (stället räknar besättningen som fiende: mörkt, roterande röda ljus, stängda dörrar, och man smyger) och larm (upptäckt). Ett larm ligger kvar tills man gått. Man kan inte gömma sig och vänta ut det.
 - Smygande gäller inte i vrak. Där räknar reaktorn ner.
-- Sövda vakter vaknar efter en stund. Den som går fram till en sövd vakt innan den vaknar kan oskadliggöra den. Vad knappen ska heta är inte bestämt.
+- Sövda vakter vaknar efter en stund. Den som går fram till en sövd vakt innan den vaknar kan oskadliggöra den. Knappen heter TAKE DOWN.
 - En vakt som hittar en sövd vakt utlöser larmet direkt.
 - Alla tre rollerna har en bonus vid bordning: Gunner slåss bättre, Engineer hackar mainframen snabbare och når fler funktioner, Captain ger överblick (ser vakter och kameror en bit genom väggar, och hela gruppen får se det). Alla kan använda mainframen. Bonusen får inte ge mycket övertag.
 - Mainframen står längst in, på översta våningen där det finns flera. Man måste alltid ta sig förbi vakterna för att nå den.
@@ -221,7 +227,8 @@ Bordning av stationer, besked från användaren (2026-11-14, inget av det är by
 - En neutral bas ska gå att ta över inifrån, med stor risk: red alert, bounty hunters som anfaller skeppet och sjunkande anseende.
 - Anseende ska inte förlåtas med tiden. Man ska få jobba för det, främst genom uppdrag som tillhör faktioner och som kan ge plus hos en och minus hos en annan (F-118, D-073). Det som är byggt i dag förlåter fortfarande med tiden och ska ändras när uppdragen finns.
 - Faktioner ska kunna vara i krig med varandra (F-119).
-- Kvar att bestämma i D-117: hur en attack inifrån börjar på en neutral bas (agentens förslag: en öppen del och en del bara för personal), att ingen längre kastas ut när stationen blir fientlig, hur larm skiljer sig från lockdown i bild, hur oförstörbara turrets aldrig kan låsa spelet, hur hårt bounty hunters slår, och vad panelen på en ägd station ska kunna när stationer i dag lagar sig själva.
+- Användaren har godkänt agentens förslag i samtalet (2026-11-14): bounty hunters som en kombination av prissumma och anfall då och då, ett krig mellan två faktioner per omgång, att förlåtelsen med tiden tas bort först när uppdragen finns, och att en faktion vars station besättningen håller som bäst kan bli "stängd".
+- Det samlade förslaget ligger i docs/station-boarding.md och väntar på ja. Det som då var kvar att bestämma: hur en attack inifrån börjar på en neutral bas (agentens förslag: en öppen del och en del bara för personal), att ingen längre kastas ut när stationen blir fientlig, hur larm skiljer sig från lockdown i bild, hur oförstörbara turrets aldrig kan låsa spelet, hur hårt bounty hunters slår, och vad panelen på en ägd station ska kunna när stationer i dag lagar sig själva.
 
 Sparande, uppdrag och omgångar (2026-11-14)
 - En autosparfil vid dockning och fem manuella platser. Vid död laddas senaste sparfilen om. Byggt 2026-11-14 (F-079).

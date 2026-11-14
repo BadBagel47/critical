@@ -202,6 +202,60 @@ await page.evaluate(() => {
   s.ship.docked = null;
 });
 
+// Buttons for what can be done right here: in position to dock, a button says so, and a click does it.
+await page.keyboard.press('Digit1');
+await page.evaluate(() => {
+  const c = window.__critical,
+    s = c.state,
+    st = c.stations.find((x) => x.home);
+  s.spawn.timer = s.raidTimer = s.traffic.timer = 1e9;
+  s.vessels = [];
+  s.bolts = [];
+  s.ship.docked = null;
+  // Off to the side and turned: further from the port than docking used to allow.
+  s.ship.x = st.x + 24;
+  s.ship.y = st.y + 96 + 44 + 28;
+  s.ship.heading = -0.3;
+  s.ship.vx = s.ship.vy = 0;
+  s.ship.throttle = 0;
+});
+await page.waitForTimeout(150);
+const offered = () =>
+  get("window.__critical.buttons().filter((b) => b.name.startsWith('action.')).map((b) => b.name).join(' ')");
+check((await offered()) === 'action.dock', 'a button offers to dock when the ship is in position');
+await shot('09a-dock-button');
+await clickOn('action.dock');
+await page.waitForTimeout(2000);
+const noseOff = await page.evaluate(() => {
+  const c = window.__critical,
+    s = c.state,
+    st = c.stations.find((x) => x.home);
+  const nx = s.ship.x + Math.sin(s.ship.heading) * 44;
+  const ny = s.ship.y - Math.cos(s.ship.heading) * 44;
+  return s.ship.docked === st.id ? Math.hypot(nx - st.x, ny - (st.y + 96)) : 999;
+});
+check(noseOff < 1, 'a click on it docks, and the ship is pulled in to the port');
+check((await offered()) === 'action.aboard action.undock', 'docked, the buttons offer to go aboard and to undock');
+await shot('09a-docked-buttons');
+await page.keyboard.press('Digit2');
+await page.waitForTimeout(100);
+check((await offered()) === 'action.aboard', 'only the Captain is offered to undock');
+await clickOn('action.aboard');
+await page.waitForTimeout(250);
+check(
+  (await get('s.players[0].inside')) !== null && (await get('s.bolts.length')) === 0,
+  'a click on a button goes aboard, and is not also taken as a shot',
+);
+check((await offered()) === 'action.leave', 'at the airlock a button offers the way back');
+await clickOn('action.leave');
+await page.waitForTimeout(250);
+check((await get('s.players[0].inside')) === null, 'and a click on it leads back to the ship');
+await page.keyboard.press('Digit1');
+await page.waitForTimeout(100);
+await clickOn('action.undock');
+await page.waitForTimeout(150);
+check((await get('s.ship.docked')) === null, 'a click on the undock button undocks');
+
 // Traffic: ships of the factions jump in, go about their business and leave the crew alone.
 await page.evaluate(() => {
   const c = window.__critical,
@@ -568,7 +622,11 @@ check((await get('s.over')) === true, 'an undefended ship is lost in the end');
 await shot('11-lost');
 await page.keyboard.press('KeyR');
 await page.waitForTimeout(200);
-check((await get('s.over')) === false && (await get('s.time')) < 2, 'R starts a new run');
+// The ship docked for real earlier on, so the game saved itself then, and R goes back to that.
+check(
+  (await get('s.over')) === false && (await get('s.ship.docked')) !== null,
+  'R after a loss loads the game that was saved when the ship docked',
+);
 
 // Test mode: T on the title screen starts with everything unlocked.
 const testPage = await browser.newPage({ viewport: { width: 1280, height: 720 }, ignoreHTTPSErrors: !!remote });
@@ -598,6 +656,8 @@ await page.waitForTimeout(80);
 check((await page.evaluate(() => window.__critical.audio.isMuted())) === !mutedNow, 'N switches the sound off and on');
 
 // The menu: saving, loading, sound levels, the autosave, and what happens when the ship is lost.
+// It starts from a browser with nothing saved.
+await page.evaluate(() => window.localStorage.clear());
 {
   const p = await browser.newPage({ viewport: { width: 1280, height: 720 }, ignoreHTTPSErrors: !!remote });
   p.on('pageerror', (e) => errors.push('menu page: ' + String(e)));

@@ -20,7 +20,6 @@ const CALM = { color: COL.ion[2], border: COL.ion[0] };
 const READY = { color: COL.ion[3], border: COL.ion[1] };
 const WARM = { color: COL.ochre[2], border: COL.ochre[0] };
 const ALARM = { color: COL.ember[2], border: COL.ember[0] };
-const LOCK_VERB = { pipes: 'BYPASS', code: 'BYPASS', dial: 'PICK' };
 
 // The three posts. The player's own is lit, and one held by someone else carries their name.
 export function drawTabs(ctx, font, state, view) {
@@ -100,27 +99,27 @@ function dockedLine(state, me) {
   if (!t) return null;
   const inside = state.players.filter((p) => p.inside === t.id).length;
   if (inside && t.interior && t.interior.trade) {
-    return { text: `${inside} ABOARD ${t.name}  ·  E UNDOCKS AND CALLS THEM BACK`, ...WARM };
+    return { text: `${inside} ABOARD ${t.name}  ·  UNDOCKING CALLS THEM BACK`, ...WARM };
   }
   if (inside) {
     const who = inside === 1 ? 'THEM' : 'THEM ALL';
-    return { text: `${inside} INSIDE  ·  E UNDOCKS AND TELEPORTS ${who} HOME`, ...WARM };
+    return { text: `${inside} INSIDE  ·  UNDOCKING TELEPORTS ${who} HOME`, ...WARM };
   }
-  if (isTrading(t)) return { text: `DOCKED AT ${t.name}  ·  F GO ABOARD  ·  E UNDOCK`, ...CALM };
-  if (t.closed) return { text: `DOCKED AT ${t.name}  ·  THEY WILL NOT LET YOU ABOARD  ·  E UNDOCK`, ...WARM };
+  if (isTrading(t)) return { text: `DOCKED AT ${t.name}`, ...CALM };
+  if (t.closed) return { text: `DOCKED AT ${t.name}  ·  THEY WILL NOT LET YOU ABOARD`, ...WARM };
   const what = nameOf(t);
   const kind = THINGS[t.kind];
   if (t.lock !== 'open' && t.breakin && t.breakin.started) {
-    const left = String(Math.max(0, Math.ceil(t.breakin.time))).padStart(2, '0');
-    return { text: `${what}  ·  F BACK TO THE LOCK  ·  0:${left}`, ...WARM };
+    const left = fmtTime(Math.max(0, Math.ceil(t.breakin.time)));
+    return { text: `${what}  ·  THE LOCK IS RUNNING  ·  ${left}`, ...WARM };
   }
   if (t.lock !== 'open') {
     // The target scanner tells how dangerous it is in there.
     const risk = has(ship, 'tscan') && kind.inside ? `  ·  RISK ${RISK[t.difficulty]}` : '';
-    return { text: `DOCKED AT ${what}  ·  F ${LOCK_VERB[kind.lock]} THE LOCK  ·  E UNDOCK` + risk, ...CALM };
+    return { text: `DOCKED AT ${what}  ·  LOCKED` + risk, ...CALM };
   }
-  if (me.tele > 0) return { text: `DOCKED  ·  TELEPORTER CHARGING  ${Math.ceil(me.tele)} S  ·  E UNDOCK`, ...CALM };
-  return { text: `DOCKED AT ${what}  ·  F BOARD  ·  E UNDOCK`, ...CALM };
+  if (me.tele > 0) return { text: `DOCKED AT ${what}  ·  TELEPORTER CHARGING  ${Math.ceil(me.tele)} S`, ...CALM };
+  return { text: `DOCKED AT ${what}  ·  THE LOCK IS OPEN`, ...CALM };
 }
 
 // Status lines at the top centre, most urgent first.
@@ -133,7 +132,7 @@ function statusLines(state, me, dock) {
     lines.push({ text: `JUMPING TO ${state.sectors[state.jump.to].name} IN ${left} S`, ...READY });
   }
   if (dock && dock.docked) lines.push(dockedLine(state, me));
-  else if (dock && dock.ready) lines.push({ text: captain ? 'PRESS E TO DOCK' : 'IN POSITION TO DOCK', ...READY });
+  else if (dock && dock.ready) lines.push({ text: 'IN POSITION TO DOCK', ...READY });
   else if (dock && dock.tooFast) lines.push({ text: 'TOO FAST TO DOCK', ...WARM });
   else if (dock && captain) lines.push({ text: 'DOCKING  ·  HOLD COURSE', ...CALM });
   lines.push(shipAlert(state));
@@ -170,8 +169,8 @@ function drawCaptainPanel(ctx, font, state) {
     label(ctx, font, 306, 333, text, { fg: out ? COL.ion[2] : COL.text, border: out ? COL.ion[0] : COL.line });
   }
   const keys = has(ship, 'boost')
-    ? 'W S THROTTLE  ·  A D TURN  ·  SHIFT BOOST  ·  E DOCK'
-    : 'W S THROTTLE  ·  A D TURN  ·  X STOP  ·  E DOCK';
+    ? 'W S THROTTLE  ·  A D TURN  ·  X STOP  ·  SHIFT BOOST'
+    : 'W S THROTTLE  ·  A D TURN  ·  X STOP';
   font.draw(ctx, keys, VIEW_W - 8, 346, ship.boosting ? COL.ion[2] : COL.faint, { align: 'r' });
 }
 

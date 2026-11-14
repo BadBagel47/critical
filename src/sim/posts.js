@@ -1,7 +1,8 @@
 // The three posts on the frigate. Each takes the command of whoever holds the post,
 // or null when nobody does, in which case the post keeps running as it was set.
 import { B } from './balance.js';
-import { nodeFactor, powerAvailable, powerUsed, setPower, dockCandidate, weaponPower } from './ship.js';
+import { nodeFactor, powerAvailable, powerUsed, setPower, dockCandidate, dockPose, weaponPower } from './ship.js';
+import { findDock } from './things.js';
 import { WEAPONS, weaponsOf, turretMount } from './weapons.js';
 import { teleportAllHome } from './boarding.js';
 import { useTool } from './map.js';
@@ -35,6 +36,24 @@ function dock(state) {
   state.events.push({ type: 'dock', target: t.id, kind: t.kind });
 }
 
+// The docking clamps pull a docked ship the last bit in, until its nose rests at the port and points at
+// what it is docked to.
+function settleInDock(state, dt) {
+  const ship = state.ship;
+  const thing = findDock(state, ship.docked);
+  const pose = thing && dockPose(ship, thing);
+  if (!pose) return;
+  const dx = pose.x - ship.x;
+  const dy = pose.y - ship.y;
+  const d = Math.hypot(dx, dy);
+  const step = Math.min(d, B.DOCK_PULL * dt);
+  if (d > 0.01) {
+    ship.x += (dx / d) * step;
+    ship.y += (dy / d) * step;
+  }
+  ship.heading = (turnToward(ship.heading, pose.heading, B.DOCK_TURN * dt) + TAU) % TAU;
+}
+
 export function stepCaptain(state, cmd, dt) {
   const ship = state.ship;
   let turnInput = 0;
@@ -47,7 +66,10 @@ export function stepCaptain(state, cmd, dt) {
       else dock(state);
     }
   }
-  if (ship.docked) return;
+  if (ship.docked) {
+    settleInDock(state, dt);
+    return;
+  }
   const enginePower = B.ENGINE_POWER[ship.power.engines];
   let thrust = enginePower * nodeFactor(ship, 'engines');
   // The afterburner trades fuel for speed while it is held.

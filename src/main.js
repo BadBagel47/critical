@@ -14,6 +14,7 @@ import { step, stepPlayers } from './sim/step.js';
 import { findThing, thingsOf } from './sim/things.js';
 import { playerById } from './sim/players.js';
 import { resetEffects, updateEffects, updateInside } from './render/effects.js';
+import { pressActions } from './render/actions.js';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('game'));
 const ctx = canvas.getContext('2d');
@@ -199,6 +200,8 @@ function frame(now) {
   const mode = settle(game);
   keys.pollPad(SCREENS[mode].pad, !!SCREENS[mode].cursor, dt);
   viewKeys(game, mode);
+  game.me = game.view.started ? playerById(game.state, game.view.playerId) : null;
+  pressActions(game, mode);
   if (mode === 'title' || mode === 'menu') menuInput(game);
   if (game.view.started) {
     if (game.state.over && !game.loss) game.loss = planAfterLoss();

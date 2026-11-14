@@ -21,12 +21,12 @@ const CX = VIEW_W / 2,
 const TEXT = {
   pipes: {
     title: 'BYPASS THE DOCKING LOCK',
-    hint: 'CLICK A TILE TO TURN IT  ·  F TO STEP AWAY',
+    hint: 'CLICK A TILE TO TURN IT',
     fail: 'IF TIME RUNS OUT THE WRECK BLOWS UP',
   },
   code: {
     title: 'ENTER THE STATION CODE',
-    hint: 'THE ENGINEER SCREEN SHOWS THE CODE  ·  F TO STEP AWAY',
+    hint: 'THE ENGINEER SCREEN SHOWS THE CODE',
     fail: 'IF TIME RUNS OUT THE STATION FIGHTS BACK',
   },
   dial: {

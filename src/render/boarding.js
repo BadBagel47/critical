@@ -1,8 +1,7 @@
 // The boarding view: the inside of a wreck seen from above.
 import { VIEW_W, COL } from '../config.js';
 import { B } from '../sim/balance.js';
-import { TILE, IW, IH, tileAt } from '../sim/boarding.js';
-import { dist } from '../sim/util.js';
+import { TILE, IW, IH, tileAt, useTarget } from '../sim/boarding.js';
 import { sprite, rect, label, bar } from './draw.js';
 import { drawStars } from './space.js';
 import { findDock } from '../sim/things.js';
@@ -143,7 +142,6 @@ const DESK = {
   armory: () => ['ARMORY', COL.ember[1]],
 };
 const upper = (o) => o.y < 9 * TILE;
-const atAirlockDoor = (it, me) => me.x < TILE * 2.2 && Math.abs(me.y - it.entry.y) < TILE * 1.5;
 const CROSSHAIR = [
   [-6, 0, 3, 1],
   [4, 0, 3, 1],
@@ -281,20 +279,10 @@ function drawPlaceLine(ctx, font, place) {
   }
 }
 
-// On a trading station: where to go, and a prompt at the desk or the airlock the player stands by.
-function drawVisitorHud(ctx, font, place, me) {
-  const it = place.interior;
-  const keys = 'W A S D MOVE  ·  F AT A DESK TO TRADE  ·  F AT THE AIRLOCK TO LEAVE';
+// On a trading station: where to go. What can be done at a desk or the airlock shows as a button, see actions.js.
+function drawVisitorHud(ctx, font) {
+  const keys = 'W A S D MOVE  ·  WALK UP TO A DESK TO TRADE, OR TO THE AIRLOCK TO LEAVE';
   font.draw(ctx, keys, VIEW_W - 8, 346, COL.faint, { align: 'r' });
-  if (!me) return;
-  const desk = it.desks.find((d) => dist(d.x, d.y, me.x, me.y) < 20);
-  if (atAirlockDoor(it, me)) {
-    label(ctx, font, OX + me.x + 14, OY + me.y - 26, 'F  BACK TO THE SHIP', { fg: COL.acid[2], border: COL.acid[0] });
-  } else if (desk) {
-    const text = 'F  ' + DESK[desk.type](place)[0];
-    const y = OY + desk.y + (upper(desk) ? 22 : -32);
-    label(ctx, font, OX + desk.x, y, text, { anchor: 'c', fg: COL.ochre[3], border: COL.ochre[1] });
-  }
 }
 
 // While boarding: health, weapons, how the ship is doing, and a prompt for what the use key does here.
@@ -316,23 +304,17 @@ function drawBoarderHud(ctx, font, state, view, player, place, me) {
   bar(ctx, x + 26, 340, 50, ship.hull / hullMax(ship), COL.steel[2], 5);
   if (state.time - ship.lastHit < 1.5) font.draw(ctx, 'UNDER FIRE', x, 346, COL.ember[2]);
   if (x < 470) {
-    const keys = x < 400 ? 'W A S D MOVE  ·  CLICK FIRE  ·  G GRENADE  ·  F USE' : 'G GRENADE  ·  F USE';
+    const keys = x < 400 ? 'W A S D MOVE  ·  CLICK FIRE  ·  G GRENADE' : 'G GRENADE';
     font.draw(ctx, keys, VIEW_W - 8, 346, COL.faint, { align: 'r' });
   }
-  if (me) {
-    const door = it.rooms[it.vault].door;
-    const atTerminal = it.terminal && it.doorOpen && dist(me.x, me.y, it.terminal.x, it.terminal.y) < 16;
-    if (atAirlockDoor(it, me)) {
-      label(ctx, font, OX + me.x + 14, OY + me.y - 26, 'F  BACK TO THE SHIP', { fg: COL.acid[2], border: COL.acid[0] });
-    } else if (atTerminal) {
-      const text = it.hacking ? 'TAKING OVER THE STATION' : 'HOLD F TO TAKE OVER THE STATION';
-      const look = { anchor: 'c', fg: COL.acid[2], border: COL.acid[0] };
-      label(ctx, font, OX + it.terminal.x, OY + it.terminal.y - 30, text, look);
-    } else if (!it.doorOpen && dist(me.x, me.y, door.x, door.y) < 22) {
-      const text = it.cutting ? 'CUTTING THE LOCK' : 'HOLD F TO CUT THE LOCK';
-      const look = { anchor: 'c', fg: COL.ochre[2], border: COL.ochre[0] };
-      label(ctx, font, OX + door.x, OY + door.y + (upper(door) ? 22 : -34), text, look);
-    }
+  // What is being worked on shows where it happens. The key for it is on a button, see actions.js.
+  const at = me && useTarget(it, me);
+  if (at && at.type === 'terminal' && it.hacking) {
+    const look = { anchor: 'c', fg: COL.acid[2], border: COL.acid[0] };
+    label(ctx, font, OX + it.terminal.x, OY + it.terminal.y - 30, 'TAKING OVER THE STATION', look);
+  } else if (at && at.type === 'door' && it.cutting) {
+    const look = { anchor: 'c', fg: COL.ochre[2], border: COL.ochre[0] };
+    label(ctx, font, OX + at.door.x, OY + at.door.y + (upper(at.door) ? 22 : -34), 'CUTTING THE LOCK', look);
   }
   ctx.fillStyle = COL.ochre[3];
   for (const [dx, dy, w, h] of CROSSHAIR)
@@ -369,6 +351,6 @@ export function drawBoarding(ctx, state, view, assets) {
   }
   const credits = { anchor: 'r', fg: it.trade ? COL.ochre[2] : COL.dim };
   label(ctx, font, VIEW_W - 8, it.trade ? 8 : 22, `CREDITS  ${state.credits}`, credits);
-  if (it.trade) drawVisitorHud(ctx, font, place, me);
+  if (it.trade) drawVisitorHud(ctx, font);
   else drawBoarderHud(ctx, font, state, view, player, place, me);
 }

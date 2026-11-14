@@ -2,7 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createState } from '../src/sim/state.js';
 import { step } from '../src/sim/step.js';
-import { setPower, powerUsed, powerAvailable, dockCandidate, fireInterval, speedOf } from '../src/sim/ship.js';
+import {
+  setPower,
+  powerUsed,
+  powerAvailable,
+  dockCandidate,
+  dockPort,
+  fireInterval,
+  speedOf,
+} from '../src/sim/ship.js';
 import { damageShip } from '../src/sim/damage.js';
 import { thingsOf, portsOf } from '../src/sim/things.js';
 import { hurtVessel } from '../src/sim/vessels.js';
@@ -207,6 +215,49 @@ test('the ship cannot fly through a wreck, and ramming hurts', () => {
 
 // ---------- boarding ----------
 import { createInterior, tryBoard, tileAt, TILE, IW, blocked } from '../src/sim/boarding.js';
+
+test('docking works from a little way off, and the ship is pulled in until its nose rests at the port', () => {
+  const s = quiet(createState(1));
+  s.traffic.timer = 1e9;
+  const st = stations(s).find((x) => x.home);
+  const port = portsOf(st)[1];
+  // Off to the side of the port and turned away from it, well outside the old reach of 20.
+  s.ship.heading = -0.5;
+  s.ship.x = port.x + 26;
+  s.ship.y = port.y + 70;
+  s.ship.vx = s.ship.vy = 0;
+  const nose = () => {
+    const f = { x: Math.sin(s.ship.heading), y: -Math.cos(s.ship.heading) };
+    return { x: s.ship.x + f.x * -SHIP_GEOM.nose.y, y: s.ship.y + f.y * -SHIP_GEOM.nose.y };
+  };
+  const off = Math.hypot(nose().x - port.x, nose().y - port.y);
+  assert.ok(off > 25 && off <= B.DOCK_RANGE, 'the nose is ' + Math.round(off) + ' from the port');
+  assert.equal(dockCandidate(s), st);
+  step(s, { captain: { dock: true } }, DT);
+  assert.equal(s.ship.docked, st.id);
+  run(s, {}, 2.5);
+  assert.ok(Math.hypot(nose().x - port.x, nose().y - port.y) < 0.5, 'the nose is at the port');
+  const facing = headingTo(st.x - port.x, st.y - port.y);
+  assert.ok(Math.abs(Math.atan2(Math.sin(s.ship.heading - facing), Math.cos(s.ship.heading - facing))) < 0.01);
+  const rest = { x: s.ship.x, y: s.ship.y };
+  run(s, {}, 1);
+  assert.deepEqual({ x: s.ship.x, y: s.ship.y }, rest, 'and there it stays');
+  s.ship.x += 400;
+  run(s, {}, 1);
+  assert.equal(s.ship.x, rest.x + 400, 'a ship that is nowhere near the port is left alone');
+});
+
+test('the nearest port is the one the ship docks at', () => {
+  const s = quiet(createState(1));
+  const st = stations(s).find((x) => x.home);
+  const [first, second] = [portsOf(st)[0], portsOf(st)[3]];
+  s.ship.heading = 0;
+  s.ship.x = second.x + 30;
+  s.ship.y = second.y + 20 - SHIP_GEOM.nose.y;
+  assert.equal(dockPort(s).thing, st);
+  assert.deepEqual(dockPort(s).port, second);
+  assert.notDeepEqual(dockPort(s).port, first);
+});
 
 function dockAt(s, w = wrecks(s)[0]) {
   s.ship.docked = w.id;
