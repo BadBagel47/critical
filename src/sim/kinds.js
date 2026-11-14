@@ -28,19 +28,19 @@ export const THINGS = {
     label: 'WRECK',
     persist: true,
   },
-  // Sprite is 96 x 96.
+  // Sprite is 192 x 192: a ring around a hub, with a docking arm on each side.
   station: {
-    hit: [{ x: 0, y: 0, r: 38 }],
+    hit: [{ x: 0, y: 0, r: 80 }],
     ports: [
-      { x: 0, y: -46 },
-      { x: 0, y: 46 },
-      { x: -46, y: 0 },
-      { x: 46, y: 0 },
+      { x: 0, y: -96 },
+      { x: 0, y: 96 },
+      { x: -96, y: 0 },
+      { x: 96, y: 0 },
     ],
-    // Where a hostile station has its guns.
+    // Where a hostile station has its guns: on two of the pads on the ring.
     guns: [
-      { x: -27, y: -27 },
-      { x: 27, y: 27 },
+      { x: -54, y: -54 },
+      { x: 54, y: 54 },
     ],
     lock: 'code',
     inside: true,

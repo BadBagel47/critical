@@ -8,54 +8,51 @@ Prioritet: Hög, Medel, Låg.
 **A** – standard model, medium level – Tester och verktyg
 - D-058 – Låt provkörningen klicka på namngivna knappar, lägg till kontroll av stavfel och typer, och kör testerna automatiskt vid varje sparning
 
-**B** – strong model, medium level – Större stationer
-- F-065 – Rita stationerna större i rymdvyn och flytta dockning, kanoner och träffyta efter det, så att de känns som stora platser bredvid skeppet
-
-**C** – strong model, high level – Spara spelet
+**B** – strong model, high level – Spara spelet
 - F-079 – Spara och fortsätta en omgång i webbläsaren, och exportera och importera en sparfil, så att långa omgångar inte går förlorade
 
-**D** – strong model, high level – Faktioner och trafik
+**C** – strong model, high level – Faktioner och trafik
 - F-035 – Faktioner med egna stationer, områden och anseende, så att världen får sidor att förhålla sig till
 - F-069 – Lägg till freighter som skeppsklass, större och långsam, så att trafiken får ett eget skepp
 - F-066 – Låt andra skepp flyga fram till stationer, docka en stund och lämna, så att stationerna känns besökta
 - F-067 – Låt handelsskepp, patruller och pirater hoppa in och ut ur systemet och slåss med varandra, så att miljön känns levande
 
-**E** – strong model, high level – Sällsynta skepp
+**D** – strong model, high level – Sällsynta skepp
 - F-070 – Juggernaut som långsamt och tungt bestyckat krigsskepp, på patrull hos faktioner och i mycket sällsynta fall som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**F** – strong model, high level – Handel
+**E** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**G** – strong model, medium level – Butik med bilder
+**F** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**H** – strong model, high level – Värme
+**G** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**I** – strong model, high level – Slå ut och borda
+**H** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**J** – strong model, high level – Missiler och raketer
+**I** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**K** – strong model, high level – Kontakt med andra skepp
+**J** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**L** – strong model, high level – Asteroider och anomalier
+**K** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**M** – strong model, high level – En värld som förändras
+**L** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 
-**N** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**M** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**O** – strong model, high level – Musik och ljud
+**N** – strong model, high level – Musik och ljud
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - F-048 – Musik för de olika lägena
 
@@ -81,7 +78,6 @@ Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. D-
 | F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer | Ej påbörjad |
 | F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
-| F-065 | Låt oss göra så att stationerna är större i rymdvyn | Ej påbörjad |
 | F-066 | Det vore trevligt om andra skepp kan besöka stationer. Att de åker fram, dockar en stund, och sedan lämnar. Från D-075: varje sektor har sin egen blandning av handelsskepp, patruller och pirater | Ej påbörjad |
 | F-067 | Vänliga skepp kan hyperjumpa in och ut ur systemet. De kan stanna en stund och sedan antingen flyga till något annat ställe, eller hoppa vidare. Detta för att miljön ska kännas mer levande. Från D-075: skeppen slåss också med varandra, och pirater anfaller freighters | Ej påbörjad |
 | F-068 | Handelssystem för goods. Att man kan köpa och sälja varor mellan olika stationer med olika priser. Det är inget som man själv kan använda, utan det är bara för att kunna tjäna pengar. Agentens förslag som användaren inte invänt mot: lastrum med begränsad plats som går att bygga ut, och priser som rör sig långsamt. Från D-075: prisnivåer per vara och station, och en kartvy som visar var det lönar sig | Ej påbörjad |
@@ -175,3 +171,4 @@ Väntar på användaren: F-090 (pekskärm) behöver besked om det ska byggas. D-
 | D-063 | Tester som vaktar att spelet är förutsägbart, även efter att det sparats och lästs in. Gäller varje ny funktion framöver | 2026-11-14 |
 | F-077 | Text och ramar ritas på ett dubbelt så fint rutnät, i samma storlek som förut. Skeppet och rymden är som de var | 2026-11-14 |
 | F-078 | Bilden fyller fönstret i stället för att hoppa mellan fasta storlekar | 2026-11-14 |
+| F-065 | Stationerna är dubbelt så stora i rymdvyn, nyritade med ring, nav och fyra dockningsarmar. Dockning, kanoner och träffyta är flyttade efter det | 2026-11-14 |

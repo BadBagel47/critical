@@ -92,7 +92,7 @@ export const THING_LOOK = {
     arrow: () => COL.ochre[2],
   },
   station: {
-    margin: 80,
+    margin: 130,
     draw: drawStation,
     mark: markStation,
     dot: { size: 4, color: (k) => ALIGN_COL[k.align] },

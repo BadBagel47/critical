@@ -8,6 +8,8 @@ Project language: English (all text in the game and README)
 
 Spelet går att spela ensam från start till mål. Du flyger fregatten, skjuter pirater, sköter energi och reparationer, byter fritt mellan de tre posterna, dockar med vrak och stationer, bryter dig in, bordar uppifrån och hämtar bränsle, krediter, stjärnkartor och slots. Vid stationer köps uppgraderingar som syns på skeppet och utrustning för bordarna. Stationer som anfalls sänder nödanrop, och varje sorts mål har sitt eget inbrottsspel. Det finns fem sektorer som nås med stjärnkartor, och i den sista väntar en Cruiser som boss.
 
+Sedan dess är koden omgjord i grunden utan att spelet beter sig annorlunda (den tekniska översynen), texten är skarpare, bilden fyller fönstret och stationerna är dubbelt så stora. Användaren har inte sett de tre sista ändringarna än.
+
 Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-089 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
 ## Nästa steg
@@ -130,6 +132,7 @@ Stationer, vapen och sektorer, agentens val som användaren inte har sett än (2
 - En neutral station blir fientlig efter sex träffar från skeppet. Den varnar först.
 - En fientlig station tas över från en terminal i dess valv. Misslyckas inbrottet slår stationen tillbaka med två Fighters, och låset får ett nytt pussel.
 - En övertagen station får shipyard.
+- Stationerna är dubbelt så stora som förut, 192 punkter tvärs över mot fregattens 108 på längden. Storleken är agentens val (F-065, 2026-11-14).
 - Den tunga lasern skjuter rakt fram längs skeppet, så Captain siktar med skeppet och Gunner laddar och avfyrar.
 - Pirater ger en liten belöning i krediter. En nedskjuten Gunboat blir ett vrak som går att borda.
 - Från andra sektorn kommer Gunboats, och pirater tål mer i senare sektorer.
@@ -178,6 +181,8 @@ Grafik
 - All grafik görs från grunden. Referensbilder används bara som inspiration.
 
 ## Miljö och begränsningar
+
+- 2026-11-14: Skarpare text och fönsterfyllnad (F-077, F-078) är bara provade i en automatisk webbläsare i tre fönsterstorlekar, inte på en riktig skärm. På en full-HD-skärm ritas bilden i 2560 × 1440 och krymps, vilket kostar mer grafikkraft än förut. Om det hackar: sänk `MAX_SCALE` i `src/main.js`.
 
 - 2026-11-14: Agenten kan klona och pusha via git. GitHub-verktygen (gh och GitHub-kopplingen) fungerade inte i sessionen, så agenten kunde inte läsa eller ändra repoinställningar, till exempel GitHub Pages.
 - 2026-11-14, senare session: GitHub-kopplingen fungerar för att läsa pull requests och issues. Kommandot gh finns inte. Sessionen fick bara pusha till sin egen gren (claude/), inte direkt till main. Därför finns nu automatisk merge, se Engångsåtgärder.

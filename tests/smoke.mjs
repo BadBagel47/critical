@@ -200,7 +200,7 @@ await page.evaluate(() => {
   s.spawn.timer = 1e9;
   s.vessels = [];
   s.ship.x = st.x;
-  s.ship.y = st.y + 90;
+  s.ship.y = st.y + 140;
   s.ship.heading = 0;
   s.ship.docked = st.id;
   s.ship.fuel = 30;
@@ -277,11 +277,11 @@ await page.evaluate(() => {
   st.align = 'hostile';
   st.lock = 'locked';
   st.guns = [
-    { x: -27, y: -27, hp: 45, heading: 0, cool: 9 },
-    { x: 27, y: 27, hp: 45, heading: 0, cool: 9 },
+    { x: -54, y: -54, hp: 45, heading: 0, cool: 9 },
+    { x: 54, y: 54, hp: 45, heading: 0, cool: 9 },
   ];
   s.ship.x = st.x;
-  s.ship.y = st.y + 100;
+  s.ship.y = st.y + 140;
   s.ship.docked = st.id;
   s.raidTimer = 1e9;
   window.__critical.view.cam = { x: s.ship.x, y: s.ship.y - 60 };

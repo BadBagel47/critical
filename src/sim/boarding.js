@@ -764,7 +764,7 @@ function blowUp(state, wreck) {
 // A station does not blow up. It fights back: fighters scramble and the lock resets.
 function fightBack(state, st) {
   st.breakin = null;
-  for (let i = 0; i < 2; i++) state.vessels.push(makeVessel(state, 'fighter', st.x + (i ? 60 : -60), st.y - 60));
+  for (let i = 0; i < 2; i++) state.vessels.push(makeVessel(state, 'fighter', st.x + (i ? 130 : -130), st.y - 130));
   state.events.push({ type: 'stationFightsBack', name: st.name });
 }
 
