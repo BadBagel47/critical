@@ -18,7 +18,7 @@ Den som besättningen skjuter på försvarar sig nu, skepp från samma sida komm
 
 Engineer ser rymden som de andra, med en remsa för energi och skador. Stationerna har varje sidas eget utseende, dockningsarmar som fälls ut och ljus som visar hur de behandlar besättningen. Vrak har formen av skeppet de var. Insidorna av vrak och stationer är större än skärmen, följer formen på det man bordat och görs nya för varje omgång.
 
-Vrak är mörka inuti (2026-11-15): man letar sig fram med ficklampa (L) och flares som kastas (Q), och väggar kastar skuggor. Det är första steget i ljussättningen. Ljus i rymden (D-147) är byggt som ett förslag som är avstängt: det syns med `lights` i adressen (`?test&lights`) och visas på designsidan under "Ljus". Det väntar på användarens ja eller nej.
+Vrak är mörka inuti (2026-11-15): man letar sig fram med ficklampa (L) och flares som kastas (Q), och väggar kastar skuggor. Det är första steget i ljussättningen. Ljus i rymden (D-147) är godkänt och påslaget för alla: stationernas ljus faller på stationen, motorer och skott lyser upp skrov, och skepp kastar skugga på stationer och vrak.
 
 Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-089 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
@@ -43,7 +43,7 @@ Idéer spånas i chatten och samlas i designskissen. Det som ska byggas läggs i
 
 ## Publicering
 
-GitHub Pages direkt från main, rotmappen. Spelet har inget byggsteg, så det som ligger på main är det som publiceras. Agentens grenar (claude/) slås ihop med main automatiskt. Adress: https://badbagel47.github.io/critical/
+GitHub Pages direkt från main, rotmappen. Spelet har inget byggsteg, så det som ligger på main är det som publiceras. Agentens grenar (claude/) slås ihop med main automatiskt, men först när alla tester har gått igenom hos GitHub (användaren, 2026-11-15). Misslyckas de publiceras ingenting och den gamla versionen ligger kvar. Det är en avvikelse från agentreglernas mall, som slår ihop direkt, och den gäller bara det här projektet. En publicering tar därför några minuter. Testerna körs av `.github/workflows/test.yml`, som `auto-merge.yml` anropar och väntar på. Adress: https://badbagel47.github.io/critical/
 
 Pages slogs på 2026-11-14. Flytt till Cloudflare sker när nätverksmotorn byggs in.
 
@@ -84,7 +84,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - `src/scene.js`: vilket slags ögonblick spelaren är i (lugnt, varning, strid, bordning, station), för musiken. `src/music.js`: musiken. Den anropas en gång per bildruta och kopplar sitt ljud till `musicOutput()` i `src/audio.js`. Delarna ligger i `src/music/`: `theory.js` (toner, introtemana och varje sektors färg), `sets.js` (uppsättningarna, var och en med eget tema och ett stycke per scen), `pieces.js` och `pieces-b.js` (uppsättning A och B, som rena funktioner), `director.js` (vilket stycke som ska spela, med tröghet), `synth.js` (instrumenten) och `engine.js` (spelar och tonar mellan styckena). Spelet spelar uppsättning A (`SET` i `src/music.js`) tills användaren uttryckligen säger något annat. Lyssningssidan är `docs/music/index.html`.
 - `src/render/`: skärmarna. `looks.js` beskriver hur varje sorts sak och skepp ser ut, på samma sätt som `kinds.js` beskriver vad de är. `effects.js` och `particles.js` ritar effekterna. Allt här läser bara spelets tillstånd och ändrar det aldrig.
 - `src/render/light.js`: ljuset i mörka ställen. Bilden ritas fullt upplyst och multipliceras med en karta över ljuset, och väggar stoppar det. Vilka ljus som finns räknas upp i `lightsOf()` i `render/boarding.js`. En insida är mörk när dess `dark` är sann.
-- Ljus i rymden (förslag, D-147): `drawSpaceLights()` och `drawShadow()` i `src/render/space.js`. De körs bara när `view.lights` är sann, vilket den blir med `lights` i adressen.
+- Ljus i rymden (D-147): `drawSpaceLights()` och `drawShadow()` i `src/render/space.js`. Det är påslaget för alla (`view.lights`).
 - `assets/`: bilder och typsnitt som skapas av `tools/export_assets.py`.
 - Spelet ritas på 640 × 360 punkter. Text och ramar ritas på ett dubbelt så fint rutnät (typsnittet är dubbelt så stort och ritas i halv skala, se `src/font.js` och `HAIR` i `src/render/draw.js`). Bilden fyller alltid fönstret så långt formen 16:9 tillåter: den ritas i ett jämnt antal skärmpunkter per spelpunkt och webbläsaren passar sedan in den, se `resize()` i `src/main.js`.
 - Koden formateras med Prettier: `npm run format`.
@@ -267,6 +267,7 @@ Bordning av stationer, besked från användaren (2026-11-14, inget av det är by
 - Ett skepp som besättningen själv slagit ut (F-081) har besättning och ström kvar och är i lockdown, med röda ljus och smygande. Ett vrak är dött och mörkt (2026-11-15).
 - Larmade dörrar (F-158, 2026-11-15): de syns på nära håll även utan radar, Engineer kan koppla ur dem på plats, och det finns alltid en väg till mainframen utan larmad dörr.
 - Vakter går fasta rundor i stället för att gå slumpat, så att smygandet går att planera. Längre fram kommer en vakttyp som väljer väg själv men visar vart den är på väg (2026-11-15, se docs/station-boarding.md avsnitt 5).
+- Besked 2026-11-15: mörkret i vraken och flares är bra som de är, och mörkernivån ändras inte nu. Zoomen i rymdvyn ska vara fast, och vi provar tre fjärdedels storlek (F-165). Faktionernas trafik är på i testläget tills vidare. Engineers tangenter är bra som de är, olika i panelen och i rymdvyn. Det senaste musikvalet gäller tills vidare. Faktionernas namn (D-095), smuggelgods (D-074) och fler minispel (D-093) ligger i backloggen och väntar inte längre på svar.
 - Energi (2026-11-15): ett system som Engineer inte ger någon energi fungerar inte alls. Utan energi till motorerna kan skeppet varken gasa eller svänga, och en sköld utan energi faller på två sekunder i stället för direkt, så att ett felklick inte blir en katastrof (F-169). Captain och Gunner ser bara energin till sitt eget system, och bara Engineer ser alla. Användaren kan komma att ändra sig om det (F-170).
 - Pods (2026-11-15, inte byggt): låset visar alla ringar samtidigt och öppnas utifrån och in, och mitten vrids ett kvarts varv när den innersta ringen är upplåst. Skissen på designsidan är godkänd, och reglerna är som i dag, utom att visaren går medurs på den yttersta och den innersta ringen och moturs på den mellersta (F-163). Varje pod får en lampa: grön blink när den går att öppna, röd blink när den larmar, släckt när den är tömd. En tömd pod ligger kvar som ett släckt skal, och en pod larmar tills piraterna den kallade på är borta (F-162).
 - Ljus inomhus ritas genom att bilden multipliceras med en ljuskarta (F-135). Ett nytt mörkt ställe sätter `dark` på sin insida och får då samma ljus. Flimmer hålls långsamt, se Lagar och regler.

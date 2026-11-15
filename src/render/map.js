@@ -122,6 +122,57 @@ function drawOwnShip(ctx, ship) {
 }
 
 // Everything inside the map square. Returns how many hostile ships are in sight.
+// The texts beside the marks on the map. Each is put where nothing else is: to the right of its mark if that
+// is free, otherwise to the left, below or above it. `labels` are { p, reach, lines }. `own` is where the
+// crew's ship is, which no text should cover.
+const LINE = 10;
+function placeLabels(ctx, font, labels, own) {
+  const taken = [{ p: own, reach: 6 }, ...labels].map((l) => ({
+    x: l.p.x - l.reach,
+    y: l.p.y - l.reach,
+    w: l.reach * 2,
+    h: l.reach * 2,
+  }));
+  for (const l of labels) {
+    const w = Math.max(...l.lines.map(([text]) => font.width(text)));
+    const h = l.lines.length * LINE;
+    const gap = l.reach + 3;
+    const right = l.p.x + gap,
+      left = l.p.x - gap - w,
+      level = l.p.y - h / 2 + 2,
+      below = l.p.y + gap,
+      above = l.p.y - gap - h;
+    const mid = l.p.x - w / 2;
+    const spots = [
+      [right, level],
+      [left, level],
+      [right, below],
+      [right, above],
+      [left, below],
+      [left, above],
+      [mid, below],
+      [mid, above],
+      [mid, below + LINE],
+      [mid, above - LINE],
+    ];
+    // How much of a text at this spot would lie over something else, or outside the map.
+    const clash = ([x, y]) => {
+      const out = x < MAP.x || y < MAP.y || x + w > MAP.x + MAP.size || y + h > MAP.y + MAP.size;
+      let area = out ? w * h : 0;
+      for (const t of taken) {
+        const ox = Math.min(x + w, t.x + t.w) - Math.max(x, t.x),
+          oy = Math.min(y + h, t.y + t.h) - Math.max(y, t.y);
+        if (ox > 0 && oy > 0) area += ox * oy;
+      }
+      return area;
+    };
+    // The first spot that is free, or else the one where the least is covered.
+    const [x, y] = spots.reduce((best, spot) => (clash(spot) < clash(best) ? spot : best));
+    taken.push({ x, y, w, h });
+    l.lines.forEach(([text, color], i) => font.draw(ctx, text, x, y + i * LINE, color));
+  }
+}
+
 function drawMapContents(ctx, font, state, sources) {
   const seen = state.map.seen;
   const env = { state, scan: has(state.ship, 'tscan') };
@@ -135,20 +186,26 @@ function drawMapContents(ctx, font, state, sources) {
     const p = toMap(s.x, s.y);
     ring(ctx, p.x, p.y, s.r * K, SOURCE_COL[s.kind]);
   }
+  const labels = [];
   for (const k of state.known) {
     const look = THING_LOOK[k.kind];
     if (!look || !look.mark) continue;
     const p = toMap(k.x, k.y);
-    if (state.raid && state.raid.station === k.id) {
+    const raided = state.raid && state.raid.station === k.id;
+    if (raided) {
       ctx.strokeStyle = COL.ochre[3];
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.arc(p.x, p.y, 8 + ((state.time * 12) % 12), 0, 7);
       ctx.stroke();
-      font.draw(ctx, 'DISTRESS CALL', p.x + 8, p.y + 12, COL.ochre[3]);
     }
-    look.mark(ctx, font, k, p, env);
+    const text = look.mark(ctx, font, k, p, env);
+    if (raided) text.lines.push(['DISTRESS CALL', COL.ochre[3]]);
+    labels.push({ p, ...text });
   }
+  // Stations get their place first, since their names matter most.
+  labels.sort((a, b) => b.lines.length - a.lines.length);
+  placeLabels(ctx, font, labels, toMap(state.ship.x, state.ship.y));
   for (const b of state.things) {
     if (b.kind !== 'buoy') continue;
     const p = toMap(b.x, b.y);

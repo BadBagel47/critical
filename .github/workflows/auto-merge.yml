@@ -1,5 +1,6 @@
 name: Auto-merge agent branches to main
 
+# An agent branch is merged into main, and so published, only when every check has passed on it.
 on:
   push:
     branches:
@@ -9,25 +10,30 @@ permissions:
   contents: write
   pages: write
 
-concurrency:
-  group: auto-merge-main
-  cancel-in-progress: false
-
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
   merge:
+    needs: test
     runs-on: ubuntu-latest
+    # One merge at a time. A push that comes while another waits takes its place, which is fine: it holds
+    # the earlier commits too.
+    concurrency:
+      group: auto-merge-main
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
-      - name: Merge agent branch into main
+      - name: Merge the tested commit into main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
           git fetch origin "${GITHUB_REF_NAME}"
-          git merge --no-edit "origin/${GITHUB_REF_NAME}"
+          git merge --no-edit "${GITHUB_SHA}"
           git push origin main
 
       - name: Trigger GitHub Pages build

@@ -184,18 +184,24 @@ function markStation(ctx, font, k, p, env) {
   rect(ctx, x - 4, y - 4, 9, 9, color, COL.out);
   rect(ctx, x - 2, y - 2, 5, 5, COL.out);
   rect(ctx, x, y, 1, 1, color);
-  font.draw(ctx, k.name, p.x + 8, p.y - 8, color);
-  font.draw(ctx, aboutStation(k, env), p.x + 8, p.y + 2, COL.dim);
+  return {
+    reach: 5,
+    lines: [
+      [k.name, color],
+      [aboutStation(k, env), COL.dim],
+    ],
+  };
 }
 function markWreck(ctx, font, k, p, env) {
   rect(ctx, Math.round(p.x) - 3, Math.round(p.y) - 3, 6, 6, COL.ochre[2], COL.out);
-  font.draw(ctx, 'WRECK', p.x + 6, p.y - 3, COL.ochre[2]);
   const wreck = env.state.things.find((t) => t.id === k.id);
-  if (env.scan && wreck) font.draw(ctx, risk(wreck.difficulty), p.x + 6, p.y + 7, COL.dim);
+  const lines = [['WRECK', COL.ochre[2]]];
+  if (env.scan && wreck) lines.push([risk(wreck.difficulty), COL.dim]);
+  return { reach: 4, lines };
 }
 function markPod(ctx, font, k, p) {
   rect(ctx, Math.round(p.x) - 2, Math.round(p.y) - 2, 4, 4, COL.ochre[1], COL.out);
-  font.draw(ctx, 'CARGO POD', p.x + 5, p.y - 3, COL.ochre[1]);
+  return { reach: 3, lines: [['CARGO POD', COL.ochre[1]]] };
 }
 
 const spriteOf = (name) => (ctx, t, env) =>
@@ -203,7 +209,8 @@ const spriteOf = (name) => (ctx, t, env) =>
 
 //   margin  how far outside the screen it is still drawn
 //   draw    how it is drawn in space
-//   mark    how it is drawn on the big map, for the kinds the map remembers
+//   mark    how it is drawn on the big map, for the kinds the map remembers. It draws the mark itself and
+//           gives back the lines of text that belong to it, which the map puts where there is room
 //   dot     its size and colour on the small map
 //   arrow   the colour of the arrow at the screen edge that points to it, for the kinds that get one
 export const THING_LOOK = {

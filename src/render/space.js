@@ -398,7 +398,7 @@ function drawArrows(ctx, font, state, cam) {
   }
 }
 
-// ---------- light in space: a proposal (D-147), on only with ?lights in the address ----------
+// ---------- light in space ----------
 // A light brightens the hulls and stars near it and leaves black space black.
 function shine(ctx, x, y, r, rgb, power) {
   if (power <= 0.01) return;

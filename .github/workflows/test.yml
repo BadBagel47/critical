@@ -1,11 +1,12 @@
 name: Tests
 
-# Runs every check on each push from an agent branch, and on pushes straight to main.
+# Runs every check. Called by auto-merge.yml for each push from an agent branch, which waits for it before
+# merging, and run by itself on pushes straight to main.
 on:
+  workflow_call:
   push:
     branches:
       - 'main'
-      - 'claude/**'
 
 permissions:
   contents: read
