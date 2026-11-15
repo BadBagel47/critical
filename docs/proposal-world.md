@@ -4,6 +4,22 @@
 
 Det som är märkt **Bestämt** kommer från dig och står i HANDOFF.md eller BACKLOG.md. Det som är märkt **Förslag** är agentens. Alla siffror är startvärden att provspela med. Text som syns i spelet är på engelska och skrivs här som den skulle stå på skärmen.
 
+## Besked 2026-11-15 som ändrar förslaget
+
+Du har läst förslaget och gett en ny riktning. Resten av texten är inte omskriven än, så där den säger emot det här gäller det här.
+
+- **Vad spelet går ut på.** Utforskning och äventyr som binder ihop systemen. Det gör också uppgraderingarna intressantare.
+- **Slutet.** Ett anfall på en svår piratbas, inte The Maw med Cruisern. Cruisern kan i stället bli en del av ett mystiskt uppdrag där man inte riktigt vet vad det är. Det avgör fråga 4.
+- **Kartan.** Mer som i Escape Velocity: många system, men inte fullt så stora, och i olika storlekar så att de känns fräscha. Hoppen med bränsle blir viktiga. Storlekarna 6, 10 och 16 i avsnitt 2 är för få och görs om. Fråga 1 och 2 ställs om på nytt.
+- **Runda system.** Systemen ska vara cirkulära, som ett solsystem uppfattas, inte fyrkantiga (F-196).
+- **Bränsle och pengar.** Man ska kunna få slut på båda, och bränslet ska inte komma tillbaka av sig självt, men man ska ändå komma vidare. Reservtanken (avsnitt 6, regel 1) stryks, och det avgör fråga 10. Vägarna ut är asteroider som ger resurser som fyller på bränsle (F-085) och solceller som man köper och som laddar bränslet (F-194). Du tror mest på solcellerna.
+- **Systemradar.** En uppgradering som visar om närliggande system är vänliga och vilken faktion de tillhör. Den scannar grannsystemen av sig själv, och statusen uppdateras när man kommer inom räckvidd (F-195).
+
+Öppet efter beskeden:
+- Hur många system, ungefär, och om storleken fortfarande väljs vid start.
+- Vad som är golvet för den som har slut på både bränsle och pengar och inte har köpt solceller: räcker asteroiderna, och finns de i varje system?
+- Om det mystiska uppdraget med Cruisern är en del av den röda tråden eller ett sidospår.
+
 ## Sammanfattning
 
 - Varje nytt spel får en egen karta: 6, 10 eller 16 system i ett nät av hoppvägar, med egna namn, ägare och faror. Storleken väljs på startskärmen.
