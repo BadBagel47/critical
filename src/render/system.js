@@ -9,7 +9,7 @@ import { TAU } from '../sim/util.js';
 // The star is worked out one pixel at a time, in the few colours and the fixed dither pattern that the ships
 // are drawn with: a surface that is brightest in the middle, with grains that move and spots that drift, a
 // crown of rays, and arcs of fire that rise and sink at its edge. That is a lot of work, so a new picture is
-// worked out a little at a time over several frames, and shown when it is whole. It was tried out first in
+// worked out a little at a time over several frames, and faded in when it is whole. It was tried out first in
 // docs/design/prototypes/star.html, which has the same code.
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 // From the dark edge of the surface to its white heart, the glow outside it from faint to strong, and the
@@ -86,10 +86,39 @@ function arcsAt(t, seed) {
   return list;
 }
 
-// The picture that is shown, and the one that is being worked out.
-let shown = null;
+// The grain and the spots of the surface change slowly from place to place, so they are worked out for every
+// third pixel each way and looked up in between. The dither pattern is still laid pixel by pixel.
+const FINE = 3;
+const FIELD_HALF = SIZE * 1.1;
+const FIELD_N = Math.ceil((FIELD_HALF * 2) / FINE) + 2;
+const GRAIN = new Float32Array(FIELD_N * FIELD_N);
+const SPOT = new Float32Array(FIELD_N * FIELD_N);
+// The surface and the arcs lie inside this many radii. What is outside is only glow, which changes so slowly
+// that it is worked out for every eighth picture.
+const INNER = 1.35;
+const INNER_ROWS = Math.ceil(SIZE * INNER);
+const OUTER_EVERY = 8;
+// How bright the surface is, and how much its grain shows, by how far out from the middle a place is. Looked
+// up by the square of that distance, from 0 in the middle to 1 at the edge.
+const SHADES = 256;
+const BRIGHT = new Float32Array(SHADES + 1);
+const SHOWS = new Float32Array(SHADES + 1);
+const ROUND = new Float32Array(SHADES + 1);
+for (let k = 0; k <= SHADES; k++) {
+  const mu = Math.sqrt(1 - k / SHADES);
+  ROUND[k] = mu;
+  BRIGHT[k] = 0.12 + 0.62 * mu ** 0.6;
+  SHOWS[k] = 0.62 * (0.35 + 0.65 * mu);
+}
+
+// The two latest pictures of the star, and the one that is being worked out. A new picture takes a while, most
+// of all on a phone, so the one before it is faded into the latest while the next is on its way. That keeps the
+// star moving smoothly however long a picture takes.
+let older = null;
+let newer = null;
 let work = null;
 let pass = null;
+let passes = 0;
 
 // Begin a new picture of the star as it is at time t.
 function begin(t, seed) {
@@ -97,44 +126,87 @@ function begin(t, seed) {
     const a = (k / 720) * TAU;
     EDGE[k] = 1 + 0.036 * (noise(Math.cos(a) * 2.2 + 9, Math.sin(a) * 2.2, t * 0.12 + seed) - 0.5);
   }
-  for (let k = 0; k < TURNS; k++) {
-    const a = (k / TURNS) * TAU - Math.PI;
-    for (let n = 0; n < STEPS; n++) {
-      const out = (n / (STEPS - 1)) * FAR;
-      const ray = fbm2(Math.cos(a) * 2.6 + 5 + seed, Math.sin(a) * 2.6, t * 0.05 + out * 0.5);
-      RAYS[k * STEPS + n] = 1.05 + 5.2 * (1 - ray) ** 1.5;
+  const outer = passes % OUTER_EVERY === 0;
+  if (outer) {
+    for (let k = 0; k < TURNS; k++) {
+      const a = (k / TURNS) * TAU - Math.PI;
+      for (let n = 0; n < STEPS; n++) {
+        const out = (n / (STEPS - 1)) * FAR;
+        const ray = fbm2(Math.cos(a) * 2.6 + 5 + seed, Math.sin(a) * 2.6, t * 0.05 + out * 0.5);
+        RAYS[k * STEPS + n] = 1.05 + 5.2 * (1 - ray) ** 1.5;
+      }
     }
   }
+  passes++;
   const bumps = arcsAt(t, seed);
-  work.data.fill(0);
-  pass = { t, seed, row: 0, bumps, high: bumps.reduce((most, b) => Math.max(most, b.high), 0) };
+  // The steps of a picture: first the rows of the grain, then the rows of pixels that are worked out anew.
+  const from = outer ? 0 : REACH - INNER_ROWS;
+  const rows = outer ? SIDE : INNER_ROWS * 2;
+  const high = bumps.reduce((most, b) => Math.max(most, b.high), 0);
+  pass = { t, seed, step: 0, steps: FIELD_N + rows, from, outer, bumps, high };
+}
+
+// Work out one row of the grain and the spots.
+function fieldRow(j) {
+  const { t, seed } = pass;
+  const grain = 5 / SIZE;
+  const y = j * FINE - FIELD_HALF;
+  const far = (FIELD_HALF + FINE * 2) ** 2;
+  for (let i = 0; i < FIELD_N; i++) {
+    const x = i * FINE - FIELD_HALF;
+    if (x * x + y * y > far) continue;
+    GRAIN[j * FIELD_N + i] = fbm(x * grain + 40, y * grain, t * 0.22 + seed) - 0.5;
+    SPOT[j * FIELD_N + i] = noise(x * grain * 0.3 + t * 0.012 + seed, y * grain * 0.3 + 20, t * 0.02);
+  }
+}
+// What a field holds at a place between the places it was worked out for.
+function fieldAt(field, dx, dy) {
+  const fx = (dx + FIELD_HALF) / FINE,
+    fy = (dy + FIELD_HALF) / FINE;
+  const i = Math.floor(fx),
+    j = Math.floor(fy);
+  const u = fx - i,
+    v = fy - j;
+  const k = j * FIELD_N + i;
+  const top = field[k] + (field[k + 1] - field[k]) * u;
+  const low = field[k + FIELD_N] + (field[k + FIELD_N + 1] - field[k + FIELD_N]) * u;
+  return top + (low - top) * v;
 }
 
 // Work out one row of the picture.
 function paintRow(y, kind) {
   const { surface, glow } = kind;
-  const { t, seed, bumps, high } = pass;
+  const { bumps, high, outer } = pass;
   const data = work.data;
-  const grain = 5 / SIZE;
   const dy = y - REACH;
-  for (let x = 0; x < SIDE; x++) {
+  // A picture that leaves the far glow as it was only reaches as far as the surface and the arcs do.
+  const wide = outer ? REACH : Math.sqrt(Math.max(0, (SIZE * INNER) ** 2 - dy * dy));
+  const x0 = Math.max(0, Math.floor(REACH - wide)),
+    x1 = Math.min(SIDE - 1, Math.ceil(REACH + wide));
+  for (let x = x0; x <= x1; x++) {
     const dx = x - REACH;
-    const d = Math.hypot(dx, dy);
+    const d = Math.sqrt(dx * dx + dy * dy);
     if (d > REACH) continue;
     const r = d / SIZE;
-    const a = Math.atan2(dy, dx);
-    const edge = EDGE[Math.floor(((a + Math.PI) / TAU) * 719.99)];
+    if (!outer && r > INNER) continue;
+    // Well inside the surface the wandering of its edge makes no difference, and the direction is not needed.
+    let a = 0,
+      edge = 1;
+    if (r > 0.9) {
+      a = Math.atan2(dy, dx);
+      edge = EDGE[Math.floor(((a + Math.PI) / TAU) * 719.99)];
+    }
     const i = (y * SIDE + x) * 4;
     const th = BAYER[(y & 3) * 4 + (x & 3)];
     let c = null;
     let alpha = 255;
     if (r < edge) {
       // The surface: brightest in the middle, darker toward the edge, with grains that move and spots that drift.
-      const mu = Math.sqrt(1 - (r / edge) ** 2);
-      let v = 0.12 + 0.62 * mu ** 0.6;
-      v += (fbm(dx * grain + 40, dy * grain, t * 0.22 + seed) - 0.5) * 0.62 * (0.35 + 0.65 * mu);
-      const spot = noise(dx * grain * 0.3 + t * 0.012 + seed, dy * grain * 0.3 + 20, t * 0.02);
-      if (spot > 0.68) v -= (spot - 0.68) * 2.4 * mu;
+      const q = r / edge;
+      const k = Math.floor(q * q * SHADES);
+      let v = BRIGHT[k] + fieldAt(GRAIN, dx, dy) * SHOWS[k];
+      const spot = fieldAt(SPOT, dx, dy);
+      if (spot > 0.68) v -= (spot - 0.68) * 2.4 * ROUND[k];
       c = surface[Math.max(0, Math.min(surface.length - 1, Math.floor(v * (surface.length - 1) + th)))];
     } else {
       // An arc of fire is a loop that stands on the edge: a band of flame with dimmer fire under its top.
@@ -163,7 +235,11 @@ function paintRow(y, kind) {
         const fall = RAYS[k + lo] + (RAYS[k + lo + 1] - RAYS[k + lo]) * (n - lo);
         const g = Math.exp(-out * fall) * 1.06 - 0.06 - Math.max(0, d / REACH - 0.75) * 0.5;
         const idx = Math.floor(g * glow.length + th * 0.95);
-        if (idx <= 0) continue;
+        if (idx <= 0) {
+          // Nothing here now, whatever the picture before had.
+          data[i + 3] = 0;
+          continue;
+        }
         c = glow[Math.min(glow.length - 1, idx - 1)];
         alpha = GLOW_ALPHA[Math.min(glow.length - 1, idx - 1)];
       }
@@ -175,25 +251,47 @@ function paintRow(y, kind) {
   }
 }
 
-// How long one frame may spend on the next picture of the star, in milliseconds.
-const BUDGET = 3;
-function workOn(time, seed, kind) {
-  if (!shown) {
-    shown = document.createElement('canvas');
-    shown.width = SIDE;
-    shown.height = SIDE;
-    work = shown.getContext('2d').createImageData(SIDE, SIDE);
-  }
-  if (!pass) begin(time, seed);
-  // The very first picture is worked out at once, so that there is something to show.
-  const until = pass.first === false ? performance.now() + BUDGET : Infinity;
-  while (pass.row < SIDE) {
-    paintRow(pass.row++, kind);
-    if (performance.now() > until) return;
-  }
-  shown.getContext('2d').putImageData(work, 0, 0);
+const canvasOf = () => {
+  const c = document.createElement('canvas');
+  c.width = SIDE;
+  c.height = SIDE;
+  return c;
+};
+// One step of the picture that is being worked out. Says whether the picture is whole.
+function stepOn(kind) {
+  if (pass.step < FIELD_N) fieldRow(pass.step);
+  else paintRow(pass.from + pass.step - FIELD_N, kind);
+  return ++pass.step >= pass.steps;
+}
+// The picture is whole: it becomes the latest, and the next one is begun.
+function finish(time, seed) {
+  [older, newer] = [newer, older];
+  newer.getContext('2d').putImageData(work, 0, 0);
   begin(time, seed);
-  pass.first = false;
+}
+
+// How long one frame may spend on the next picture of the star, in milliseconds, and how many steps it takes
+// at the least, whatever the clock says.
+const BUDGET = 3;
+const LEAST = 6;
+function workOn(time, seed, kind) {
+  if (!work) {
+    // The very first picture is worked out at once, so that there is something to show.
+    older = canvasOf();
+    newer = canvasOf();
+    work = newer.getContext('2d').createImageData(SIDE, SIDE);
+    begin(time, seed);
+    while (!stepOn(kind));
+    finish(time, seed);
+    older.getContext('2d').putImageData(work, 0, 0);
+    return;
+  }
+  const until = performance.now() + BUDGET;
+  for (let n = 0; n < LEAST || performance.now() < until; n++) {
+    if (!stepOn(kind)) continue;
+    finish(time, seed);
+    return;
+  }
 }
 
 // Sparks drift outward through the reach of the heat and fade as they go, which shows where it does harm.
@@ -221,7 +319,11 @@ export function drawStar(ctx, cam, time, seed = 0) {
   workOn(time, seed, kind);
   const smooth = ctx.imageSmoothingEnabled;
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(shown, -REACH / ZOOM, -REACH / ZOOM, SIDE / ZOOM, SIDE / ZOOM);
+  // The picture before the latest, with the latest fading in over it as the next one is worked out.
+  ctx.drawImage(older, -REACH / ZOOM, -REACH / ZOOM, SIDE / ZOOM, SIDE / ZOOM);
+  ctx.globalAlpha = pass.step / pass.steps;
+  ctx.drawImage(newer, -REACH / ZOOM, -REACH / ZOOM, SIDE / ZOOM, SIDE / ZOOM);
+  ctx.globalAlpha = 1;
   ctx.imageSmoothingEnabled = smooth;
   drawSparks(ctx, time, seed, kind.spark);
   // A faint ring where the heat begins to do harm.
