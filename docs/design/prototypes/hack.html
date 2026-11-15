@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engineers hack, tre varianter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* One screen: the three variants as tabs, the lock itself in the middle, what was found and how it went below.
+   The page keeps to the game's own dark world, so it has one theme by choice. */
+:root {
+  color-scheme: dark;
+  --bg: #0b0c16;
+  --panel: #14162a;
+  --line: #2f3350;
+  --text: #c9ccd8;
+  --dim: #7d8199;
+  --accent: #dba445;
+  --good: #96d66e;
+  --bad: #f09a5a;
+  --display: 'Chakra Petch', 'Trebuchet MS', sans-serif;
+  --body: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 20px 16px 40px;
+}
+main { max-width: 760px; margin: 0 auto; display: grid; gap: 18px; }
+h1 { font-family: var(--display); font-weight: 600; font-size: 1.7rem; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 1.05rem; margin: 0 0 6px; }
+p { margin: 0; max-width: 65ch; }
+.lede { color: var(--dim); }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tabs button {
+  font-family: var(--display); font-weight: 600; font-size: 1rem;
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--line); border-radius: 4px;
+  padding: 9px 14px; cursor: pointer; flex: 1 1 150px; text-align: left;
+}
+.tabs button small { display: block; font-family: var(--body); font-weight: 400; font-size: .78rem; color: var(--dim); }
+.tabs button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.tabs button:focus-visible, .ctl button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.stage { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px; display: grid; gap: 10px; }
+canvas { width: 100%; height: auto; display: block; background: #0d0d18; border-radius: 2px; touch-action: manipulation; cursor: pointer; }
+.how { color: var(--text); min-height: 3em; }
+.dials { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
+.dials[hidden] { display: none; }
+.dials label { display: grid; gap: 4px; font-size: .82rem; color: var(--dim); }
+input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+.ctl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.ctl button {
+  font-family: var(--body); font-size: .9rem; background: transparent; color: var(--text);
+  border: 1px solid var(--line); border-radius: 4px; padding: 8px 14px; cursor: pointer;
+}
+.ctl .big { background: var(--accent); color: #15120a; border-color: var(--accent); font-weight: 500; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line); font-weight: 400; }
+th { color: var(--dim); font-size: .8rem; }
+.note { color: var(--dim); font-size: .85rem; }
+@media (max-width: 420px) { .dials { grid-template-columns: 1fr; } h1 { font-size: 1.4rem; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Engineers hack, tre varianter</h1>
+    <p class="lede">I dag står koden till en stations lås färdig på Engineers skärm. Här får du i stället fram en siffra i taget. Prova alla tre och se vilken som känns rätt. Du har 50 sekunder, som i spelet, och en miss kostar 6.</p>
+  </header>
+
+  <div class="tabs" role="group" aria-label="Variant">
+    <button type="button" id="tab-a" data-mode="A" aria-pressed="true">A · Vågen<small>ställ in två rattar</small></button>
+    <button type="button" id="tab-b" data-mode="B" aria-pressed="false">B · Ringarna<small>samma lås som på en pod</small></button>
+    <button type="button" id="tab-c" data-mode="C" aria-pressed="false">C · Svepet<small>hitta signalen som avviker</small></button>
+  </div>
+
+  <section class="stage" aria-label="Låset">
+    <canvas id="view" width="640" height="360" tabindex="0" aria-label="Låset. Mellanslag eller ett tryck stoppar."></canvas>
+    <div class="dials" id="dials">
+      <label for="freq">Vänster ratt: hur tät vågen är
+        <input type="range" id="freq" min="0" max="100" value="20">
+      </label>
+      <label for="amp">Höger ratt: hur hög vågen är
+        <input type="range" id="amp" min="0" max="100" value="80">
+      </label>
+    </div>
+    <p class="how" id="how"></p>
+    <div class="ctl">
+      <button type="button" class="big" id="stop">Stoppa (mellanslag)</button>
+      <button type="button" id="again">Börja om</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Så gick det</h2>
+    <table>
+      <thead><tr><th>Variant</th><th>Försök</th><th>Öppnade</th><th>Bästa tid</th></tr></thead>
+      <tbody id="score"></tbody>
+    </table>
+    <p class="note">Räknas bara medan sidan är öppen. Koden slumpas för varje försök, och varje siffra är 1 till 6, som i spelet.</p>
+  </section>
+</main>
+
+<script>
+const C = { bg: '#0d0d18', panel: '#14162a', line: '#3a3d4e', dim: '#5d6174', text: '#bfc2cd', ochre: '#dba445',
+  ion: '#4fb0c8', acid: '#96d66e', ember: '#f09a5a', violet: '#a878c8', teal: '#6ebeaa', white: '#f4f8ff' };
+const W = 640, H = 360, TIME = 50, MISS = 6, TAU = Math.PI * 2;
+const canvas = document.getElementById('view');
+const ctx = canvas.getContext('2d');
+const $ = (id) => document.getElementById(id);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const diff = (a, b) => { let d = (a - b) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; };
+
+const HOW = {
+  A: 'Dra i de två reglagen tills den blå vågen ligger på den grå. Håll den där en kort stund, så får du en siffra. Piltangenterna fungerar också: vänster och höger för den ena, upp och ner för den andra.',
+  B: 'En ring per siffra, utifrån och in. Stoppa visaren när den står i den ljusa markeringen. Varannan ring går åt andra hållet, och varje ring är lite snabbare.',
+  C: 'Sex signaler rör sig i takt, utom en. Stoppa strecket när det står över den som avviker. Dess nummer är siffran.',
+};
+const NAMES = { A: 'A · Vågen', B: 'B · Ringarna', C: 'C · Svepet' };
+const score = { A: { tries: 0, wins: 0, best: null }, B: { tries: 0, wins: 0, best: null }, C: { tries: 0, wins: 0, best: null } };
+let mode = 'A';
+let g = null;
+
+function start() {
+  g = { code: Array.from({ length: 4 }, () => 1 + Math.floor(Math.random() * 6)), found: 0, time: TIME, t: 0,
+    over: null, flash: 0, miss: 0, counted: false };
+  LOCK[mode].next(g);
+}
+function gotOne() {
+  g.found++;
+  g.flash = 0.35;
+  if (g.found >= 4) finish(true);
+  else LOCK[mode].next(g);
+}
+function missed() {
+  g.time -= MISS;
+  g.miss = 0.5;
+}
+function finish(won) {
+  g.over = won ? 'open' : 'failed';
+  const s = score[mode];
+  s.tries++;
+  if (won) {
+    s.wins++;
+    const used = TIME - g.time;
+    if (s.best === null || used < s.best) s.best = used;
+  }
+  showScore();
+}
+function showScore() {
+  $('score').innerHTML = Object.keys(score).map((k) => {
+    const s = score[k];
+    return `<tr><td>${NAMES[k]}</td><td>${s.tries}</td><td>${s.wins}</td><td>${s.best === null ? '' : s.best.toFixed(1) + ' s'}</td></tr>`;
+  }).join('');
+}
+
+// ---------- the three locks ----------
+const LOCK = {
+  // A: bring your own wave on top of the lock's by setting how tight and how tall it is.
+  A: {
+    next(s) { s.f = rnd(1.2, 4.2); s.a = rnd(0.3, 0.95); s.hold = 0; },
+    mine() { return { f: 1 + ($('freq').value / 100) * 3.6, a: 0.2 + ($('amp').value / 100) * 0.8 }; },
+    update(s, dt) {
+      const m = this.mine();
+      const close = Math.abs(m.f - s.f) < 0.16 && Math.abs(m.a - s.a) < 0.07;
+      s.hold = close ? s.hold + dt : Math.max(0, s.hold - dt * 2);
+      if (s.hold >= 0.7) gotOne();
+    },
+    press() {},
+    draw(s) {
+      const m = this.mine();
+      const x0 = 60, x1 = W - 60, mid = 150, tall = 78;
+      ctx.fillStyle = '#0a1016'; ctx.fillRect(x0 - 10, mid - tall - 16, x1 - x0 + 20, tall * 2 + 32);
+      ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.strokeRect(x0 - 10.5, mid - tall - 16.5, x1 - x0 + 21, tall * 2 + 33);
+      const wave = (f, a, color, w) => {
+        ctx.strokeStyle = color; ctx.lineWidth = w; ctx.beginPath();
+        for (let x = x0; x <= x1; x += 2) {
+          const y = mid + Math.sin(((x - x0) / (x1 - x0)) * f * TAU + s.t * 1.4) * a * tall;
+          if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      };
+      wave(s.f, s.a, C.dim, 4);
+      wave(m.f, m.a, s.hold > 0 ? C.acid : C.ion, 2.5);
+      ctx.fillStyle = C.line; ctx.fillRect(x0, mid + tall + 24, x1 - x0, 5);
+      ctx.fillStyle = C.acid; ctx.fillRect(x0, mid + tall + 24, (x1 - x0) * Math.min(1, s.hold / 0.7), 5);
+      label(s.hold > 0 ? 'HOLD IT THERE' : 'TUNE THE BLUE WAVE ONTO THE GREY ONE', W / 2, mid + tall + 46, s.hold > 0 ? C.acid : C.dim);
+    },
+  },
+  // B: the rings of a pod's lock, one for each digit, from the outside in.
+  B: {
+    R: [124, 100, 76, 52],
+    COL: [C.ochre, C.ion, C.violet, C.teal],
+    next(s) {
+      const way = s.found % 2 ? -1 : 1;
+      s.way = way; s.speed = 2.5 * Math.pow(1.18, s.found); s.width = 0.9 * Math.pow(0.82, s.found);
+      s.angle = s.angle || 0;
+      s.mark = (s.angle + way * Math.PI * rnd(0.6, 1.4) + TAU * 2) % TAU;
+    },
+    update(s, dt) { s.angle = (s.angle + s.way * s.speed * dt + TAU) % TAU; },
+    press(s) { if (Math.abs(diff(s.angle, s.mark)) <= s.width / 2) gotOne(); else missed(); },
+    draw(s) {
+      const cx = W / 2, cy = 150, turn = (a) => a - Math.PI / 2;
+      ctx.fillStyle = '#12172e'; ctx.beginPath(); ctx.arc(cx, cy, 142, 0, TAU); ctx.fill();
+      this.R.forEach((r, i) => {
+        const ring = (color, from = 0, to = TAU) => { ctx.strokeStyle = color; ctx.lineWidth = 16; ctx.beginPath(); ctx.arc(cx, cy, r, from, to); ctx.stroke(); };
+        if (i < s.found) ring(C.acid);
+        else if (i > s.found) ring('#232744');
+        else {
+          ctx.globalAlpha = 0.4; ring(this.COL[i]); ctx.globalAlpha = 1;
+          ring(this.COL[i], turn(s.mark - s.width / 2), turn(s.mark + s.width / 2));
+          const sx = Math.sin(s.angle), sy = -Math.cos(s.angle);
+          ctx.strokeStyle = C.white; ctx.lineWidth = 3; ctx.beginPath();
+          ctx.moveTo(cx + sx * (r - 11), cy + sy * (r - 11)); ctx.lineTo(cx + sx * (r + 11), cy + sy * (r + 11)); ctx.stroke();
+        }
+      });
+      const open = s.found >= 4;
+      ctx.fillStyle = open ? C.acid : '#8a8ea0'; ctx.beginPath(); ctx.arc(cx, cy, 26, 0, TAU); ctx.fill();
+      ctx.save(); ctx.translate(cx, cy); if (open) ctx.rotate(Math.PI / 2);
+      ctx.fillStyle = '#10121c'; ctx.fillRect(-26, -3, 52, 6); ctx.restore();
+    },
+  },
+  // C: six signals that move in step, but for one. Stop the sweep over the one that does not.
+  C: {
+    X: (i) => 105 + i * 86,
+    next(s) { s.odd = s.code[s.found] - 1; s.pace = 2.2 * Math.pow(1.2, s.found); s.sweep = s.sweep || 0; },
+    update(s, dt) { s.sweep += dt * s.pace; },
+    at(s) { const p = s.sweep % 10; return p < 5 ? p : 10 - p; },
+    press(s) {
+      const over = Math.round(this.at(s));
+      if (Math.abs(this.at(s) - over) < 0.3 && over === s.odd) gotOne(); else missed();
+    },
+    draw(s) {
+      for (let i = 0; i < 6; i++) {
+        const x = this.X(i);
+        ctx.fillStyle = '#0a1016'; ctx.fillRect(x - 30, 40, 60, 200);
+        ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.strokeRect(x - 30.5, 39.5, 61, 201);
+        for (let k = 0; k < 8; k++) {
+          // The odd one keeps another beat. It is told by how it moves, not by its colour.
+          const beat = i === s.odd ? s.t * 5.2 + k * 1.7 + 1.1 : s.t * 3.2 + k * 0.8;
+          const len = 26 + Math.sin(beat) * 18;
+          ctx.fillStyle = C.ion; ctx.fillRect(x - len / 2, 52 + k * 23, len, 12);
+        }
+        label(String(i + 1), x, 262, C.text, 18);
+      }
+      const sx = this.X(0) + this.at(s) * 86;
+      ctx.fillStyle = C.white; ctx.fillRect(sx - 2, 30, 4, 222);
+    },
+  },
+};
+
+// ---------- what all three share: the clock, the digits found so far and the end ----------
+function label(text, x, y, color, size = 13) {
+  ctx.fillStyle = color; ctx.font = `600 ${size}px "Chakra Petch", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+}
+function draw() {
+  ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+  LOCK[mode].draw(g);
+  // The clock.
+  const left = Math.max(0, g.time);
+  ctx.fillStyle = '#1c1c28'; ctx.fillRect(20, 12, W - 110, 8);
+  ctx.fillStyle = left < 10 ? C.ember : C.ochre; ctx.fillRect(20, 12, (W - 110) * (left / TIME), 8);
+  label(left.toFixed(0) + ' S', W - 50, 16, g.miss > 0 ? C.ember : C.ochre, 15);
+  if (g.miss > 0) label('MISS  −' + MISS + ' S', W / 2, 30, C.ember);
+  // The code so far.
+  for (let i = 0; i < 4; i++) {
+    const x = W / 2 - 96 + i * 52, y = 300, got = i < g.found;
+    ctx.fillStyle = got ? '#16281c' : C.panel; ctx.fillRect(x, y, 40, 44);
+    ctx.strokeStyle = got ? C.acid : C.line; ctx.lineWidth = got && i === g.found - 1 && g.flash > 0 ? 3 : 1; ctx.strokeRect(x + 0.5, y + 0.5, 40, 44);
+    label(got ? String(g.code[i]) : '?', x + 20, y + 23, got ? C.acid : C.dim, 24);
+  }
+  if (g.over) {
+    ctx.fillStyle = 'rgba(5,5,10,0.78)'; ctx.fillRect(0, 0, W, 286);
+    const won = g.over === 'open';
+    label(won ? 'CODE FOUND' : 'OUT OF TIME', W / 2, 120, won ? C.acid : C.ember, 30);
+    label(won ? (TIME - g.time).toFixed(1) + ' SECONDS' : 'THE STATION FIGHTS BACK', W / 2, 158, C.text, 15);
+    label('PRESS TO TRY AGAIN', W / 2, 200, C.dim);
+  }
+}
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (!g.over) {
+    g.t += dt; g.time -= dt; g.flash = Math.max(0, g.flash - dt); g.miss = Math.max(0, g.miss - dt);
+    LOCK[mode].update(g, dt);
+    if (g.time <= 0 && !g.over) finish(false);
+  }
+  draw();
+  requestAnimationFrame(frame);
+}
+
+// ---------- input ----------
+function press() {
+  if (g.over) { start(); return; }
+  LOCK[mode].press(g);
+}
+function pick(next) {
+  mode = next;
+  for (const b of document.querySelectorAll('.tabs button')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
+  $('dials').hidden = mode !== 'A';
+  $('stop').hidden = mode === 'A';
+  $('how').textContent = HOW[mode];
+  start();
+  // The keys go to the lock from the start, and not to the tab that was just pressed.
+  canvas.focus({ preventScroll: true });
+}
+for (const b of document.querySelectorAll('.tabs button')) b.addEventListener('click', () => pick(b.dataset.mode));
+canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); canvas.focus(); press(); });
+$('stop').addEventListener('click', press);
+$('again').addEventListener('click', start);
+window.addEventListener('keydown', (e) => {
+  const range = e.target instanceof HTMLInputElement;
+  if (e.code === 'Space' && !range && !(e.target instanceof HTMLButtonElement)) { e.preventDefault(); press(); return; }
+  if (mode !== 'A' || range) return;
+  const step = { ArrowLeft: ['freq', -2], ArrowRight: ['freq', 2], ArrowDown: ['amp', -2], ArrowUp: ['amp', 2] }[e.code];
+  if (!step) return;
+  e.preventDefault();
+  $(step[0]).value = Number($(step[0]).value) + step[1];
+});
+showScore();
+pick('A');
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
