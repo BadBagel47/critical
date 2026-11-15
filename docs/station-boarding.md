@@ -96,6 +96,8 @@ Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **F
 - **Förslag:**
   - Stationens turrets går inte att förstöra, men de går att slå ut i 20 sekunder med en granat eller från mainframen. Annars kan en korridor bli omöjlig efter att larmet gått.
   - En turret ser i en smal kon rakt fram. Den som går in i konen blir beskjuten, och larmet går.
+  - **Bestämt (2026-11-15):** konen står still medan turreten vaktar. När någon gått in i den, eller larmet gått, följer turreten målet inom en begränsad vinkel. Tappar den målet en stund går den tillbaka till sitt läge. Då är den ett pussel medan man smyger och ett verkligt hot när larmet gått, och den skiljer sig från kamerorna, som sveper men inte skadar.
+  - **Bestämt (2026-11-15):** stationens turrets går inte att förstöra. Gunner slår ut en turret en kort stund med en granat, och Engineer kan vända den till besättningens sida en stund (F-183).
   - Regel för planlösningen, vaktad av ett test: varje turret har en väg runt, eller en strömbrytare som går att nå utan att passera den.
   - Spelarnas turrets får sättas ut där vapen är tillåtna: hos fiender när som helst, hos neutrala först när larmet gått, och aldrig på egna eller lugna stationer.
 - Kameror sveper fram och tillbaka och skadar ingen. De går att stänga av från mainframen, inte att skjuta sönder.
