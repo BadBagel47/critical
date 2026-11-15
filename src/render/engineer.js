@@ -1,11 +1,11 @@
 // The Engineer post: a blueprint of the ship with damage nodes, and the power panel.
 import { VIEW_W, VIEW_H, COL } from '../config.js';
-import { B } from '../sim/balance.js';
-import { nodeStatus, powerAvailable, powerUsed } from '../sim/ship.js';
+import { B, WING_MOUNTS } from '../sim/balance.js';
+import { nodeStatus, nodeFactor, powerAvailable, powerUsed } from '../sim/ship.js';
 import { rect, label, dashed } from './draw.js';
 import { drawTabs, drawBars } from './hud.js';
 import { drawTools } from './map.js';
-import { powerTotal } from '../sim/upgrades.js';
+import { powerTotal, has } from '../sim/upgrades.js';
 
 const BX = 150,
   BY = 72,
@@ -21,13 +21,13 @@ const SYS = [
     key: 'shields',
     name: 'SHIELDS',
     color: COL.ion[1],
-    notes: ['NO RECHARGE', 'RECHARGE  SLOW', 'RECHARGE  NORMAL', 'RECHARGE  FAST', 'RECHARGE  MAX'],
+    notes: ['OFFLINE  ·  SHIELD FALLS', 'RECHARGE  SLOW', 'RECHARGE  NORMAL', 'RECHARGE  FAST', 'RECHARGE  MAX'],
   },
   {
     key: 'engines',
     name: 'ENGINES',
     color: COL.captain,
-    notes: ['CRAWLING', 'SPEED  LOW', 'SPEED  NORMAL', 'SPEED  HIGH', 'SPEED  MAX'],
+    notes: ['OFFLINE  ·  NO THRUST', 'SPEED  LOW', 'SPEED  NORMAL', 'SPEED  HIGH', 'SPEED  MAX'],
   },
   {
     key: 'repair',
@@ -37,6 +37,59 @@ const SYS = [
   },
 ];
 const STATUS_COL = { ok: COL.engineer, damaged: COL.ochre[2], critical: COL.ember[1] };
+// The upgrades that sit at each part of the ship, with the short names they go by on the drawing. They do
+// not break by themselves: when the part is damaged, what they do is weakened with it.
+const FITTED = {
+  bow: [
+    ['heavy', 'HEAVY LASER'],
+    ['tcomp', 'TARGETING'],
+    ['tractor', 'TRACTOR'],
+  ],
+  bridge: [
+    ['tscan', 'SCANNER'],
+    ['alarm', 'ALARM'],
+  ],
+  reactor: [
+    ['core', 'CORE'],
+    ['bay', 'BAY'],
+    ['drones', 'DRONES'],
+    ['dockfield', 'DOCK FIELD'],
+  ],
+  port: [
+    ['twin', 'TURRET'],
+    ['rockets', 'ROCKETS'],
+    ['emit', 'EMITTER'],
+  ],
+  starboard: [
+    ['twin', 'TURRET'],
+    ['rockets', 'ROCKETS'],
+    ['emit', 'EMITTER'],
+    ['armor', 'POINT DEFENSE'],
+  ],
+  engines: [
+    ['boost', 'AFTERBURNER'],
+    ['jumpcoil', 'JUMP COILS'],
+    ['tank', 'TANK'],
+  ],
+};
+// As many of the names as fit on a line, and how many more there are.
+function fitted(font, ship, id, room) {
+  const names = FITTED[id].filter(([mod]) => has(ship, mod)).map(([, name]) => name);
+  let shown = names.length;
+  const line = () => names.slice(0, shown).join('  ·  ') + (shown < names.length ? `  +${names.length - shown}` : '');
+  while (shown > 1 && font.width(line()) > room) shown--;
+  return line();
+}
+// What damage to a part does, in the words of the system it weakens.
+function effectOf(ship, n) {
+  const pct = (f) => Math.round(f * 100) + '%';
+  const f = nodeFactor(ship, n.id);
+  if (n.id === 'bow') return 'GUNS AT ' + pct(f);
+  if (n.id === 'bridge') return 'TURNING AT ' + pct(f);
+  if (n.id === 'engines') return 'THRUST AT ' + pct(f);
+  if (n.id === 'reactor') return 'POWER  -' + (powerTotal(ship) - powerAvailable(ship));
+  return 'SHIELD RECHARGE AT ' + pct((nodeFactor(ship, 'port') + nodeFactor(ship, 'starboard')) / 2);
+}
 
 export const nodePos = (n) => ({ x: BX + (n.x + 36) * 2, y: BY + (n.y + 54) * 2 });
 const rowY = (i) => 54 + i * 40;
@@ -88,6 +141,16 @@ export function drawEngineer(ctx, state, view, assets) {
   for (let x = 0; x < PANEL_X; x += 16) ctx.fillRect(x, 0, 1, VIEW_H);
   for (let y = 0; y < VIEW_H; y += 16) ctx.fillRect(0, y, PANEL_X, 1);
   ctx.drawImage(img.frigate_blueprint, BX, BY);
+  // What has been bought and fitted is drawn on the plan, where it sits on the ship.
+  ctx.globalAlpha = 0.6;
+  for (const m of ['armor', 'emit', 'bay', 'rockets', 'heavy']) {
+    if (has(ship, m)) ctx.drawImage(img['mod_' + m], BX, BY, 144, 216);
+  }
+  if (has(ship, 'twin')) {
+    for (const w of WING_MOUNTS)
+      ctx.drawImage(img.turret_pulse, BX + (w.x + 36) * 2 - 12, BY + (w.y + 54) * 2 - 21, 24, 42);
+  }
+  ctx.globalAlpha = 1;
   // Queue path: from the crew through every queued node.
   const cp = crewPos(ship);
   let from = cp;
@@ -107,15 +170,21 @@ export function drawEngineer(ctx, state, view, assets) {
     if (left) ctx.fillRect(lx + 6, p.y, p.x - 8 - lx - 6, 1);
     else ctx.fillRect(p.x + 8, p.y, lx - 6 - p.x - 8, 1);
     const status = st === 'ok' ? 'OK' : (st === 'damaged' ? 'DAMAGED  ' : 'CRITICAL  ') + Math.round(n.hp) + '%';
+    // Under the name and the state: what the damage does, or else what is fitted here.
+    const more = st === 'ok' ? fitted(font, ship, n.id, 124) : effectOf(ship, n);
+    const moreCol = st === 'ok' ? COL.faint : c;
     if (left) {
       font.draw(ctx, n.name, lx, p.y - 12, COL.text, { align: 'r' });
       font.draw(ctx, status, lx, p.y - 1, c, { align: 'r' });
+      font.draw(ctx, more, lx, p.y + 10, moreCol, { align: 'r' });
     } else if (oy) {
       const w = font.draw(ctx, n.name, lx, p.y - 3 + oy, COL.text);
       font.draw(ctx, status, lx + w + 8, p.y - 3 + oy, c);
+      font.draw(ctx, more, lx, p.y + 8 + oy, moreCol);
     } else {
       font.draw(ctx, n.name, lx, p.y - 9, COL.text);
       font.draw(ctx, status, lx, p.y + 2, c);
+      font.draw(ctx, more, lx, p.y + 13, moreCol);
     }
     ctx.fillStyle = COL.panel;
     ctx.beginPath();
@@ -132,8 +201,10 @@ export function drawEngineer(ctx, state, view, assets) {
     ctx.fill();
     const qi = crew.queue.indexOf(i);
     if (qi > 0) font.draw(ctx, String(qi + 1), p.x + 9, p.y - 12, COL.ochre[2]);
-    if (st === 'critical' && Math.floor(state.time * 4) % 2 === 0) {
-      ctx.strokeStyle = COL.ember[2];
+    // A damaged part blinks: slowly when it is damaged, faster when it is critical.
+    const blink = st === 'critical' ? Math.floor(state.time * 4) % 2 === 0 : st === 'damaged' && state.time % 1.6 < 0.8;
+    if (blink) {
+      ctx.strokeStyle = st === 'critical' ? COL.ember[2] : COL.ochre[2];
       ctx.beginPath();
       ctx.arc(p.x, p.y, 10.5, 0, 7);
       ctx.stroke();
@@ -170,7 +241,7 @@ export function drawEngineer(ctx, state, view, assets) {
   const crewText = crew.moving
     ? 'REPAIR CREW  ·  ON THE WAY'
     : working
-      ? 'REPAIR CREW  ·  WORKING'
+      ? `REPAIR CREW  ·  WORKING ON ${ship.nodes[crew.at].name}  ·  ${Math.round(ship.nodes[crew.at].hp)}%`
       : ship.power.repair === 0
         ? 'REPAIR CREW  ·  NO POWER'
         : 'REPAIR CREW  ·  IDLE, PATCHING HULL';
