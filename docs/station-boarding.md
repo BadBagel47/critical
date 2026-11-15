@@ -32,6 +32,10 @@ Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **F
 | Vrak | Som i dag: inget smygande, vakter och turrets slåss direkt, reaktorn räknar ner |
 
 - **Bestämt:** smygande gäller inte i vrak.
+- **Förslag (2026-11-15):** ljuset talar om vad det är för ställe.
+  - Vrak som man hittar i rymden är strömlösa: nästan helt mörka, med ficklampa (F-159). Inget rött ljus.
+  - Ett skepp som spelarna själva slagit ut (F-081) har besättning och ström kvar. Det är i lockdown, som en fientlig station.
+  - Rött ljus betyder alltid att stället räknar besättningen som fiende: roterande i lockdown, blinkande vid larm.
 - **Förslag:** stängda stationer (anseende "stängd") släpper inte in någon alls, som i dag. Dit kommer man bara in genom att bryta upp låset, och då är stället i lockdown.
 
 ## 3. Planlösning
