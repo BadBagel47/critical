@@ -1,6 +1,7 @@
 name: Auto-merge agent branches to main
 
-# An agent branch is merged into main, and so published, only when every check has passed on it.
+# An agent branch is merged into main, and so published, only when every check has passed on it. A push
+# that changes nothing but documents is merged at once, since it cannot break the game.
 on:
   push:
     branches:
@@ -11,11 +12,36 @@ permissions:
   pages: write
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      game: ${{ steps.look.outputs.game }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Everything that the merge would bring to main counts, not only this push. An earlier push whose
+      # checks failed is still waiting on the branch, and must not slip in behind a change to a document.
+      - name: See whether anything but documents would change on main
+        id: look
+        run: |
+          git fetch origin main
+          git diff --name-only "origin/main...${GITHUB_SHA}" > changed.txt
+          if grep -qvE '(\.md$|^docs/)' changed.txt; then
+            echo "game=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "game=false" >> "$GITHUB_OUTPUT"
+          fi
+
   test:
+    needs: changes
+    if: needs.changes.outputs.game == 'true'
     uses: ./.github/workflows/test.yml
 
   merge:
-    needs: test
+    needs: [changes, test]
+    if: ${{ always() && needs.changes.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped') }}
     runs-on: ubuntu-latest
     # One merge at a time. A push that comes while another waits takes its place, which is fine: it holds
     # the earlier commits too.
