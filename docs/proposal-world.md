@@ -22,6 +22,8 @@ Fler besked samma dag:
 
 - **Färd inom ett system.** Uppdrag får peka tvärs över ett system. Systemen är inte för stora, och skeppet får en speed boost (F-197), som är samma sak som dagens överladdning av motorerna. Den laddas upp, fortare ju mer energi motorerna har, och nollställs om skeppet blir beskjutet innan den är klar. Samma regel gäller hoppet till ett nytt system, så att man inte bara kan fly ur en strid. Tiderna kortas med uppgraderingar.
 
+- **Omfattning.** En kort omgång i co-op ska gå att spela på ett par timmar, och längre om man vill. Spelet ska inte bli så stort som Escape Velocity, och det ska inte ha en handskriven fast story.
+
 Öppet efter beskeden:
 - Vilka antal system man får välja mellan.
 - Om det mystiska uppdraget med Cruisern är en del av den röda tråden eller ett sidospår.

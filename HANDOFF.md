@@ -38,6 +38,8 @@ Ett co-op-spel online där upp till tre spelare delar på ett rymdskepp. Det ska
 
 Världen ska vara av samma typ som i Escape Velocity med efterföljare och Endless Sky, fast med egna idéer och multiplayer (2026-11-14). Spelen används bara som inspiration för idéer och spelmekanik. Inget innehåll, ingen text, grafik eller kod hämtas därifrån.
 
+Omfattning (2026-11-15): en kort omgång i co-op ska gå att spela på ett par timmar, och längre om man vill. Spelet ska inte bli så stort som Escape Velocity, med en handskriven fast story. Det är ett för stort åtagande både att göra och att spela. Spelet upplevs redan som avancerat, så nya saker ska hellre förenkla än lägga till.
+
 ## Arbetssätt
 
 Idéer spånas i chatten och samlas i designskissen. Det som ska byggas läggs i BACKLOG.md och körs i grupper efter godkännande.
