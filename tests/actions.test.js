@@ -138,5 +138,7 @@ test('a gamepad shows the button that stands in for the key', () => {
   assert.equal(padButtonFor('captain', 'KeyF'), 'B', 'a button that works on every screen');
   assert.equal(padButtonFor('away', 'KeyF'), 'A');
   assert.equal(padButtonFor('away', 'KeyC'), 'X');
-  assert.equal(padButtonFor('gunner', 'KeyZ'), null);
+  assert.equal(padButtonFor('gunner', 'KeyZ'), 'Y', 'the overcharge');
+  assert.equal(padButtonFor('captain', 'KeyB'), 'RIGHT', 'the boarding radar');
+  assert.equal(padButtonFor('gunner', 'KeyH'), null);
 });

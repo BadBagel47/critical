@@ -1,7 +1,6 @@
 // What the posts do for each other: the overcharge that the Engineer builds up and another post lets go,
-// and the marks that each post can set for the others to see.
+// and the marks that the Captain and the Gunner can set for each other to see.
 import { B } from './balance.js';
-import { nodeStatus } from './ship.js';
 import { CREW, enemies } from './sides.js';
 import { shieldMax } from './upgrades.js';
 import { dist } from './util.js';
@@ -63,8 +62,8 @@ export function stepSurge(state, dt) {
 }
 
 // ---------- marks ----------
-// state.marks holds what each post has pointed out: the Gunner a ship for the Captain to keep in sight, the
-// Captain a ship that the crew's shots hurt a little more, and the Engineer a damaged part of the ship.
+// state.marks holds what each post has pointed out: the Gunner a ship for the Captain to keep in sight, and
+// the Captain a ship that the crew's shots hurt a little more.
 const foes = (state) => state.vessels.filter((v) => enemies(state, v.side, CREW));
 
 // The Gunner marks the enemy nearest to where they aim. Marking it again takes the mark away.
@@ -91,21 +90,10 @@ export function markByCaptain(state) {
   const next = list[at + 1];
   state.marks.captain = next ? next.id : null;
 }
-// The Engineer goes through the damaged parts from the worst one, and then to none.
-export function markByEngineer(state) {
-  const hurt = state.ship.nodes
-    .map((n, i) => ({ i, hp: n.hp }))
-    .filter((n) => nodeStatus(n.hp) !== 'ok')
-    .sort((a, b) => a.hp - b.hp);
-  const at = hurt.findIndex((n) => n.i === state.marks.engineer);
-  const next = hurt[at + 1];
-  state.marks.engineer = next ? next.i : null;
-}
-// A mark goes when what it points at is gone, or mended.
+// A mark goes when the ship it points at is gone.
 export function stepMarks(state) {
   const m = state.marks;
   for (const post of ['gunner', 'captain']) {
     if (m[post] !== null && !state.vessels.some((v) => v.id === m[post])) m[post] = null;
   }
-  if (m.engineer !== null && nodeStatus(state.ship.nodes[m.engineer].hp) === 'ok') m.engineer = null;
 }

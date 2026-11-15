@@ -175,6 +175,14 @@ const SOUNDS = {
     },
   ],
   guardDown: [0.08, () => noise(0.2, 0.25, 1400)],
+  // A part of the ship has become critical: two falling notes, once.
+  partCritical: [
+    1,
+    () => {
+      tone(660, 440, 0.16, 'square', 0.16);
+      tone(660, 440, 0.16, 'square', 0.16, 0.24);
+    },
+  ],
   hullHit: [
     0.07,
     () => {

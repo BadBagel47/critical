@@ -1,6 +1,7 @@
 // Damage to the player ship: shield first, then hull and one random part of the ship.
 import { B } from './balance.js';
 import { rand } from './util.js';
+import { nodeStatus } from './ship.js';
 
 export function damageShip(state, dmg, at) {
   const ship = state.ship;
@@ -15,8 +16,12 @@ export function damageShip(state, dmg, at) {
   if (rest > 0) {
     ship.hull = Math.max(0, ship.hull - rest);
     const node = ship.nodes[Math.floor(rand(state) * ship.nodes.length)];
+    const was = nodeStatus(node.hp);
     node.hp = Math.max(0, node.hp - rest * B.NODE_DMG_MULT);
     state.events.push({ type: 'hullHit', node: node.id });
+    // The moment a part becomes critical is told once, so that it can be heard.
+    if (was !== 'critical' && nodeStatus(node.hp) === 'critical')
+      state.events.push({ type: 'partCritical', node: node.id });
   } else {
     state.events.push({ type: 'shieldHit' });
   }

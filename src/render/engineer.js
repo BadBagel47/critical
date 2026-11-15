@@ -41,12 +41,14 @@ const STATUS_COL = { ok: COL.engineer, damaged: COL.ochre[2], critical: COL.embe
 // The upgrades that sit at each part of the ship, with the short names they go by on the drawing. They do
 // not break by themselves: when the part is damaged, what they do is weakened with it.
 const FITTED = {
-  bow: [
+  weapons: [
     ['heavy', 'HEAVY LASER'],
+    ['twin', 'WING TURRETS'],
+    ['rockets', 'ROCKETS'],
     ['tcomp', 'TARGETING'],
     ['tractor', 'TRACTOR'],
   ],
-  bridge: [
+  steering: [
     ['tscan', 'SCANNER'],
     ['alarm', 'ALARM'],
   ],
@@ -56,15 +58,8 @@ const FITTED = {
     ['drones', 'DRONES'],
     ['dockfield', 'DOCK FIELD'],
   ],
-  port: [
-    ['twin', 'TURRET'],
-    ['rockets', 'ROCKETS'],
-    ['emit', 'EMITTER'],
-  ],
-  starboard: [
-    ['twin', 'TURRET'],
-    ['rockets', 'ROCKETS'],
-    ['emit', 'EMITTER'],
+  shields: [
+    ['emit', 'EMITTERS'],
     ['armor', 'POINT DEFENSE'],
   ],
   engines: [
@@ -85,11 +80,11 @@ function fitted(font, ship, id, room) {
 function effectOf(ship, n) {
   const pct = (f) => Math.round(f * 100) + '%';
   const f = nodeFactor(ship, n.id);
-  if (n.id === 'bow') return 'GUNS AT ' + pct(f);
-  if (n.id === 'bridge') return 'TURNING AT ' + pct(f);
+  if (n.id === 'weapons') return 'GUNS AT ' + pct(f);
+  if (n.id === 'steering') return 'TURNING AT ' + pct(f);
   if (n.id === 'engines') return 'THRUST AT ' + pct(f);
   if (n.id === 'reactor') return 'POWER  -' + (powerTotal(ship) - powerAvailable(ship));
-  return 'SHIELD RECHARGE AT ' + pct((nodeFactor(ship, 'port') + nodeFactor(ship, 'starboard')) / 2);
+  return 'SHIELD RECHARGE AT ' + pct(f);
 }
 
 export const nodePos = (n) => ({ x: BX + (n.x + 36) * 2, y: BY + (n.y + 54) * 2 });
@@ -164,29 +159,15 @@ export function drawEngineer(ctx, state, view, assets) {
     const p = nodePos(n),
       st = nodeStatus(n.hp),
       c = STATUS_COL[st];
-    const left = n.id === 'port';
-    const lx = left ? 130 : 310,
-      oy = n.id === 'reactor' ? -8 : n.id === 'starboard' ? 8 : 0;
+    const lx = 310;
     ctx.fillStyle = st === 'ok' ? '#2f4f58' : c;
-    if (left) ctx.fillRect(lx + 6, p.y, p.x - 8 - lx - 6, 1);
-    else ctx.fillRect(p.x + 8, p.y, lx - 6 - p.x - 8, 1);
+    ctx.fillRect(p.x + 8, p.y, lx - 6 - p.x - 8, 1);
     const status = st === 'ok' ? 'OK' : (st === 'damaged' ? 'DAMAGED  ' : 'CRITICAL  ') + Math.round(n.hp) + '%';
     // Under the name and the state: what the damage does, or else what is fitted here.
-    const more = st === 'ok' ? fitted(font, ship, n.id, 124) : effectOf(ship, n);
-    const moreCol = st === 'ok' ? COL.faint : c;
-    if (left) {
-      font.draw(ctx, n.name, lx, p.y - 12, COL.text, { align: 'r' });
-      font.draw(ctx, status, lx, p.y - 1, c, { align: 'r' });
-      font.draw(ctx, more, lx, p.y + 10, moreCol, { align: 'r' });
-    } else if (oy) {
-      const w = font.draw(ctx, n.name, lx, p.y - 3 + oy, COL.text);
-      font.draw(ctx, status, lx + w + 8, p.y - 3 + oy, c);
-      font.draw(ctx, more, lx, p.y + 8 + oy, moreCol);
-    } else {
-      font.draw(ctx, n.name, lx, p.y - 9, COL.text);
-      font.draw(ctx, status, lx, p.y + 2, c);
-      font.draw(ctx, more, lx, p.y + 13, moreCol);
-    }
+    font.draw(ctx, n.name, lx, p.y - 9, COL.text);
+    font.draw(ctx, status, lx, p.y + 2, c);
+    if (st === 'ok') font.draw(ctx, fitted(font, ship, n.id, 124), lx, p.y + 13, COL.faint);
+    else font.draw(ctx, effectOf(ship, n), lx, p.y + 13, c);
     ctx.fillStyle = COL.panel;
     ctx.beginPath();
     ctx.arc(p.x, p.y, 7, 0, 7);

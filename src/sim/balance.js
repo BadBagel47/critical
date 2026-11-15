@@ -312,11 +312,11 @@ export const SHIP_GEOM = {
     { x: 0, y: 34, r: 16 },
   ],
   nodes: [
-    { id: 'bow', name: 'BOW TURRET', x: 0, y: -38 },
-    { id: 'bridge', name: 'BRIDGE', x: 0, y: -18 },
-    { id: 'reactor', name: 'REACTOR', x: 0, y: 8 },
-    { id: 'port', name: 'PORT WING', x: -22, y: 16 },
-    { id: 'starboard', name: 'STARBOARD WING', x: 22, y: 16 },
+    // The parts that can be damaged and mended. Each is named after the one thing it runs.
+    { id: 'weapons', name: 'WEAPONS', x: 0, y: -38 },
+    { id: 'steering', name: 'STEERING', x: 0, y: -18 },
+    { id: 'reactor', name: 'REACTOR', x: 0, y: 6 },
+    { id: 'shields', name: 'SHIELD EMITTER', x: 0, y: 25 },
     { id: 'engines', name: 'ENGINES', x: 0, y: 44 },
   ],
 };

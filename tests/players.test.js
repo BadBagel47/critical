@@ -62,18 +62,18 @@ test('only the player who holds a post can work it', () => {
 test('a crew of three works all posts at once, and nobody else can join', () => {
   const s = crewOf(3);
   assert.equal(addPlayer(s), null, 'the ship is full');
-  s.ship.nodes[5].hp = 40;
+  s.ship.nodes[4].hp = 40;
   run(
     s,
     {
       0: { captain: { throttle: 1 } },
       1: { gunner: { aim: { x: 0, y: -900 }, fire: true } },
-      2: { engineer: { power: [], repair: { node: 5 } } },
+      2: { engineer: { power: [], repair: { node: 4 } } },
     },
     3,
   );
   assert.ok(s.ship.throttle > 0.5 && s.bolts.length > 0);
-  assert.ok(s.ship.nodes[5].hp > 40, 'the Engineer repairs while the others fly and shoot');
+  assert.ok(s.ship.nodes[4].hp > 40, 'the Engineer repairs while the others fly and shoot');
 });
 
 test("a held post cannot be taken, but two players who ask for each other's posts swap", () => {

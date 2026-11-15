@@ -11,7 +11,7 @@ import {
   weaponPower,
   surging,
 } from './ship.js';
-import { startSurge, fireSurge, markByCaptain, markByGunner, markByEngineer } from './teamwork.js';
+import { startSurge, fireSurge, markByCaptain, markByGunner } from './teamwork.js';
 import { findDock } from './things.js';
 import { WEAPONS, weaponsOf, turretMount } from './weapons.js';
 import { teleportAllHome } from './boarding.js';
@@ -96,7 +96,7 @@ export function stepCaptain(state, cmd, dt) {
   ship.fuel = Math.max(0, ship.fuel - burn * dt);
   if (ship.fuel <= 0) thrust *= B.ADRIFT_FACTOR;
   ship.turn += (turnInput - ship.turn) * Math.min(1, B.TURN_SMOOTH * dt);
-  ship.heading = (ship.heading + ship.turn * B.TURN_RATE * nodeFactor(ship, 'bridge') * dt + TAU) % TAU;
+  ship.heading = (ship.heading + ship.turn * B.TURN_RATE * nodeFactor(ship, 'steering') * dt + TAU) % TAU;
   const f = forward(ship.heading);
   const a = B.ACCEL * thrust * ship.throttle;
   ship.vx += f.x * a * dt;
@@ -209,7 +209,6 @@ export function stepEngineer(state, cmd, dt) {
       if (state.ship.surge.sys === 'shields' && state.ship.surge.charge >= 1) fireSurge(state, 'engineer');
       else startSurge(state, cmd.surge);
     }
-    if (cmd.mark) markByEngineer(state);
     if (cmd.repair && state.ship.nodes[cmd.repair.node]) {
       const i = cmd.repair.node;
       if (!cmd.repair.queue) crew.queue = [i];

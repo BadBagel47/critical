@@ -14,7 +14,7 @@ import { rect, label, bar } from './draw.js';
 import { drawMiniMap } from './map.js';
 import { drawEngineerStrip } from './engineer.js';
 import { RISK } from './looks.js';
-import { drawTargets, drawCourse, drawMarks, surgeLine, engineerMark } from './instruments.js';
+import { drawTargets, drawCourse, drawMarks, surgeLine } from './instruments.js';
 
 const fmtTime = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 // Colours for the status lines at the top: calm, a warning, an alarm, good news.
@@ -81,23 +81,42 @@ export function drawToasts(ctx, font, view, time, y = 44, x = VIEW_W / 2) {
   });
 }
 
-// The system that a post depends on, and how much power the Engineer has given it. The Captain and the
-// Gunner see only their own. The Engineer sets them all and sees them where that is done.
-const OWN_SYSTEM = {
-  captain: { sys: 'engines', name: 'ENGINES', color: COL.captain },
-  gunner: { sys: 'weapons', name: 'WEAPONS', color: COL.gunner },
+// What a post depends on: the system whose power the Engineer sets, and the parts of the ship that run it.
+// The Captain and the Gunner see only their own. The Engineer sets and mends them all, and sees them there.
+const OWN = {
+  captain: { sys: 'engines', power: 'ENGINE POWER', color: COL.captain, parts: ['steering', 'engines'] },
+  gunner: { sys: 'weapons', power: 'WEAPON POWER', color: COL.gunner, parts: ['weapons'] },
 };
-function drawOwnPower(ctx, font, state, post) {
-  const own = OWN_SYSTEM[post];
+const PART_COL = { ok: COL.engineer, damaged: COL.ochre[2], critical: COL.ember[2] };
+// What the repair crew is doing about a part, or nothing.
+function mending(ship, i) {
+  const crew = ship.crew;
+  if (crew.queue[0] === i) return crew.moving || crew.at !== i ? 'CREW ON THE WAY' : 'REPAIRING';
+  return crew.queue.includes(i) ? 'REPAIR QUEUED' : null;
+}
+function drawOwnSystem(ctx, font, state, post) {
+  const own = OWN[post];
   if (!own) return;
-  const power = state.ship.power[own.sys];
+  const ship = state.ship;
+  const power = ship.power[own.sys];
   const x = VIEW_W - 8 - B.POWER_MAX_PER_SYSTEM * 7;
-  font.draw(ctx, power ? own.name : own.name + '  NO POWER', x - 5, 332, power ? COL.dim : COL.ember[2], {
-    align: 'r',
-  });
+  font.draw(ctx, power ? own.power : own.power + '  NONE', x - 5, 332, power ? COL.dim : COL.ember[2], { align: 'r' });
   for (let k = 0; k < B.POWER_MAX_PER_SYSTEM; k++) {
     rect(ctx, x + k * 7, 332, 6, 6, k < power ? own.color : '#1c1c28', COL.out);
   }
+  // Above it, each part with how whole it is. A critical one blinks slowly, see "Lagar och regler" in HANDOFF.md.
+  own.parts.forEach((id, row) => {
+    const i = ship.nodes.findIndex((n) => n.id === id);
+    const n = ship.nodes[i];
+    const st = nodeStatus(n.hp);
+    const y = 321 - (own.parts.length - 1 - row) * 11;
+    const dimmed = st === 'critical' && state.time % 1.2 < 0.5;
+    const color = dimmed ? COL.ember[0] : PART_COL[st];
+    const work = mending(ship, i);
+    const text = `${n.name}  ${Math.round(n.hp)}%` + (work ? '  ·  ' + work : '');
+    font.draw(ctx, text, x - 5, y, work && st !== 'critical' ? COL.ochre[3] : color, { align: 'r' });
+    bar(ctx, x, y, B.POWER_MAX_PER_SYSTEM * 7 - 1, n.hp / 100, color, 5);
+  });
 }
 
 // What to show at the top when the ship is docked.
@@ -138,9 +157,8 @@ function statusLines(state, me, dock) {
   // Why the ship does not answer when the engines have been given no power. The Gunner is told the same about
   // the weapons next to them, see drawGunnerPanel.
   if (captain && ship.power.engines <= 0) lines.push({ text: 'ENGINES OFFLINE  ·  NO POWER', ...ALARM });
-  // An overcharge that waits for this post comes first, and then what the Engineer has pointed out.
+  // An overcharge that waits for this post comes first.
   lines.push(surgeLine(state, me.post));
-  if (me.post !== 'engineer') lines.push(engineerMark(state));
   if (state.jump) {
     const left = Math.ceil(jumpCharge(ship) - state.jump.t);
     lines.push({ text: `JUMPING TO ${state.sectors[state.jump.to].name} IN ${left} S`, ...READY });
@@ -247,7 +265,7 @@ export function drawHud(ctx, state, view, assets, dock) {
     drawEngineerStrip(ctx, font, state, view);
     font.draw(ctx, 'Q PULSE  ·  B BUOY', VIEW_W - 8, 346, COL.faint, { align: 'r' });
   } else if (!me.post) font.draw(ctx, '1 2 3  TAKE A FREE POST', VIEW_W - 8, 346, COL.faint, { align: 'r' });
-  drawOwnPower(ctx, font, state, me.post);
+  drawOwnSystem(ctx, font, state, me.post);
   drawMiniMap(ctx, state, VIEW_W - 70, 44);
   font.draw(ctx, 'M  MAP', VIEW_W - 8, 110, COL.faint, { align: 'r' });
 }
@@ -267,7 +285,7 @@ const HELP = [
   ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     F  USE WHAT YOU ARE DOCKED AT'],
   ['CAPTAIN', 'W S  THROTTLE     A D  TURN     X  FULL STOP     E  DOCK AND UNDOCK     R  DARTS     SHIFT  BOOST'],
   ['', 'C  SET A COURSE FOR THE NEXT PLACE ON THE MAP'],
-  ['ALL POSTS', 'T  MARK A SHIP OR A DAMAGED PART FOR THE OTHERS     Z  BUILD UP OR LET GO AN OVERCHARGE'],
+  ['ALL POSTS', 'Z  BUILD UP OR LET GO AN OVERCHARGE     CAPTAIN AND GUNNER  T  MARK A SHIP FOR THE OTHER'],
   ['', 'ON THE MAP  CLICK A STAR CHART TO JUMP TO THAT SECTOR'],
   ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE     Q E  CHANGE WEAPON'],
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW     SHIFT CLICK  QUEUE'],

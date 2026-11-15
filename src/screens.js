@@ -131,7 +131,7 @@ function engineerInput(game, out) {
   const { keys, state, view } = game;
   const rows = SYSTEM_KEYS.length;
   onBoard(game, out);
-  const cmd = { power: [], repair: null, tool: quickTool(keys), surge: null, mark: keys.hit('KeyT') };
+  const cmd = { power: [], repair: null, tool: quickTool(keys), surge: null };
   // The keys follow how the systems are laid out. On the panel they are in a column: up and down pick one,
   // left and right set its power. In the strip beside the view of space they are in a row, so there left and
   // right pick one, and up and down raise and lower its power.
@@ -299,7 +299,7 @@ export const SCREENS = {
   },
   crew: { pad: 'captain', input: onBoard, draw: drawOnBoard, toasts: [44] },
   radar: {
-    pad: 'map',
+    pad: 'radar',
     cursor: true,
     input: radarInput,
     draw: (game) => drawRadar(game.ctx, game.state, game.view, game.assets),

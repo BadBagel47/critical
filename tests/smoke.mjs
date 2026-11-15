@@ -105,12 +105,12 @@ await clickOn('power.weapons.3');
 await page.waitForTimeout(100);
 check((await get('s.ship.power.weapons')) === 3, 'clicking a dark pip raises the system');
 await page.evaluate(() => {
-  window.__critical.state.ship.nodes[5].hp = 20;
+  window.__critical.state.ship.nodes[4].hp = 20;
   window.__critical.state.ship.nodes[3].hp = 55;
 });
 await clickOn('node.engines');
 await page.waitForTimeout(150);
-check(JSON.stringify(await get('s.ship.crew.queue')) === '[5]', 'clicking a node sends the repair crew');
+check(JSON.stringify(await get('s.ship.crew.queue')) === '[4]', 'clicking a node sends the repair crew');
 await page.waitForTimeout(700);
 await shot('04-engineer');
 

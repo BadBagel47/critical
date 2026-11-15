@@ -135,16 +135,16 @@ test('shield recharges after a pause, faster with more power', () => {
 
 test('repair crew walks to the node, repairs it, then takes the next in the queue', () => {
   const s = quiet(createState(1));
-  s.ship.nodes[5].hp = 40;
+  s.ship.nodes[4].hp = 40;
   s.ship.nodes[0].hp = 80;
-  step(s, { engineer: { repair: { node: 5, queue: false } } }, DT);
+  step(s, { engineer: { repair: { node: 4, queue: false } } }, DT);
   step(s, { engineer: { repair: { node: 0, queue: true } } }, DT);
-  assert.deepEqual(s.ship.crew.queue, [5, 0]);
+  assert.deepEqual(s.ship.crew.queue, [4, 0]);
   run(s, {}, 1);
   assert.ok(s.ship.crew.moving, 'crew is on the way');
-  assert.equal(s.ship.nodes[5].hp, 40);
+  assert.equal(s.ship.nodes[4].hp, 40);
   run(s, {}, 30);
-  assert.equal(s.ship.nodes[5].hp, 100);
+  assert.equal(s.ship.nodes[4].hp, 100);
   assert.equal(s.ship.nodes[0].hp, 100);
   assert.deepEqual(s.ship.crew.queue, []);
 });
@@ -1791,15 +1791,6 @@ test("the posts mark things for each other, and the Captain's mark makes shots h
   s.vessels = [a];
   step(s, {}, DT);
   assert.equal(s.marks.captain, null, 'a mark goes when the ship is gone');
-  s.ship.nodes[5].hp = 20;
-  s.ship.nodes[1].hp = 60;
-  step(s, { engineer: { mark: true } }, DT);
-  assert.equal(s.marks.engineer, 5, 'the Engineer points out the worst damage first');
-  step(s, { engineer: { mark: true } }, DT);
-  assert.equal(s.marks.engineer, 1);
-  s.ship.nodes[1].hp = 100;
-  step(s, {}, DT);
-  assert.equal(s.marks.engineer, null, 'and the mark goes when the part is mended');
 });
 
 test('the Captain marks a spot inside the place the ship is docked at, and takes the mark away again', () => {
@@ -1809,4 +1800,54 @@ test('the Captain marks a spot inside the place the ship is docked at, and takes
   assert.deepEqual(it.pin, spot);
   step(s, { captain: { pin: { x: spot.x + 3, y: spot.y } } }, DT);
   assert.equal(it.pin, null, 'a second mark on the same spot removes it');
+});
+
+test('the ship that has to be destroyed to win is still there when the crew comes back', () => {
+  const s = quiet(createState(1));
+  const last = s.sectors.findIndex((sec) => sec.boss);
+  const back = s.sectors[last].links[0];
+  // Jump along a route, with the charts and the fuel that it takes.
+  const jump = (to) => {
+    s.ship.fuel = 100;
+    if (!s.charts.includes(to)) s.charts.push(to);
+    s.jump = { to, t: 1e9 };
+    step(s, {}, DT);
+    assert.equal(s.sector, to);
+  };
+  // The way to the last sector, one link at a time.
+  const way = (function find(at, seen) {
+    if (at === last) return [];
+    for (const to of s.sectors[at].links) {
+      if (seen.includes(to)) continue;
+      const rest = find(to, [...seen, to]);
+      if (rest) return [to, ...rest];
+    }
+    return null;
+  })(s.sector, [s.sector]);
+  for (const to of way) jump(to);
+  const boss = s.vessels.find((v) => v.kind === 'cruiser');
+  assert.ok(boss, 'it is there the first time');
+  boss.hp -= 100;
+  jump(back);
+  assert.ok(!s.vessels.some((v) => v.kind === 'cruiser'), 'it does not follow the crew');
+  jump(last);
+  const again = s.vessels.filter((v) => v.kind === 'cruiser');
+  assert.equal(again.length, 1, 'and it is there again, once');
+  assert.equal(again[0].hp, boss.hp, 'as hurt as it was left');
+});
+
+test('the moment a part of the ship becomes critical is told once', () => {
+  const s = quiet(createState(1));
+  s.ship.shield = 0;
+  s.ship.hull = 1e6;
+  for (const n of s.ship.nodes) n.hp = 31;
+  let told = 0;
+  for (let i = 0; i < 40; i++) {
+    s.events.length = 0;
+    damageShip(s, 2, null);
+    told += s.events.filter((e) => e.type === 'partCritical').length;
+  }
+  const critical = s.ship.nodes.filter((n) => n.hp < 30).length;
+  assert.ok(critical > 0);
+  assert.equal(told, critical, 'once for each part, and not again while it stays critical');
 });

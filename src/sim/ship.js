@@ -86,7 +86,7 @@ export const shipNose = (ship) => toWorld(ship, SHIP_GEOM.nose);
 // Whether a system is overcharged right now.
 export const surging = (ship, sys) => ship.surge.left > 0 && ship.surge.sys === sys;
 export const weaponPower = (ship) =>
-  B.WEAPON_POWER[ship.power.weapons] * nodeFactor(ship, 'bow') * (surging(ship, 'weapons') ? B.SURGE_WEAPONS : 1);
+  B.WEAPON_POWER[ship.power.weapons] * nodeFactor(ship, 'weapons') * (surging(ship, 'weapons') ? B.SURGE_WEAPONS : 1);
 export function fireInterval(ship) {
   const power = weaponPower(ship);
   return power > 0 ? B.FIRE_INTERVAL / power : Infinity;

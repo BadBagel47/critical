@@ -7,7 +7,6 @@ import { CREW, enemies } from '../sim/sides.js';
 import { nameOf, findThing } from '../sim/things.js';
 import { level } from '../sim/upgrades.js';
 import { dist, headingTo, angleDiff } from '../sim/util.js';
-import { nodeStatus } from '../sim/ship.js';
 import { SURGE_BY } from '../sim/teamwork.js';
 import { rect, bar, brackets, label } from './draw.js';
 
@@ -142,16 +141,4 @@ export function drawMarks(ctx, font, state, cam, post) {
   const m = state.marks;
   if (m.gunner !== null) draw(m.gunner, COL.gunner, post === 'gunner' ? 'YOUR MARK' : "GUNNER'S MARK");
   if (m.captain !== null) draw(m.captain, COL.captain, post === 'captain' ? 'YOUR MARK' : 'MARKED  ·  HIT HARDER');
-}
-// The part of the ship that the Engineer has pointed out, as a line for the others.
-export function engineerMark(state) {
-  const i = state.marks.engineer;
-  if (i === null) return null;
-  const n = state.ship.nodes[i];
-  const critical = nodeStatus(n.hp) === 'critical';
-  return {
-    text: `ENGINEER  ·  ${n.name} ${critical ? 'CRITICAL' : 'DAMAGED'}`,
-    color: critical ? COL.ember[2] : COL.ochre[2],
-    border: critical ? COL.ember[0] : COL.ochre[0],
-  };
 }

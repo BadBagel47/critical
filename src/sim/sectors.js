@@ -1,7 +1,7 @@
 // Sectors: the world is split into sectors, and a star chart unlocks the jump to the next one.
 // Only the sector the ship is in is simulated. The others are stored as they were left.
 import { B } from './balance.js';
-import { THINGS, HULLS } from './kinds.js';
+import { THINGS, HULLS, SHIPS } from './kinds.js';
 import { addThing, dockTargets, mapInfo } from './things.js';
 import { makeVessel, firstWaveDelay } from './vessels.js';
 import { createMap, reveal } from './map.js';
@@ -269,7 +269,14 @@ function arrive(state, to) {
   const ship = state.ship;
   const from = currentSector(state);
   const next = state.sectors[to];
-  from.saved = { things: state.things.filter((t) => THINGS[t.kind].persist), map: state.map, known: state.known };
+  // Ships come and go, but the one that has to be destroyed to win stays where it was left.
+  const bosses = state.vessels.filter((v) => SHIPS[v.kind].boss);
+  from.saved = {
+    things: state.things.filter((t) => THINGS[t.kind].persist),
+    map: state.map,
+    known: state.known,
+    bosses,
+  };
   ship.fuel -= jumpFuel(ship);
   ship.dartStock += state.darts.length;
   state.darts = [];
@@ -280,8 +287,10 @@ function arrive(state, to) {
     state.things = next.saved.things;
     state.map = next.saved.map;
     state.known = next.saved.known;
+    const bosses = next.saved.bosses || [];
     next.saved = null;
     clearTraffic(state, B.RAID_GAP);
+    state.vessels.push(...bosses);
     state.spawn = { timer: firstWaveDelay(state), wave: Math.floor(state.spawn.wave / 2) };
   } else generateSector(state, to);
   ship.x = 0;

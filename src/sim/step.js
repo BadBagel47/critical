@@ -36,7 +36,7 @@ function rechargeShield(state, dt) {
   }
   const surge = surging(ship, 'shields');
   if (!surge && state.time - ship.lastHit <= B.SHIELD_DELAY) return;
-  const emitters = (nodeFactor(ship, 'port') + nodeFactor(ship, 'starboard')) / 2;
+  const emitters = nodeFactor(ship, 'shields');
   const rate = B.SHIELD_RECHARGE[ship.power.shields] * (surge ? B.SURGE_RECHARGE : 1);
   ship.shield = Math.min(shieldMax(ship), ship.shield + rate * emitters * dt);
 }
