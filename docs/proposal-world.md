@@ -12,7 +12,7 @@ Du har läst förslaget och gett en ny riktning. Resten av texten är inte omskr
 - **Slutet.** Ett anfall på en svår piratbas, inte The Maw med Cruisern. Cruisern kan i stället bli en del av ett mystiskt uppdrag där man inte riktigt vet vad det är. Det avgör fråga 4.
 - **Kartan.** Mer som i Escape Velocity: många system, men inte fullt så stora, och i olika storlekar så att de känns fräscha. Hoppen med bränsle blir viktiga. Storlekarna 6, 10 och 16 i avsnitt 2 är för få och görs om. Fråga 1 och 2 ställs om på nytt.
 - **Runda system.** Systemen ska vara cirkulära, som ett solsystem uppfattas, inte fyrkantiga (F-196).
-- **Bränsle och pengar.** Man ska kunna få slut på båda, och bränslet ska inte komma tillbaka av sig självt, men man ska ändå komma vidare. Reservtanken (avsnitt 6, regel 1) stryks, och det avgör fråga 10. Vägarna ut är asteroider som ger resurser som fyller på bränsle (F-085) och solceller som man köper och som laddar bränslet (F-194). Du tror mest på solcellerna.
+- **Bränsle och pengar.** Man ska kunna få slut på båda, och bränslet ska inte komma tillbaka av sig självt, men man ska ändå komma vidare. Reservtanken (avsnitt 6, regel 1) stryks, och det avgör fråga 10. Vägarna ut är asteroider som ger resurser som fyller på bränsle (F-085) och solceller som man köper och som laddar bränslet (F-194). Du tror mest på solcellerna. Det man bryter ur asteroider kan också säljas på en bas, så brytningen ger både bränsle och pengar.
 - **Systemradar.** En uppgradering som visar om närliggande system är vänliga och vilken faktion de tillhör. Den scannar grannsystemen av sig själv, och statusen uppdateras när man kommer inom räckvidd (F-195).
 
 Öppet efter beskeden:
