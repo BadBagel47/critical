@@ -2,6 +2,8 @@
 // so it can be saved, sent and compared as it is.
 import { createShip } from './ship.js';
 import { createPlayer } from './players.js';
+import { thingsOf, mapInfo } from './things.js';
+import { arrival, placeShip } from './system.js';
 import { createSectors, generateSector, gatherForTesting } from './sectors.js';
 import { applyTestLoadout } from './upgrades.js';
 
@@ -60,6 +62,11 @@ export function createState(seed = 1, options = {}) {
     jump: null,
   };
   generateSector(state, 0);
+  // The game starts a little way from the crew's own yard, which is all they know of so far.
+  state.known = thingsOf(state, 'station')
+    .filter((st) => st.home)
+    .map(mapInfo);
+  placeShip(state, { ...arrival(state), throttle: 0 });
   if (options.test) {
     applyTestLoadout(state);
     // A test game has everything that can be docked with close to the start.

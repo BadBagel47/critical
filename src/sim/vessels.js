@@ -373,8 +373,9 @@ export function stepVessels(state, dt) {
     }
     v.heading = turnToward(v.heading, want, c.turn * dt);
     const f = forward(v.heading);
-    v.vx = f.x * speed;
-    v.vy = f.y * speed;
+    // Adding zero turns a negative zero into a plain one, which is what a saved game brings back.
+    v.vx = f.x * speed + 0;
+    v.vy = f.y * speed + 0;
     v.x += v.vx * dt;
     v.y += v.vy * dt;
   }

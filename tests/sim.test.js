@@ -13,7 +13,7 @@ import {
   weaponPower,
 } from '../src/sim/ship.js';
 import { damageShip } from '../src/sim/damage.js';
-import { thingsOf, portsOf, solidCircles, dockTargets } from '../src/sim/things.js';
+import { thingsOf, portsOf, solidCircles, dockTargets, mapInfo } from '../src/sim/things.js';
 import { hurtVessel, makeVessel } from '../src/sim/vessels.js';
 import { weaponsOf } from '../src/sim/weapons.js';
 import { SHIPS, HULLS } from '../src/sim/kinds.js';
@@ -22,6 +22,8 @@ import { createWreck, jumpBlocked } from '../src/sim/sectors.js';
 import { B, SHIP_GEOM, WING_MOUNTS } from '../src/sim/balance.js';
 import { headingTo, dist, toWorld, angleDiff } from '../src/sim/util.js';
 import { newRock, hurtRock } from '../src/sim/rocks.js';
+import { arrival } from '../src/sim/system.js';
+const speed = (s) => Math.hypot(s.ship.vx, s.ship.vy);
 
 const wrecks = (s) => thingsOf(s, 'wreck');
 const stations = (s) => thingsOf(s, 'station');
@@ -34,8 +36,12 @@ const run = (s, cmds, seconds) => {
   for (let i = 0; i < Math.round(seconds / DT); i++) step(s, typeof cmds === 'function' ? cmds(s) : cmds, DT);
   return s;
 };
+// Most tests are about one thing at a time, in empty space: no pirate waves, and the ship at rest in the middle
+// of a system that has no star, pointing straight up.
 const quiet = (s) => {
   s.spawn.timer = 1e9;
+  s.sectors[s.sector].star = false;
+  Object.assign(s.ship, { x: 0, y: 0, heading: 0, vx: 0, vy: 0, throttle: 0 });
   return s;
 };
 
@@ -213,7 +219,7 @@ const rocks = (s) => s.things.filter((t) => t.kind === 'rock');
 // One rock alone in empty space, for trying things on.
 function loneRock(s, variant = 2) {
   s.things = s.things.filter((t) => t.kind !== 'rock');
-  const rock = newRock(s, 0, -3000, variant);
+  const rock = newRock(s, 0, -1000, variant);
   s.things.unshift(rock);
   return rock;
 }
@@ -296,6 +302,136 @@ test('asteroids lie in a belt and in fields, never near a station, and new ones 
     run(s, {}, B.ROCK_REGROW * 200);
     assert.ok(rocks(s).length <= before + 6, 'but never more than the field had');
   }
+});
+
+// ---------- the star, the haze and arriving ----------
+// A game in which the system has its star, with nothing else about. The ship flies straight up from below it.
+function underStar(setup = () => {}) {
+  const s = quiet(createState(1));
+  s.sectors[s.sector].star = true;
+  s.raidTimer = 1e9;
+  s.traffic.timer = 1e9;
+  s.things = s.things.filter((t) => t.kind !== 'rock');
+  Object.assign(s.ship, { x: 0, y: 700 });
+  setup(s.ship);
+  return s;
+}
+const across = (s) => {
+  for (let t = 0; t < 40 && s.ship.y > -420 && !s.over; t += DT) step(s, { captain: { throttle: 1 } }, DT);
+  return s;
+};
+
+test('the star burns a ship that flies across it, and only a strong shield with all power gets it over', () => {
+  const plain = underStar();
+  run(plain, {}, 1);
+  assert.equal(plain.ship.heat, 0, 'at a distance the star does nothing');
+  assert.equal(plain.ship.hull, B.HULL_MAX);
+  across(plain);
+  assert.equal(plain.over, true, 'a ship with a plain shield is lost');
+  const boosted = across(
+    underStar((ship) => {
+      ship.power = { weapons: 0, shields: 4, engines: 4, repair: 0 };
+    }),
+  );
+  assert.equal(boosted.over, true, 'however its power is shared out');
+  const strong = across(
+    underStar((ship) => {
+      ship.mods.emit = 1;
+      // The better shield holds half as much again.
+      ship.shield = B.SHIELD_MAX + 50;
+      ship.power = { weapons: 0, shields: 4, engines: 4, repair: 0 };
+    }),
+  );
+  assert.equal(strong.over, false, 'the better shield with all power on shields and engines carries it across');
+  assert.ok(strong.ship.y < -400);
+});
+
+test('the heat of the star is told of once, and passing its edge costs only some shield', () => {
+  const s = underStar();
+  Object.assign(s.ship, { x: B.STAR_BURN - 40, y: 300 });
+  run(s, { captain: { throttle: 1 } }, 8);
+  assert.equal(s.events.filter((e) => e.type === 'starHeat').length, 1);
+  assert.ok(s.ship.shield < B.SHIELD_MAX || s.ship.lastHit < 0, 'the shield took the heat');
+  assert.equal(s.ship.hull, B.HULL_MAX, 'the hull is untouched');
+  assert.equal(s.ship.heat, 0, 'and it is out of the heat again');
+});
+
+test('the haze at the edge of a system slows the ship to a stop, and lets it turn back', () => {
+  const s = quiet(createState(1));
+  const radius = s.sectors[0].radius;
+  s.sectors[0].haze = true;
+  s.things = s.things.filter((t) => t.kind !== 'rock');
+  Object.assign(s.ship, { x: 0, y: -(radius - 300) });
+  run(s, { captain: { throttle: 1 } }, 30);
+  const far = Math.hypot(s.ship.x, s.ship.y);
+  assert.ok(far > radius, 'the ship gets into the haze');
+  assert.ok(far <= radius + B.HAZE_DEPTH + 1, 'but never through it');
+  assert.ok(speed(s) < 5, 'and is all but stopped there');
+  assert.equal(s.ship.hull, B.HULL_MAX, 'unharmed');
+  assert.ok(s.ship.haze > 0.9);
+  // Turned round, it flies back in as easily as anywhere else.
+  s.ship.heading = Math.PI;
+  run(s, { captain: { throttle: 1 } }, 4);
+  assert.ok(speed(s) > 60, 'it gets up speed at once');
+  assert.ok(Math.hypot(s.ship.x, s.ship.y) < far - 100);
+});
+
+test('the game starts by the home yard, pointing at it', () => {
+  for (let seed = 1; seed <= 5; seed++) {
+    const s = createState(seed);
+    const yard = stations(s).find((st) => st.home);
+    const gap = dist(s.ship.x, s.ship.y, yard.x, yard.y);
+    assert.ok(Math.abs(gap - B.ARRIVE_GAP) < 1, 'a little way from the yard');
+    const way = headingTo(yard.x - s.ship.x, yard.y - s.ship.y);
+    assert.ok(Math.abs(angleDiff(s.ship.heading, way)) < 0.01, 'with its nose toward it');
+    assert.ok(Math.hypot(s.ship.x, s.ship.y) > Math.hypot(yard.x, yard.y), 'on the side away from the star');
+    assert.equal(s.ship.throttle, 0);
+    assert.ok(!s.sectors.some((sec) => sec.star || sec.haze), 'the star and the haze wait to be approved');
+  }
+  const trial = createState(1, { test: true });
+  assert.ok(
+    trial.sectors.every((sec) => sec.star && sec.haze),
+    'a test game has them, to be looked at',
+  );
+});
+
+test('a jump to a system the crew knows comes in by a base, and one to an unknown system comes in anywhere safe', () => {
+  for (let seed = 1; seed <= 8; seed++) {
+    const s = quiet(createState(seed));
+    s.charts.push(1);
+    s.ship.fuel = 100;
+    step(s, { captain: { jump: 1 } }, DT);
+    run(s, {}, B.JUMP_CHARGE + 0.2);
+    assert.equal(s.sector, 1);
+    const d = Math.hypot(s.ship.x, s.ship.y);
+    assert.ok(d >= B.STAR_BURN + B.ARRIVE_STAR - 1, 'never in the star, or too close to turn away');
+    assert.ok(d <= s.sectors[1].radius, 'and inside the system');
+    for (const st of stations(s).filter((x) => x.align === 'hostile'))
+      assert.ok(dist(st.x, st.y, s.ship.x, s.ship.y) > B.STATION_RANGE, 'out of reach of a hostile base');
+    assert.equal(s.ship.throttle, 0, 'at rest');
+    // Back to the first system, where the yard is known.
+    s.spawn.timer = 1e9;
+    step(s, { captain: { jump: 0 } }, DT);
+    run(s, {}, B.JUMP_CHARGE + 0.2);
+    assert.equal(s.sector, 0);
+    const yard = stations(s).find((st) => st.home);
+    assert.ok(Math.abs(dist(s.ship.x, s.ship.y, yard.x, yard.y) - B.ARRIVE_GAP) < 40, 'it comes in by the yard');
+    assert.ok(s.ship.throttle > 0 && s.ship.throttle < 0.5, 'gliding in on low throttle');
+  }
+});
+
+test('a known hostile base is the last choice to arrive at, and then out of reach of its guns', () => {
+  const s = quiet(createState(1));
+  const [a, b] = stations(s);
+  s.known = [
+    { ...mapInfo(a), align: 'hostile' },
+    { ...mapInfo(b), align: 'neutral' },
+  ];
+  let spot = arrival(s);
+  assert.ok(Math.abs(dist(spot.x, spot.y, b.x, b.y) - B.ARRIVE_GAP) < 1, 'a neutral base comes before a hostile one');
+  s.known = [{ ...mapInfo(a), align: 'hostile' }];
+  spot = arrival(s);
+  assert.ok(dist(spot.x, spot.y, a.x, a.y) > B.STATION_RANGE + 100);
 });
 
 test('systems come in three sizes, and nothing lies in the very middle', () => {
@@ -1364,6 +1500,7 @@ test('a star chart can be bought at a station or carried out of a vault', () => 
 test('destroying the cruiser in the last sector wins the game, and gunboats leave wrecks', () => {
   const s = quiet(createState(1));
   s.sector = 3;
+  quiet(s);
   s.charts.push(4);
   s.ship.fuel = 80;
   step(s, { captain: { jump: 4 } }, DT);

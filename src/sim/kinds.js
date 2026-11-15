@@ -2,7 +2,7 @@
 // How each kind looks is described the same way in src/render/looks.js.
 
 // Things: what stands still or drifts. The order here is the order they are stored and handled in.
-//   hit      circles, in the thing's own pixels, that the frigate and shots run into
+//   hit      circles, in the thing's own pixels, that shots run into. The frigate only runs into rocks
 //   ports    where the frigate's nose can dock, in the thing's own pixels. A docked ship points at the middle
 //            of the thing, or at `toward` for a port that has one
 //            Both can be a function of the thing, for kinds that come in more than one shape

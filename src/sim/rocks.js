@@ -25,7 +25,7 @@ const massOf = (s) => thingsOf(s, 'rock').reduce((sum, r) => sum + MASS[r.varian
 
 // A spot somewhere in the belt or in one of the fields.
 function spotIn(s, field) {
-  const pick = Math.floor(rand(s) * (field.clusters.length + 2));
+  const pick = Math.floor(rand(s) * (field.clusters.length + (field.belt ? 2 : 0)));
   if (pick >= field.clusters.length) return at(rand(s) * TAU, randRange(s, field.belt[0], field.belt[1]));
   const c = field.clusters[pick];
   const p = at(rand(s) * TAU, Math.sqrt(rand(s)) * c.r);
@@ -46,12 +46,12 @@ function scatter(s, c, n) {
   }
 }
 
-// A test game has one field of asteroids close to the start, to try flying through and shooting at. The belt
-// lies far out, where the rocks that were left in place are.
+// A test game has one field of asteroids close to the start, to try flying through and shooting at, and no
+// belt, so that nothing new turns up among the things that are laid out to be tried.
 export function layTestRocks(s, x, y) {
   const c = { x, y, r: 150 };
   scatter(s, c, 14);
-  s.field = { belt: [1500, 1700], clusters: [c], target: massOf(s), timer: B.ROCK_REGROW };
+  s.field = { belt: null, clusters: [c], target: massOf(s), timer: B.ROCK_REGROW };
 }
 
 // Lay out the asteroids of a system that is `radius` across from its middle to its edge. Stations, wrecks and
@@ -61,7 +61,7 @@ export function layRocks(s, radius) {
   const clusters = [];
   const count = 2 + (radius > 1500 ? 1 : 0) + (radius > 2100 ? 1 : 0);
   for (let i = 0; i < count; i++) {
-    const p = at(rand(s) * TAU, randRange(s, radius * 0.25, radius * 0.92));
+    const p = at(rand(s) * TAU, randRange(s, Math.max(radius * 0.25, B.STAR_BURN + 320), radius * 0.92));
     clusters.push({ x: p.x, y: p.y, r: randRange(s, B.CLUSTER_R[0], B.CLUSTER_R[1]) });
   }
   const field = { belt, clusters, target: 0, timer: B.ROCK_REGROW };
@@ -71,7 +71,7 @@ export function layRocks(s, radius) {
   for (let i = 0; i < inBelt; i++) add(at(rand(s) * TAU, randRange(s, belt[0], belt[1])));
   for (const c of clusters) scatter(s, c, Math.round(randRange(s, B.CLUSTER_ROCKS[0], B.CLUSTER_ROCKS[1])));
   // A few lie on their own, anywhere outside the very middle.
-  for (let i = 0; i < Math.round(radius / 200); i++) add(at(rand(s) * TAU, randRange(s, 260, radius)));
+  for (let i = 0; i < Math.round(radius / 200); i++) add(at(rand(s) * TAU, randRange(s, B.STAR_BURN + 100, radius)));
   field.target = massOf(s);
   s.field = field;
 }

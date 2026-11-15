@@ -12,6 +12,9 @@ const quiet = () => {
   const s = createState(1);
   s.spawn.timer = 1e9;
   s.raidTimer = 1e9;
+  // The ship at rest in the middle of a system without a star.
+  s.sectors[s.sector].star = false;
+  Object.assign(s.ship, { x: 0, y: 0, heading: 0, vx: 0, vy: 0, throttle: 0 });
   return s;
 };
 

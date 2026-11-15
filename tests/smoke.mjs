@@ -828,7 +828,12 @@ await page.evaluate(() => window.localStorage.clear());
   const file = await download.path();
   const saved = JSON.parse((await import('node:fs')).readFileSync(file, 'utf8'));
   check(saved.game === 'critical-st8' && saved.state.credits === 888, 'the game can be exported to a file');
-  await p.evaluate(() => (window.__critical.state.credits = 2));
+  // The ship starts close to the yard. It is moved well away first, so that F does not begin to dock.
+  await p.evaluate(() => {
+    const s = window.__critical.state;
+    s.credits = 2;
+    Object.assign(s.ship, { x: 0, y: -5000, vx: 0, vy: 0, throttle: 0 });
+  });
   await press('KeyF', 'KeyO', 'ArrowDown', 'ArrowDown', 'Enter');
   const rows = await at('8');
   for (let i = 0; i < rows; i++) if ((await at('v.menu.row')) !== 6) await press('ArrowDown');

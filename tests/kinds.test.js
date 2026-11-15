@@ -16,9 +16,12 @@ const run = (s, cmds, seconds) => {
   for (let i = 0; i < Math.round(seconds / DT); i++) step(s, cmds, DT);
   return s;
 };
+// Empty space: no pirates of their own, and the ship at rest in the middle of a system without a star.
 const quiet = (s) => {
   s.spawn.timer = 1e9;
   s.raidTimer = 1e9;
+  s.sectors[s.sector].star = false;
+  Object.assign(s.ship, { x: 0, y: 0, heading: 0, vx: 0, vy: 0, throttle: 0 });
   return s;
 };
 
@@ -91,7 +94,7 @@ test('a new ship class is one entry of data', () => {
   }
 });
 
-test('a new kind of thing is one entry of data: it is solid, can be docked with and is put on the map', () => {
+test('a new kind of thing is one entry of data: it stops shots, can be docked with and is put on the map', () => {
   THINGS.beacon = {
     hit: [{ x: 0, y: 0, r: 20 }],
     ports: [{ x: 0, y: 30 }],
@@ -104,7 +107,7 @@ test('a new kind of thing is one entry of data: it is solid, can be docked with 
     const beacon = addThing(s, { id: s.nextId++, kind: 'beacon', x: 0, y: -200, heading: 0, name: 'OLD BEACON' });
     assert.ok(
       solidCircles(s).some((c) => c.thing === beacon),
-      'the ship and shots run into it',
+      'shots run into it',
     );
     assert.ok(dockTargets(s).includes(beacon));
     run(s, {}, 0.5);

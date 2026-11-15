@@ -10,6 +10,7 @@ import { crewCommands } from './players.js';
 import { nodeFactor, surging } from './ship.js';
 import { stepSurge, stepMarks } from './teamwork.js';
 import { stepRocks } from './rocks.js';
+import { stepSystem } from './system.js';
 import { solidCircles, stepSalvage, findThing } from './things.js';
 import { stepVessels, stepAlarm } from './vessels.js';
 import { stepBolts, stepRockets, stepCollisions } from './shots.js';
@@ -82,6 +83,7 @@ export function step(state, cmds, dt) {
   stepStrife(state, dt);
   const solids = solidCircles(state);
   stepCollisions(state, dt, solids);
+  stepSystem(state, dt);
   stepBolts(state, dt, solids);
   stepRockets(state, dt, solids);
   state.vessels = state.vessels.filter((v) => v.hp > 0 && !v.gone);

@@ -23,6 +23,10 @@ export function createShip() {
     dockShield: 0,
     lastHit: -99,
     ramCooldown: 0,
+    // How hot the star makes it where the ship is, and how deep in the haze at the edge of the system it is.
+    // Both from 0 to 1, see system.js.
+    heat: 0,
+    haze: 0,
     fuel: B.FUEL_START,
     turretAngle: 0,
     // The turrets on the wings turn by themselves, so that all of them point at what the Gunner aims at.

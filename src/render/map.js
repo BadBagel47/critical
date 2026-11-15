@@ -91,12 +91,41 @@ function diamond(ctx, x, y, r, color) {
   shape(r);
 }
 
-// The system itself: a round patch of space as far out as it reaches.
+// The system itself: a round patch of space that fades into the haze at its edge, with the star in the middle
+// and a ring where its heat begins. Once the system has been scanned the belt of asteroids is marked too.
 function drawSystem(ctx, state) {
   const mid = toMap(0, 0);
-  ctx.fillStyle = '#12162c';
+  const radius = currentSector(state).radius;
+  const out = currentSector(state).haze ? (radius + B.HAZE_DEPTH) * K : radius * K;
+  const g = ctx.createRadialGradient(mid.x, mid.y, 0, mid.x, mid.y, out);
+  const edge = (radius * K) / out;
+  g.addColorStop(0, '#12162c');
+  g.addColorStop(edge * 0.96, '#12162c');
+  if (edge < 1) {
+    g.addColorStop(edge + (1 - edge) * 0.4, '#262431');
+    g.addColorStop(1, '#0c0c14');
+  } else g.addColorStop(1, '#12162c');
+  ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(mid.x, mid.y, currentSector(state).radius * K, 0, 7);
+  ctx.arc(mid.x, mid.y, out, 0, 7);
+  ctx.fill();
+  const field = state.field;
+  if (state.map.scanned && field && field.belt) {
+    ctx.strokeStyle = 'rgba(140,136,150,0.13)';
+    ctx.lineWidth = (field.belt[1] - field.belt[0]) * K;
+    ctx.beginPath();
+    ctx.arc(mid.x, mid.y, ((field.belt[0] + field.belt[1]) / 2) * K, 0, 7);
+    ctx.stroke();
+  }
+  if (!currentSector(state).star) return;
+  ring(ctx, mid.x, mid.y, B.STAR_BURN * K, COL.ember[0]);
+  ctx.fillStyle = COL.ember[2];
+  ctx.beginPath();
+  ctx.arc(mid.x, mid.y, Math.max(3, B.STAR_R * K), 0, 7);
+  ctx.fill();
+  ctx.fillStyle = COL.ochre[3];
+  ctx.beginPath();
+  ctx.arc(mid.x, mid.y, Math.max(2, B.STAR_R * K * 0.6), 0, 7);
   ctx.fill();
 }
 
@@ -375,6 +404,7 @@ export function drawMiniMap(ctx, state, x, y) {
   ctx.rect(x, y, size, size);
   ctx.clip();
   ring(ctx, x + size / 2, y + size / 2, B.VISION_SHIP * k, COL.ion[0]);
+  if (currentSector(state).star) dot(0, 0, 4, 4, COL.ember[2]);
   for (const known of state.known) {
     const look = THING_LOOK[known.kind];
     if (look && look.dot) dot(known.x, known.y, look.dot.size, look.dot.size, look.dot.color(known));

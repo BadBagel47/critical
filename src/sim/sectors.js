@@ -6,9 +6,10 @@ import { addThing, dockTargets, mapInfo } from './things.js';
 import { makeVessel, firstWaveDelay } from './vessels.js';
 import { createMap } from './map.js';
 import { layRocks, layTestRocks } from './rocks.js';
+import { placeShip } from './system.js';
 import { createStation } from './stations.js';
 import { jumpCharge, jumpFuel } from './upgrades.js';
-import { rand, randRange, TAU } from './util.js';
+import { rand, randRange, TAU, dist } from './util.js';
 
 // links: the sectors that can be reached from here. size: which of the three sizes in B.SYSTEM_R it has.
 // stations: [side, shipyard, how far out it lies in the largest size, name].
@@ -83,6 +84,10 @@ export const createSectors = () =>
     tier: s.tier,
     // How far it is from the middle of the system to its edge.
     radius: B.SYSTEM_R[s.size],
+    // Whether it has a star in its middle, and a haze at its edge. Both are built but wait for the user to
+    // approve how they look. Until then only a test game has them, see gatherForTesting.
+    star: false,
+    haze: false,
     links: s.links,
     hint: s.hint,
     boss: !!s.boss,
@@ -185,7 +190,7 @@ export function generateSector(s, id) {
   layRocks(s, sec.radius);
   clearTraffic(s, B.RAID_FIRST);
   if (spec.boss) {
-    const p = at(base + 3.3, 1000);
+    const p = at(base + 3.3, out(1000));
     s.vessels.push(makeVessel(s, spec.boss, p.x, p.y));
   }
   s.spawn = { timer: firstWaveDelay(s), wave: 0 };
@@ -193,12 +198,20 @@ export function generateSector(s, id) {
 }
 
 // For trying things out: a test game has one of everything that can be docked with close to where the ship
-// starts. A station of every side, a wreck of every hull and two cargo pods stand in rings round the start.
-// This is only for test games. An ordinary game is never laid out like this.
+// starts. A station of every side, a wreck of every hull and two cargo pods stand in rings round the start,
+// and one field of asteroids lies near by. The start is well away from the star, in a system of the largest
+// size so that all of it fits. This is only for test games. An ordinary game is never laid out like this.
+export const TEST_START = { x: 0, y: 1150 };
 export function gatherForTesting(s) {
   const turn = (deg) => (deg * Math.PI) / 180;
+  const from = (deg, far) => {
+    const p = at(turn(deg), far);
+    return { x: TEST_START.x + p.x, y: TEST_START.y + p.y };
+  };
+  currentSector(s).radius = B.SYSTEM_R[2];
+  for (const sec of s.sectors) Object.assign(sec, { star: true, haze: true });
   // Whatever was laid out near the start is cleared away, rocks too, so that nothing is in the way.
-  s.things = s.things.filter((t) => t.kind === 'rock' && Math.hypot(t.x, t.y) > 1500);
+  s.things = s.things.filter((t) => t.kind === 'rock' && dist(t.x, t.y, TEST_START.x, TEST_START.y) > 1500);
   s.known = [];
   const onward = currentSector(s).links.filter((l) => l !== 0);
   // side, shipyard, where (degrees from straight ahead, and how far), name
@@ -212,7 +225,7 @@ export function gatherForTesting(s) {
     ['pirate', false, 300, 1150, 'PIRATE TEST HOLD'],
   ];
   stations.forEach(([side, yard, deg, far, name], i) => {
-    const p = at(turn(deg), far);
+    const p = from(deg, far);
     const st = createStation(s, p.x, p.y, side, yard, name, side === 'crew');
     if (side !== 'pirate') st.chart = onward[i % Math.max(1, onward.length)] ?? null;
     addThing(s, st);
@@ -224,19 +237,20 @@ export function gatherForTesting(s) {
     ['freighter', 3, 215, 380],
   ];
   for (const [hull, risk, deg, far] of wrecks) {
-    const p = at(turn(deg), far);
+    const p = from(deg, far);
     const wreck = createWreck(s, p.x, p.y, risk, hull);
     wreck.heading = 0;
     addThing(s, wreck);
   }
   for (const deg of [90, 270]) {
-    const p = at(turn(deg), 250);
+    const p = from(deg, 250);
     addThing(s, createPod(s, p.x, p.y));
   }
-  const rocks = at(turn(30), 850);
+  const rocks = from(30, 850);
   layTestRocks(s, rocks.x, rocks.y);
   // All of it is on the map from the start, so that nothing has to be looked for.
   s.known = dockTargets(s).map(mapInfo);
+  placeShip(s, { ...TEST_START, heading: 0, throttle: 0 });
 }
 
 // Why the ship cannot jump to a sector right now, or null when it can.
@@ -299,13 +313,9 @@ function arrive(state, to) {
     state.vessels.push(...bosses);
     state.spawn = { timer: firstWaveDelay(state), wave: Math.floor(state.spawn.wave / 2) };
   } else generateSector(state, to);
-  ship.x = 0;
-  ship.y = 0;
-  ship.vx = 0;
-  ship.vy = 0;
-  ship.throttle = 0;
+  placeShip(state);
   ship.pulse = null;
-  state.fx = [{ type: 'jump', x: 0, y: 0, t: 0, dur: 1 }];
+  state.fx = [{ type: 'jump', x: ship.x, y: ship.y, t: 0, dur: 1 }];
   state.events.push({ type: 'jumped', name: next.name });
 }
 

@@ -13,6 +13,8 @@ import { drawNebula, drawRipples } from './effects.js';
 import { THING_LOOK, lookOf, spriteOfVessel, hpBar, SIDE_COL, armLights, podLamp } from './looks.js';
 import { CREW, PIRATE, enemies } from '../sim/sides.js';
 import { drawFlame, steering, FLAME_ION, FLAME_FIRE } from './flames.js';
+import { drawStar, drawHaze } from './system.js';
+import { currentSector } from '../sim/sectors.js';
 
 // Three layers of stars that move at different speeds, always the same ones.
 const STARS = (() => {
@@ -511,6 +513,7 @@ export function drawSpace(ctx, state, view, assets) {
   ctx.imageSmoothingQuality = 'high';
   const near = (o, margin) =>
     Math.abs(o.x - cam.x) < VIEW_W / 2 / ZOOM + margin && Math.abs(o.y - cam.y) < VIEW_H / 2 / ZOOM + margin;
+  if (currentSector(state).star) drawStar(ctx, cam, state.time);
   for (const t of state.things) {
     const look = THING_LOOK[t.kind];
     if (look && near(t, look.margin)) look.draw(ctx, t, env);
@@ -540,6 +543,7 @@ export function drawSpace(ctx, state, view, assets) {
   for (const r of state.rockets) drawRocket(ctx, r, img);
   for (const f of state.fx) drawEffect(ctx, f);
   if (view.lights) drawSpaceLights(ctx, state, env, near);
+  drawHaze(ctx, state, cam, state.time);
   ctx.restore();
   ctx.imageSmoothingEnabled = false;
   drawArrows(ctx, font, state, cam);

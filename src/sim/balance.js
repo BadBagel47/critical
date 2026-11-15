@@ -95,7 +95,26 @@ export const B = {
   // Systems come in three sizes: how far it is from the middle to the edge.
   SYSTEM_R: [1200, 1800, 2400],
   // Nothing that can be docked with lies closer to the middle than this.
-  SYSTEM_CORE: 450,
+  SYSTEM_CORE: 600,
+  // The star in the middle. STAR_R is how large it looks, STAR_BURN how far its heat reaches, and inside
+  // STAR_CORE it burns at full strength. What gets through the shield does STAR_HULL times the harm to the
+  // hull. The strength is set so that a ship with a plain shield is lost on a straight run across, however the
+  // power is shared out, and one with the better shield gets across with all power on shields and engines.
+  STAR_R: 150,
+  STAR_BURN: 300,
+  STAR_CORE: 110,
+  STAR_DPS: 88,
+  STAR_HULL: 3,
+  // The haze at the edge of a system: how deep it is, and how fast a ship can still go outward at its start.
+  HAZE_DEPTH: 300,
+  HAZE_SPEED: 240,
+  // Arriving after a jump: how far from a base, how far outside the reach of a hostile one, how far from the
+  // heat of the star at the least, and how much throttle the ship glides in on.
+  ARRIVE_GAP: 280,
+  ARRIVE_CLEAR: 220,
+  ARRIVE_STAR: 350,
+  ARRIVE_SHIPS: 750,
+  ARRIVE_THROTTLE: 0.25,
   // Asteroids. How much a rock takes before it breaks, by variant: middling, small, large.
   ROCK_HP: [30, 12, 60],
   // How far rocks keep from a station, and from wrecks and pods.
@@ -221,7 +240,7 @@ export const B = {
   // break-in game, seconds per difficulty
   BREAKIN_TIME: [0, 60, 50, 42],
   // map, scanner pulse, probes and buoys
-  // How much room the map leaves round a system.
+  // How much room the map leaves round a system: as much as the haze is deep.
   MAP_MARGIN: 300,
   VISION_SHIP: 420,
   PULSE_RADIUS: 1100,
