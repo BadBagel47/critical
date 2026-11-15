@@ -207,7 +207,7 @@ Väntar på användaren: F-091 (mining laser) tas upp när F-085 är provad. D-0
 
 | ID | Vad | Status |
 |---|---|---|
-| F-034 | Autopilot på lediga poster, för solo, två spelare och tappad anslutning | Parkerad |
+| F-034 | Autopilot på lediga poster, för solo, två spelare och tappad anslutning. Användaren 2026-11-15: vad kan vi göra för att spelet ska bli mer hanterbart för en eller två spelare, och kan man välja att skeppets AI kopplas in? Läget i dag: piratvågorna kommer mer än dubbelt så glest för en ensam spelare, och posterna fortsätter som de ställts när man byter. Agentens förslag, inte bestämt: en ledig post kan lämnas till skeppets dator, som man slår av och på per post. Datorn som Gunner skjuter på närmaste eller märkta fiende, datorn som Engineer lagar det som är värst skadat och håller energin efter ett valt läge, datorn som Captain håller kursen mot den plats man satt kurs för. Datorn är sämre än en människa, så att en besättning på tre fortfarande är bäst. Den hjälper inte till vid bordning | Parkerad |
 | F-036 | Pirater som bordar er, med försvar i vågor i bordningsläget | Parkerad |
 | F-037 | Paus och start som kräver allas godkännande | Parkerad |
 | F-039 | Fler skeppsklasser som fungerar olika, till exempel Interceptorn | Parkerad |
