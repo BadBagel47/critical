@@ -19,6 +19,56 @@ export { TILE, tileAt, blocked, los };
 
 // ---------- generation ----------
 // The floor plan itself is made in layout.js. Here it is filled with guards, turrets and loot.
+// Whether a tile can be walked to from another without stepping on any of the tiles in `shut`.
+function reachable(it, from, to, shut) {
+  const seen = new Set([from.ty * it.w + from.tx]);
+  const queue = [from];
+  while (queue.length) {
+    const at = queue.shift();
+    if (at.tx === to.tx && at.ty === to.ty) return true;
+    for (const [dx, dy] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ]) {
+      const tx = at.tx + dx,
+        ty = at.ty + dy,
+        key = ty * it.w + tx;
+      if (seen.has(key) || shut.has(key)) continue;
+      const c = tileAt(it, tx, ty);
+      // The vault door counts as a way through here: it is the crew's to open.
+      if (c !== '.' && c !== ',' && c !== 'A' && c !== 'L') continue;
+      seen.add(key);
+      queue.push({ tx, ty });
+    }
+  }
+  return false;
+}
+// Put alarms on some of a station's doors: the doors of rooms with something worth taking. There is always
+// a way from where the crew comes in to the vault that goes through no alarmed door.
+function alarmDoors(state, it) {
+  const tile = (p) => ({ tx: Math.floor(p.x / TILE), ty: Math.floor(p.y / TILE) });
+  const vault = tile(it.rooms[it.vault].door);
+  const holds = (r) =>
+    it.loot.some((l) => l.x >= r.c0 * TILE && l.x < (r.c1 + 1) * TILE && l.y >= r.r0 * TILE && l.y < (r.r1 + 1) * TILE);
+  const rooms = it.rooms.filter((r, i) => i !== it.vault && r.door && holds(r));
+  const shut = new Set();
+  for (const r of rooms) {
+    if (it.alarmed.length >= B.ALARMED_DOORS) break;
+    if (rand(state) < 0.35) continue;
+    const t = tile(r.door);
+    const key = t.ty * it.w + t.tx;
+    shut.add(key);
+    const free = it.airlocks.every((a) => reachable(it, tile(a), vault, shut));
+    if (!free) {
+      shut.delete(key);
+      continue;
+    }
+    it.alarmed.push({ x: r.door.x, y: r.door.y, tx: t.tx, ty: t.ty, off: false });
+  }
+}
+
 // A turret. `rest` is the way it points while it watches. `hot` is how long it still follows what it has
 // seen, `out` how long it is still knocked out, and `turned` how long it is still on the crew's side.
 const newTurret = (state, p, rest) => ({
@@ -75,7 +125,8 @@ export function createInterior(state, wreck) {
     mood: null,
     // A spot that the Captain has marked on the boarding radar, for the boarders to see.
     pin: null,
-    // How far the Engineer has come with turning a turret, from 0 to 1.
+    // How far the Engineer has come with what they are working on with the use key: turning a turret,
+    // switching off an alarmed door or steadying the reactor. From 0 to 1.
     turning: 0,
     doorCut: 0,
     doorOpen: false,
@@ -88,6 +139,10 @@ export function createInterior(state, wreck) {
     guards: [],
     turrets: [],
     cameras: [],
+    // Doors that give the crew away when someone walks through them, until the Engineer has switched them off.
+    alarmed: [],
+    // The reactor of a wreck, where the Engineer can buy the crew more time, once.
+    reactor: null,
     sentries: [],
     loot: [],
     bolts: [],
@@ -156,6 +211,16 @@ export function createInterior(state, wreck) {
       it.cameras.push({ id: state.nextId++, x: room.mid.x, y: room.mid.y, rest, phase: rand(state) * TAU });
     }
   }
+  if (wreck.kind === 'station') alarmDoors(state, it);
+  // The reactor of a wreck stands in the room that is furthest from the way in.
+  else {
+    const far = open
+      .map((i) => rooms[i])
+      .sort(
+        (a, b) => dist(b.mid.x, b.mid.y, it.entry.x, it.entry.y) - dist(a.mid.x, a.mid.y, it.entry.x, it.entry.y),
+      )[0];
+    if (far) it.reactor = { ...spot(far), steadied: false };
+  }
   // On a station most guards walk a round. In a wreck most of them stand at a post.
   planRounds(state, it, wreck.kind === 'station' ? 0.7 : 0.34);
   return it;
@@ -173,6 +238,7 @@ export function makeTrade(state, it) {
   it.guards = [];
   it.turrets = [];
   it.cameras = [];
+  it.alarmed = [];
   it.bolts = [];
   it.grenades = [];
   it.flares = [];
@@ -289,7 +355,8 @@ export function tryBoard(state, playerId) {
     carry: [],
     cool: 0,
     grenades: B.GRENADES,
-    charges: has(ship, 'charge') ? B.CHARGES : 0,
+    // A Gunner always brings one charge, with or without the ones that are bought.
+    charges: (has(ship, 'charge') ? B.CHARGES : 0) + (player.backTo === 'gunner' ? 1 : 0),
     sentries: has(ship, 'sentry') ? 1 : 0,
     flares: has(ship, 'flare') ? B.FLARES : 0,
     lamp: true,
@@ -414,9 +481,16 @@ export function useTarget(it, av) {
   // A guard that sleeps can be taken down for the rest of the boarding, by the one who gets to it in time.
   const asleep = it.guards.find((g) => g.sleep > 0 && !g.down && dist(g.x, g.y, av.x, av.y) < B.TAKE_DOWN_REACH);
   if (asleep) return { type: 'guard', guard: asleep };
-  // The Engineer can turn a turret to the crew's side for a while, standing next to it.
-  const turret = av.role === 'engineer' && it.turrets.find((t) => t.turned <= 0 && dist(t.x, t.y, av.x, av.y) < 20);
-  if (turret) return { type: 'turret', turret };
+  if (av.role === 'engineer') {
+    // The Engineer can turn a turret to the crew's side for a while, standing next to it, switch off an
+    // alarmed door from beside it, and steady the reactor of a wreck.
+    const turret = it.turrets.find((t) => t.turned <= 0 && dist(t.x, t.y, av.x, av.y) < 20);
+    if (turret) return { type: 'turret', turret };
+    const door = it.alarmed.find((d) => !d.off && dist(d.x, d.y, av.x, av.y) < 26);
+    if (door && it.mood === 'lockdown') return { type: 'alarm', door };
+    if (it.reactor && !it.reactor.steadied && dist(it.reactor.x, it.reactor.y, av.x, av.y) < 18)
+      return { type: 'reactor' };
+  }
   if (atAirlockDoor(it, av)) return { type: 'airlock' };
   if (it.trade) {
     const desk = it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20);
@@ -452,7 +526,7 @@ function fireRifle(state, it, av) {
     vy: f.y * B.RIFLE_SPEED,
     ttl: B.RIFLE_TTL,
     owner: 'crew',
-    dmg: rifleDmg(state.ship),
+    dmg: rifleDmg(state.ship) * (av.role === 'gunner' ? B.ROLE_RIFLE : 1),
   });
   av.cool = B.RIFLE_INTERVAL;
   state.events.push({ type: 'rifle' });
@@ -556,11 +630,15 @@ function workVaultDoor(state, it, av, cmd, dt) {
     state.events.push({ type: 'breached' });
   }
   if (cmd.use && away < 22) {
-    it.doorCut += dt / B.DOOR_CUT_TIME;
+    // Anyone can cut the lock, and it is heard when the door gives way. The Engineer goes round the lock
+    // instead, which is quicker and makes no sound.
+    const quiet = av.role === 'engineer';
+    it.doorCut += (dt / B.DOOR_CUT_TIME) * (quiet ? B.ROLE_HACK : 1);
     it.cutting = true;
     if (it.doorCut >= 1) {
       openVault(it);
       state.events.push({ type: 'doorOpen' });
+      if (!quiet) heard(state, it, door);
     }
   }
 }
@@ -569,7 +647,7 @@ function workVaultDoor(state, it, av, cmd, dt) {
 function workTerminal(state, it, av, cmd, dt) {
   if (!it.terminal || !it.doorOpen || !cmd.use) return;
   if (dist(av.x, av.y, it.terminal.x, it.terminal.y) >= 16) return;
-  it.takeover += dt / B.TAKEOVER_TIME;
+  it.takeover += (dt / B.TAKEOVER_TIME) * (av.role === 'engineer' ? B.ROLE_HACK : 1);
   it.hacking = true;
   if (it.takeover < 1) return;
   const st = thingsOf(state, 'station').find((x) => x.interior === it);
@@ -632,18 +710,34 @@ function stepAvatar(state, it, av, cmd, dt) {
       state.events.push({ type: 'sentryDown' });
     }
   }
-  // The Engineer turns a turret by holding the use key next to it.
+  // What the Engineer does by holding the use key next to it.
   const near = cmd.use ? useTarget(it, av) : null;
-  if (near && near.type === 'turret') {
-    it.turning = Math.min(1, it.turning + dt / B.TURRET_TURN_TIME);
+  const work = near && { turret: B.TURRET_TURN_TIME, alarm: B.DISARM_TIME, reactor: B.STEADY_TIME }[near.type];
+  if (work) {
+    it.turning = Math.min(1, it.turning + dt / work);
     it.working = true;
     if (it.turning >= 1) {
-      near.turret.turned = B.TURRET_TURNED;
-      near.turret.out = 0;
-      near.turret.hot = 0;
       it.turning = 0;
-      state.events.push({ type: 'turretTurned' });
+      if (near.type === 'turret') {
+        near.turret.turned = B.TURRET_TURNED;
+        near.turret.out = 0;
+        near.turret.hot = 0;
+        state.events.push({ type: 'turretTurned' });
+      } else if (near.type === 'alarm') {
+        near.door.off = true;
+        state.events.push({ type: 'doorDisarmed' });
+      } else {
+        it.reactor.steadied = true;
+        it.timer += B.STEADY_GAIN;
+        state.events.push({ type: 'reactorSteadied', gain: B.STEADY_GAIN });
+      }
     }
+  }
+  // Walking through an alarmed door gives the crew away.
+  if (it.mood === 'lockdown') {
+    const tx = Math.floor(av.x / TILE),
+      ty = Math.floor(av.y / TILE);
+    if (it.alarmed.some((d) => !d.off && d.tx === tx && d.ty === ty)) foundOut(state, it, av);
   }
   workVaultDoor(state, it, av, cmd, dt);
   workTerminal(state, it, av, cmd, dt);

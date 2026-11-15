@@ -291,11 +291,51 @@ function drawKeyButton(ctx, font, b, over, glyph, round) {
 }
 
 // `layout` is the gamepad layout of the screen, see input.js.
+// Beside a button: which posts can do the thing. A post that can is lit in its own colour, one that is best
+// at it has a mark over it, and one that cannot is dark. So nobody has to know the rules by heart, and a
+// player who is alone sees which post is worth changing to.
+const POST_MARK = [
+  ['captain', 'C', COL.captain],
+  ['gunner', 'G', COL.gunner],
+  ['engineer', 'E', COL.engineer],
+];
+function drawWho(ctx, font, b) {
+  const who = b.action.who;
+  if (Object.values(who).every((v) => v === 'can')) return;
+  POST_MARK.forEach(([post, letter, color], i) => {
+    const x = b.x - 40 + i * 12;
+    const can = who[post] !== 'no';
+    rect(ctx, x, b.y + 4, 10, 10, can ? COL.panel : '#101018', can ? color : COL.line);
+    font.draw(ctx, letter, x + 5, b.y + 6, can ? color : COL.faint, { align: 'c' });
+    if (who[post] === 'best') rect(ctx, x + 2, b.y + 1, 6, 2, color);
+  });
+}
+// How many times each kind of button has come up, to show its line of explanation only the first times.
+const shown = new Map();
+let lastNames = '';
+const TIP_TIMES = 3;
+
 export function drawActions(ctx, game, mode, layout) {
   const { keys } = game;
   const font = game.assets.font;
   const style = styleOf(keys);
-  for (const b of actionButtons(game, mode)) {
+  const buttons = actionButtons(game, mode);
+  // A button counts as having come up when it is new on the screen.
+  const names = buttons.map((b) => b.action.name).join();
+  if (names !== lastNames) {
+    for (const b of buttons)
+      if (!lastNames.split(',').includes(b.action.name)) shown.set(b.action.name, (shown.get(b.action.name) || 0) + 1);
+    lastNames = names;
+  }
+  const first = buttons.find((b) => b.action.tip && (shown.get(b.action.name) || 0) <= TIP_TIMES);
+  if (first && style !== 'touch') {
+    const top = Math.min(...buttons.map((b) => b.y));
+    const w = font.width(first.action.tip) + 12;
+    rect(ctx, VIEW_W - 8 - w, top - 17, w, 14, COL.panel, COL.line);
+    font.draw(ctx, first.action.tip, VIEW_W - 14, top - 13, COL.text, { align: 'r' });
+  }
+  for (const b of buttons) {
+    if (style !== 'touch') drawWho(ctx, font, b);
     const over = within(keys.mouse, b) && !b.action.off;
     if (style === 'touch') drawTouchButton(ctx, font, b, over);
     else if (style === 'pad') {

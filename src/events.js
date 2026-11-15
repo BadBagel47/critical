@@ -44,6 +44,8 @@ const TOAST = {
   ],
   podAlarm: () => ['THE POD ALARM IS RINGING  ·  PIRATES INCOMING', BAD],
   codeWrong: () => ['WRONG CODE', BAD],
+  doorDisarmed: () => ['THE ALARM ON THE DOOR IS OFF', TECH],
+  reactorSteadied: (e) => [`REACTOR STEADIED  ·  ${e.gain} S MORE`, TECH],
   turretTurned: () => ['THE TURRET IS YOURS FOR A WHILE', TECH],
   sentryNoFight: () => ['THE TURRET IS FOR A FIGHT  ·  NOTHING TO SHOOT AT HERE', WARM],
   foundOut: () => ['ALARM  ·  THEY KNOW YOU ARE HERE', BAD],

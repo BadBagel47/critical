@@ -471,6 +471,7 @@ function lightsOf(state, it, style, origin) {
   for (const e of [...it.guards.filter(awake), ...armed]) round(e.x, e.y, 19, RED, 0.6);
   for (const t of it.turrets) if (t.turned > 0) round(t.x, t.y, 19, '150,214,110', 0.6);
   for (const c of it.cameras) small(c.x, c.y, 10, '155,228,238', 0.5);
+  if (it.reactor) small(it.reactor.x, it.reactor.y, 24, it.reactor.steadied ? '150,214,110' : '219,164,69', 0.6);
   for (const e of it.sentries) round(e.x, e.y, 19, '155,228,238', 0.6);
   for (const a of it.avatars) {
     round(a.x, a.y, B.LAMP_NEAR, WARM, 0.6);
@@ -593,6 +594,44 @@ function drawWatch(ctx, font, state, it, me) {
     rect(ctx, c.x - 3, c.y - 3, 6, 6, '#1c1c28', COL.out);
     rect(ctx, c.x - 1, c.y - 1, 2, 2, live ? COL.ion[2] : COL.dim);
   }
+  // An alarmed door has a small lamp in its frame. It is seen from close by, and a Captain's radar shows it
+  // from further off. One that the Engineer has switched off is green.
+  const reach = me && me.role === 'captain' ? B.RADAR_REACH * TILE : 76;
+  for (const d of it.alarmed) {
+    if (!me || dist(me.x, me.y, d.x, d.y) > reach) continue;
+    const lit = d.off || state.time % 1.4 < 0.9;
+    rect(ctx, d.x - 2, d.y - 2, 4, 4, d.off ? COL.acid[2] : lit ? COL.ember[2] : COL.ember[0], COL.out);
+    if (!d.off) font.draw(ctx, 'ALARMED', d.x, d.y - 12, COL.ember[2], { align: 'c' });
+  }
+  // The reactor of a wreck, which the Engineer can steady.
+  if (it.reactor && me && dist(me.x, me.y, it.reactor.x, it.reactor.y) < 70) {
+    const text = it.reactor.steadied ? 'REACTOR  ·  STEADIED' : 'REACTOR';
+    font.draw(ctx, text, it.reactor.x, it.reactor.y - 16, it.reactor.steadied ? COL.acid[2] : COL.ochre[2], {
+      align: 'c',
+    });
+  }
+  // A Captain who stands at the vault door sees what is behind it, before anyone decides how to open it.
+  if (me && me.role === 'captain' && !it.doorOpen && !it.trade) {
+    const room = it.rooms[it.vault];
+    if (dist(me.x, me.y, room.door.x, room.door.y) < 60) {
+      const inside = it.loot.filter(
+        (l) =>
+          l.x >= room.c0 * TILE && l.x < (room.c1 + 1) * TILE && l.y >= room.r0 * TILE && l.y < (room.r1 + 1) * TILE,
+      );
+      const count = (type) => inside.filter((l) => l.type === type).length;
+      const parts = [
+        [count('crate'), 'CRATES'],
+        [count('cell'), 'FUEL'],
+        [count('chart'), 'STAR CHART'],
+        [count('part'), 'SPARE SLOT'],
+      ]
+        .filter(([n]) => n)
+        .map(([n, name]) => (n > 1 ? `${n} ${name}` : name));
+      font.draw(ctx, 'IN THE VAULT  ·  ' + parts.join('  ·  '), room.door.x, room.door.y - 22, COL.captain, {
+        align: 'c',
+      });
+    }
+  }
   // Over the player: how close the guards are to being sure.
   if (me && me.spotted > 0) {
     rect(ctx, me.x - 9, me.y - 20, 18, 4, COL.out, COL.out);
@@ -618,6 +657,18 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
     sprite(ctx, img[l.type], l.x, l.y);
   }
   if (it.terminal) drawTerminal(ctx, it, state.time);
+  if (it.reactor) {
+    const r = it.reactor;
+    rect(ctx, r.x - 7, r.y - 7, 14, 14, '#1c1c28', COL.out);
+    rect(
+      ctx,
+      r.x - 4,
+      r.y - 4,
+      8,
+      8,
+      r.steadied ? COL.acid[1] : Math.floor(state.time * 2) % 2 ? COL.ochre[2] : COL.ochre[0],
+    );
+  }
   for (const t of it.turrets) {
     shadow(ctx, t.x, t.y, 6);
     sprite(ctx, img.turret_guard, t.x, t.y, t.heading);
@@ -788,6 +839,12 @@ export function drawBoarding(ctx, state, view, assets) {
     border: null,
   });
   label(ctx, font, where + 4, 8, 'AWAY FROM YOUR POST', { fg: COL.faint });
+  const gift = {
+    gunner: 'GUNNER  ·  RIFLE HITS HARDER  ·  ONE CHARGE',
+    engineer: 'ENGINEER  ·  QUIET AND QUICK WITH LOCKS AND MACHINES',
+    captain: 'CAPTAIN  ·  RADAR  ·  SEES INTO THE VAULT',
+  }[me && !it.trade ? me.role : ''];
+  if (gift) label(ctx, font, 8, 24, gift, { fg: COL.text });
   drawPlaceLine(ctx, font, place);
   // An alarm puts a red frame round the picture, so that it is seen at once and without sound. It swells and
   // fades slowly and does not flash, see "Lagar och regler" in HANDOFF.md.

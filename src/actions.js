@@ -7,6 +7,9 @@
 //   main      the thing the player most likely wants here. The other one is drawn smaller
 //   hold      the key has to be held, and `progress` is how far it has come, from 0 to 1
 //   off       it cannot be done right now. The label says why
+//   who       which posts can do it: 'can', 'best' for the post that is better at it than the others, and
+//             'no' for a post that cannot. It is shown beside the button, see WHO below
+//   tip       a line that says what it is, shown the first times the button comes up
 import { POSTS } from './sim/players.js';
 import { THINGS } from './sim/kinds.js';
 import { dockCandidate } from './sim/ship.js';
@@ -15,6 +18,22 @@ import { isTrading } from './sim/stations.js';
 import { useTarget } from './sim/boarding.js';
 
 const LOCK_VERB = { pipes: 'BYPASS', code: 'BYPASS', dial: 'PICK' };
+// Who can do what, for the things that are not the same for every post. [captain, gunner, engineer].
+const ALL = { captain: 'can', gunner: 'can', engineer: 'can' };
+const only = (post) => ({ captain: 'no', gunner: 'no', engineer: 'no', [post]: 'can' });
+const best = (post) => ({ ...ALL, [post]: 'best' });
+const WHO = {
+  dock: [only('captain'), 'ONLY THE CAPTAIN FLIES THE SHIP IN TO DOCK'],
+  undock: [only('captain'), 'ONLY THE CAPTAIN CASTS OFF'],
+  radar: [only('captain'), 'THE CAPTAIN FOLLOWS THE BOARDERS ON THE RADAR'],
+  turn: [only('engineer'), 'ONLY THE ENGINEER CAN TURN A TURRET TO YOUR SIDE'],
+  disarm: [only('engineer'), 'ONLY THE ENGINEER CAN SWITCH OFF AN ALARMED DOOR'],
+  steady: [only('engineer'), 'ONLY THE ENGINEER CAN STEADY THE REACTOR'],
+  cut: [best('engineer'), 'ANYONE CAN CUT THE LOCK, BUT IT IS HEARD. THE ENGINEER IS QUIET AND QUICK'],
+  blow: [best('gunner'), 'A CHARGE OPENS THE DOOR AT ONCE AND WAKES EVERYONE. THE GUNNER ALWAYS HAS ONE'],
+  takeover: [best('engineer'), 'ANYONE CAN TAKE THE STATION OVER. THE ENGINEER IS QUICKER'],
+  takedown: [ALL, 'A SLEEPING GUARD THAT IS TAKEN DOWN IS OUT FOR THE REST OF THE BOARDING'],
+};
 // Every action has the same shape. `more` holds what differs from a plain press of a key.
 const act = (name, code, label, short, more = {}) => ({
   name,
@@ -25,6 +44,8 @@ const act = (name, code, label, short, more = {}) => ({
   hold: false,
   progress: 0,
   off: false,
+  who: (WHO[name] || [ALL])[0],
+  tip: (WHO[name] || [])[1] || null,
   ...more,
 });
 const use = (name, label, short, more = {}) => act(name, 'KeyF', label, short, { main: true, ...more });
@@ -35,7 +56,11 @@ function dockedUse(state, me, t) {
   if (t.closed) return null;
   if (t.lock !== 'open') {
     if (t.breakin && t.breakin.started) return use('lock', 'BACK TO THE LOCK', 'LOCK');
-    return use('lock', LOCK_VERB[THINGS[t.kind].lock] + ' THE LOCK', 'LOCK');
+    const code = THINGS[t.kind].lock === 'code';
+    const more = code
+      ? { who: best('engineer'), tip: 'THE ENGINEER FINDS THE CODE. ANYONE CAN ENTER IT AT THE LOCK' }
+      : {};
+    return use('lock', LOCK_VERB[THINGS[t.kind].lock] + ' THE LOCK', 'LOCK', more);
   }
   if (!THINGS[t.kind].inside) return null;
   if (me.tele > 0) return use('board', `TELEPORTER  ${Math.ceil(me.tele)} S`, 'WAIT', { off: true });
@@ -71,13 +96,26 @@ function away(state, me) {
   if (!at) return [];
   if (at.type === 'guard') return [use('takedown', 'TAKE DOWN', 'TAKE DOWN')];
   if (at.type === 'turret') return [use('turn', 'TURN THE TURRET', 'TURN', { hold: true, progress: it.turning })];
+  if (at.type === 'alarm')
+    return [use('disarm', 'SWITCH OFF THE ALARM', 'DISARM', { hold: true, progress: it.turning })];
+  if (at.type === 'reactor')
+    return [use('steady', 'STEADY THE REACTOR', 'STEADY', { hold: true, progress: it.turning })];
   if (at.type === 'airlock') return [use('leave', 'BACK TO THE SHIP', 'LEAVE')];
   if (at.type === 'desk') return [use('trade', DESK[at.desk.type], 'TRADE')];
   if (at.type === 'terminal') {
     return [use('takeover', 'TAKE OVER THE STATION', 'TAKE OVER', { hold: true, progress: it.takeover })];
   }
   const list = [];
-  if (at.cut) list.push(use('cut', 'CUT THE LOCK', 'CUT', { hold: true, progress: it.doorCut }));
+  // The Engineer goes round the lock without a sound. Anyone else cuts it, which is heard.
+  const quiet = av.role === 'engineer';
+  if (at.cut) {
+    list.push(
+      use('cut', quiet ? 'BYPASS THE LOCK' : 'CUT THE LOCK  ·  LOUD', quiet ? 'BYPASS' : 'CUT', {
+        hold: true,
+        progress: it.doorCut,
+      }),
+    );
+  }
   if (av.charges > 0) list.push(act('blow', 'KeyC', 'BLOW THE DOOR', 'BLOW', { main: !at.cut }));
   return list;
 }

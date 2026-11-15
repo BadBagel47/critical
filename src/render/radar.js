@@ -83,6 +83,13 @@ export function drawRadar(ctx, state, view, assets) {
     dot(p, 3.5, GREEN[3]);
     font.draw(ctx, playerById(state, a.player).name, p.x, p.y - 12, GREEN[3], { align: 'c' });
   }
+  // Doors with an alarm on them, which the boarders only see from close by.
+  for (const d of it.alarmed) {
+    if (d.off) continue;
+    const p = at(d);
+    ctx.fillStyle = '#e8c04a';
+    ctx.fillRect(Math.round(p.x) - 2, Math.round(p.y) - 2, 5, 5);
+  }
   if (it.pin) {
     const p = at(it.pin);
     ctx.strokeStyle = GREEN[3];
@@ -119,6 +126,7 @@ export function drawRadar(ctx, state, view, assets) {
     [GREEN[3], 'CREW'],
     [RED, 'ENEMY AFTER THEM'],
     [GREEN[2], 'AIRLOCK'],
+    ['#e8c04a', 'ALARMED DOOR'],
   ];
   legend.forEach(([color, text], i) => {
     rect(ctx, sx + 12, 160 + i * 14, 5, 5, color);

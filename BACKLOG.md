@@ -18,99 +18,88 @@ Prioritet: Hög, Medel, Låg.
 **D** – strong model, high level – Flera sorters vakter
 - F-126 – Flera typer av vakter, lättare i början och svårare längre fram
 
-**E** – strong model, high level – Lockdown och smygande
-- F-158 – Larmade dörrar som utlöser larmet när man öppnar dem, och som radarn visar
-
-**F** – strong model, high level – Roller vid bordning (efter lockdown och smygande)
-- F-113 – Gunner slåss bättre, Engineer hackar och Captain ger gruppen något eget, så att det spelar roll vem som går in
-- F-181 – Tre vägar genom valvdörren: Engineer kopplar förbi låset tyst, Gunner spränger den, Captain ser vad valvet innehåller först
-- F-182 – Engineer stabiliserar reaktorn i ett vrak och köper mer tid
-
-**G** – strong model, high level – Mainframe och egna stationer (efter lockdown och smygande)
+**E** – strong model, high level – Mainframe och egna stationer
 - F-109 – En mainframe-panel på alla stationer, som Engineer hackar hos fiender och som styr stationen hos ägaren
 - F-110 – Laga och uppgradera en station man äger från panelen
 
-**H** – strong model, high level – Ta över neutrala baser (efter gruppen om mainframen)
+**F** – strong model, high level – Ta över neutrala baser (efter gruppen om mainframen)
 - F-114 – Hacka en neutral bas med stor risk: red alert, bounty hunters som anfaller skeppet och sjunkande anseende
 
-**I** – strong model, high level – Anfall på egna stationer (efter gruppen om mainframen)
+**G** – strong model, high level – Anfall på egna stationer (efter gruppen om mainframen)
 - F-121 – Stationer kan falla även när man är i ett annat system, och varnar i tre nivåer när de anfalls
 - F-122 – Ett övertagande i steg: belägring, bordning och avgörande, som inte går att fuska sig ur genom att skjuta det dockade skeppet
 - F-123 – Regler för hur ofta det sker, och ordnade anfall från faktioner man är ovän med
 
-**J** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
+**H** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 - D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
 
-**K** – strong model, high level – Förslag: ekonomi och belöningar
+**I** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**L** – strong model, high level – Baser i två storlekar
+**J** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 
-**M** – strong model, high level – Sällsynta skepp
+**K** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**N** – strong model, high level – Handel
+**L** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**O** – strong model, medium level – Butik med bilder
+**M** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**P** – strong model, high level – Värme
+**N** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**Q** – strong model, high level – Slå ut och borda
+**O** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**R** – strong model, high level – Missiler och raketer
+**P** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**S** – strong model, high level – Kontakt med andra skepp
+**Q** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**T** – strong model, high level – Asteroider och anomalier
+**R** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**U** – strong model, high level – En värld som förändras
+**S** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**V** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**T** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**W** – strong model, high level – Ljudeffekter
+**U** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**X** – strong model, high level – Visuella effekter och feedback
+**V** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 
-**Y** – strong model, high level – Vad ett misslyckat lås kostar
+**W** – strong model, high level – Vad ett misslyckat lås kostar
 - D-172 – Se över vilka minispel som straffar ett misslyckande, och hur
 
-**Z** – strong model, medium level – Sköld från en station under attack (efter anfall på egna stationer)
+**X** – strong model, medium level – Sköld från en station under attack (efter anfall på egna stationer)
 - F-173 – En station under attack ger sköld tills angriparna hackat mainframen. Första delen är byggd: en fiende ger ingen sköld
 
-**AA** – strong model, medium level – Vem kan göra vad
-- F-179 – En bild vid varje moment som visar vilka roller som kan göra det och vem som har en bonus
-
-**AB** – strong model, high level – Förslag: skeppets dator för små besättningar
+**Y** – strong model, high level – Förslag: skeppets dator för små besättningar
 - D-186 – Gå igenom hur skeppets dator skulle fungera i praktiken, innan något ändras
 
-**AC** – strong model, high level – Förslag: meddelanden och sensordata
+**Z** – strong model, high level – Förslag: meddelanden och sensordata
 - D-187 – Se över vad spelet och skeppet visar på skärmen, hur det prioriteras, och om sensordata ska få en egen del
 
-**AD** – strong model, high level – Uppgraderingar och ekonomi per roll
+**AA** – strong model, high level – Uppgraderingar och ekonomi per roll
 - F-188 – Uppgraderingarna sorteras efter kategori och roll
 - D-189 – Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar
 
@@ -151,18 +140,13 @@ Väntar på användaren: F-091 (mining laser) tas upp när F-085 är provad. D-0
 | F-123 | Regler för hur ofta stationer anfalls och om angriparna kommer i grupp. Är man ovän med en faktion ska den också kunna utföra attacker. De bör vara mer organiserade och mer aggressiva. Anseendet och nivån på faktionens spridning i systemet borde också påverka | Ej påbörjad |
 | F-109 | Alla stationer har en panel där man kan ansluta till stationens mainframe. Vad man ska kunna göra där är inte bestämt. Agentens förslag: se stationens planritning, stänga av kameror och turrets en stund, öppna låsta dörrar, och hos vänliga stationer se priser och uppdrag Tillägg 2026-11-14: Engineer är den som kan hacka mainframen. På en station man äger är inställningarna i panelen att reparera stationen, aktivera externa försvarsturrets igen om de blivit förstörda och sedan lagade, och slå av lockdown mode. Mainframen kan även uppgradera basens försvar. Agentens förslag: en och samma panel på alla stationer, med olika innehåll beroende på om man äger stationen, är fiende eller neutral | Ej påbörjad |
 | F-110 | Stationer man tagit över har en panel där man kan laga stationen, med ett system som liknar skeppets Tillägg 2026-11-14: se F-109 för vad panelen ska kunna. Agentens anmärkning: i dag lagar stationer sig själva med tiden, så det måste ändras för ägda stationer om panelen ska betyda något | Ej påbörjad |
-| F-113 | Roller vid bordning. Gunner får en extra boost med sina vapen, och det ska framgå för Gunnern att hen har en bonus när den är relevant. Engineer har redan en unik roll som den som kan hacka mainframen. Oklart vad Captain ska ge: någon form av boost för hela gruppen för att hen är ett moraliskt stöd? Det får inte bli mycket övertag, men ändå något som kan påverka lite. Agentens förslag för Captain: överblick i stället för styrka, hen ser vakter och kameror en bit genom väggar och alla i gruppen får se det Besked 2026-11-14: alla har en bonus av något slag. Captain ger överblick. Alla kan använda mainframen, men Engineer gör det snabbare och når fler funktioner. Rollen är den post man lämnade. Besked 2026-11-14: Captains överblick är en bärbar radar med kort räckvidd, se F-140 | Ej påbörjad |
-| F-181 | Tre vägar genom valvdörren. Valt av användaren 2026-11-15 ur D-180. I dag skär alla upp valvdörren på samma sätt, eller spränger den med en laddning om skeppet har köpt sådana. Förslaget: Engineer kopplar förbi låset utan ljud. Gunner spränger den, och då vaknar alla. Captain ser vad valvet innehåller innan någon bestämmer sig. Att skära upp dörren finns kvar för alla, så att ingen fastnar. Kan byggas före smygandet | Ej påbörjad |
-| F-182 | Engineer stabiliserar reaktorn i ett vrak. Valt av användaren 2026-11-15 ur D-180. I dag räknar reaktorn ner från första steget in och går inte att påverka. Förslaget: Engineer kan gå till reaktorn och köpa mer tid. Öppet: hur mycket tid, och var reaktorn står. Ensam: byt till Engineer innan du går in, eller acceptera den kortare tiden. Kan byggas före smygandet | Ej påbörjad |
 | F-114 | En Engineer ska kunna försöka få access till en neutral bas mainframe. Det måste vara en stor risk. Att ta över en neutral bas ska vara svårt, och basen borde kunna kalla på hjälp av bounty hunters, som kommer in i systemet och börjar attackera skeppet, så att man måste avväga om det är värt risken. Då sjunker anseendet automatiskt, och tar man över basen sjunker det ytterligare om den är med i en faktion. Är den inte det är den nu en station man äger och har kontroll över. Om en neutral bas utsätts för en attack inifrån går red alert igång och vakterna blir aggressiva Besked 2026-11-14: mainframen är längst in, så man måste ta sig förbi vakterna för att nå den. Ett alternativ till prissumma är att man blir mål för bounty hunters, dock inte överdrivet mycket, eller en kombination. Agentens förslag: en prissumma som lockar en grupp bounty hunters då och då, aldrig mer än en grupp åt gången, tills den är betald eller ett visst antal grupper är besegrade. Besked 2026-11-14: prissumma och bounty hunters kommer från stationer utan faktion. Faktioner kommer själva | Ej påbörjad |
-| F-158 | Larmade dörrar. Användaren 2026-11-14: vissa dörrar är larmade när man ska attackera, och när man öppnar en sådan går larmet. Radarn kan se vilka dörrar som är larmade. Agentens förslag på resten, inte bestämt: de sitter på genvägar och sidorum med loot, och det finns alltid en väg till mainframen utan larmad dörr. De syns också utan radar, som en liten lampa i dörrkarmen när man står nära, så att radarn ger förvarning och inte är enda sättet. Engineer kan koppla ur en larmad dörr på plats. Vakter går igenom utan att larmet går. Gäller bara där smygande gäller, alltså inte i vrak. Hör ihop med F-107, F-108 och F-140. Beskrivs i docs/station-boarding.md, avsnitt 4 Besked 2026-11-15: bestämt enligt agentens förslag. Larmade dörrar syns på nära håll även utan radar, Engineer kan koppla ur dem på plats, och det finns alltid en väg till mainframen utan larmad dörr. | Ej påbörjad |
 | D-172 | Se över vilka minispel man blir straffad av när man misslyckas, och hur. Användaren 2026-11-15, med fel kod som exempel. Läget i dag: i rörspelet på vrak sprängs vraket när tiden går ut, och skeppet tar 60 i skada om det ligger dockat. I kodspelet på stationer kostar en fel kod 6 sekunder, och går tiden ut skickar stationen ut två jaktskepp och låset återställs. I visarspelet på pods slår poden larm efter tre missar eller när tiden går ut, och nästa piratvåg kommer direkt. Att besvara: är straffen lagom och begripliga, ska ett enstaka misstag kosta något eller bara ett helt misslyckande, och ska spelaren få veta priset i förväg. Görs tillsammans med F-171 (Engineer hackar fram koden) och F-163 (låset med ringar), eftersom båda ändrar hur låsen fungerar Förslaget är framtaget 2026-11-15 i docs/proposal-economy.md och väntar på användarens svar på frågorna där. Läget 2026-11-15: en del är bestämd och byggd. Ett misslyckat lås på ett vrak spränger inte längre vraket direkt, utan kostar 40 sekunder av reaktortiden, och det tredje misslyckandet spränger det. Resten väntar på svaren i docs/proposal-economy.md | Väntar på användaren |
 | F-173 | Sköld vid dockning. Användaren 2026-11-15: saker skeppet dockar med som är fiender ska inte ge en sköldboost. En station som är under attack ger sköld tills de som attackerar lyckas hacka mainframen. Läget i dag: allt skeppet dockar med ger den extra skölden, även en fientlig station. Första delen går att bygga nu. Andra delen kräver anfallen på stationer med mainframe (F-109, F-121 till F-123), och fram till dess ger en station under attack sköld så länge den inte har fallit. Agentens anmärkning: den som spelar ensam och bordar en fientlig station lämnar då skeppet utan extra sköld, vilket är avsikten Läget 2026-11-15: första delen är byggd. Ett skepp som ligger dockat vid en fientlig station får ingen extra sköld, och den som finns försvinner om stationen blir fientlig. Vrak och pods ger sköld som förut. Kvar: att en station under attack slutar ge sköld när angriparna hackat mainframen | Delvis byggd |
 | D-186 | Skeppets dator i praktiken. Användaren 2026-11-15: vi behöver gå igenom hur det skulle fungera i praktiken först, och göra brainstorming innan några förändringar görs. Gäller F-034 (autopilot på lediga poster), som är parkerad och har agentens första förslag. Inget byggs förrän genomgången är gjord Besked 2026-11-15: det ska synas när datorn sköter något. När man startar en omgång väljer man vilka roller datorn får sköta, och som standard är det ingen. Då kan spelare i co-op inte bara slå på datorn och slippa göra sitt jobb. Öppet: om datorn tar en tillåten post av sig själv när ingen sitter där, om valet går att ändra under omgången, om datorn bestämmer själv eller bara utför det man pekat ut, hur mycket sämre den är än en människa, och vad den gör medan besättningen bordar | Ej påbörjad |
 | D-187 | Se över hur spelet och skeppet visar meddelanden. Användaren 2026-11-15: just nu läggs allt möjligt på skärmen i en struktur som kan vara svår att prioritera. Allt som visas i dag kanske inte heller ska visas, eller bara visas med uppgraderingar. Kanske ska sensordata få en egen del av gränssnittet. Läget i dag: upp till två statusrader överst i mitten, tillfälliga meddelanden under dem, pilar i skärmkanten mot allt som är känt, en minikarta, och varje posts egna mätare nere i hörnen | Ej påbörjad |
 | F-188 | Uppgraderingar sorterade efter kategori och roll. Användaren 2026-11-15. Läget i dag: butiken har tre flikar (hull, systems, armory) utan att säga vilken roll en uppgradering hör till | Ej påbörjad |
 | D-189 | Ekonomin delad mellan rollerna. Användaren 2026-11-15: så att alla roller kan ta egna beslut om vad som behöver förbättras. Då undviker man diskussion om att en person vill ha alla förbättringar själv. Läget i dag: en gemensam kassa. Att besvara: hur pengarna delas, vad som köps ur vilken kassa, vad som fortfarande är gemensamt (bränsle, lagning, stjärnkartor), och hur det fungerar för den som spelar ensam. Hör ihop med F-188 och docs/proposal-economy.md | Ej påbörjad |
-| F-179 | Visa vem som kan göra ett moment. Användaren 2026-11-15: eftersom det är svårt att lära sig eller komma på alla moment som spelare, kan vi visa en bild när en spelare kommer till ett moment, som visar vilken eller vilka roller som kan göra det och om någon roll har en bonus. Agentens förslag, inte bestämt: bygg ut knappen som redan dyker upp när det finns något att göra. Bredvid den visas de tre posterna som små märken: tänd för den som kan, släckt för den som inte kan, och ett plus vid den som har en bonus. Första gångerna visas en större ruta med en mening om vad momentet är. Den som spelar ensam ser då vilken post som är värd att byta till. Rutan får inte täcka det man gör, och den större rutan ska gå att stänga av. Hör ihop med F-113 (roller vid bordning), F-171 (Engineers hack) och F-158 (larmade dörrar) | Ej påbörjad |
 | F-118 | Man borde inte bli förlåten med tiden. På något sätt borde man få jobba för det, till exempel genom uppdrag för faktionen (D-073). I dag stiger ett dåligt anseende av sig självt upp till avvaktande. Agentens anmärkning: ta bort det först när uppdragen finns, och se till att det alltid finns ett sätt att höja anseendet även när faktionens baser är stängda, till exempel uppdrag för den som erbjuds på andra baser Förslaget är framtaget 2026-11-15 i docs/proposal-world.md och väntar på användarens svar på frågorna där. | Väntar på användaren |
 | F-119 | Faktioner som är i krig med varandra. Då får sidouppdragen man tar större tyngd. Agentens förslag: ett krig mellan två av faktionerna per omgång, där deras patruller slåss med varandra och uppdrag för den ena sänker anseendet hos den andra. Krig kan börja och ta slut som händelser i världen (F-087) | Ej påbörjad |
 | F-103 | Stora baser med två våningar: 1,5 gånger större än dagens stationer, med annan design, mer vapen och starkare sköld till försvar. Dagens storlek är bra för små stationer. Design visas först | Ej påbörjad |
@@ -331,3 +315,8 @@ Väntar på användaren: F-091 (mining laser) tas upp när F-085 är provad. D-0
 | F-116 | Besättningens egna turrets är engångssaker för strid: de går bara att sätta ut när en strid pågår, och de försvinner några sekunder efter att striden är över. De skjuter inte på stationens turrets, som ändå inte går att förstöra | 2026-11-15 |
 | F-183 | Engineer vänder en turret till besättningens sida genom att hålla F intill den i två och en halv sekund. Den skjuter då på vakterna i 15 sekunder. Gunner slår ut en turret med en granat. Att Captain ser synfältet blev att alla ser det, eftersom det ritas på golvet | 2026-11-15 |
 | F-161 | Fiender ser ljus. Vakter ser åt ett håll, ser den som står i ljus på långt håll och den i mörker bara på nära håll, och en bordare med tänd lampa syns alltid. En vakt som ser en flare utan att se någon går dit, ser sig om en stund och går tillbaka, en gång per flare, så en flare fungerar som lockbete. Inte byggt: att nödlampornas ljus räknas, och att en vakt reagerar på skenet från en ficklampa | 2026-11-15 |
+| F-158 | Larmade dörrar på fientliga stationer. Tre dörrar är larmade, och den som går igenom en sådan utlöser larmet. De sitter aldrig så att de stänger vägen: det finns alltid en väg från luftslussen till valvet utan larmad dörr. En gul lampa med texten ALARMED syns när man står nära, Captain ser dem på radarns räckvidd, och radarbilden visar dem som gula rutor. Engineer stänger av en larmad dörr genom att hålla F intill den i två och en halv sekund. Finns inte i vrak. Inte byggt: att vakter går igenom dem (vakterna öppnar inga dörrar i dag) | 2026-11-15 |
+| F-113 | Roller vid bordning. Rollen är den post man lämnade, och en rad under rubriken säger vad den ger. Gunner gör en fjärdedel mer skada med geväret och har en sprängladdning med sig. Engineer är tyst och en och en halv gång så snabb med lås och övertagande, och är den som kan vända turrets, stänga av larmade dörrar och stabilisera reaktorn. Captain har radarn och ser vad valvet innehåller | 2026-11-15 |
+| F-181 | Tre vägar genom valvdörren. Engineer kopplar förbi låset tyst och snabbare. Gunner har alltid en laddning och spränger dörren, vilket hörs. Captain ser vad som finns i valvet när hen står vid dörren, så att gruppen kan avgöra om det är värt det. Alla andra kan fortfarande skära upp låset, men det hörs nu av vakterna | 2026-11-15 |
+| F-182 | Engineer stabiliserar reaktorn i ett vrak. Reaktorn står i rummet längst från ingången. Engineer håller F intill den i tre sekunder och besättningen får en minut till, en gång per vrak | 2026-11-15 |
+| F-179 | Vem kan göra vad. Bredvid varje knapp som dyker upp visas de tre posterna som små märken: tänd för den som kan, släckt för den som inte kan, och ett streck över den som gör det bäst. De tre första gångerna ett moment dyker upp visas också en rad som förklarar det. Inte byggt: en inställning som stänger av raden | 2026-11-15 |

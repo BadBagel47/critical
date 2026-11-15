@@ -70,6 +70,7 @@ Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **F
 - Planritningen från hack nivå 1 visar också de larmade dörrarna.
 - När larmet väl har gått spelar dörrarna ingen roll längre.
 - Larmade dörrar finns bara där smygande gäller, alltså inte i vrak.
+- **Byggt (2026-11-15):** tre larmade dörrar per fientlig station, gul lampa på nära håll, gula rutor på radarn, och Engineer stänger av en på två och en halv sekund. Vakterna öppnar inga dörrar i dag, så de går inte igenom dem. Planritningen från hacket väntar på mainframen (F-109).
 
 ## 5. Vakter, tranq gun och TAKE DOWN
 

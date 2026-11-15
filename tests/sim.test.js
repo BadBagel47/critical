@@ -503,9 +503,14 @@ test('with two guards on an intruder, one of them goes round another way', () =>
   s.players[0].hp = 10000;
   const [here, there] = stretch(it);
   Object.assign(av, here);
-  it.guards.forEach((g, i) => Object.assign(g, { x: there.x + i * 14, y: there.y }));
+  // Both look the boarder's way, so that they notice at once.
+  it.guards.forEach((g, i) => {
+    const at = { x: there.x + i * 14, y: there.y };
+    const way = headingTo(here.x - at.x, here.y - at.y);
+    Object.assign(g, at, { route: [], path: [], looks: [way], heading: way, home: { ...at } });
+  });
   let flankers = 0;
-  for (let i = 0; i < 60 * 3; i++) {
+  for (let i = 0; i < 60 * 5; i++) {
     step(s, { away: { 0: {} } }, DT);
     flankers = Math.max(flankers, it.guards.filter((g) => g.plan === 'flank').length);
   }
@@ -2250,4 +2255,138 @@ test('a guard that sees a flare goes to look at it, once, and then back to its p
   assert.equal(it.flares[0].seen.includes(g.id), true);
   run(s, { away: { 0: {} } }, 3);
   assert.equal(g.curious, null, 'and it does not go back to the same light');
+});
+
+// ---------- alarmed doors, what each post is good at inside, and the reactor ----------
+test('a station has alarmed doors, and there is always a way to the vault that goes through none of them', () => {
+  let doors = 0;
+  for (let seed = 1; seed <= 12; seed++) {
+    const s = quiet(createState(seed));
+    for (const st of stations(s)) {
+      turnHostile(s, st);
+      const it = createInterior(s, st);
+      doors += it.alarmed.length;
+      assert.ok(it.alarmed.length <= B.ALARMED_DOORS);
+      const shut = new Set(it.alarmed.map((d) => d.ty * it.w + d.tx));
+      const vault = it.rooms[it.vault].door;
+      const goal = { tx: Math.floor(vault.x / TILE), ty: Math.floor(vault.y / TILE) };
+      for (const a of it.airlocks) {
+        // Walk the tiles from the airlock, never stepping on an alarmed door.
+        const from = { tx: Math.floor(a.x / TILE), ty: Math.floor(a.y / TILE) };
+        const seen = new Set([from.ty * it.w + from.tx]);
+        const queue = [from];
+        let found = false;
+        while (queue.length && !found) {
+          const at = queue.shift();
+          if (at.tx === goal.tx && at.ty === goal.ty) found = true;
+          for (const [dx, dy] of [
+            [1, 0],
+            [-1, 0],
+            [0, 1],
+            [0, -1],
+          ]) {
+            const tx = at.tx + dx,
+              ty = at.ty + dy,
+              key = ty * it.w + tx;
+            if (seen.has(key) || shut.has(key) || !'.,AL'.includes(tileAt(it, tx, ty))) continue;
+            seen.add(key);
+            queue.push({ tx, ty });
+          }
+        }
+        assert.ok(found, `seed ${seed}: the vault can be reached without an alarmed door`);
+      }
+    }
+  }
+  assert.ok(doors > 0, 'some stations have alarmed doors');
+});
+
+test('walking through an alarmed door gives the crew away, unless the Engineer has switched it off', () => {
+  const { s, it, av } = sneaking();
+  it.guards = [];
+  it.turrets = [];
+  it.cameras = [];
+  const door = { x: av.x + 4, y: av.y, tx: Math.floor((av.x + 4) / TILE), ty: Math.floor(av.y / TILE), off: false };
+  it.alarmed = [door];
+  // Standing beside it: a Gunner can do nothing about it, an Engineer switches it off.
+  Object.assign(av, { x: door.x - 18, y: door.y });
+  av.role = 'gunner';
+  run(s, { away: { 0: { use: true } } }, B.DISARM_TIME + 0.5);
+  assert.equal(door.off, false);
+  av.role = 'engineer';
+  run(s, { away: { 0: { use: true } } }, B.DISARM_TIME + 0.1);
+  assert.equal(door.off, true);
+  Object.assign(av, { x: (door.tx + 0.5) * TILE, y: (door.ty + 0.5) * TILE });
+  step(s, { away: { 0: {} } }, DT);
+  assert.equal(it.mood, 'lockdown', 'switched off, it can be walked through');
+  door.off = false;
+  step(s, { away: { 0: {} } }, DT);
+  assert.equal(it.mood, 'alarm', 'and one that is on gives the crew away');
+});
+
+test('the post a boarder left makes a difference inside', () => {
+  const dmgOf = (role) => {
+    const { s, it, av } = boarded();
+    it.guards = [];
+    it.turrets = [];
+    av.role = role;
+    step(s, { away: { 0: { aim: { x: av.x + 50, y: av.y }, fire: true } } }, DT);
+    return it.bolts[0].dmg;
+  };
+  assert.ok(Math.abs(dmgOf('gunner') - dmgOf('captain') * B.ROLE_RIFLE) < 1e-9, "the Gunner's rifle hits harder");
+  // The vault door: the Engineer is quicker and makes no sound, anyone else is heard.
+  const open = (role) => {
+    const { s, it, av } = sneaking();
+    it.turrets = [];
+    it.cameras = [];
+    it.alarmed = [];
+    it.guards = [];
+    av.role = role;
+    const door = it.rooms[it.vault].door;
+    const spot = [
+      [0, 14],
+      [0, -14],
+      [14, 0],
+      [-14, 0],
+    ]
+      .map(([dx, dy]) => ({ x: door.x + dx, y: door.y + dy }))
+      .find((p) => !blocked(it, p.x, p.y, 5));
+    Object.assign(av, spot);
+    let t = 0;
+    while (!it.doorOpen && t < 20) {
+      step(s, { away: { 0: { use: true } } }, DT);
+      t += DT;
+    }
+    return { t, mood: it.mood };
+  };
+  const eng = open('engineer'),
+    cap = open('captain');
+  assert.ok(eng.t < cap.t, 'the Engineer is quicker');
+  assert.equal(eng.mood, 'lockdown', 'and is not heard');
+  assert.equal(cap.mood, 'alarm', 'cutting the lock is heard');
+  // A Gunner always brings a charge.
+  const s = quiet(createState(1));
+  s.players[0].post = 'gunner';
+  const w = dockAt(s);
+  step(s, { system: { board: [0] } }, DT);
+  assert.equal(w.interior.avatars[0].charges, 1);
+});
+
+test('the Engineer steadies the reactor of a wreck and buys the crew more time, once', () => {
+  const { s, it, av } = boarded();
+  it.guards = [];
+  it.turrets = [];
+  assert.ok(it.reactor, 'a wreck has a reactor');
+  Object.assign(av, { x: it.reactor.x + 8, y: it.reactor.y });
+  av.role = 'captain';
+  const before = it.timer;
+  run(s, { away: { 0: { use: true } } }, B.STEADY_TIME + 0.5);
+  assert.ok(it.timer < before, 'a Captain cannot');
+  av.role = 'engineer';
+  const t0 = it.timer;
+  run(s, { away: { 0: { use: true } } }, B.STEADY_TIME + 0.1);
+  assert.ok(it.timer > t0 + B.STEADY_GAIN - B.STEADY_TIME - 1);
+  assert.equal(it.reactor.steadied, true);
+  const t1 = it.timer;
+  run(s, { away: { 0: { use: true } } }, B.STEADY_TIME + 0.5);
+  assert.ok(it.timer < t1, 'it works only once');
 });

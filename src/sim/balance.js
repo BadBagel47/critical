@@ -175,6 +175,16 @@ export const B = {
   TURRET_OUT: 20,
   TURRET_TURNED: 15,
   TURRET_TURN_TIME: 2.5,
+  // What the post a boarder left gives them inside: the Gunner's rifle hits harder, and the Engineer is
+  // quicker at everything that is done with a lock or a machine.
+  ROLE_RIFLE: 1.25,
+  ROLE_HACK: 1.5,
+  // How long the Engineer takes to switch off an alarmed door, and how many of them a station has at most.
+  DISARM_TIME: 2.5,
+  ALARMED_DOORS: 3,
+  // How long the Engineer takes to steady the reactor of a wreck, and how much time that buys, once.
+  STEADY_TIME: 3,
+  STEADY_GAIN: 60,
   // A camera sweeps from side to side and gives the crew away, but hurts nobody.
   CAMERA_RANGE: 118,
   CAMERA_FOV: 0.38,
