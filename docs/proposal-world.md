@@ -20,8 +20,9 @@ Fler besked samma dag:
 - **Antalet system** väljs i starten, och det avgör hur många uppdrag det finns innan man når slutet.
 - **Stjärna i mitten** och ett asteroidbälte.
 
+- **Färd inom ett system.** Uppdrag får peka tvärs över ett system. Systemen är inte för stora, och skeppet får en speed boost (F-197). Den laddas upp, fortare ju mer energi motorerna har, och nollställs om skeppet blir beskjutet innan den är klar. Samma regel gäller hoppet till ett nytt system, så att man inte bara kan fly ur en strid. Tiderna kortas med uppgraderingar.
+
 Öppet efter beskeden:
-- Hur man slipper långa sträckor runt stjärnan vid uppdrag: genom hur system och uppdrag läggs upp, genom ett korthopp inom systemet (F-197), eller båda.
 - Vilka antal system man får välja mellan.
 - Om det mystiska uppdraget med Cruisern är en del av den röda tråden eller ett sidospår.
 
