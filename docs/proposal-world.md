@@ -28,7 +28,7 @@ Fler besked samma dag:
 - **Dolda system.** Storyn ska kunna låsa upp färdvägar till system man inte kan hitta själv på kartan. Kartan dit får man genom ett uppdrag, eller genom att borda ett skepp och plocka upp den. I första hand är det vrak man bordar, men skepp blir också bra när de går att borda (F-081). Man får aldrig låsas av att man råkar förstöra ett skepp man skulle borda.
 
 - **Upptäcka själv.** Man ska kunna upptäcka systemen själv, som i Escape Velocity, och inte bara genom kartor. Det ändrar det som står under Bestämt i avsnitt 2 om att system nås med stjärnkartor.
-- **Fog of war inuti system.** Ska provas utan (F-199). Inte bestämt. Före scanningen visar kartan stjärnan och det skeppet ser. En scanning kostar bränsle och ger en engångsbild av baserna och allt annat i systemet. Det behövs en ny för att se aktuell status. En boj håller i stället kartan över sitt system uppdaterad utan att man scannar. Sondens nya uppgift är inte bestämd.
+- **Fog of war inuti system.** Ska provas utan (F-199). Inte bestämt. Före scanningen visar kartan stjärnan och det skeppet ser. En scanning kostar bränsle och ger en engångsbild av baserna och allt annat i systemet. Det behövs en ny för att se aktuell status. En boj håller i stället kartan över sitt system uppdaterad utan att man scannar. Det bojen vet syns också på stjärnkartan, så att man ser läget där från ett annat system. Sondens nya uppgift är inte bestämd.
 
 Öppet efter beskeden:
 - Vilka antal system man får välja mellan.
