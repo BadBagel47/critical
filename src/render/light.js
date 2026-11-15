@@ -9,11 +9,16 @@ import { TAU } from '../sim/util.js';
 const DARK = '#1f2338';
 // A little of the light is laid on top of the picture as well, so that what is lit also shines.
 const SHINE = 0.07;
-// Light reaches a little way into the wall it falls on, so that the wall itself is seen.
-const INTO_WALL = 12;
+// Light reaches a little way into the wall it falls on, so that the wall itself is seen. How far is measured
+// straight into the wall, so that a beam along a wall lights an even strip of it. A wall is drawn with its
+// front toward the bottom of the screen: light from below falls on that front, and light from above or from
+// the side only on the edge of its top.
+const INTO_FRONT = 10;
+const INTO_TOP = 6;
+const INTO_SIDE = 8;
 const stops = (c) => c === '#' || c === 'L';
 
-// How far a ray from x, y gets before a wall, at most r.
+// How far a ray from x, y gets, at most r: to the first wall and a little way into it.
 function reach(it, x, y, dx, dy, r) {
   let tx = Math.floor(x / TILE),
     ty = Math.floor(y / TILE);
@@ -23,19 +28,32 @@ function reach(it, x, y, dx, dy, r) {
     perY = dy ? TILE / Math.abs(dy) : Infinity;
   let nextX = dx ? (dx > 0 ? (tx + 1) * TILE - x : x - tx * TILE) / Math.abs(dx) : Infinity,
     nextY = dy ? (dy > 0 ? (ty + 1) * TILE - y : y - ty * TILE) / Math.abs(dy) : Infinity;
-  for (;;) {
-    let d;
-    if (nextX < nextY) {
-      d = nextX;
+  // One step to the next line between tiles. Says how far along the ray that is, and sets `fromSide`.
+  let fromSide = false;
+  const step = () => {
+    fromSide = nextX < nextY;
+    const d = fromSide ? nextX : nextY;
+    if (fromSide) {
       nextX += perX;
       tx += sx;
     } else {
-      d = nextY;
       nextY += perY;
       ty += sy;
     }
+    return d;
+  };
+  for (;;) {
+    const d = step();
     if (d >= r) return r;
-    if (stops(tileAt(it, tx, ty))) return d;
+    if (!stops(tileAt(it, tx, ty))) continue;
+    const deep = fromSide ? INTO_SIDE / Math.abs(dx) : (dy < 0 ? INTO_FRONT : INTO_TOP) / Math.abs(dy);
+    const end = Math.min(r, d + deep);
+    // Inside the wall the light goes on until it is deep enough, or until the wall ends.
+    for (;;) {
+      const e = step();
+      if (e >= end) return end;
+      if (!stops(tileAt(it, tx, ty))) return e;
+    }
   }
 }
 
@@ -70,8 +88,7 @@ export function litArea(it, x, y, r, heading = null, half = Math.PI) {
   for (const off of offs) {
     const dx = Math.cos(mid + off),
       dy = Math.sin(mid + off);
-    const d = reach(it, x, y, dx, dy, r);
-    const end = d < r ? Math.min(r, d + INTO_WALL) : r;
+    const end = reach(it, x, y, dx, dy, r);
     points.push([x + dx * end, y + dy * end]);
   }
   return points;
