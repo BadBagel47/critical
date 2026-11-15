@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stjärnan, fyra förslag</title>
+<style>
+/* One screen: the proposals as tabs, the star itself in the middle at the size it has in the game, and a few
+   words on what is different below. The page keeps to the game's own dark world, so it has one theme by choice. */
+:root {
+  color-scheme: dark;
+  --bg: #0b0c16;
+  --panel: #14162a;
+  --line: #2f3350;
+  --text: #c9ccd8;
+  --dim: #8a8ea6;
+  --accent: #dba445;
+  --display: 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --body: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Courier New', monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 20px 16px 40px;
+}
+main { max-width: 860px; margin: 0 auto; display: grid; gap: 18px; }
+h1 { font-family: var(--display); font-weight: 600; font-size: 1.7rem; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 1.05rem; margin: 0 0 6px; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--dim); }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tabs button {
+  font-family: var(--display); font-weight: 600; font-size: 1rem;
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--line); border-radius: 4px;
+  padding: 9px 14px; cursor: pointer; flex: 1 1 170px; text-align: left;
+}
+.tabs button small { display: block; font-family: var(--body); font-weight: 400; font-size: .78rem; color: var(--dim); }
+.tabs button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.stage { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px; display: grid; gap: 10px; }
+canvas { width: 100%; height: auto; display: block; background: #0d0d18; border-radius: 2px; image-rendering: pixelated; }
+.how { min-height: 4.5em; }
+.ctl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.ctl button {
+  font-family: var(--body); font-size: .9rem; background: transparent; color: var(--text);
+  border: 1px solid var(--line); border-radius: 4px; padding: 8px 14px; cursor: pointer;
+}
+.note { color: var(--dim); font-size: .85rem; }
+ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; max-width: 68ch; }
+@media (max-width: 420px) { h1 { font-size: 1.4rem; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Stjärnan, fyra förslag</h1>
+    <p class="lede">Stjärnan ritas i samma storlek och upplösning som i spelet. Välj ett förslag och se hur det rör sig.</p>
+  </header>
+
+  <div class="tabs" role="group" aria-label="Förslag">
+    <button type="button" data-v="a" aria-pressed="false">A · I dag<small>Släta band, som i testläget nu</small></button>
+    <button type="button" data-v="b" aria-pressed="false">B · Levande yta<small>Kornig yta, fläckar och mjuk kant</small></button>
+    <button type="button" data-v="c" aria-pressed="true">C · Krans och utbrott<small>B plus strålar, eldbågar och gnistor</small></button>
+    <button type="button" data-v="d" aria-pressed="false">D · Olika stjärnor<small>C i tre färger och storlekar</small></button>
+  </div>
+
+  <section class="stage" aria-label="Stjärnan">
+    <canvas id="view" width="640" height="360" role="img" aria-label="Stjärnan enligt det valda förslaget, med ett skepp intill som mått"></canvas>
+    <p class="how" id="how"></p>
+    <div class="ctl">
+      <button type="button" id="pause">Pausa rörelsen</button>
+      <span class="note">Skeppet till vänster visar storleken. Den tunna ringen är där hettan börjar skada.</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Vad som är nytt jämfört med i dag</h2>
+    <ul>
+      <li>Ytan ritas pixel för pixel i få färger, som skeppen, i stället för släta former.</li>
+      <li>Den är ljusast i mitten och mörknar mot kanten, så att den ser ut som ett klot.</li>
+      <li>Kornen på ytan rör sig långsamt, och mörka fläckar driver över den.</li>
+      <li>I C sträcker sig en krans av strålar ut, eldbågar reser sig vid kanten och gnistor driver utåt genom området där hettan skadar.</li>
+      <li>I D har olika system olika stjärnor. Färg och storlek kan då följa hur farligt systemet är.</li>
+    </ul>
+    <p class="note" style="margin-top:10px">Ingenting blinkar. Allt rör sig långsamt, och bilden uppdateras tolv gånger i sekunden.</p>
+  </section>
+</main>
+
+<script>
+// The star is drawn one pixel at a time into a picture as large as the game's own screen, a few times a second,
+// and then shown enlarged. Everything is worked out from the place of the pixel and the time, so the same code
+// can be moved into the game as it is.
+const W = 640, H = 360;
+const canvas = document.getElementById('view');
+const ctx = canvas.getContext('2d');
+const TAU = Math.PI * 2;
+// The size of the star on the screen: 150 in space, shown at three quarters.
+const R = 112;
+const BURN = 225;
+
+const HOW = {
+  a: 'Så här ser stjärnan ut i testläget i dag: fem släta band med en kant som vågar sig långsamt, och ett sken runt om.',
+  b: 'Ytan har fått korn som rör sig och mörka fläckar som driver. Den mörknar mot kanten, och skenet tonar ut i punkter i stället för en jämn dimma.',
+  c: 'Som B, och dessutom en krans av strålar, eldbågar som reser sig och sjunker vid kanten, och gnistor som driver utåt. Gnistorna visar var hettan skadar, så ringen kan göras svagare.',
+  d: 'Samma stjärna som C i tre utföranden: en liten röd, en gul och en stor blåvit. Ett system får en av dem.',
+};
+
+// ---------- noise ----------
+function hash(x, y, z) {
+  let n = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(z, 1274126177);
+  n = Math.imul(n ^ (n >>> 13), 1274126177);
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
+}
+function noise(x, y, z) {
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+  let u = x - xi, v = y - yi, w = z - zi;
+  u = u * u * (3 - 2 * u);
+  v = v * v * (3 - 2 * v);
+  w = w * w * (3 - 2 * w);
+  const a = hash(xi, yi, zi), b = hash(xi + 1, yi, zi), c = hash(xi, yi + 1, zi), d = hash(xi + 1, yi + 1, zi);
+  const e = hash(xi, yi, zi + 1), f = hash(xi + 1, yi, zi + 1), g = hash(xi, yi + 1, zi + 1), h = hash(xi + 1, yi + 1, zi + 1);
+  const near = a + (b - a) * u + (c + (d - c) * u - a - (b - a) * u) * v;
+  const far = e + (f - e) * u + (g + (h - g) * u - e - (f - e) * u) * v;
+  return near + (far - near) * w;
+}
+const fbm = (x, y, z) => noise(x, y, z) * 0.6 + noise(x * 2.1, y * 2.1, z * 1.7) * 0.28 + noise(x * 4.3, y * 4.3, z * 2.9) * 0.12;
+const fbm2 = (x, y, z) => noise(x, y, z) * 0.68 + noise(x * 2.3, y * 2.3, z * 1.9) * 0.32;
+// Ordered dither: which of two neighbouring colours a pixel gets depends on where it is, in a fixed pattern.
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16);
+const dither = (x, y) => BAYER[(y & 3) * 4 + (x & 3)];
+
+// ---------- colours ----------
+const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+// From the dark edge of the surface to its white heart, and the glow outside it from faint to strong.
+const KINDS = {
+  yellow: {
+    surface: ['#7a2a1c', '#a83c1e', '#d0563a', '#f09a5a', '#f6c458', '#f2d27a', '#fff0b4', '#fffbe6'].map(rgb),
+    glow: ['#2a1210', '#4a1a14', '#7a2a1c', '#b04424', '#e07a3c'].map(rgb),
+    spark: rgb('#ffd08a'),
+  },
+  red: {
+    surface: ['#4a1414', '#74201c', '#a02c20', '#c8442a', '#e06a3a', '#f09a5a', '#ffc890', '#ffe6c8'].map(rgb),
+    glow: ['#220c0e', '#3c1212', '#5e1a16', '#8a261c', '#b83a24'].map(rgb),
+    spark: rgb('#ff9a6a'),
+  },
+  blue: {
+    surface: ['#2c4a8a', '#3c6cb4', '#58a0d8', '#8cc8ec', '#bce4f6', '#dcf2fc', '#f2fbff', '#ffffff'].map(rgb),
+    glow: ['#101a30', '#182a4c', '#24406e', '#3a6498', '#5c94c8'].map(rgb),
+    spark: rgb('#cfeeff'),
+  },
+};
+const BG = rgb('#0d0d18');
+
+// ---------- the scene around the star ----------
+const STARS = [];
+for (let i = 0; i < 150; i++) STARS.push({ x: Math.floor(hash(i, 1, 7) * W), y: Math.floor(hash(i, 2, 7) * H), c: hash(i, 3, 7) });
+
+// A ship as a plain shape, for the size of it. `lit` is the side that faces the star.
+function drawShip(x, y, lit) {
+  const shape = [[0, -22], [5, -10], [6, 2], [14, 10], [14, 18], [5, 16], [4, 22], [-4, 22], [-5, 16], [-14, 18], [-14, 10], [-6, 2], [-5, -10]];
+  ctx.fillStyle = '#5a6076';
+  ctx.beginPath();
+  shape.forEach(([sx, sy], i) => (i ? ctx.lineTo(x + sx, y + sy) : ctx.moveTo(x + sx, y + sy)));
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#8c94ac';
+  ctx.fillRect(x - 2, y - 14, 4, 18);
+  if (!lit) return;
+  // The light of the star on the side that faces it.
+  ctx.strokeStyle = lit;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  shape.slice(0, 8).forEach(([sx, sy], i) => (i ? ctx.lineTo(x + sx + 0.5, y + sy) : ctx.moveTo(x + sx + 0.5, y + sy)));
+  ctx.stroke();
+}
+
+// ---------- A: the star as it is today ----------
+function drawToday(cx, cy, t) {
+  const bands = [[1, '#8a2f2a'], [0.92, '#d0563a'], [0.8, '#f09a5a'], [0.64, '#f2d27a'], [0.44, '#fff6dc']];
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, BURN * 1.9);
+  g.addColorStop(0, 'rgba(255,170,90,0.5)');
+  g.addColorStop(0.3, 'rgba(240,120,60,0.2)');
+  g.addColorStop(1, 'rgba(200,80,40,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+  for (const [k, color] of bands) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let i = 0; i < 56; i++) {
+      const a = (i / 56) * TAU;
+      const wave = 0.035 * Math.sin(a * 5 + t * 0.5 + k * 7) + 0.02 * Math.sin(a * 9 - t * 0.33 + k * 3);
+      ctx.lineTo(cx + Math.cos(a) * R * k * (1 + wave), cy + Math.sin(a) * R * k * (1 + wave));
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+// ---------- B and C: the star pixel by pixel ----------
+const frame = ctx.createImageData(W, H);
+// The fire arcs of proposal C: each rises and sinks at a place of its own, and then moves on.
+function arcs(t, seed) {
+  const list = [];
+  for (let k = 0; k < 4; k++) {
+    const span = 14 + k * 3;
+    const turn = Math.floor(t / span + k * 0.37);
+    const life = (t / span + k * 0.37) % 1;
+    list.push({
+      at: hash(k, turn, seed) * TAU - Math.PI,
+      wide: 0.13 + hash(k, turn, seed + 1) * 0.1,
+      high: (0.1 + hash(k, turn, seed + 2) * 0.13) * Math.sin(life * Math.PI) ** 0.7,
+    });
+  }
+  return list;
+}
+
+// Paint one star into the frame. `size` is its radius on the screen, `rich` adds the crown and the arcs.
+const EDGE = new Float32Array(720);
+// How far the glow reaches in each direction and at each distance. It changes slowly from place to place, so
+// it is worked out for a few thousand places and looked up for every pixel.
+const TURNS = 360, STEPS = 14, FAR = 1.7;
+const RAYS = new Float32Array(TURNS * STEPS);
+// How strong the light already is at each pixel, so that one star never paints over another: a surface
+// counts as stronger than any glow.
+const LIT = new Float32Array(W * H);
+function paintStar(cx, cy, size, kind, t, rich, seed) {
+  const { surface, glow } = KINDS[kind];
+  const reach = size * (rich ? 2.6 : 1.9);
+  const x0 = Math.max(0, Math.floor(cx - reach)), x1 = Math.min(W - 1, Math.ceil(cx + reach));
+  const y0 = Math.max(0, Math.floor(cy - reach)), y1 = Math.min(H - 1, Math.ceil(cy + reach));
+  const bumps = rich ? arcs(t, seed) : [];
+  const grain = 5 / size;
+  // The edge of the surface wanders a little. It only depends on the direction, so it is worked out once.
+  for (let k = 0; k < 720; k++) {
+    const a = (k / 720) * TAU;
+    EDGE[k] = 1 + 0.036 * (noise(Math.cos(a) * 2.2 + 9, Math.sin(a) * 2.2, t * 0.12 + seed) - 0.5);
+  }
+  if (rich) {
+    for (let k = 0; k < TURNS; k++) {
+      const a = (k / TURNS) * TAU - Math.PI;
+      for (let n = 0; n < STEPS; n++) {
+        const out = (n / (STEPS - 1)) * FAR;
+        const ray = fbm2(Math.cos(a) * 2.6 + 5 + seed, Math.sin(a) * 2.6, t * 0.05 + out * 0.5);
+        RAYS[k * STEPS + n] = 1.05 + 5.2 * (1 - ray) ** 1.5;
+      }
+    }
+  }
+  const high = bumps.reduce((most, b) => Math.max(most, b.high), 0);
+  const data = frame.data;
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const dx = x - cx, dy = y - cy;
+      const d = Math.hypot(dx, dy);
+      if (d > reach) continue;
+      const r = d / size;
+      const a = Math.atan2(dy, dx);
+      const edge = EDGE[Math.floor(((a + Math.PI) / TAU) * 719.99)];
+      const i = (y * W + x) * 4;
+      const th = dither(x, y);
+      if (r < edge) {
+        // The surface: brightest in the middle, darker toward the edge, with grains that move and spots that drift.
+        const mu = Math.sqrt(1 - (r / edge) ** 2);
+        let v = 0.12 + 0.62 * mu ** 0.6;
+        v += (fbm(dx * grain + 40, dy * grain, t * 0.22 + seed) - 0.5) * 0.62 * (0.35 + 0.65 * mu);
+        const spot = noise(dx * grain * 0.3 + t * 0.012 + seed, dy * grain * 0.3 + 20, t * 0.02);
+        if (spot > 0.68) v -= (spot - 0.68) * 2.4 * mu;
+        const idx = Math.max(0, Math.min(surface.length - 1, Math.floor(v * (surface.length - 1) + th)));
+        const c = surface[idx];
+        data[i] = c[0]; data[i + 1] = c[1]; data[i + 2] = c[2];
+        LIT[y * W + x] = 9;
+        continue;
+      }
+      // An arc of fire is a loop that stands on the edge: a band of flame with dimmer fire under its top.
+      let flame = 0;
+      for (let k = 0; r < edge + high && k < bumps.length; k++) {
+        const b = bumps[k];
+        let turn = a - b.at;
+        if (turn > Math.PI) turn -= TAU;
+        else if (turn < -Math.PI) turn += TAU;
+        const off = Math.abs(turn) / b.wide;
+        if (off >= 1) continue;
+        const top = b.high * Math.sqrt(1 - off * off);
+        const up = r - edge;
+        if (up > top) continue;
+        const thick = Math.max(0.028, b.high * 0.3);
+        flame = Math.max(flame, up > top - thick || off > 0.72 ? 1 - (up / Math.max(top, 0.001)) * 0.55 : 0.34);
+      }
+      if (flame > 0) {
+        const idx = Math.max(1, Math.min(5, Math.floor(flame * 4.4 + th)));
+        const c = surface[idx];
+        data[i] = c[0]; data[i + 1] = c[1]; data[i + 2] = c[2];
+        LIT[y * W + x] = 9;
+        continue;
+      }
+      // The glow outside. In the rich one it reaches out in rays that turn slowly.
+      const out = r - edge;
+      let fall = 3.6;
+      if (rich) {
+        const k = Math.min(TURNS - 1, Math.floor(((a + Math.PI) / TAU) * TURNS)) * STEPS;
+        const n = Math.min(STEPS - 1.001, (out / FAR) * (STEPS - 1));
+        const lo = Math.floor(n);
+        fall = RAYS[k + lo] + (RAYS[k + lo + 1] - RAYS[k + lo]) * (n - lo);
+      }
+      // It ends in nothing well before the square it is worked out in does.
+      const g = Math.exp(-out * fall) * 1.06 - 0.06 - Math.max(0, d / reach - 0.75) * 0.5;
+      const idx = Math.floor(g * glow.length + th * 0.95);
+      if (idx <= 0 || g <= LIT[y * W + x]) continue;
+      LIT[y * W + x] = g;
+      const c = glow[Math.min(glow.length - 1, idx - 1)];
+      data[i] = c[0]; data[i + 1] = c[1]; data[i + 2] = c[2];
+    }
+  }
+}
+
+// Sparks that drift outward through the reach of the heat, fading as they go.
+function drawSparks(cx, cy, size, kind, t, seed) {
+  const c = KINDS[kind].spark;
+  for (let k = 0; k < 130; k++) {
+    const a = hash(k, 11, seed) * TAU + Math.sin(t * 0.05 + k) * 0.05;
+    const life = (t * (0.035 + hash(k, 12, seed) * 0.05) + hash(k, 13, seed)) % 1;
+    const r = size * (1.02 + life * 1.0);
+    ctx.globalAlpha = (1 - life) ** 1.5 * 0.9;
+    ctx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`;
+    const big = hash(k, 14, seed) > 0.75 && life < 0.4;
+    ctx.fillRect(Math.round(cx + Math.cos(a) * r), Math.round(cy + Math.sin(a) * r), big ? 2 : 1, big ? 2 : 1);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function ring(cx, cy, r, alpha) {
+  ctx.strokeStyle = `rgba(240,154,90,${alpha})`;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 8]);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, TAU);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// ---------- the whole picture ----------
+let variant = 'c';
+function draw(t) {
+  ctx.fillStyle = '#0d0d18';
+  ctx.fillRect(0, 0, W, H);
+  for (const s of STARS) {
+    ctx.fillStyle = s.c > 0.85 ? '#c9ccd8' : s.c > 0.5 ? '#6a6e88' : '#3a3d52';
+    ctx.fillRect(s.x, s.y, 1, 1);
+  }
+  const cx = 360, cy = 180;
+  if (variant === 'a') {
+    drawToday(cx, cy, t);
+    ring(cx, cy, BURN, 0.22);
+    drawShip(96, 200, null);
+    return;
+  }
+  // The stars and the dark sky are kept under the glow by starting from what is drawn so far.
+  const under = ctx.getImageData(0, 0, W, H);
+  frame.data.set(under.data);
+  LIT.fill(0);
+  if (variant === 'd') {
+    const three = [
+      [96, 196, 46, 'red', 3],
+      [296, 180, 66, 'yellow', 0],
+      [524, 172, 84, 'blue', 5],
+    ];
+    for (const [x, y, size, kind, seed] of three) paintStar(x, y, size, kind, t, true, seed);
+    ctx.putImageData(frame, 0, 0);
+    for (const [x, y, size, kind, seed] of three) drawSparks(x, y, size, kind, t, seed);
+    return;
+  }
+  const rich = variant === 'c';
+  paintStar(cx, cy, R, 'yellow', t, rich, 0);
+  ctx.putImageData(frame, 0, 0);
+  if (rich) drawSparks(cx, cy, R, 'yellow', t, 0);
+  ring(cx, cy, BURN, rich ? 0.1 : 0.22);
+  drawShip(96, 200, '#f09a5a');
+}
+
+// ---------- running it ----------
+const quietly = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let running = !quietly;
+let time = 40;
+let last = 0;
+function tick(now) {
+  // Twelve pictures a second are plenty for something this slow, and keep the work light.
+  if (now - last >= 1000 / 12) {
+    if (running) time += Math.min(0.2, (now - last) / 1000);
+    last = now;
+    draw(time);
+  }
+  requestAnimationFrame(tick);
+}
+const pause = document.getElementById('pause');
+function showPause() {
+  pause.textContent = running ? 'Pausa rörelsen' : 'Starta rörelsen';
+}
+pause.addEventListener('click', () => {
+  running = !running;
+  showPause();
+});
+function pick(v) {
+  variant = v;
+  for (const b of document.querySelectorAll('.tabs button')) b.setAttribute('aria-pressed', String(b.dataset.v === v));
+  document.getElementById('how').textContent = HOW[v];
+  draw(time);
+}
+for (const b of document.querySelectorAll('.tabs button')) b.addEventListener('click', () => pick(b.dataset.v));
+// For taking pictures of it: ?v=b&still shows one proposal, standing still.
+const asked = new URLSearchParams(location.search);
+if (asked.has('still')) running = false;
+showPause();
+pick(KINDS && HOW[asked.get('v')] ? asked.get('v') : 'c');
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
