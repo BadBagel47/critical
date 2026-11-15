@@ -387,15 +387,10 @@ test('the game starts by the home yard, pointing at it', () => {
     assert.ok(Math.hypot(s.ship.x, s.ship.y) > Math.hypot(yard.x, yard.y), 'on the side away from the star');
     assert.equal(s.ship.throttle, 0);
     assert.ok(
-      s.sectors.every((sec) => sec.haze && !sec.star),
-      'every system has its haze, and the star waits to be approved',
+      s.sectors.every((sec) => sec.haze && sec.star),
+      'every system has its star and its haze',
     );
   }
-  const trial = createState(1, { test: true });
-  assert.ok(
-    trial.sectors.every((sec) => sec.star && sec.haze),
-    'a test game has them, to be looked at',
-  );
 });
 
 test('a jump to a system the crew knows comes in by a base, and one to an unknown system comes in anywhere safe', () => {

@@ -84,10 +84,9 @@ export const createSectors = () =>
     tier: s.tier,
     // How far it is from the middle of the system to its edge.
     radius: B.SYSTEM_R[s.size],
-    // Whether it has a haze at its edge, and a star in its middle. The star waits for the user to approve how
-    // it looks. Until then only a test game has one, see gatherForTesting.
+    // Whether it has a haze at its edge, and a star in its middle. All of them have both so far.
     haze: true,
-    star: false,
+    star: true,
     links: s.links,
     hint: s.hint,
     boss: !!s.boss,
@@ -209,7 +208,6 @@ export function gatherForTesting(s) {
     return { x: TEST_START.x + p.x, y: TEST_START.y + p.y };
   };
   currentSector(s).radius = B.SYSTEM_R[2];
-  for (const sec of s.sectors) Object.assign(sec, { star: true, haze: true });
   // Whatever was laid out near the start is cleared away, rocks too, so that nothing is in the way.
   s.things = s.things.filter((t) => t.kind === 'rock' && dist(t.x, t.y, TEST_START.x, TEST_START.y) > 1500);
   s.known = [];
