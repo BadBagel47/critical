@@ -13,6 +13,8 @@ permissions:
 
 jobs:
   changes:
+    # Commits marked [wip] are unfinished work and are never merged (agent rules v1.9).
+    if: ${{ !contains(github.event.head_commit.message, '[wip]') }}
     runs-on: ubuntu-latest
     outputs:
       game: ${{ steps.look.outputs.game }}
