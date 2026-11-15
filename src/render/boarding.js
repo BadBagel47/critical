@@ -9,6 +9,8 @@ import { findDock } from '../sim/things.js';
 import { playerById } from '../sim/players.js';
 import { hullMax, shieldMax, level, carryMax, crewHpMax } from '../sim/upgrades.js';
 import { alarmText } from './hud.js';
+import { shade, litArea, flareLevel, lampLevel } from './light.js';
+import { forward } from '../sim/util.js';
 
 // Where on the screen the inside of a place is drawn. The camera follows the player's own figure. A place
 // that is smaller than the screen is kept still in the middle of it, and at the edges of a larger one the
@@ -33,10 +35,12 @@ const WALL = ['#2a2c3a', '#44475a', '#666a7e'];
 //   marks    what is drawn on the floor, see drawMarks
 const STYLES = {
   plain: { wall: WALL, floor: ['#1a1b26', '#1d1e2a', '#1e2029', '#21232d', '#13131c'], lamp: COL.ochre, dead: 0 },
+  // A wreck is dark inside, see light.js. These are its colours where light falls on them. The few lamps
+  // that still work are cold white: red light is kept for places that count the crew as an enemy.
   wreck: {
-    wall: ['#201f25', '#34323a', '#4c4a54'],
-    floor: ['#131318', '#16161c', '#17171d', '#1a1a21', '#0d0d12'],
-    lamp: COL.ember,
+    wall: ['#35333c', '#56535f', '#7b7786'],
+    floor: ['#25252d', '#292932', '#2a2a33', '#2e2e38', '#191920'],
+    lamp: ['#3a4450', '#7f93a8', '#c5d6e6', '#f2f8ff'],
     dead: 0.65,
     marks: 'debris',
   },
@@ -94,7 +98,7 @@ function drawMarks(ctx, style, c, tx, ty, x, y) {
     ctx.fillRect(x + 3, y + 3, 1, 1);
     ctx.fillRect(x + TILE - 5, y + TILE - 5, 1, 1);
   } else if (style.marks === 'debris' && n % 7 === 0) {
-    ctx.fillStyle = ['#2b2a30', '#45434c', '#0a0a0e'][n % 3];
+    ctx.fillStyle = ['#3d3b44', '#5d5a66', '#121218'][n % 3];
     ctx.fillRect(x + 2 + (n % 9), y + 3 + ((n >> 4) % 8), 2 + (n % 3), 1 + ((n >> 2) % 2));
   } else if (style.marks === 'stripes' && c === ',' && (tx + ty) % 2 === 0) {
     ctx.fillStyle = '#2c5fae';
@@ -105,6 +109,21 @@ function drawMarks(ctx, style, c, tx, ty, x, y) {
   }
 }
 const solid = (c) => c === '#' || c === 'L';
+// Every other stretch of wall that faces a floor has a strip light in the side's colour. Some of them are out.
+const lampAt = (it, style, tx, ty) =>
+  tx % 2 === 0 &&
+  tileAt(it, tx, ty) === '#' &&
+  FLOOR.has(tileAt(it, tx, ty + 1)) &&
+  (scatter(tx, ty) % 100) / 100 >= style.dead;
+// The shadow on the floor under something that stands on it.
+function shadow(ctx, x, y, r) {
+  ctx.globalAlpha = 0.3;
+  ctx.fillStyle = COL.out;
+  ctx.beginPath();
+  ctx.ellipse(x + 1, y + 2, r, r * 0.8, 0, 0, 7);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
 const fmt = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 
 // The tiles that are on the screen, given where the place is drawn.
@@ -130,6 +149,14 @@ function drawTiles(ctx, it, origin, style) {
       ctx.fillRect(x, y + TILE - 1, TILE, 1);
       ctx.fillRect(x + TILE - 1, y, 1, TILE);
       drawMarks(ctx, style, c, tx, ty, x, y);
+      // The floor is a little darker along the walls.
+      ctx.fillStyle = COL.out;
+      ctx.globalAlpha = 0.28;
+      if (solid(tileAt(it, tx, ty - 1))) ctx.fillRect(x, y, TILE, 3);
+      ctx.globalAlpha = 0.16;
+      if (solid(tileAt(it, tx - 1, ty))) ctx.fillRect(x, y, 2, TILE);
+      if (solid(tileAt(it, tx + 1, ty))) ctx.fillRect(x + TILE - 2, y, 2, TILE);
+      ctx.globalAlpha = 1;
       if (c === 'A') {
         ctx.fillStyle = COL.acid[1];
         ctx.fillRect(x + 2, y + 2, TILE - 4, 1);
@@ -166,10 +193,7 @@ function drawTiles(ctx, it, origin, style) {
         rect(ctx, x, y + 7, TILE, 9, wall[0]);
         ctx.fillStyle = COL.out;
         ctx.fillRect(x, y + 7, TILE, 1);
-        // Every other stretch of wall has a strip light in the side's colour. Some of them are out.
-        const n = scatter(tx, ty);
-        const lamp = tx % 2 === 0;
-        const lit = lamp && (n % 100) / 100 >= style.dead;
+        const lit = lampAt(it, style, tx, ty);
         rect(ctx, x + 3, y + 10, 10, 3, lit ? style.lamp[1] : '#1c1c28');
         if (lit) {
           ctx.fillStyle = style.lamp[3];
@@ -356,28 +380,147 @@ function drawGrenade(ctx, g, time) {
   ctx.globalAlpha = 1;
 }
 
+// A flare: a short stick with a white-hot end that throws sparks.
+function drawFlare(ctx, f, time) {
+  const lv = flareLevel(f.burn, B.FLARE_FADE, time);
+  glow(ctx, f.x, f.y, 8, '#ffcf8a', 0.22 * lv);
+  ctx.fillStyle = '#5a2a22';
+  ctx.fillRect(f.x - 2, f.y, 4, 2);
+  ctx.globalAlpha = Math.min(1, 0.3 + lv);
+  ctx.fillStyle = '#fff6e0';
+  ctx.fillRect(f.x - 1, f.y - 1, 2, 2);
+  ctx.fillStyle = COL.ochre[3];
+  for (let i = 0; i < 3; i++) {
+    const a = time * 9 + i * 2.1 + f.burn;
+    const r = 3 + ((time * 14 + i * 5) % 5);
+    ctx.fillRect(f.x + Math.cos(a) * r, f.y - 1 + Math.sin(a) * r, 1, 1);
+  }
+  ctx.globalAlpha = 1;
+}
+
+const WARM = '255,240,214';
+const COLD = '196,214,236';
+const RED = '255,74,52';
+// Every light in a dark place: the few lamps that still work, the way home, what the crew carries and
+// throws, and the small lights that guards and turrets carry themselves, so that nothing shoots unseen.
+function lightsOf(state, it, style, origin) {
+  const time = state.time;
+  const lights = [];
+  const round = (x, y, r, rgb, power) => lights.push({ x, y, r, rgb, power, area: litArea(it, x, y, r) });
+  const small = (x, y, r, rgb, power) => lights.push({ x, y, r, rgb, power });
+  const tx0 = Math.max(0, Math.floor(-origin.x / TILE) - 3),
+    ty0 = Math.max(0, Math.floor(-origin.y / TILE) - 3),
+    tx1 = Math.min(it.w, Math.ceil((VIEW_W - origin.x) / TILE) + 3),
+    ty1 = Math.min(it.h, Math.ceil((VIEW_H - origin.y) / TILE) + 3);
+  for (let ty = ty0; ty < ty1; ty++)
+    for (let tx = tx0; tx < tx1; tx++) {
+      const x = tx * TILE + TILE / 2,
+        y = ty * TILE;
+      if (tileAt(it, tx, ty) === 'L') small(x, y + 9, 20, '219,164,69', 0.5);
+      else if (lampAt(it, style, tx, ty)) round(x, y + TILE + 2, 40, COLD, 0.5 * lampLevel(scatter(tx, ty), time));
+    }
+  round(it.entry.x, it.entry.y, 46, '190,236,200', 0.55);
+  for (const l of it.loot) small(l.x, l.y, 11, l.type === 'crate' ? '219,164,69' : '155,228,238', 0.4);
+  for (const e of [...it.guards, ...it.turrets]) round(e.x, e.y, 19, RED, 0.6);
+  for (const e of it.sentries) round(e.x, e.y, 19, '155,228,238', 0.6);
+  for (const a of it.avatars) {
+    round(a.x, a.y, B.LAMP_NEAR, WARM, 0.6);
+    if (!a.lamp) continue;
+    // The beam, and a weaker and wider one around it so that its edge is not sharp.
+    const f = forward(a.heading);
+    const way = Math.atan2(f.y, f.x);
+    const beam = (half, power) => {
+      const area = litArea(it, a.x, a.y, B.LAMP_RANGE, way, half);
+      lights.push({ x: a.x, y: a.y, r: B.LAMP_RANGE, rgb: WARM, power, area, far: true });
+    };
+    beam(B.LAMP_ANGLE, 0.75);
+    beam(B.LAMP_ANGLE + 0.16, 0.3);
+  }
+  for (const f of it.flares) {
+    const lv = flareLevel(f.burn, B.FLARE_FADE, time);
+    round(f.x, f.y, B.FLARE_LIGHT * (0.7 + 0.3 * lv), '255,206,140', lv);
+  }
+  for (const b of it.bolts) small(b.x, b.y, 22, b.owner === 'crew' ? '242,210,122' : '150,214,110', 0.6);
+  for (const g of it.grenades) small(g.x, g.y, 12, RED, 0.5);
+  for (const f of it.fx) {
+    const left = 1 - f.t / f.dur;
+    if (f.type === 'boom') round(f.x, f.y, f.size * 2.6, '255,190,120', left);
+    else if (f.type === 'teleport') small(f.x, f.y, 40, '155,228,238', left);
+  }
+  return lights;
+}
+
+// What shines by itself in the dark, drawn after the light has been laid on: the lamps themselves, a red
+// eye on every guard and turret, and a glint on the loot.
+function drawGlows(ctx, state, it, style, origin) {
+  const time = state.time;
+  const tx0 = Math.max(0, Math.floor(-origin.x / TILE) - 1),
+    ty0 = Math.max(0, Math.floor(-origin.y / TILE) - 1),
+    tx1 = Math.min(it.w, Math.ceil((VIEW_W - origin.x) / TILE) + 1),
+    ty1 = Math.min(it.h, Math.ceil((VIEW_H - origin.y) / TILE) + 1);
+  for (let ty = ty0; ty < ty1; ty++)
+    for (let tx = tx0; tx < tx1; tx++) {
+      if (!lampAt(it, style, tx, ty)) continue;
+      ctx.globalAlpha = lampLevel(scatter(tx, ty), time);
+      rect(ctx, tx * TILE + 3, ty * TILE + 10, 10, 3, style.lamp[1]);
+      ctx.fillStyle = style.lamp[3];
+      ctx.fillRect(tx * TILE + 4, ty * TILE + 11, 8, 1);
+    }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = COL.ember[2];
+  for (const e of [...it.guards, ...it.turrets]) {
+    const f = forward(e.heading);
+    ctx.fillRect(Math.round(e.x + f.x * 3) - 1, Math.round(e.y + f.y * 3) - 1, 2, 2);
+  }
+  ctx.fillStyle = COL.white;
+  for (const l of it.loot) {
+    if (Math.floor(time * 2 + l.x * 0.37 + l.y * 0.11) % 4 === 0) ctx.fillRect(l.x + 2, l.y - 4, 1, 1);
+  }
+}
+
 // Everything on the floor, in the interior's own pixels.
 function drawFloor(ctx, state, place, me, assets, fx, origin) {
   const { img, font } = assets;
   const it = place.interior;
+  const style = styleOf(place);
   drawTunnel(ctx, img, it);
-  drawTiles(ctx, it, origin, styleOf(place));
+  drawTiles(ctx, it, origin, style);
   for (const desk of it.desks) drawDesk(ctx, img, font, place, desk);
-  for (const c of it.civilians) sprite(ctx, img.boarder, c.x, c.y, c.heading);
+  for (const c of it.civilians) {
+    shadow(ctx, c.x, c.y, 5);
+    sprite(ctx, img.boarder, c.x, c.y, c.heading);
+  }
   for (const l of it.loot) {
+    shadow(ctx, l.x, l.y, 5);
     glow(ctx, l.x, l.y, 9, l.type === 'crate' ? COL.ochre[2] : COL.ion[2], 0.14);
     sprite(ctx, img[l.type], l.x, l.y);
   }
   if (it.terminal) drawTerminal(ctx, it, state.time);
-  for (const t of it.turrets) sprite(ctx, img.turret_guard, t.x, t.y, t.heading);
+  for (const t of it.turrets) {
+    shadow(ctx, t.x, t.y, 6);
+    sprite(ctx, img.turret_guard, t.x, t.y, t.heading);
+  }
   for (const s of it.sentries) {
     glow(ctx, s.x, s.y, 9, COL.ion[2], 0.12);
     sprite(ctx, img.turret_pulse, s.x, s.y, s.heading, 6, 10.5);
   }
   for (const g of it.guards) {
+    shadow(ctx, g.x, g.y, 5);
     sprite(ctx, img.guard, g.x, g.y, g.heading);
+  }
+  for (const a of it.avatars) {
+    shadow(ctx, a.x, a.y, 5);
+    sprite(ctx, img.boarder, a.x, a.y, a.heading);
+  }
+  if (it.dark) {
+    const off = fx ? fx.offset : { x: 0, y: 0 };
+    shade(ctx, it, origin.x + off.x, origin.y + off.y, lightsOf(state, it, style, origin));
+    drawGlows(ctx, state, it, style, origin);
+  }
+  // What is drawn from here on is not dimmed by the dark.
+  ctx.fillStyle = COL.ember[2];
+  for (const g of it.guards) {
     if (g.mode !== 'alert') continue;
-    ctx.fillStyle = COL.ember[2];
     ctx.fillRect(g.x - 1, g.y - 14, 2, 4);
     ctx.fillRect(g.x - 1, g.y - 9, 2, 2);
   }
@@ -392,13 +535,13 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
-    sprite(ctx, img.boarder, a.x, a.y, a.heading);
     a.carry.forEach((c, i) => {
       rect(ctx, a.x - 5 + i * 4, a.y - 13, 3, 3, c.type === 'crate' ? COL.ochre[2] : COL.ion[2], COL.out);
     });
   }
   for (const b of it.bolts) drawInsideBolt(ctx, b);
   for (const g of it.grenades) drawGrenade(ctx, g, state.time);
+  for (const f of it.flares) drawFlare(ctx, f, state.time);
   for (const f of it.fx) effect(ctx, f);
   if (fx) fx.inside.draw(ctx);
 }
@@ -440,6 +583,13 @@ function drawBoarderHud(ctx, font, state, view, player, place, me, origin) {
   x = label(ctx, font, x, 336, 'GRENADES  ' + grenades, { fg: grenades ? COL.text : COL.faint }) + 4;
   if (me && me.charges) x = label(ctx, font, x, 336, 'C  CHARGES  ' + me.charges) + 4;
   if (me && me.sentries) x = label(ctx, font, x, 336, 'T  TURRET') + 4;
+  // What is carried for the dark has a line of its own above the rest.
+  if (me && it.dark) {
+    const lamp = label(ctx, font, 114, 320, me.lamp ? 'L  LAMP' : 'L  LAMP OFF', {
+      fg: me.lamp ? COL.text : COL.faint,
+    });
+    if (me.flares) label(ctx, font, lamp + 4, 320, 'Q  FLARES  ' + me.flares);
+  }
   x += 6;
   font.draw(ctx, 'SHIP', x, 334, COL.dim);
   bar(ctx, x + 26, 333, 50, ship.shield / shieldMax(ship), COL.ion[1], 5);

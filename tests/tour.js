@@ -93,6 +93,8 @@ function inputs(state, i) {
       aim: foe ? { x: foe.x, y: foe.y } : { x: me.x + 50, y: me.y },
       fire: true,
       grenade: i % 240 === 60 ? { x: me.x + 80, y: me.y + 10 } : null,
+      flare: i % 240 === 150 ? { x: me.x - 90, y: me.y + 40 } : null,
+      lampPressed: i % 400 === 399,
       use: true,
       usePressed: false,
       ...extra,

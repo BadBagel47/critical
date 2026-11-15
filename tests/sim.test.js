@@ -19,7 +19,7 @@ import { SHIPS, HULLS } from '../src/sim/kinds.js';
 import { summon } from '../src/sim/testing.js';
 import { createWreck, jumpBlocked } from '../src/sim/sectors.js';
 import { B, SHIP_GEOM } from '../src/sim/balance.js';
-import { headingTo } from '../src/sim/util.js';
+import { headingTo, dist } from '../src/sim/util.js';
 
 const wrecks = (s) => thingsOf(s, 'wreck');
 const stations = (s) => thingsOf(s, 'station');
@@ -473,6 +473,61 @@ test('a grenade clears a group of guards', () => {
   assert.equal(av.grenades, B.GRENADES - 1);
   run(s, { away: { 0: {} } }, 2);
   assert.equal(it.guards.length, 0);
+});
+
+test('a wreck is dark inside and a station is not', () => {
+  const { it, av } = boarded();
+  assert.equal(it.dark, true);
+  assert.equal(av.lamp, true, 'the lamp is on when the boarder comes in');
+  const s = quiet(createState(2));
+  const st = s.things.find((t) => t.kind === 'station');
+  assert.equal(createInterior(s, st).dark, false);
+});
+
+test('the lamp is turned off and on with its key', () => {
+  const { s, av } = boarded();
+  step(s, { away: { 0: { lampPressed: true } } }, DT);
+  assert.equal(av.lamp, false);
+  step(s, { away: { 0: {} } }, DT);
+  assert.equal(av.lamp, false, 'it stays off until the key is pressed again');
+  step(s, { away: { 0: { lampPressed: true } } }, DT);
+  assert.equal(av.lamp, true);
+});
+
+test('flares are bought in the armory, and a boarder has none without them', () => {
+  const { s, it, av } = boarded();
+  assert.equal(av.flares, 0);
+  step(s, { away: { 0: { flare: { x: av.x + 50, y: av.y } } } }, DT);
+  assert.equal(it.flares.length, 0);
+});
+
+test('a flare flies to where it was thrown, bounces off a wall, burns for a while and goes out', () => {
+  const { s, it, av } = boarded();
+  it.guards = [];
+  it.turrets = [];
+  s.ship.mods.flare = 1;
+  av.flares = B.FLARES;
+  const [here, there] = stretch(it, 80);
+  Object.assign(av, here);
+  step(s, { away: { 0: { flare: there } } }, DT);
+  assert.equal(av.flares, B.FLARES - 1);
+  assert.equal(it.flares.length, 1);
+  run(s, { away: { 0: {} } }, 1);
+  const f = it.flares[0];
+  assert.ok(dist(f.x, f.y, there.x, there.y) < 3, 'it lands where the boarder aimed');
+  assert.ok(f.burn < B.FLARE_BURN && f.burn > 0);
+  // Thrown straight at a wall it comes back, and never ends up inside the wall.
+  const up = { x: av.x, y: av.y - 400 };
+  step(s, { away: { 0: { flare: up } } }, DT);
+  for (let i = 0; i < 120; i++) {
+    step(s, { away: { 0: {} } }, DT);
+    for (const g of it.flares) assert.ok(!blocked(it, g.x, g.y, 0.5), 'a flare is never in a wall');
+  }
+  const back = it.flares[1];
+  assert.equal(back.left, 0, 'it has come to rest');
+  assert.ok(back.y > it.halls[0].r0 * TILE, 'it stayed in the corridor');
+  run(s, { away: { 0: {} } }, B.FLARE_BURN);
+  assert.equal(it.flares.length, 0, 'both have burnt out');
 });
 
 test('the vault door opens when a player holds the use key next to it', () => {

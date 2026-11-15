@@ -18,6 +18,8 @@ Den som besättningen skjuter på försvarar sig nu, skepp från samma sida komm
 
 Engineer ser rymden som de andra, med en remsa för energi och skador. Stationerna har varje sidas eget utseende, dockningsarmar som fälls ut och ljus som visar hur de behandlar besättningen. Vrak har formen av skeppet de var. Insidorna av vrak och stationer är större än skärmen, följer formen på det man bordat och görs nya för varje omgång.
 
+Vrak är mörka inuti (2026-11-15): man letar sig fram med ficklampa (L) och flares som kastas (Q), och väggar kastar skuggor. Det är första steget i ljussättningen. Förslaget för ljus i rymden (D-147) är nästa.
+
 Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-089 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
 ## Nästa steg
@@ -81,6 +83,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - `src/saves.js`: sparade spel. En sparning är hela spelets tillstånd som text. `SAVE_VERSION` måste höjas när tillståndet byter form, och ett test i `tests/saves.test.js` säger till när det behövs. Sparningar från en äldre version nekas då i stället för att gå sönder.
 - `src/scene.js`: vilket slags ögonblick spelaren är i (lugnt, varning, strid, bordning, station), för musiken. `src/music.js`: musiken. Den anropas en gång per bildruta och kopplar sitt ljud till `musicOutput()` i `src/audio.js`. Delarna ligger i `src/music/`: `theory.js` (toner, introtemana och varje sektors färg), `sets.js` (uppsättningarna, var och en med eget tema och ett stycke per scen), `pieces.js` och `pieces-b.js` (uppsättning A och B, som rena funktioner), `director.js` (vilket stycke som ska spela, med tröghet), `synth.js` (instrumenten) och `engine.js` (spelar och tonar mellan styckena). Spelet spelar uppsättning A (`SET` i `src/music.js`) tills användaren uttryckligen säger något annat. Lyssningssidan är `docs/music/index.html`.
 - `src/render/`: skärmarna. `looks.js` beskriver hur varje sorts sak och skepp ser ut, på samma sätt som `kinds.js` beskriver vad de är. `effects.js` och `particles.js` ritar effekterna. Allt här läser bara spelets tillstånd och ändrar det aldrig.
+- `src/render/light.js`: ljuset i mörka ställen. Bilden ritas fullt upplyst och multipliceras med en karta över ljuset, och väggar stoppar det. Vilka ljus som finns räknas upp i `lightsOf()` i `render/boarding.js`. En insida är mörk när dess `dark` är sann.
 - `assets/`: bilder och typsnitt som skapas av `tools/export_assets.py`.
 - Spelet ritas på 640 × 360 punkter. Text och ramar ritas på ett dubbelt så fint rutnät (typsnittet är dubbelt så stort och ritas i halv skala, se `src/font.js` och `HAIR` i `src/render/draw.js`). Bilden fyller alltid fönstret så långt formen 16:9 tillåter: den ritas i ett jämnt antal skärmpunkter per spelpunkt och webbläsaren passar sedan in den, se `resize()` i `src/main.js`.
 - Koden formateras med Prettier: `npm run format`.
@@ -258,6 +261,12 @@ Bordning av stationer, besked från användaren (2026-11-14, inget av det är by
 - Spelet görs färdigt i 2D först. Om det görs om i 3D blir det ett helt omtag, och det läggs ingen tid på det nu (D-146 är parkerad, 2026-11-14). Ljussättningen ska i stället lyftas i 2D: användaren tror att den kan göra mycket för känslan, till exempel ljusen på stationerna (D-147, F-135, F-136).
 - Spelarens lampa vid bordning: vi provar en lampa som går att tända och släcka så att man inte syns. Den lyser bara framåt, som en ficklampa (2026-11-14, byggs med smygandet, F-107).
 - Ljus och mörker i vrak (2026-11-15): smygande med larm, kameror och lockdown gäller fortfarande inte i vrak, men mörker och ljus spelar roll även där. Vakter ser åt ett håll, ser spelare i ljus på långt håll och i mörker bara på nära håll. Den som blir sedd i ett vrak får vakten på sig, larmet går inte. En vakt som ser ljus utan att se någon går dit och tittar, så en flare kan användas som lockbete (F-160, F-161).
+- Rött ljus betyder alltid att stället räknar besättningen som fiende: roterande i lockdown, blinkande vid larm. Därför är vrakens nödlampor kallt vita, och vakter och turrets har ett rött öga (2026-11-15).
+- Vrak är mörka och man letar sig fram med ficklampa och flares (F-159, F-160, byggt 2026-11-15). Ficklampan byggdes med ljussättningen i stället för med smygandet. Flares köps en gång i armory och ger tre per bordning, på samma sätt som sprängladdningarna. De studsar mot väggar och brinner 30 sekunder.
+- Ett skepp som besättningen själv slagit ut (F-081) har besättning och ström kvar och är i lockdown, med röda ljus och smygande. Ett vrak är dött och mörkt (2026-11-15).
+- Larmade dörrar (F-158, 2026-11-15): de syns på nära håll även utan radar, Engineer kan koppla ur dem på plats, och det finns alltid en väg till mainframen utan larmad dörr.
+- Vakter går fasta rundor i stället för att gå slumpat, så att smygandet går att planera. Längre fram kommer en vakttyp som väljer väg själv men visar vart den är på väg (2026-11-15, se docs/station-boarding.md avsnitt 5).
+- Ljus inomhus ritas genom att bilden multipliceras med en ljuskarta (F-135). Ett nytt mörkt ställe sätter `dark` på sin insida och får då samma ljus. Flimmer hålls långsamt, se Lagar och regler.
 - Utsidan på stationer och vrak är byggd enligt designen (F-130 till F-133, 2026-11-14). Agentens val: ett vrak med lägre risk är oftare ett litet skrov, ett fraktskepp som förstörs lämnar nu också ett vrak, Wardens extra plattor på ringen är bara utseende och har inga kanoner, och armen fälls ut när ett skepp är inom 150 punkter och rör sig långsamt.
 - Genererade inomhusmiljöer är byggda (F-127, D-101, 2026-11-14). Agentens val:
   - Storlekar i rutor: Gunboat 38 gånger 21, okänt skrov 54 gånger 25, fraktskepp 80 gånger 21 och station 73 gånger 73. Skärmen visar 40 gånger 22.
@@ -329,7 +338,7 @@ Grafik
 
 ## Lagar och regler
 
-- Blinkande ljus (2026-11-14): larmet vid bordning blinkar rött. Blinkande rött ljus kan utlösa anfall hos personer med ljuskänslig epilepsi. Gängse riktlinje för webben (WCAG 2.3.1) är högst tre blinkningar per sekund. Spelet håller sig till högst två, och bör få en inställning som dämpar blinkandet när larmet byggs (F-102).
+- Blinkande ljus (2026-11-14): larmet vid bordning blinkar rött. Blinkande rött ljus kan utlösa anfall hos personer med ljuskänslig epilepsi. Gängse riktlinje för webben (WCAG 2.3.1) är högst tre blinkningar per sekund. Spelet håller sig till högst två, och bör få en inställning som dämpar blinkandet när larmet byggs (F-102). Tillägg 2026-11-15: samma gräns gäller flares och nödlampor i mörka vrak. En flare skimrar bara svagt, och när den falnar dippar ljuset högst 1,4 gånger i sekunden. En nödlampa som flimrar gör det med två korta dippar var 2,5 sekund, och lamporna är små. Se `flareLevel()` och `lampLevel()` i `src/render/light.js`.
 
 Genomgång 2026-11-14 (D-033). Agenten är ingen jurist, och inget här är juridisk rådgivning. Officiella källor är IMY (imy.se) för personuppgifter och PTS (pts.se) för kakor och liknande lagring.
 

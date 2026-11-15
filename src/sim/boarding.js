@@ -91,6 +91,8 @@ export function createInterior(state, wreck) {
     entry: plan.airlocks[0],
     timer: null,
     live: false,
+    // A wreck has no power. It is dark inside, and the crew finds its way by lamp and flare.
+    dark: wreck.kind === 'wreck',
     doorCut: 0,
     doorOpen: false,
     terminal: null,
@@ -105,6 +107,7 @@ export function createInterior(state, wreck) {
     loot: [],
     bolts: [],
     grenades: [],
+    flares: [],
     fx: [],
   };
   // A friendly or neutral station is a place to walk around and trade in, with nothing to fight.
@@ -171,6 +174,7 @@ export function makeTrade(state, it) {
   it.turrets = [];
   it.bolts = [];
   it.grenades = [];
+  it.flares = [];
   // A desk in each of the three largest rooms.
   const open = it.rooms.filter((_, i) => i !== it.vault);
   const area = (rm) => (rm.c1 - rm.c0) * (rm.r1 - rm.r0);
@@ -242,6 +246,8 @@ export function tryBoard(state, playerId) {
       grenades: 0,
       charges: 0,
       sentries: 0,
+      flares: 0,
+      lamp: false,
     });
     state.events.push({ type: 'boarded', player: playerId, wreck: wreck.id, trade: true });
     return true;
@@ -276,6 +282,8 @@ export function tryBoard(state, playerId) {
     grenades: B.GRENADES,
     charges: has(ship, 'charge') ? B.CHARGES : 0,
     sentries: has(ship, 'sentry') ? 1 : 0,
+    flares: has(ship, 'flare') ? B.FLARES : 0,
+    lamp: true,
   });
   state.events.push({ type: 'boarded', player: playerId, wreck: wreck.id });
   return true;
@@ -428,6 +436,15 @@ function throwGrenade(it, av, at) {
   });
 }
 
+// A flare is thrown toward where the boarder aims. It lights up what is around it, in the air as well.
+function throwFlare(state, it, av, at) {
+  const d = dist(av.x, av.y, at.x, at.y);
+  const dir = d > 1 ? { x: (at.x - av.x) / d, y: (at.y - av.y) / d } : forward(av.heading);
+  av.flares--;
+  it.flares.push({ x: av.x, y: av.y, dx: dir.x, dy: dir.y, left: Math.min(d, B.FLARE_RANGE), burn: B.FLARE_BURN });
+  state.events.push({ type: 'flare' });
+}
+
 // Loot is picked up by walking over it.
 function pickUpLoot(state, it, av) {
   for (const item of [...it.loot]) {
@@ -502,6 +519,8 @@ function stepAvatar(state, it, av, cmd, dt) {
   }
   if (cmd.fire && av.cool <= 0) fireRifle(state, it, av);
   if (cmd.grenade && av.grenades > 0) throwGrenade(it, av, cmd.grenade);
+  if (cmd.lampPressed) av.lamp = !av.lamp;
+  if (cmd.flare && av.flares > 0) throwFlare(state, it, av, cmd.flare);
   pickUpLoot(state, it, av);
   // What is carried is stowed on the ship at the airlock.
   const atAirlock = tileAt(it, Math.floor(av.x / TILE), Math.floor(av.y / TILE)) === 'A' || atAirlockDoor(it, av);
@@ -714,6 +733,28 @@ function stepGrenades(state, it, dt) {
   it.grenades = it.grenades.filter((g) => !g.done);
 }
 
+// A flare in the air bounces off the walls and loses half of what is left of its way each time. It burns
+// from the moment it is thrown, and is gone when it has burnt out.
+function stepFlares(it, dt) {
+  for (const f of it.flares) {
+    f.burn -= dt;
+    if (f.left <= 0) continue;
+    const step = Math.min(f.left, B.FLARE_SPEED * dt);
+    f.left -= step;
+    const hitX = solidAt(it, f.x + f.dx * step, f.y),
+      hitY = solidAt(it, f.x, f.y + f.dy * step),
+      corner = !hitX && !hitY && solidAt(it, f.x + f.dx * step, f.y + f.dy * step);
+    if (hitX || corner) f.dx = -f.dx;
+    if (hitY || corner) f.dy = -f.dy;
+    if (hitX || hitY || corner) f.left *= 0.5;
+    else {
+      f.x += f.dx * step;
+      f.y += f.dy * step;
+    }
+  }
+  it.flares = it.flares.filter((f) => f.burn > 0);
+}
+
 function clearFallen(state, it) {
   for (const e of [...it.guards, ...it.turrets]) {
     if (e.hp > 0) continue;
@@ -738,6 +779,7 @@ function stepInterior(state, wreck, cmds, dt) {
   for (const s of it.sentries) stepSentry(state, it, s, dt);
   stepInsideBolts(state, it, dt);
   stepGrenades(state, it, dt);
+  stepFlares(it, dt);
   clearFallen(state, it);
   // The reactor of a wreck runs down from the first step inside.
   if (it.timer === null) return;

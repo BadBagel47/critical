@@ -32,8 +32,8 @@ Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **F
 | Vrak | Som i dag: inget smygande, vakter och turrets slåss direkt, reaktorn räknar ner |
 
 - **Bestämt:** smygande gäller inte i vrak. Tillägg 2026-11-15: mörker och ljus spelar ändå roll i vrak (F-161). Vakter ser åt ett håll, ser spelare i ljus på långt håll och i mörker bara på nära håll. Men i vrak finns inget larm, inga kameror och ingen lockdown: den som blir sedd får vakten på sig, inte hela stället.
-- **Förslag (2026-11-15):** ljuset talar om vad det är för ställe.
-  - Vrak som man hittar i rymden är strömlösa: nästan helt mörka, med ficklampa (F-159). Inget rött ljus.
+- **Bestämt (2026-11-15):** ljuset talar om vad det är för ställe.
+  - Vrak som man hittar i rymden är strömlösa: nästan helt mörka, med ficklampa och flares (F-159 och F-160, byggt). Inget rött ljus.
   - Ett skepp som spelarna själva slagit ut (F-081) har besättning och ström kvar. Det är i lockdown, som en fientlig station.
   - Rött ljus betyder alltid att stället räknar besättningen som fiende: roterande i lockdown, blinkande vid larm.
 - **Förslag:** stängda stationer (anseende "stängd") släpper inte in någon alls, som i dag. Dit kommer man bara in genom att bryta upp låset, och då är stället i lockdown.
@@ -62,7 +62,7 @@ Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **F
 
 **Larmade dörrar (F-158, idé från användaren 2026-11-14).** Vissa dörrar är larmade. Den som öppnar en sådan utlöser larmet. Radarn visar vilka dörrar som är larmade.
 
-**Förslag** på resten, inte bestämt:
+**Bestämt (2026-11-15):** de syns på nära håll även utan radar, Engineer kan koppla ur dem, och det finns alltid en väg utan larmad dörr. Så här:
 - Larmade dörrar sitter på genvägar och på sidorum med loot. Det finns alltid en väg till mainframen utan larmad dörr, så att larmet aldrig är påtvingat.
 - De syns också utan radar: en liten lampa i dörrkarmen som man ser när man står nära. Radarn visar dem på håll och genom väggar. Annars blir det gissning för den som saknar radar.
 - Engineer kan koppla ur en larmad dörr på plats. Det tar några sekunder, och under tiden står hen stilla och oskyddad.
@@ -80,7 +80,7 @@ Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **F
   - Tranq gun har sex pilar per bordning. Man växlar mellan den och geväret med en tangent.
   - En vakt som vaknar av sig själv och inte ser någon går tillbaka till sin runda. Den utlöser inte larmet.
 
-**Rundor (förslag 2026-11-15, inte bestämt).** I dag står varje vakt vid en plats och går slumpvis några steg runt den. Det går inte att planera efter. Förslag:
+**Rundor (bestämt 2026-11-15).** I dag står varje vakt vid en plats och går slumpvis några steg runt den. Det går inte att planera efter. I stället:
 - Varje vakt har en fast runda mellan bestämda punkter. Rundan görs tillsammans med planlösningen, så varje ställe har sina egna, men den är densamma under hela besöket.
 - Vid vissa punkter stannar vakten och ser sig om åt bestämda håll. Somliga vakter står på post och vrider bara blicken i ett mönster.
 - Rundan ändras bara av något spelaren gör: ljus från en flare eller ficklampa, ett skott, en sövd vakt. En vakt som undersökt något och inte hittat någon går tillbaka till sin runda.

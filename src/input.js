@@ -48,7 +48,7 @@ const PAD_KEYS = {
   },
   map: { X: 'KeyQ', Y: 'KeyB', A: 'CLICK', RB: 'Tab', LB: 'PadPrevPost' },
   panel: { A: 'CLICK' },
-  away: { A: 'KeyF', X: 'KeyC', Y: 'KeyT', RB: 'KeyG' },
+  away: { A: 'KeyF', X: 'KeyC', Y: 'KeyT', RB: 'KeyG', LB: 'KeyQ', L3: 'KeyL' },
 };
 const dead = (v) => (Math.abs(v) < 0.2 ? 0 : v);
 // The gamepad button that stands in for a key in the given layout, or null. The layout's own button comes

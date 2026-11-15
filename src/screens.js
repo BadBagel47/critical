@@ -213,6 +213,8 @@ function awayInput(game, out) {
     aim,
     fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5,
     grenade: keys.hit('KeyG') || m.rightClicked ? lob : null,
+    flare: keys.hit('KeyQ') ? lob : null,
+    lampPressed: keys.hit('KeyL'),
     use: keys.down('KeyF'),
     usePressed: keys.hit('KeyF'),
     charge: keys.hit('KeyC'),

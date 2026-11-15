@@ -102,6 +102,17 @@ export const B = {
   GRENADE_RADIUS: 38,
   GRENADE_DMG: 45,
   GRENADE_SELF_DMG: 30,
+  // Light in a dark place. A boarder sees a little around them, and further where their lamp points.
+  LAMP_NEAR: 26,
+  LAMP_RANGE: 150,
+  LAMP_ANGLE: 0.5,
+  // A flare is thrown, bounces off walls and burns for a while. It fades over the last seconds.
+  FLARES: 3,
+  FLARE_RANGE: 150,
+  FLARE_SPEED: 210,
+  FLARE_BURN: 30,
+  FLARE_FADE: 8,
+  FLARE_LIGHT: 125,
   GUARD_HP: 30,
   GUARD_SPEED: 46,
   GUARD_SIGHT: 170,
