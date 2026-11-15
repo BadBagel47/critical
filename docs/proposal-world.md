@@ -25,7 +25,7 @@ Fler besked samma dag:
 - **Omfattning.** En kort omgång i co-op ska gå att spela på ett par timmar, och längre om man vill. Spelet ska inte bli så stort som Escape Velocity, och det ska inte ha en handskriven fast story.
 
 - **Fler än fem system.** Fem låter lite om systemen är små, så det minsta valet ska vara fler.
-- **Dolda system.** Storyn ska kunna låsa upp färdvägar till system man inte kan hitta själv på kartan. Kartan dit får man genom ett uppdrag, eller genom att borda ett skepp och plocka upp den. Att borda skepp finns inte än (F-081).
+- **Dolda system.** Storyn ska kunna låsa upp färdvägar till system man inte kan hitta själv på kartan. Kartan dit får man genom ett uppdrag, eller genom att borda ett skepp och plocka upp den. I första hand är det vrak man bordar, men skepp blir också bra när de går att borda (F-081). Man får aldrig låsas av att man råkar förstöra ett skepp man skulle borda.
 
 Öppet efter beskeden:
 - Vilka antal system man får välja mellan.
