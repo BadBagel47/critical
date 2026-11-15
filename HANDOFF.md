@@ -61,6 +61,8 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - [tools/export_assets.py](tools/export_assets.py): gör spelets bilder av ritskripten, och typsnittet av DejaVu Sans Bold. Kör `npm run assets`.
 - [docs/station-boarding.md](docs/station-boarding.md): samlat förslag för bordning av stationer (D-117): lockdown, smygande, roller, mainframe och övertagande. Säger vad användaren har bestämt och vad som är agentens förslag. Godkänt av användaren 2026-11-14.
 - [docs/music-brief.md](docs/music-brief.md): underlag för den agent som gör musiken (F-048). Säger vad som gäller, hur musiken kopplas in och vilka filer den får röra.
+- `docs/proposal-world.md`: förslag (inte godkänt) om genererad karta, röd tråd, uppdrag, anseende genom uppdrag och att spelet aldrig får låsa sig. Slutar med 14 frågor till användaren.
+- `docs/proposal-economy.md`: förslag (inte godkänt) om ekonomin, vad skepp och vrak lämnar efter sig och vad ett misslyckat lås kostar. Slutar med 12 frågor till användaren. Inkomsterna per timme i det är uppskattningar, inte mätningar.
 
 ## Kod
 
@@ -353,6 +355,7 @@ Grafik
 
 ## Lagar och regler
 
+- Namn att se över (2026-11-15, flaggat i docs/proposal-world.md): Kestrel, som hemsektorn och varvsstationen heter, är också namnet på kända skepp i andra rymdspel, och Drifters används som faktionsnamn i minst ett annat spel. Båda är vanliga ord och risken bedöms som liten, men de går emot beslutet att inget innehåll ska likna förebilderna. Agenten är ingen jurist. Tas upp i D-095 (faktionernas namn).
 - Blinkande ljus (2026-11-14): larmet vid bordning blinkar rött. Blinkande rött ljus kan utlösa anfall hos personer med ljuskänslig epilepsi. Gängse riktlinje för webben (WCAG 2.3.1) är högst tre blinkningar per sekund. Spelet håller sig till högst två, och bör få en inställning som dämpar blinkandet när larmet byggs (F-102). Tillägg 2026-11-15: samma gräns gäller flares och nödlampor i mörka vrak. En flare skimrar bara svagt, och när den falnar dippar ljuset högst 1,4 gånger i sekunden. En nödlampa som flimrar gör det med två korta dippar var 2,5 sekund, och lamporna är små. Se `flareLevel()` och `lampLevel()` i `src/render/light.js`.
 
 Genomgång 2026-11-14 (D-033). Agenten är ingen jurist, och inget här är juridisk rådgivning. Officiella källor är IMY (imy.se) för personuppgifter och PTS (pts.se) för kakor och liknande lagring.
