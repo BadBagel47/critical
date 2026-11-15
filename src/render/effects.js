@@ -1,6 +1,6 @@
 // Visual effects for space and for boarding. This watches the game state for new explosions,
 // shots and so on and adds particles for them. It never changes the game state.
-import { VIEW_W, VIEW_H, COL } from '../config.js';
+import { VIEW_W, VIEW_H, ZOOM, COL } from '../config.js';
 import { SHIP_GEOM } from '../sim/balance.js';
 import { nodeStatus } from '../sim/ship.js';
 import { toWorld, forward, headingTo, dist } from '../sim/util.js';
@@ -335,7 +335,8 @@ export function updateEffects(fx, state, view, dt) {
   for (const r of fx.ripples) r.t += dt;
   fx.ripples = fx.ripples.filter((r) => r.t < 0.5);
   const cam = view.cam;
-  const near = (o, m = 80) => Math.abs(o.x - cam.x) < VIEW_W / 2 + m && Math.abs(o.y - cam.y) < VIEW_H / 2 + m;
+  const near = (o, m = 80) =>
+    Math.abs(o.x - cam.x) < VIEW_W / 2 / ZOOM + m && Math.abs(o.y - cam.y) < VIEW_H / 2 / ZOOM + m;
   if (!state.paused) {
     watchBlasts(fx, state, near);
     watchShots(fx, state, near);

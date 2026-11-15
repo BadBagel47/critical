@@ -1,7 +1,7 @@
 // What the player is looking at and working with. There is always exactly one mode, worked out by modeOf().
 // Each mode is one entry in SCREENS that says how it is drawn, what the keys and the mouse do in it, and how
 // a gamepad is read. A new mode is one more entry there, plus the rule in modeOf() for when it applies.
-import { VIEW_W, VIEW_H, COL } from './config.js';
+import { VIEW_W, VIEW_H, ZOOM, COL } from './config.js';
 import { toast } from './events.js';
 import { toggleMute } from './audio.js';
 import { createMenu, openPage, drawMenu, menuButtons } from './menu.js';
@@ -100,7 +100,7 @@ function gunnerInput(game, out) {
   const { keys, state, view } = game;
   const m = keys.mouse;
   onBoard(game, out);
-  let aim = { x: view.cam.x + m.x - VIEW_W / 2, y: view.cam.y + m.y - VIEW_H / 2 };
+  let aim = { x: view.cam.x + (m.x - VIEW_W / 2) / ZOOM, y: view.cam.y + (m.y - VIEW_H / 2) / ZOOM };
   if (keys.pad.used) {
     // With a gamepad the right stick points the turret.
     const dir = stickAim(view, keys.pad);

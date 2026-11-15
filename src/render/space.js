@@ -1,5 +1,5 @@
 // The space view: world, ships, shots and effects. Used by the Captain and Gunner posts.
-import { VIEW_W, VIEW_H, COL } from '../config.js';
+import { VIEW_W, VIEW_H, ZOOM, COL } from '../config.js';
 import { B, SHIP_GEOM, WING_MOUNTS } from '../sim/balance.js';
 import { SHIPS } from '../sim/kinds.js';
 import { nodeStatus, dockCandidate, shipNose, speedOf } from '../sim/ship.js';
@@ -346,8 +346,8 @@ export function dockingInfo(state) {
 
 // An arrow at the screen edge for something that is off the screen.
 function edgeMarker(ctx, font, cam, x, y, color, text) {
-  const sx = x - cam.x + VIEW_W / 2;
-  const sy = y - cam.y + VIEW_H / 2;
+  const sx = (x - cam.x) * ZOOM + VIEW_W / 2;
+  const sy = (y - cam.y) * ZOOM + VIEW_H / 2;
   if (sx > 0 && sx < VIEW_W && sy > 24 && sy < VIEW_H - 24) return;
   const cx = VIEW_W / 2;
   const cy = VIEW_H / 2;
@@ -492,9 +492,16 @@ export function drawSpace(ctx, state, view, assets) {
   };
   drawStars(ctx, cam, fx, state.sector);
   ctx.save();
-  ctx.translate(VIEW_W / 2 - cam.x + (fx ? fx.offset.x : 0), VIEW_H / 2 - cam.y + (fx ? fx.offset.y : 0));
+  ctx.translate(VIEW_W / 2 + (fx ? fx.offset.x : 0), VIEW_H / 2 + (fx ? fx.offset.y : 0));
+  ctx.scale(ZOOM, ZOOM);
+  ctx.translate(-cam.x, -cam.y);
+  // Where a pixel of space does not cover a whole number of pixels on the screen, the pictures are smoothed.
+  // Otherwise some of their pixels would be drawn wider than others, and they would shimmer as they move.
+  const even = Number.isInteger(Math.round(ctx.getTransform().a * 1000) / 1000);
+  ctx.imageSmoothingEnabled = !even;
+  ctx.imageSmoothingQuality = 'high';
   const near = (o, margin) =>
-    Math.abs(o.x - cam.x) < VIEW_W / 2 + margin && Math.abs(o.y - cam.y) < VIEW_H / 2 + margin;
+    Math.abs(o.x - cam.x) < VIEW_W / 2 / ZOOM + margin && Math.abs(o.y - cam.y) < VIEW_H / 2 / ZOOM + margin;
   for (const t of state.things) {
     const look = THING_LOOK[t.kind];
     if (look && near(t, look.margin)) look.draw(ctx, t, env);
@@ -525,6 +532,7 @@ export function drawSpace(ctx, state, view, assets) {
   for (const f of state.fx) drawEffect(ctx, f);
   if (view.lights) drawSpaceLights(ctx, state, env, near);
   ctx.restore();
+  ctx.imageSmoothingEnabled = false;
   drawArrows(ctx, font, state, cam);
   return dock;
 }

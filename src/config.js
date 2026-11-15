@@ -3,6 +3,8 @@ export const VIEW_W = 640;
 export const VIEW_H = 360;
 export const STEP = 1 / 60;
 
+// How large space is drawn. Less than one shows more of it around the ship. Text and meters keep their size.
+export const ZOOM = 0.75;
 export const COL = {
   bg: '#090911',
   panel: '#0f0f1a',

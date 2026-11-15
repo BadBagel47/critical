@@ -40,6 +40,7 @@ Världen ska vara av samma typ som i Escape Velocity med efterföljare och Endle
 
 Idéer spånas i chatten och samlas i designskissen. Det som ska byggas läggs i BACKLOG.md och körs i grupper efter godkännande.
 - När grupperna i "Proposed runs" är fler än bokstäverna fortsätter de efter Z med AA, AB och så vidare. Grupper slås inte ihop för att få plats (användaren, 2026-11-14).
+- Klartecken (användaren, 2026-11-15): en körning startas bara när användaren uttryckligen har gett klartecken. En fråga, ett "det låter bra" eller ett ja på en designfråga är inte klartecken för att bygga. Är det oklart, fråga i en rad och vänta. Rekommendationer om vad som bör göras härnäst ges bara när användaren ber om dem. Bakgrund: agenten tolkade vid tre tillfällen samma dag svar och frågor som klartecken och började bygga.
 
 ## Publicering
 
