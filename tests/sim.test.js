@@ -1801,3 +1801,12 @@ test("the posts mark things for each other, and the Captain's mark makes shots h
   step(s, {}, DT);
   assert.equal(s.marks.engineer, null, 'and the mark goes when the part is mended');
 });
+
+test('the Captain marks a spot inside the place the ship is docked at, and takes the mark away again', () => {
+  const { s, it, av } = boarded();
+  const spot = { x: av.x + 40, y: av.y };
+  step(s, { captain: { pin: spot } }, DT);
+  assert.deepEqual(it.pin, spot);
+  step(s, { captain: { pin: { x: spot.x + 3, y: spot.y } } }, DT);
+  assert.equal(it.pin, null, 'a second mark on the same spot removes it');
+});

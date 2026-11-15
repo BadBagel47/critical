@@ -15,19 +15,10 @@ Prioritet: Hög, Medel, Låg.
 **C** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 
-**D** – strong model, high level – Egna instrument för posterna
-- F-138 – En mållista för Gunner och navigering för Captain, så att varje post har något eget
-- F-153 – Engineers skärm visar allt som kan gå sönder, också uppgraderingarna, och säger tydligt vad som är skadat och vad det gör
-
-**E** – strong model, high level – Samspel mellan rollerna
-- F-140 – En radar för den som leder bordningen från skeppet, som en gammal terminalskärm med besättningen i grönt och jagande fiender i rött
-- F-141 – Märkning mellan posterna, så att man kan peka ut mål och skador för varandra
-- F-142 – Överladdning som Engineer förbereder och den som sköter systemet löser ut
-
-**F** – strong model, high level – Flera sorters vakter
+**D** – strong model, high level – Flera sorters vakter
 - F-126 – Flera typer av vakter, lättare i början och svårare längre fram
 
-**G** – strong model, high level – Lockdown och smygande
+**E** – strong model, high level – Lockdown och smygande
 - F-102 – Lockdown på fientliga ställen: mörkare, roterande röda ljus och stängda dörrar tills spelarna slår av det vid en kontrollpanel längst in
 - F-107 – Smygande tills man blir upptäckt av patrullerande vakter, och en tranq gun som söver vakter
 - F-108 – Kameror som sveper och utlöser larmet om man blir sedd
@@ -37,83 +28,83 @@ Prioritet: Hög, Medel, Låg.
 - F-161 – Fiender ser ljus, och ser spelare som står i ljus när de tittar åt det hållet
 - F-120 – Spelet talar om för musiken när larmet har gått, så att musiken byter från smyg till larm
 
-**H** – strong model, high level – Roller vid bordning (efter lockdown och smygande)
+**F** – strong model, high level – Roller vid bordning (efter lockdown och smygande)
 - F-113 – Gunner slåss bättre, Engineer hackar och Captain ger gruppen något eget, så att det spelar roll vem som går in
 
-**I** – strong model, high level – Mainframe och egna stationer (efter lockdown och smygande)
+**G** – strong model, high level – Mainframe och egna stationer (efter lockdown och smygande)
 - F-109 – En mainframe-panel på alla stationer, som Engineer hackar hos fiender och som styr stationen hos ägaren
 - F-110 – Laga och uppgradera en station man äger från panelen
 
-**J** – strong model, high level – Ta över neutrala baser (efter gruppen om mainframen)
+**H** – strong model, high level – Ta över neutrala baser (efter gruppen om mainframen)
 - F-114 – Hacka en neutral bas med stor risk: red alert, bounty hunters som anfaller skeppet och sjunkande anseende
 
-**K** – strong model, high level – Anfall på egna stationer (efter gruppen om mainframen)
+**I** – strong model, high level – Anfall på egna stationer (efter gruppen om mainframen)
 - F-121 – Stationer kan falla även när man är i ett annat system, och varnar i tre nivåer när de anfalls
 - F-122 – Ett övertagande i steg: belägring, bordning och avgörande, som inte går att fuska sig ur genom att skjuta det dockade skeppet
 - F-123 – Regler för hur ofta det sker, och ordnade anfall från faktioner man är ovän med
 
-**L** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
+**J** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 - D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
 
-**M** – strong model, high level – Förslag: ekonomi och belöningar
+**K** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**N** – strong model, high level – Baser i två storlekar
+**L** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 
-**O** – strong model, high level – Sällsynta skepp
+**M** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**P** – strong model, high level – Handel
+**N** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**Q** – strong model, medium level – Butik med bilder
+**O** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**R** – strong model, high level – Värme
+**P** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**S** – strong model, high level – Slå ut och borda
+**Q** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**T** – strong model, high level – Missiler och raketer
+**R** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**U** – strong model, high level – Kontakt med andra skepp
+**S** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**V** – strong model, high level – Asteroider och anomalier
+**T** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**W** – strong model, high level – En värld som förändras
+**U** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**X** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**V** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**Y** – strong model, high level – Ljudeffekter
+**W** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**Z** – strong model, high level – Visuella effekter och feedback
+**X** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 
-**AA** – strong model, high level – Engineer hackar fram koden, och vad ett misslyckande kostar
+**Y** – strong model, high level – Engineer hackar fram koden, och vad ett misslyckande kostar
 - F-171 – Koden till en stations lås dyker inte upp av sig själv, utan Engineer måste hacka fram den siffra för siffra
 - D-172 – Se över vilka minispel som straffar ett misslyckande, och hur
 
-**AB** – strong model, medium level – Sköld från en station under attack (efter anfall på egna stationer)
+**Z** – strong model, medium level – Sköld från en station under attack (efter anfall på egna stationer)
 - F-173 – En station under attack ger sköld tills angriparna hackat mainframen. Första delen är byggd: en fiende ger ingen sköld
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
@@ -140,12 +131,7 @@ Väntar på användaren: F-091 (mining laser) tas upp när F-085 är provad. D-0
 | F-124 | Se över hur de visuella effekterna och den visuella feedbacken kan förbättras. Från en fråga av användaren 2026-11-14. Agentens tolkning av vad som ingår: gå igenom varje sak som händer i spelet och se om skärmen svarar tydligt på den (träffar på skeppet och på fiender, sköld som går ner, skador, upplock, knapptryck, dockning, larm, anseende som ändras, låg bränslenivå), och förbättra där svaret är svagt eller saknas | Ej påbörjad |
 | F-151 | Bättre animationer på figurerna. Fråga från användaren 2026-11-14. I dag är varje figur en enda stillbild som vrids. Agentens förslag på vad som ingår: gång i steg, sikta och skjuta, bära loot, bli träffad, falla och teleporteras hem, och samma för vakter och folk på stationer. Nya bilder visas för användaren innan de läggs in | Ej påbörjad |
 | F-152 | Bättre interiör. Fråga från användaren 2026-11-14. I dag har rummen väggar, golv och lampor i sidans stil, men ingen inredning. Agentens förslag på vad som ingår: rum som syns vad de är till för (brygga med konsoler, maskinrum med reaktor, lastrum med lådor, sovhytter, mäss), saker att ta skydd bakom, dörrar som öppnas och stängs, och skyltar vid dörrarna. Hänger ihop med vakter som tar skydd (F-125) och rumsnamn för radarn (F-140). Designen visas först | Ej påbörjad |
-| F-153 | Engineering borde få upp alla saker som kan gå sönder i sitt läge. I dag syns till exempel inte turrets. Bättre indikationer på vad som är skadat. Från användaren 2026-11-14. Så fungerar det i dag: skeppet har sex delar som kan skadas (bow turret, bridge, reactor, två vingar och engines), och varje del styr ett system. Uppgraderingar som vingtorn, raketer och tung laser syns inte på Engineers ritning och kan inte gå sönder var för sig. Agentens förslag: rita uppgraderingarna på ritningen, säg vid varje del vad skadan gör (till exempel långsammare skott), låt skadade delar blinka och visa hur långt lagningen har kommit. Besked 2026-11-14: vi går på agentens rekommendation. Uppgraderingar går inte sönder var för sig tills vidare. De sex delarna är som i dag, och uppgraderingarna visas vid den del de hör till. Frågan om fler delar som går sönder tas upp igen tillsammans med värme (F-084) | Ej påbörjad |
 | F-137 | En viewer: en extra skärm som kaptenen, eller alla, kan skicka sin vy till. Tänk att man spelar tillsammans och kan ha en stor kommandobrygga med det innehåll man väljer. Agentens anmärkning: över nätet blir viewern en åskådare som ansluter utan att styra, och det väntar på nätverksmotorn (F-040). En första version går att bygga redan nu för en extra skärm på samma dator, till exempel en tv kopplad till datorn, genom ett andra fönster som visar det spelet skickar dit. Agentens anmärkning 2026-11-14: Captain och Gunner har i dag nästan samma bild, rymdvyn med olika mätare, så det finns lite unikt att skicka från dem. Viewern bör därför byggas kring sorters innehåll (överblick, karta, skeppets skick, bordarnas vyer) och inte kring poster. Besked 2026-11-14: man kan aldrig helt räkna med att det finns en viewer inkopplad. Den är en bonus för att förstärka spelkänslan, så inget i spelet får kräva den | Ej påbörjad |
-| F-138 | Egna instrument för Captain och Gunner, som i dag har nästan samma bild. Gunner: en mållista som visar vilka fiender som är farligast och hur skadade de är. Captain: navigering, alltså kurs mot valt mål, avstånd till stationer och order till besättningen. Agentens förslag 2026-11-14, godkänt av användaren som ett mycket bra tillägg | Ej påbörjad |
-| F-140 | Den som stannar på skeppet leder bordningen med en radar. Användaren 2026-11-14: det borde vara en radar som kaptenen ser, som en gammal terminalskärm med lysande gröna markeringar för layout och besättning och röda för fiender som fått aggro. Frågor från användaren: hur gör man så att man inte måste skjuta i blindo, när det är svårt att förklara exakt var en fiende är, och hur fungerar det ensam? Agentens förslag: radarn är till för att varna och visa vägen, inte för att sikta. Bordarna ser själva allt som är i deras synfält och skjuter på det de ser. Radarn visar det som är bakom väggar. Rummen får korta namn som står både på radarn och vid dörrarna, och Captain kan klicka på radarn för att sätta en markering som bordarna ser. Fiender som inte har upptäckt någon syns inte på radarn. Ensam: bordaren har kvar planritningen i hörnet, och skeppets dator varnar med en pil i skärmkanten när en fiende med aggro närmar sig utanför synfältet. Valt av användaren 2026-11-14. Besked 2026-11-14: vi kör på bärbar radar. Captain har en liten radar med sig när hen själv går in, med kort räckvidd, ungefär åtta rutor. Den stora radarn finns bara på skeppet. Den bärbara radarn är Captains bonus vid bordning (F-113) | Ej påbörjad |
-| F-141 | Märkning mellan posterna: Gunner märker ett mål som Captain ska hålla i sikte, Captain märker ett mål som ger Gunner lite extra skada, och Engineer pekar ut en skada. Valt av användaren 2026-11-14. Ensam: märket ligger kvar när man byter post | Ej påbörjad |
-| F-142 | Överladdning: Engineer laddar upp ett system, och den som sköter systemet löser ut laddningen när den behövs, till exempel inför ett laserskott eller en flykt. Väntetid efteråt. Valt av användaren 2026-11-14. Ensam: ladda som Engineer, byt post och lös ut | Ej påbörjad |
 | F-126 | Flera typer av vakter. Kanske så att de är lättare i början och svårare ju längre man kommer. Agentens förslag på typer: väktare (lätt, slår larm), soldat (tar skydd), tung vakt (pansrad och långsam), tekniker (slår på utslagna turrets igen) och drönare (snabb, går nära). Vilka som finns beror på sektor, på hur farligt stället är och på vems det är Besked 2026-11-15: längre fram ska det finnas en vakttyp som väljer väg själv, men som visar vart den är på väg innan den går. | Ej påbörjad |
 | F-053 | Anomalier man kan hitta. Till exempel områden där man flyger och skjuter långsammare, och områden där man tar skada | Ej påbörjad |
 | F-068 | Handelssystem för goods. Att man kan köpa och sälja varor mellan olika stationer med olika priser. Det är inget som man själv kan använda, utan det är bara för att kunna tjäna pengar. Agentens förslag som användaren inte invänt mot: lastrum med begränsad plats som går att bygga ut, och priser som rör sig långsamt. Från D-075: prisnivåer per vara och station, och en kartvy som visar var det lönar sig | Ej påbörjad |
@@ -318,3 +304,8 @@ Väntar på användaren: F-091 (mining laser) tas upp när F-085 är provad. D-0
 | F-163 | Låset på pods visar tre ringar runt en mitt och öppnas utifrån och in. Visaren och markeringen finns på ringen man arbetar med, och en upplåst ring blir grön. Visaren går medurs på den yttersta och den innersta ringen och moturs på den mellersta. När den sista ringen är upplåst vrids mitten ett kvarts varv och blir grön innan låset går upp | 2026-11-15 |
 | F-174 | Levande lågor ur motorer och styrraketer: de smalnar av mot spetsen, har en vit kärna med färg utåt, fladdrar i längd och bredd och växer mjukt när man gasar. Gnistor lossnar från lågorna, och efterbrännaren ger en längre och hetare låga. Andra skepp har samma lågor, längre ju fortare de går, röda hos pirater och blå hos övriga | 2026-11-15 |
 | F-125 | Smartare vakter. En vakt som sett en inkräktare slåss från skydd: den kliver fram, skjuter och kliver tillbaka. Framfusiga vakter flyttar fram från skydd till skydd, försiktiga håller avstånd och drar sig undan när de är illa skadade. Är de flera går en av dem runt en annan väg. Vakter i närheten hör skott och kommer till hjälp. Skydd är i dag hörn och dörröppningar, eftersom rummen saknar inredning (F-152) | 2026-11-15 |
+| F-153 | Engineers skärm visar vad som är monterat och vad skador gör. Köpta uppgraderingar ritas på ritningen och står med namn vid den del de sitter vid. En skadad del säger vad skadan gör, till exempel GUNS AT 70%, och blinkar. Raden för reparationslaget säger vilken del det arbetar med och hur långt det har kommit. Uppgraderingar går inte sönder var för sig | 2026-11-15 |
+| F-138 | Egna instrument. Gunner har en mållista med de farligaste fienderna först, avstånd och skada, och den farligaste är utpekad i rymden. Captain sätter kurs mot en plats på kartan med C och ser avstånd, tid dit och åt vilket håll hen ska svänga. Order till besättningen är inte byggt | 2026-11-15 |
+| F-142 | Överladdning. Engineer laddar upp vapen, motorer eller sköld med Z (6 sekunder). När den är full löser posten som sköter systemet ut den med Z: Gunner för vapen, Captain för motorer, Engineer själv för sköld. Systemet är starkare i 5 sekunder och behöver sedan svalna i 20. Ensam: ladda som Engineer, byt post och lös ut | 2026-11-15 |
+| F-141 | Märkning mellan posterna med T. Gunner märker ett skepp som Captain får utpekat. Captain märker ett skepp som besättningens skott träffar 15 procent hårdare. Engineer pekar ut en skadad del, som de andra får som en rad överst. Märkena ligger kvar när man byter post | 2026-11-15 |
+| F-140 | Bordningsradar. Captain öppnar den med B när skeppet ligger dockat och någon har varit inne. Den ser ut som en gammal terminal: planritningen och besättningen i grönt, och fiender som är efter någon i rött. Rummen har bokstäver som också står vid dörrarna. Ett klick sätter en markering som bordarna ser. Den som bordar får pilar i skärmkanten mot fiender som är efter hen utanför bild. Captain bär en liten radar när hen själv går in: sådana fiender syns på planritningen inom åtta rutor | 2026-11-15 |

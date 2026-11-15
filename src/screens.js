@@ -13,6 +13,7 @@ import { createEffects, drawFlash } from './render/effects.js';
 import { drawSpace, drawStars } from './render/space.js';
 import { drawHud, drawOverlay, drawHelp, drawToasts } from './render/hud.js';
 import { nextCourse } from './render/instruments.js';
+import { drawRadar, radarPlace, radarPoint } from './render/radar.js';
 import { drawBoarding, insideOrigin } from './render/boarding.js';
 import { drawBreakin, breakinAction, breakinButtons } from './render/breakin.js';
 import { drawMap, mapPoint, chartClick, mapButtons } from './render/map.js';
@@ -57,6 +58,7 @@ export function modeOf(game) {
   if (me.inside !== null) return view.panel === 'shop' && isTrading(docked) ? 'shop' : 'away';
   if (view.panel === 'lock' && docked && docked.breakin && docked.lock !== 'open') return 'lock';
   if (view.panel === 'map') return 'map';
+  if (view.panel === 'radar' && me.post === 'captain' && radarPlace(state)) return 'radar';
   // On board the ship: the post the player holds, or 'crew' when they hold none.
   return me.post || 'crew';
 }
@@ -158,6 +160,15 @@ function engineerInput(game, out) {
     if (click && click.repair) cmd.repair = click.repair;
   }
   out.engineer = cmd;
+}
+
+// Looking at the boarding radar: the ship keeps running as set, and a click marks a spot for the boarders.
+function radarInput(game, out) {
+  const { keys, state } = game;
+  const m = keys.mouse;
+  onBoard(game, out);
+  const at = m.clicked ? radarPoint(state, m.x, m.y) : null;
+  if (at) out.captain = { pin: at };
 }
 
 // Looking at the map: the posts keep running as set. The Engineer uses the tools, the Captain starts a jump.
@@ -287,6 +298,13 @@ export const SCREENS = {
     buttons: (game) => (game.view.engOpen ? engineerButtons(game.state) : []),
   },
   crew: { pad: 'captain', input: onBoard, draw: drawOnBoard, toasts: [44] },
+  radar: {
+    pad: 'map',
+    cursor: true,
+    input: radarInput,
+    draw: (game) => drawRadar(game.ctx, game.state, game.view, game.assets),
+    toasts: [296, 180],
+  },
   map: {
     pad: 'map',
     cursor: true,
@@ -319,7 +337,7 @@ export function drawsPointer(game, mode) {
   const { state, view, keys } = game;
   if (!view.started || state.paused || state.over || view.help) return false;
   const me = playerById(state, view.playerId);
-  if (mode === 'gunner') return true;
+  if (mode === 'gunner' || mode === 'radar') return true;
   if (mode === 'map') return me.post === 'engineer' && !!mapPoint(keys.mouse.x, keys.mouse.y);
   if (mode !== 'away') return false;
   const place = findDock(state, me.inside);
@@ -368,6 +386,9 @@ export function viewKeys(game, mode) {
   }
   // V folds the Engineer's screen away and brings it back.
   if (mode === 'engineer' && keys.hit('KeyV')) view.engOpen = !view.engOpen;
+  // B opens the Captain's boarding radar, and closes it.
+  if (mode === 'radar' && keys.hit('KeyB', 'KeyF', 'Escape')) view.panel = null;
+  else if (mode === 'captain' && keys.hit('KeyB') && radarPlace(state)) view.panel = 'radar';
   const canOpenMap = mode === 'map' || POSTS.includes(mode) || mode === 'crew';
   if (keys.hit('KeyM') && canOpenMap) view.panel = mode === 'map' ? null : 'map';
 }

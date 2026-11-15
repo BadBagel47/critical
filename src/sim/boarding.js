@@ -53,6 +53,8 @@ export function createInterior(state, wreck) {
     live: false,
     // A wreck has no power. It is dark inside, and the crew finds its way by lamp and flare.
     dark: wreck.kind === 'wreck',
+    // A spot that the Captain has marked on the boarding radar, for the boarders to see.
+    pin: null,
     doorCut: 0,
     doorOpen: false,
     terminal: null,
@@ -744,6 +746,13 @@ const LOCK_OPENED = { pod: lootPod };
 export function stepBoarding(state, cmds, dt) {
   for (const id of (cmds.system && cmds.system.board) || []) tryBoard(state, id);
   for (const p of state.players) p.tele = Math.max(0, p.tele - dt);
+  // The Captain marks a spot inside the place the ship is docked at. Marking it again takes the mark away.
+  const pin = cmds.captain && cmds.captain.pin;
+  const pinned = pin && findDock(state, state.ship.docked);
+  if (pinned && pinned.interior) {
+    const it = pinned.interior;
+    it.pin = it.pin && dist(it.pin.x, it.pin.y, pin.x, pin.y) < TILE ? null : { x: pin.x, y: pin.y };
+  }
   for (const target of dockTargets(state)) {
     const result = stepBreakin(state, target, cmds, dt);
     if (result === 'failed') LOCK_FAILED[target.kind](state, target);

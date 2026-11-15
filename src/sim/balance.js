@@ -118,6 +118,8 @@ export const B = {
   GRENADE_RADIUS: 38,
   GRENADE_DMG: 45,
   GRENADE_SELF_DMG: 30,
+  // How many tiles the small radar reaches that the Captain carries when boarding.
+  RADAR_REACH: 8,
   // Light in a dark place. A boarder sees a little around them, and further where their lamp points.
   LAMP_NEAR: 26,
   LAMP_RANGE: 150,

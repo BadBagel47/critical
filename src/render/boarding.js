@@ -10,7 +10,8 @@ import { playerById } from '../sim/players.js';
 import { hullMax, shieldMax, level, carryMax, crewHpMax } from '../sim/upgrades.js';
 import { alarmText } from './hud.js';
 import { shade, litArea, flareLevel, lampLevel } from './light.js';
-import { forward } from '../sim/util.js';
+import { forward, dist } from '../sim/util.js';
+import { hunters, roomName } from './radar.js';
 
 // Where on the screen the inside of a place is drawn. The camera follows the player's own figure. A place
 // that is smaller than the screen is kept still in the middle of it, and at the edges of a larger one the
@@ -212,7 +213,7 @@ function drawTiles(ctx, it, origin, style) {
 // A small plan of the whole place in the corner, since it no longer fits on the screen. It is drawn once and
 // kept, and drawn again when a door has opened.
 const plans = new WeakMap();
-function drawPlan(ctx, it, me, x, y) {
+function drawPlan(ctx, it, me, x, y, radar = []) {
   let kept = plans.get(it);
   if (!kept || kept.tiles !== it.tiles) {
     const canvas = document.createElement('canvas');
@@ -244,9 +245,43 @@ function drawPlan(ctx, it, me, x, y) {
   ctx.globalAlpha = 1;
   ctx.fillStyle = COL.acid[2];
   ctx.fillRect(x + Math.floor(it.entry.x / TILE) - 1, y + Math.floor(it.entry.y / TILE) - 1, 2, 2);
+  if (it.pin) {
+    ctx.fillStyle = '#9cf7b0';
+    ctx.fillRect(x + Math.floor(it.pin.x / TILE) - 1, y + Math.floor(it.pin.y / TILE) - 1, 3, 3);
+  }
+  // The Captain carries a small radar: enemies that are after someone show on the plan when they are near.
+  for (const e of radar) {
+    ctx.fillStyle = COL.ember[2];
+    ctx.fillRect(x + Math.floor(e.x / TILE) - 1, y + Math.floor(e.y / TILE) - 1, 2, 2);
+  }
   if (!me) return;
   ctx.fillStyle = COL.white;
   ctx.fillRect(x + Math.floor(me.x / TILE) - 1, y + Math.floor(me.y / TILE) - 1, 3, 3);
+}
+
+// Enemies that are after someone and are not on the screen: an arrow at the edge says where they come from.
+function drawHunters(ctx, it, origin) {
+  for (const e of hunters(it)) {
+    const sx = origin.x + e.x,
+      sy = origin.y + e.y;
+    if (sx > 0 && sx < VIEW_W && sy > 30 && sy < VIEW_H - 34) continue;
+    const cx = VIEW_W / 2,
+      cy = VIEW_H / 2;
+    const dx = sx - cx,
+      dy = sy - cy;
+    const k = Math.min((cx - 10) / Math.abs(dx || 1e-6), (cy - 40) / Math.abs(dy || 1e-6));
+    ctx.save();
+    ctx.translate(cx + dx * k, cy + dy * k);
+    ctx.rotate(Math.atan2(dy, dx));
+    ctx.fillStyle = COL.ember[2];
+    ctx.beginPath();
+    ctx.moveTo(6, 0);
+    ctx.lineTo(-3, -4);
+    ctx.lineTo(-3, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
 }
 
 function glow(ctx, x, y, r, color, a) {
@@ -539,6 +574,18 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
       rect(ctx, a.x - 5 + i * 4, a.y - 13, 3, 3, c.type === 'crate' ? COL.ochre[2] : COL.ion[2], COL.out);
     });
   }
+  // The names of the rooms stand at their doors, the same as on the Captain's radar.
+  if (!it.trade) {
+    it.rooms.forEach((r, i) => {
+      if (r.door) font.draw(ctx, roomName(i), r.door.x, r.door.y - 3, COL.faint, { align: 'c' });
+    });
+  }
+  if (it.pin) {
+    ctx.strokeStyle = '#9cf7b0';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(Math.round(it.pin.x) - 5.5, Math.round(it.pin.y) - 5.5, 11, 11);
+    font.draw(ctx, "CAPTAIN'S MARK", it.pin.x, it.pin.y - 15, '#9cf7b0', { align: 'c' });
+  }
   for (const b of it.bolts) drawInsideBolt(ctx, b);
   for (const g of it.grenades) drawGrenade(ctx, g, state.time);
   for (const f of it.flares) drawFlare(ctx, f, state.time);
@@ -644,7 +691,10 @@ export function drawBoarding(ctx, state, view, assets) {
   const credits = { anchor: 'r', fg: it.trade ? COL.ochre[2] : COL.dim };
   label(ctx, font, VIEW_W - 8, it.trade ? 8 : 22, `CREDITS  ${state.credits}`, credits);
   // The plan of the place sits under the lines in the corner.
-  drawPlan(ctx, it, me, VIEW_W - 11 - it.w, it.trade ? 28 : 42);
+  const carries = me && player.backTo === 'captain' && !it.trade;
+  const near = carries ? hunters(it).filter((e) => dist(e.x, e.y, me.x, me.y) < B.RADAR_REACH * TILE) : [];
+  drawPlan(ctx, it, me, VIEW_W - 11 - it.w, it.trade ? 28 : 42, near);
+  if (!it.trade) drawHunters(ctx, it, origin);
   if (it.trade) drawVisitorHud(ctx, font);
   else drawBoarderHud(ctx, font, state, view, player, place, me, origin);
 }

@@ -55,6 +55,8 @@ function onBoard(state, me) {
   if (captain) {
     const inside = state.players.some((p) => p.inside === t.id);
     list.push(act('undock', 'KeyE', inside ? 'UNDOCK AND RECALL' : 'UNDOCK', 'UNDOCK'));
+    // With someone inside, the Captain can follow them on the boarding radar.
+    if (inside && t.interior && !t.interior.trade) list.push(act('radar', 'KeyB', 'BOARDING RADAR', 'RADAR'));
   }
   return list.filter(Boolean);
 }
