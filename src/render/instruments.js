@@ -7,6 +7,8 @@ import { CREW, enemies } from '../sim/sides.js';
 import { nameOf, findThing } from '../sim/things.js';
 import { level } from '../sim/upgrades.js';
 import { dist, headingTo, angleDiff } from '../sim/util.js';
+import { nodeStatus } from '../sim/ship.js';
+import { SURGE_BY } from '../sim/teamwork.js';
 import { rect, bar, brackets, label } from './draw.js';
 
 const onScreen = (cam, x, y) => ({ x: (x - cam.x) * ZOOM + VIEW_W / 2, y: (y - cam.y) * ZOOM + VIEW_H / 2 });
@@ -94,4 +96,62 @@ export function drawCourse(ctx, font, state, view, cam) {
     dy = p.y - cy;
   const s = Math.min((cx - 26) / Math.abs(dx || 1e-6), (cy - 44) / Math.abs(dy || 1e-6));
   label(ctx, font, cx + dx * s, cy + dy * s, name, { anchor: 'c', fg: COL.captain, border: COL.captain });
+}
+
+// ---------- the overcharge and the marks ----------
+// The line that tells a post about the overcharge: that one is ready for its system, or running.
+export function surgeLine(state, post) {
+  const s = state.ship.surge;
+  if (!s.sys || SURGE_BY[s.sys] !== post) return null;
+  const name = s.sys.toUpperCase();
+  if (s.left > 0)
+    return { text: `${name} OVERCHARGED  ·  ${Math.ceil(s.left)} S`, color: COL.ion[3], border: COL.ion[1] };
+  if (s.charge >= 1) return { text: `Z  ·  OVERCHARGE ${name}`, color: COL.ion[3], border: COL.ion[1] };
+  return null;
+}
+// What the Engineer sees of it: what is being built up, that it is ready, or that it is cooling.
+export function surgeNote(state) {
+  const s = state.ship.surge;
+  if (s.left > 0) return { text: `${s.sys.toUpperCase()} OVERCHARGED  ${Math.ceil(s.left)} S`, color: COL.ion[3] };
+  if (s.cool > 0) return { text: `OVERCHARGE COOLING  ${Math.ceil(s.cool)} S`, color: COL.dim };
+  if (!s.sys) return { text: 'Z  OVERCHARGE THE PICKED SYSTEM', color: COL.faint };
+  const name = s.sys.toUpperCase();
+  if (s.charge < 1) return { text: `OVERCHARGE ${name}  ${Math.round(s.charge * 100)}%`, color: COL.ochre[2] };
+  const who = SURGE_BY[s.sys] === 'engineer' ? 'PRESS Z' : `${SURGE_BY[s.sys].toUpperCase()} PRESSES Z`;
+  return { text: `${name} READY  ·  ${who}`, color: COL.ion[3] };
+}
+// The marks that the other posts have set, drawn for the one who is looking: the ship that the Gunner wants
+// kept in sight, and the one that the Captain has marked for harder hits.
+export function drawMarks(ctx, font, state, cam, post) {
+  const draw = (id, color, text) => {
+    const v = state.vessels.find((x) => x.id === id);
+    if (!v) return;
+    const p = onScreen(cam, v.x, v.y);
+    if (p.x > 0 && p.x < VIEW_W && p.y > 24 && p.y < VIEW_H - 24) {
+      brackets(ctx, p.x, p.y, 15, color, 5);
+      font.draw(ctx, text, p.x, p.y - 24, color, { align: 'c' });
+      return;
+    }
+    const cx = VIEW_W / 2,
+      cy = VIEW_H / 2;
+    const dx = p.x - cx,
+      dy = p.y - cy;
+    const k = Math.min((cx - 40) / Math.abs(dx || 1e-6), (cy - 56) / Math.abs(dy || 1e-6));
+    label(ctx, font, cx + dx * k, cy + dy * k, text, { anchor: 'c', fg: color, border: color });
+  };
+  const m = state.marks;
+  if (m.gunner !== null) draw(m.gunner, COL.gunner, post === 'gunner' ? 'YOUR MARK' : "GUNNER'S MARK");
+  if (m.captain !== null) draw(m.captain, COL.captain, post === 'captain' ? 'YOUR MARK' : 'MARKED  ·  HIT HARDER');
+}
+// The part of the ship that the Engineer has pointed out, as a line for the others.
+export function engineerMark(state) {
+  const i = state.marks.engineer;
+  if (i === null) return null;
+  const n = state.ship.nodes[i];
+  const critical = nodeStatus(n.hp) === 'critical';
+  return {
+    text: `ENGINEER  ·  ${n.name} ${critical ? 'CRITICAL' : 'DAMAGED'}`,
+    color: critical ? COL.ember[2] : COL.ochre[2],
+    border: critical ? COL.ember[0] : COL.ochre[0],
+  };
 }

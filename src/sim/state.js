@@ -49,6 +49,8 @@ export function createState(seed = 1, options = {}) {
     traffic: { timer: 0 },
     // sides that the crew is in trouble with right here, see sides.js
     strife: {},
+    // What each post has pointed out for the others, see teamwork.js.
+    marks: { gunner: null, captain: null, engineer: null },
     // Sectors, the star charts the crew holds, and a jump being charged.
     sectors: createSectors(),
     sector: 0,

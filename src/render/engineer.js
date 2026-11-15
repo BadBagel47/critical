@@ -6,6 +6,7 @@ import { rect, label, dashed } from './draw.js';
 import { drawTabs, drawBars } from './hud.js';
 import { drawTools } from './map.js';
 import { powerTotal, has } from '../sim/upgrades.js';
+import { surgeNote } from './instruments.js';
 
 const BX = 150,
   BY = 72,
@@ -272,6 +273,8 @@ export function drawEngineer(ctx, state, view, assets) {
   rect(ctx, PANEL_X + 12, 256, VIEW_W - PANEL_X - 24, 1, COL.line);
   drawTools(ctx, font, state, PANEL_X + 12, 266, VIEW_W - PANEL_X - 24);
   font.draw(ctx, 'M  OPEN THE MAP TO SEND PROBES', PANEL_X + 12, 316, COL.faint);
+  const surge = surgeNote(state);
+  font.draw(ctx, surge.text, PANEL_X + 12, 230, surge.color);
   drawTabs(ctx, font, state, view);
   if (state.time - ship.lastHit < 1.5)
     label(ctx, font, 222, 30, 'UNDER FIRE', { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
@@ -315,7 +318,19 @@ export function drawEngineerStrip(ctx, font, state, view) {
   const text = hurt.length ? 'DAMAGED  ·  ' + hurt.map((n) => n.name).join(', ') : 'ALL SYSTEMS OK';
   font.draw(ctx, text, 156, 343, hurt.length ? (worst ? COL.ember[2] : COL.ochre[2]) : COL.faint);
   // The keys for the power are shown as long as there is no damage to tell about.
-  if (!hurt.length) font.draw(ctx, 'LEFT RIGHT PICK  ·  UP DOWN POWER', 466, 343, COL.faint, { align: 'r' });
+  // Beside it: the overcharge, or the keys for the power as long as there is nothing else to tell.
+  const surge = surgeNote(state);
+  const busy = state.ship.surge.sys || state.ship.surge.cool > 0;
+  if (!hurt.length)
+    font.draw(
+      ctx,
+      busy ? surge.text : 'LEFT RIGHT PICK  ·  UP DOWN POWER  ·  Z OVERCHARGE',
+      466,
+      343,
+      busy ? surge.color : COL.faint,
+      { align: 'r' },
+    );
+  else if (busy) label(ctx, font, 478, 333, surge.text, { fg: surge.color });
   drawLockCode(ctx, font, state);
 }
 

@@ -14,7 +14,7 @@ import { rect, label, bar } from './draw.js';
 import { drawMiniMap } from './map.js';
 import { drawEngineerStrip } from './engineer.js';
 import { RISK } from './looks.js';
-import { drawTargets, drawCourse } from './instruments.js';
+import { drawTargets, drawCourse, drawMarks, surgeLine, engineerMark } from './instruments.js';
 
 const fmtTime = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 // Colours for the status lines at the top: calm, a warning, an alarm, good news.
@@ -138,6 +138,9 @@ function statusLines(state, me, dock) {
   // Why the ship does not answer when the engines have been given no power. The Gunner is told the same about
   // the weapons next to them, see drawGunnerPanel.
   if (captain && ship.power.engines <= 0) lines.push({ text: 'ENGINES OFFLINE  ·  NO POWER', ...ALARM });
+  // An overcharge that waits for this post comes first, and then what the Engineer has pointed out.
+  lines.push(surgeLine(state, me.post));
+  if (me.post !== 'engineer') lines.push(engineerMark(state));
   if (state.jump) {
     const left = Math.ceil(jumpCharge(ship) - state.jump.t);
     lines.push({ text: `JUMPING TO ${state.sectors[state.jump.to].name} IN ${left} S`, ...READY });
@@ -233,6 +236,7 @@ export function drawHud(ctx, state, view, assets, dock) {
       label(ctx, font, VIEW_W / 2, 8 + i * 16, l.text, { anchor: 'c', fg: l.color, border: l.border }),
     );
   drawBars(ctx, font, state);
+  drawMarks(ctx, font, state, view.cam, me.post);
   if (me.post === 'captain') {
     drawCaptainPanel(ctx, font, state);
     drawCourse(ctx, font, state, view, view.cam);
@@ -263,6 +267,7 @@ const HELP = [
   ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     F  USE WHAT YOU ARE DOCKED AT'],
   ['CAPTAIN', 'W S  THROTTLE     A D  TURN     X  FULL STOP     E  DOCK AND UNDOCK     R  DARTS     SHIFT  BOOST'],
   ['', 'C  SET A COURSE FOR THE NEXT PLACE ON THE MAP'],
+  ['ALL POSTS', 'T  MARK A SHIP OR A DAMAGED PART FOR THE OTHERS     Z  BUILD UP OR LET GO AN OVERCHARGE'],
   ['', 'ON THE MAP  CLICK A STAR CHART TO JUMP TO THAT SECTOR'],
   ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE     Q E  CHANGE WEAPON'],
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW     SHIFT CLICK  QUEUE'],

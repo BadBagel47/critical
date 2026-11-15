@@ -43,7 +43,9 @@ function boltMeetsShips(state, b) {
     if (b.side === CREW ? !struckByCrew(state, v) : !enemies(state, b.side, v.side)) continue;
     b.ttl = 0;
     spark(state, b, 0.2);
-    hurtVessel(state, v, b.dmg, b.side);
+    // The crew's shots hit the ship that the Captain has marked a little harder.
+    const marked = b.side === CREW && state.marks.captain === v.id;
+    hurtVessel(state, v, b.dmg * (marked ? B.MARK_BONUS : 1), b.side);
     return;
   }
   if (enemies(state, b.side, CREW)) boltMeetsFrigate(state, b);

@@ -10,6 +10,19 @@ export const B = {
   TURN_RATE: 1.25,
   TURN_SMOOTH: 6,
   THROTTLE_RATE: 0.9,
+  // The overcharge: how long it takes to build up, how long it lasts, how long it cools, and what it gives.
+  SURGE_CHARGE: 6,
+  SURGE_TIME: 5,
+  SURGE_COOL: 20,
+  SURGE_WEAPONS: 1.8,
+  SURGE_ENGINES: 1.7,
+  SURGE_SHIELD: 0.4,
+  SURGE_RECHARGE: 3,
+  // Marks: how near the aim an enemy has to be for the Gunner to mark it, how far off the Captain can mark
+  // one, and how much harder the crew's shots hit the one the Captain has marked.
+  MARK_REACH: 70,
+  MARK_RANGE: 1200,
+  MARK_BONUS: 1.15,
   // A system that the Engineer gives no power does not work at all.
   ENGINE_POWER: [0, 0.6, 0.85, 1.0, 1.25],
   // standing with factions and free stations, from -100 to 100. At or above `friendly` a side is friendly.

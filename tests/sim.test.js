@@ -10,6 +10,7 @@ import {
   dockPort,
   fireInterval,
   speedOf,
+  weaponPower,
 } from '../src/sim/ship.js';
 import { damageShip } from '../src/sim/damage.js';
 import { thingsOf, portsOf, solidCircles, dockTargets } from '../src/sim/things.js';
@@ -1726,4 +1727,77 @@ test('a station that is taken over becomes a trading floor', () => {
   step(s, { system: { board: [0] } }, DT);
   assert.equal(st.interior.trade, true);
   assert.equal(st.interior.desks.length, 3);
+});
+
+// ---------- what the posts do for each other ----------
+test('the Engineer builds up an overcharge and the post that runs the system lets it go', () => {
+  const s = quiet(createState(1));
+  const surge = s.ship.surge;
+  step(s, { engineer: { surge: 'weapons' } }, DT);
+  assert.equal(surge.sys, 'weapons');
+  step(s, { gunner: { surge: true } }, DT);
+  assert.equal(surge.left, 0, 'it cannot be let go before it is full');
+  run(s, {}, B.SURGE_CHARGE + 0.1);
+  assert.equal(surge.charge, 1);
+  const before = weaponPower(s.ship);
+  step(s, { captain: { surge: true } }, DT);
+  assert.equal(surge.left, 0, 'the Captain does not run the weapons');
+  step(s, { gunner: { surge: true } }, DT);
+  assert.ok(surge.left > 0);
+  assert.ok(Math.abs(weaponPower(s.ship) - before * B.SURGE_WEAPONS) < 1e-9, 'the weapons are stronger while it lasts');
+  run(s, {}, B.SURGE_TIME + 0.1);
+  assert.ok(Math.abs(weaponPower(s.ship) - before) < 1e-9, 'and as before when it is over');
+  step(s, { engineer: { surge: 'engines' } }, DT);
+  assert.equal(surge.sys, null, 'a new one cannot be started while it cools');
+  run(s, {}, B.SURGE_COOL);
+  step(s, { engineer: { surge: 'engines' } }, DT);
+  assert.equal(surge.sys, 'engines');
+  s.ship.power.engines = 0;
+  step(s, {}, DT);
+  assert.equal(surge.sys, null, 'a system without power loses its charge');
+});
+
+test('an overcharge of the shields gives some shield back at once, and the Engineer lets it go', () => {
+  const s = quiet(createState(1));
+  s.ship.shield = 0;
+  s.ship.lastHit = s.time;
+  step(s, { engineer: { surge: 'shields' } }, DT);
+  run(s, {}, B.SURGE_CHARGE + 0.1);
+  step(s, { engineer: { surge: 'shields' } }, DT);
+  assert.ok(s.ship.surge.left > 0, 'the same key lets it go');
+  assert.ok(s.ship.shield >= shieldMax(s.ship) * B.SURGE_SHIELD - 1);
+});
+
+test("the posts mark things for each other, and the Captain's mark makes shots hit harder", () => {
+  const s = quiet(createState(1));
+  const a = makeVessel(s, 'gunboat', s.ship.x + 200, s.ship.y, 'pirate');
+  const b = makeVessel(s, 'gunboat', s.ship.x + 400, s.ship.y, 'pirate');
+  s.vessels.push(a, b);
+  step(s, { gunner: { mark: { x: b.x + 10, y: b.y } } }, DT);
+  assert.equal(s.marks.gunner, b.id, 'the Gunner marks the one nearest the aim');
+  step(s, { gunner: { mark: { x: b.x + 10, y: b.y } } }, DT);
+  assert.equal(s.marks.gunner, null, 'and marking it again takes the mark away');
+  step(s, { captain: { mark: true } }, DT);
+  assert.equal(s.marks.captain, a.id, 'the Captain starts with the nearest');
+  step(s, { captain: { mark: true } }, DT);
+  assert.equal(s.marks.captain, b.id);
+  // The same shot at both: the marked one loses more.
+  const hpA = a.hp,
+    hpB = b.hp;
+  for (const v of [a, b]) s.bolts.push({ x: v.x, y: v.y, vx: 0, vy: 0, ttl: 1, side: 'crew', dmg: 10 });
+  step(s, {}, DT);
+  assert.ok(hpB - b.hp > hpA - a.hp, 'the marked ship is hit harder');
+  assert.ok(Math.abs(hpB - b.hp - (hpA - a.hp) * B.MARK_BONUS) < 1e-6);
+  s.vessels = [a];
+  step(s, {}, DT);
+  assert.equal(s.marks.captain, null, 'a mark goes when the ship is gone');
+  s.ship.nodes[5].hp = 20;
+  s.ship.nodes[1].hp = 60;
+  step(s, { engineer: { mark: true } }, DT);
+  assert.equal(s.marks.engineer, 5, 'the Engineer points out the worst damage first');
+  step(s, { engineer: { mark: true } }, DT);
+  assert.equal(s.marks.engineer, 1);
+  s.ship.nodes[1].hp = 100;
+  step(s, {}, DT);
+  assert.equal(s.marks.engineer, null, 'and the mark goes when the part is mended');
 });

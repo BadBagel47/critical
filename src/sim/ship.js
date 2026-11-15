@@ -27,6 +27,9 @@ export function createShip() {
     turretAngle: 0,
     // The turrets on the wings turn by themselves, so that all of them point at what the Gunner aims at.
     wingAngles: [0, 0],
+    // The overcharge, see teamwork.js: the system it is for, how full it is, how long it still lasts, and how
+    // long it still has to cool.
+    surge: { sys: null, charge: 0, left: 0, cool: 0 },
     fireCooldown: 0,
     firing: false,
     power: { weapons: 2, shields: 2, engines: 2, repair: 2 },
@@ -80,7 +83,10 @@ export function setPower(state, sys, delta) {
 
 export const speedOf = (body) => Math.hypot(body.vx, body.vy);
 export const shipNose = (ship) => toWorld(ship, SHIP_GEOM.nose);
-export const weaponPower = (ship) => B.WEAPON_POWER[ship.power.weapons] * nodeFactor(ship, 'bow');
+// Whether a system is overcharged right now.
+export const surging = (ship, sys) => ship.surge.left > 0 && ship.surge.sys === sys;
+export const weaponPower = (ship) =>
+  B.WEAPON_POWER[ship.power.weapons] * nodeFactor(ship, 'bow') * (surging(ship, 'weapons') ? B.SURGE_WEAPONS : 1);
 export function fireInterval(ship) {
   const power = weaponPower(ship);
   return power > 0 ? B.FIRE_INTERVAL / power : Infinity;

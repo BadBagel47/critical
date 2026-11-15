@@ -7,7 +7,8 @@
 import { B } from './balance.js';
 import { stepCaptain, stepGunner, stepEngineer, stepDrones } from './posts.js';
 import { crewCommands } from './players.js';
-import { nodeFactor } from './ship.js';
+import { nodeFactor, surging } from './ship.js';
+import { stepSurge, stepMarks } from './teamwork.js';
 import { solidCircles, stepSalvage, findThing } from './things.js';
 import { stepVessels, stepAlarm } from './vessels.js';
 import { stepBolts, stepRockets, stepCollisions } from './shots.js';
@@ -33,9 +34,11 @@ function rechargeShield(state, dt) {
     ship.shield = Math.max(0, ship.shield - (shieldMax(ship) / B.SHIELD_DROP) * dt);
     return;
   }
-  if (state.time - ship.lastHit <= B.SHIELD_DELAY) return;
+  const surge = surging(ship, 'shields');
+  if (!surge && state.time - ship.lastHit <= B.SHIELD_DELAY) return;
   const emitters = (nodeFactor(ship, 'port') + nodeFactor(ship, 'starboard')) / 2;
-  ship.shield = Math.min(shieldMax(ship), ship.shield + B.SHIELD_RECHARGE[ship.power.shields] * emitters * dt);
+  const rate = B.SHIELD_RECHARGE[ship.power.shields] * (surge ? B.SURGE_RECHARGE : 1);
+  ship.shield = Math.min(shieldMax(ship), ship.shield + rate * emitters * dt);
 }
 
 // What a ship is docked at lends it an extra shield, so that the crew has a better chance while they are away.
@@ -90,6 +93,8 @@ export function step(state, cmds, dt) {
   stepMap(state, dt);
   rechargeShield(state, dt);
   stepDockShield(state, dt);
+  stepSurge(state, dt);
+  stepMarks(state);
   return state;
 }
 

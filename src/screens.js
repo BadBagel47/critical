@@ -98,6 +98,8 @@ function captainInput(game, out) {
     dock: keys.hit('KeyE'),
     darts: keys.hit('KeyR'),
     boost: keys.down('ShiftLeft', 'ShiftRight'),
+    surge: keys.hit('KeyZ'),
+    mark: keys.hit('KeyT'),
   };
 }
 
@@ -116,6 +118,8 @@ function gunnerInput(game, out) {
     aim,
     fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5,
     weapon: keys.hit('KeyE') ? 1 : keys.hit('KeyQ') ? -1 : null,
+    surge: keys.hit('KeyZ'),
+    mark: keys.hit('KeyT') ? aim : null,
   };
 }
 
@@ -125,7 +129,7 @@ function engineerInput(game, out) {
   const { keys, state, view } = game;
   const rows = SYSTEM_KEYS.length;
   onBoard(game, out);
-  const cmd = { power: [], repair: null, tool: quickTool(keys) };
+  const cmd = { power: [], repair: null, tool: quickTool(keys), surge: null, mark: keys.hit('KeyT') };
   // The keys follow how the systems are laid out. On the panel they are in a column: up and down pick one,
   // left and right set its power. In the strip beside the view of space they are in a row, so there left and
   // right pick one, and up and down raise and lower its power.
@@ -146,6 +150,8 @@ function engineerInput(game, out) {
   if (keys.hit(...after)) view.engRow = (view.engRow + 1) % rows;
   if (keys.hit(...more)) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: 1 });
   if (keys.hit(...less)) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: -1 });
+  // Z builds up an overcharge for the system that is picked.
+  if (keys.hit('KeyZ')) cmd.surge = SYSTEM_KEYS[view.engRow];
   if (keys.mouse.clicked && view.engOpen) {
     const click = engineerClick(state, keys.mouse.x, keys.mouse.y, keys.mouse.shift);
     if (click && click.power) cmd.power.push(...click.power);
