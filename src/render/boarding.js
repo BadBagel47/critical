@@ -1,7 +1,7 @@
 // The boarding view: the inside of a wreck seen from above.
 import { VIEW_W, VIEW_H, COL } from '../config.js';
 import { B } from '../sim/balance.js';
-import { TILE, tileAt, useTarget } from '../sim/boarding.js';
+import { TILE, tileAt, useTarget, cameraWay } from '../sim/boarding.js';
 import { FACTIONS } from '../sim/sides.js';
 import { sprite, rect, label, bar } from './draw.js';
 import { drawStars } from './space.js';
@@ -467,7 +467,10 @@ function lightsOf(state, it, style, origin) {
     }
   round(it.entry.x, it.entry.y, 46, '190,236,200', 0.55);
   for (const l of it.loot) small(l.x, l.y, 11, l.type === 'crate' ? '219,164,69' : '155,228,238', 0.4);
-  for (const e of [...it.guards.filter(awake), ...it.turrets]) round(e.x, e.y, 19, RED, 0.6);
+  const armed = it.turrets.filter((t) => t.out <= 0 && t.turned <= 0);
+  for (const e of [...it.guards.filter(awake), ...armed]) round(e.x, e.y, 19, RED, 0.6);
+  for (const t of it.turrets) if (t.turned > 0) round(t.x, t.y, 19, '150,214,110', 0.6);
+  for (const c of it.cameras) small(c.x, c.y, 10, '155,228,238', 0.5);
   for (const e of it.sentries) round(e.x, e.y, 19, '155,228,238', 0.6);
   for (const a of it.avatars) {
     round(a.x, a.y, B.LAMP_NEAR, WARM, 0.6);
@@ -514,7 +517,7 @@ function drawGlows(ctx, state, it, style, origin) {
     }
   ctx.globalAlpha = 1;
   ctx.fillStyle = COL.ember[2];
-  for (const e of [...it.guards.filter(awake), ...it.turrets]) {
+  for (const e of [...it.guards.filter(awake), ...it.turrets.filter((t) => t.out <= 0 && t.turned <= 0)]) {
     const f = forward(e.heading);
     ctx.fillRect(Math.round(e.x + f.x * 3) - 1, Math.round(e.y + f.y * 3) - 1, 2, 2);
   }
@@ -527,7 +530,7 @@ function drawGlows(ctx, state, it, style, origin) {
 // What sneaking needs to be seen: where each guard that has noticed nobody is looking, how sure the guards
 // are of having seen the player, and which guards sleep. It is drawn over the dark, since it is there to be
 // planned by. A guard sees far in the light and only near in the dark, so the near part is drawn stronger.
-function drawWatch(ctx, font, it, me) {
+function drawWatch(ctx, font, state, it, me) {
   for (const g of it.guards) {
     if (!awake(g)) {
       if (g.sleep > 0) font.draw(ctx, 'Z', g.x + 5, g.y - 15, COL.ion[2]);
@@ -549,6 +552,46 @@ function drawWatch(ctx, font, it, me) {
     wedge(B.GUARD_SIGHT, 0.06);
     wedge(B.GUARD_SIGHT_DARK, 0.14);
     ctx.globalAlpha = 1;
+  }
+  // A turret watches a narrow cone, and an awake one follows within a wider arc about the way it rests.
+  for (const t of it.turrets) {
+    if (t.out > 0) {
+      font.draw(ctx, 'OUT  ' + Math.ceil(t.out), t.x, t.y - 18, COL.ion[2], { align: 'c' });
+      continue;
+    }
+    if (t.turned > 0) {
+      font.draw(ctx, 'YOURS  ' + Math.ceil(t.turned), t.x, t.y - 18, COL.acid[2], { align: 'c' });
+      continue;
+    }
+    const hot = t.hot > 0 || it.mood === 'alarm';
+    const f = forward(t.rest);
+    const area = litArea(it, t.x, t.y, B.TURRET_SIGHT, Math.atan2(f.y, f.x), hot ? B.TURRET_ARC : B.TURRET_FOV);
+    ctx.globalAlpha = hot ? 0.07 : 0.16;
+    ctx.fillStyle = COL.ember[1];
+    ctx.beginPath();
+    ctx.moveTo(area[0][0], area[0][1]);
+    for (let i = 1; i < area.length; i++) ctx.lineTo(area[i][0], area[i][1]);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  // A camera, and what it sees right now. It sweeps, and hurts nobody.
+  for (const c of it.cameras) {
+    const live = it.mood !== 'alarm';
+    if (live) {
+      const f = forward(cameraWay(state, c));
+      const area = litArea(it, c.x, c.y, B.CAMERA_RANGE, Math.atan2(f.y, f.x), B.CAMERA_FOV);
+      ctx.globalAlpha = 0.13;
+      ctx.fillStyle = COL.ion[2];
+      ctx.beginPath();
+      ctx.moveTo(area[0][0], area[0][1]);
+      for (let i = 1; i < area.length; i++) ctx.lineTo(area[i][0], area[i][1]);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    rect(ctx, c.x - 3, c.y - 3, 6, 6, '#1c1c28', COL.out);
+    rect(ctx, c.x - 1, c.y - 1, 2, 2, live ? COL.ion[2] : COL.dim);
   }
   // Over the player: how close the guards are to being sure.
   if (me && me.spotted > 0) {
@@ -600,7 +643,7 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
     drawGlows(ctx, state, it, style, origin);
   }
   // What is drawn from here on is not dimmed by the dark.
-  drawWatch(ctx, font, it, me);
+  drawWatch(ctx, font, state, it, me);
   ctx.fillStyle = COL.ember[2];
   for (const g of it.guards) {
     if (g.mode !== 'alert' || !awake(g)) continue;

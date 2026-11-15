@@ -70,6 +70,7 @@ function away(state, me) {
   const at = av && useTarget(it, av);
   if (!at) return [];
   if (at.type === 'guard') return [use('takedown', 'TAKE DOWN', 'TAKE DOWN')];
+  if (at.type === 'turret') return [use('turn', 'TURN THE TURRET', 'TURN', { hold: true, progress: it.turning })];
   if (at.type === 'airlock') return [use('leave', 'BACK TO THE SHIP', 'LEAVE')];
   if (at.type === 'desk') return [use('trade', DESK[at.desk.type], 'TRADE')];
   if (at.type === 'terminal') {

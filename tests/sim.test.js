@@ -2056,3 +2056,198 @@ test('guards walk the same round every time, and one at a post looks about in th
     'and every one has ways to look',
   );
 });
+
+// ---------- turrets that watch a cone, cameras, and a light that leads a guard away ----------
+// A hostile station with no guards and one turret, and a boarder in front of it or to the side of it.
+function facingTurret() {
+  const { s, it, av } = sneaking();
+  it.guards = [];
+  it.cameras = [];
+  const { at, toward } = spotNear(it, av, 70);
+  const t = {
+    id: s.nextId++,
+    ...at,
+    hp: B.TURRET_HP,
+    heading: toward,
+    rest: toward,
+    cool: 0,
+    hot: 0,
+    out: 0,
+    turned: 0,
+  };
+  it.turrets = [t];
+  s.players[0].hp = 10000;
+  return { s, it, av, t, toward };
+}
+
+test('a turret watches a narrow cone: outside it nothing happens, inside it the turret fires and the alarm goes', () => {
+  const { s, it, t, toward } = facingTurret();
+  // Looking the other way, it does not see the boarder.
+  t.rest = t.heading = toward + Math.PI;
+  run(s, { away: { 0: {} } }, 2);
+  assert.equal(it.mood, 'lockdown');
+  assert.equal(t.hot, 0);
+  t.rest = t.heading = toward;
+  run(s, { away: { 0: {} } }, 0.5);
+  assert.equal(it.mood, 'alarm', 'stepping into its cone gives the crew away');
+  assert.ok(s.players[0].hp < 10000 || it.bolts.some((b) => b.owner === 'enemy'), 'and it fires');
+});
+
+test('an awake turret follows its target within an arc, and goes back to rest when it has lost it', () => {
+  const { s, it, av, t, toward } = facingTurret();
+  run(s, { away: { 0: {} } }, 0.3);
+  assert.ok(t.hot > 0);
+  // The boarder steps to the side: outside the narrow cone, but inside the arc.
+  const side = toward + 0.7;
+  Object.assign(av, { x: t.x + Math.sin(side) * 60, y: t.y - Math.cos(side) * 60 });
+  if (los(it, t.x, t.y, av.x, av.y) && !blocked(it, av.x, av.y, 5)) {
+    run(s, { away: { 0: {} } }, 1);
+    assert.ok(Math.abs(angleDiff(t.heading, side)) < 0.2, 'it has turned after them');
+  }
+  // Behind it, out of the arc: it loses them and turns back.
+  const behind = toward + Math.PI;
+  Object.assign(av, { x: t.x + Math.sin(behind) * 12, y: t.y - Math.cos(behind) * 12 });
+  it.mood = 'lockdown';
+  run(s, { away: { 0: {} } }, B.TURRET_HOLD + 4);
+  assert.equal(t.hot, 0);
+  assert.ok(Math.abs(angleDiff(t.heading, t.rest)) < 0.05, 'it points the way it rests again');
+});
+
+test("a station's turret cannot be destroyed, only put out for a while by a grenade", () => {
+  const { s, it, av, t } = facingTurret();
+  t.rest = t.heading = t.rest + Math.PI;
+  run(s, { away: { 0: { aim: { x: t.x, y: t.y }, fire: true } } }, 3);
+  assert.equal(t.hp, B.TURRET_HP, 'shots do it no harm');
+  assert.ok(it.turrets.includes(t));
+  step(s, { away: { 0: { grenade: { x: t.x, y: t.y } } } }, DT);
+  run(s, { away: { 0: {} } }, 1.5);
+  assert.ok(t.out > B.TURRET_OUT - 3, 'a grenade puts it out');
+  t.rest = t.heading = headingTo(av.x - t.x, av.y - t.y);
+  const hp = s.players[0].hp;
+  it.bolts = [];
+  run(s, { away: { 0: {} } }, 2);
+  assert.ok(!it.bolts.some((b) => b.owner === 'enemy') && s.players[0].hp === hp, 'while it is out it does nothing');
+  run(s, { away: { 0: {} } }, B.TURRET_OUT);
+  assert.ok(t.out <= 0, 'and then it is back');
+  // In a wreck a turret can still be shot to pieces.
+  const w = boarded();
+  w.it.guards = [];
+  const wt = w.it.turrets[0];
+  if (wt) {
+    wt.hp = 1;
+    wt.rest = wt.heading = headingTo(w.av.x - wt.x, w.av.y - wt.y) + Math.PI;
+    w.s.players[0].hp = 10000;
+    Object.assign(w.av, { x: wt.x + Math.sin(wt.rest) * -20, y: wt.y - Math.cos(wt.rest) * -20 });
+    for (let i = 0; i < 120 && w.it.turrets.includes(wt); i++) {
+      step(w.s, { away: { 0: { aim: { x: wt.x, y: wt.y }, fire: true } } }, DT);
+    }
+    assert.ok(!w.it.turrets.includes(wt));
+  }
+});
+
+test('the Engineer turns a turret to the crew, and nobody else can', () => {
+  const { s, it, av, t } = facingTurret();
+  t.rest = t.heading = t.rest + Math.PI;
+  Object.assign(av, { x: t.x + Math.sin(t.rest) * -14, y: t.y - Math.cos(t.rest) * -14 });
+  av.role = 'gunner';
+  run(s, { away: { 0: { use: true } } }, B.TURRET_TURN_TIME + 0.5);
+  assert.equal(t.turned, 0, 'a Gunner cannot');
+  av.role = 'engineer';
+  run(s, { away: { 0: { use: true } } }, B.TURRET_TURN_TIME / 2);
+  assert.ok(it.turning > 0.3 && t.turned === 0, 'it takes a while');
+  run(s, { away: { 0: {} } }, 0.1);
+  assert.equal(it.turning, 0, 'and letting go loses the work');
+  run(s, { away: { 0: { use: true } } }, B.TURRET_TURN_TIME + 0.1);
+  assert.ok(t.turned > 0);
+  // A guard in front of it is now what it fires at.
+  const g = { ...JSON.parse(JSON.stringify(boarded().it.guards[0])), id: s.nextId++ };
+  Object.assign(g, {
+    x: t.x + Math.sin(t.rest) * 40,
+    y: t.y - Math.cos(t.rest) * 40,
+    hp: 5,
+    mode: 'idle',
+    route: [],
+    path: [],
+  });
+  if (!blocked(it, g.x, g.y, 5) && los(it, t.x, t.y, g.x, g.y)) {
+    it.guards = [g];
+    run(s, { away: { 0: {} } }, 3);
+    assert.equal(it.guards.length, 0, 'the turned turret shot the guard');
+  }
+  run(s, { away: { 0: {} } }, B.TURRET_TURNED + 1);
+  assert.ok(t.turned <= 0, "after a while it is the station's again");
+});
+
+test("the crew's own turret can only be set down in a fight, and is gone when the fight is over", () => {
+  const { s, it, av } = boarded();
+  it.turrets = [];
+  av.sentries = 1;
+  for (const g of it.guards) Object.assign(g, { mode: 'idle', route: [], looks: [g.heading] });
+  // Out of everyone's sight, so that nothing starts.
+  it.guards = [];
+  step(s, { away: { 0: { deploy: true } } }, DT);
+  assert.equal(it.sentries.length, 0, 'with no fight on it stays in the pack');
+  assert.equal(av.sentries, 1);
+  const g = {
+    ...JSON.parse(JSON.stringify(boarded().it.guards[0])),
+    id: s.nextId++,
+    mode: 'alert',
+    seen: { x: av.x, y: av.y },
+    lost: 0,
+  };
+  const far = it.rooms.map((r) => r.mid).find((p) => !los(it, p.x, p.y, av.x, av.y));
+  Object.assign(g, far);
+  it.guards = [g];
+  step(s, { away: { 0: { deploy: true } } }, DT);
+  assert.equal(it.sentries.length, 1);
+  it.guards = [];
+  run(s, { away: { 0: {} } }, B.SENTRY_LINGER + 0.5);
+  assert.equal(it.sentries.length, 0, 'it does not outlast the fight');
+});
+
+test('a camera that sweeps over a boarder gives them away, and one that looks elsewhere does not', () => {
+  const { s, it, av } = sneaking();
+  it.guards = [];
+  it.turrets = [];
+  const { at, toward } = spotNear(it, av, 60);
+  // A camera that does not sweep, to keep the test simple: it looks straight at the boarder, or away.
+  const cam = { id: s.nextId++, ...at, rest: toward + Math.PI, phase: 0 };
+  it.cameras = [cam];
+  const still = B.CAMERA_SWEEP;
+  B.CAMERA_SWEEP = 0;
+  try {
+    run(s, { away: { 0: {} } }, 2);
+    assert.equal(it.mood, 'lockdown');
+    cam.rest = toward;
+    run(s, { away: { 0: {} } }, B.GUARD_NOTICE * 0.4);
+    assert.ok(av.spotted > 0 && it.mood === 'lockdown', 'it takes a moment');
+    run(s, { away: { 0: {} } }, B.GUARD_NOTICE);
+    assert.equal(it.mood, 'alarm');
+  } finally {
+    B.CAMERA_SWEEP = still;
+  }
+});
+
+test('a guard that sees a flare goes to look at it, once, and then back to its post', () => {
+  const { s, it, av, g } = sneaking();
+  s.ship.mods.flare = 1;
+  av.flares = 2;
+  av.lamp = false;
+  const { at, toward } = spotNear(it, av, 110);
+  // The guard looks toward where the flare will land, which is not where the boarder stands.
+  const land = { x: (av.x + at.x) / 2, y: (av.y + at.y) / 2 };
+  post(g, at, toward);
+  // The boarder is out of its sight: in the dark and far enough off.
+  assert.equal(inSight(it, g, av), false);
+  step(s, { away: { 0: { flare: land } } }, DT);
+  run(s, { away: { 0: {} } }, 1.5);
+  if (inSight(it, g, av)) return;
+  assert.ok(g.curious, 'it has seen the light');
+  assert.equal(it.mood, 'lockdown', 'a light gives nobody away by itself');
+  run(s, { away: { 0: {} } }, 14);
+  if (it.mood === 'alarm') return;
+  assert.equal(g.curious, null, 'when it has looked, it lets it be');
+  assert.equal(it.flares[0].seen.includes(g.id), true);
+  run(s, { away: { 0: {} } }, 3);
+  assert.equal(g.curious, null, 'and it does not go back to the same light');
+});

@@ -19,6 +19,23 @@ export { TILE, tileAt, blocked, los };
 
 // ---------- generation ----------
 // The floor plan itself is made in layout.js. Here it is filled with guards, turrets and loot.
+// A turret. `rest` is the way it points while it watches. `hot` is how long it still follows what it has
+// seen, `out` how long it is still knocked out, and `turned` how long it is still on the crew's side.
+const newTurret = (state, p, rest) => ({
+  id: state.nextId++,
+  x: p.x,
+  y: p.y,
+  hp: B.TURRET_HP,
+  heading: rest,
+  rest,
+  cool: 1,
+  hot: 0,
+  out: 0,
+  turned: 0,
+});
+// Which way a camera looks right now.
+export const cameraWay = (state, c) => c.rest + Math.sin(state.time * B.CAMERA_SPEED + c.phase) * B.CAMERA_SWEEP;
+
 // A free spot on the floor inside a box of walls (a room or a corridor): not too close to anything in `taken`,
 // and at least `away` from the way in.
 function spotIn(state, it, box, taken, away = 0) {
@@ -58,6 +75,8 @@ export function createInterior(state, wreck) {
     mood: null,
     // A spot that the Captain has marked on the boarding radar, for the boarders to see.
     pin: null,
+    // How far the Engineer has come with turning a turret, from 0 to 1.
+    turning: 0,
     doorCut: 0,
     doorOpen: false,
     terminal: null,
@@ -68,6 +87,7 @@ export function createInterior(state, wreck) {
     avatars: [],
     guards: [],
     turrets: [],
+    cameras: [],
     sentries: [],
     loot: [],
     bolts: [],
@@ -103,7 +123,7 @@ export function createInterior(state, wreck) {
   for (let i = 0; i < difficulty - 1; i++) {
     const p = i === 0 ? { x: it.far.x, y: it.far.y + (rand(state) - 0.5) * TILE } : spot(anyRoom(), 8 * TILE);
     taken.push(p);
-    it.turrets.push({ id: state.nextId++, x: p.x, y: p.y, hp: B.TURRET_HP, heading: Math.PI * 1.5, cool: 1 });
+    it.turrets.push(newTurret(state, p, Math.PI * 1.5));
   }
   // Loot: fuel cells and crates in the rooms, and the best of it in the vault.
   for (let i = 0; i < 2 + difficulty; i++) addLoot(anyRoom(), () => ({ type: 'cell' }));
@@ -127,6 +147,14 @@ export function createInterior(state, wreck) {
     // A station that counts the crew as an enemy is in lockdown: dark, and on its guard.
     it.mood = 'lockdown';
     it.dark = true;
+    // Cameras in some of its rooms. Each sweeps from side to side about the way to the room's door.
+    for (const room of open
+      .map((i) => rooms[i])
+      .filter((r) => r.door)
+      .slice(0, 3)) {
+      const rest = headingTo(room.door.x - room.mid.x, room.door.y - room.mid.y);
+      it.cameras.push({ id: state.nextId++, x: room.mid.x, y: room.mid.y, rest, phase: rand(state) * TAU });
+    }
   }
   // On a station most guards walk a round. In a wreck most of them stand at a post.
   planRounds(state, it, wreck.kind === 'station' ? 0.7 : 0.34);
@@ -144,6 +172,7 @@ export function makeTrade(state, it) {
   it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
   it.guards = [];
   it.turrets = [];
+  it.cameras = [];
   it.bolts = [];
   it.grenades = [];
   it.flares = [];
@@ -220,6 +249,7 @@ export function tryBoard(state, playerId) {
       sentries: 0,
       flares: 0,
       lamp: false,
+      role: player.backTo,
       spotted: 0,
       watched: false,
       weapon: 'rifle',
@@ -263,6 +293,8 @@ export function tryBoard(state, playerId) {
     sentries: has(ship, 'sentry') ? 1 : 0,
     flares: has(ship, 'flare') ? B.FLARES : 0,
     lamp: true,
+    // The post that the boarder left to come here. Some things inside can only be done by one post.
+    role: player.backTo,
     // How sure the guards are that they have seen this boarder, from 0 to 1, and whether one is watching now.
     spotted: 0,
     watched: false,
@@ -301,6 +333,10 @@ function leave(state, it, av, teleported) {
     }
   }
 }
+
+// Whether there is a fight on: the place is hunting the crew, or a guard or a turret is after someone.
+const fighting = (it) =>
+  it.mood === 'alarm' || it.guards.some((g) => g.mode === 'alert' && awake(g)) || it.turrets.some((t) => t.hot > 0);
 
 // Something has given the crew away at `at`. A place with an alarm sounds it, and every guard that is awake
 // knows where to look. A wreck has no alarm: there only the guards that noticed are after the crew.
@@ -361,7 +397,11 @@ function explode(state, it, g) {
   state.events.push({ type: 'grenade' });
   const inBlast = (e) => dist(e.x, e.y, g.x, g.y) < B.GRENADE_RADIUS && los(it, g.x, g.y, e.x, e.y);
   for (const e of it.guards) if (inBlast(e)) e.hp -= B.GRENADE_DMG;
-  for (const e of it.turrets) if (inBlast(e)) e.hp -= B.GRENADE_DMG;
+  for (const e of it.turrets) {
+    if (!inBlast(e)) continue;
+    if (it.mood) e.out = B.TURRET_OUT;
+    else e.hp -= B.GRENADE_DMG;
+  }
   for (const av of [...it.avatars]) if (inBlast(av)) hurtAvatar(state, it, av, B.GRENADE_SELF_DMG);
   heard(state, it, g);
 }
@@ -374,6 +414,9 @@ export function useTarget(it, av) {
   // A guard that sleeps can be taken down for the rest of the boarding, by the one who gets to it in time.
   const asleep = it.guards.find((g) => g.sleep > 0 && !g.down && dist(g.x, g.y, av.x, av.y) < B.TAKE_DOWN_REACH);
   if (asleep) return { type: 'guard', guard: asleep };
+  // The Engineer can turn a turret to the crew's side for a while, standing next to it.
+  const turret = av.role === 'engineer' && it.turrets.find((t) => t.turned <= 0 && dist(t.x, t.y, av.x, av.y) < 20);
+  if (turret) return { type: 'turret', turret };
   if (atAirlockDoor(it, av)) return { type: 'airlock' };
   if (it.trade) {
     const desk = it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20);
@@ -473,7 +516,17 @@ function throwFlare(state, it, av, at) {
   const d = dist(av.x, av.y, at.x, at.y);
   const dir = d > 1 ? { x: (at.x - av.x) / d, y: (at.y - av.y) / d } : forward(av.heading);
   av.flares--;
-  it.flares.push({ x: av.x, y: av.y, dx: dir.x, dy: dir.y, left: Math.min(d, B.FLARE_RANGE), burn: B.FLARE_BURN });
+  // `seen` are the guards that have been to look at it, so that each of them comes only once.
+  const flare = {
+    x: av.x,
+    y: av.y,
+    dx: dir.x,
+    dy: dir.y,
+    left: Math.min(d, B.FLARE_RANGE),
+    burn: B.FLARE_BURN,
+    seen: [],
+  };
+  it.flares.push(flare);
   state.events.push({ type: 'flare' });
 }
 
@@ -568,10 +621,29 @@ function stepAvatar(state, it, av, cmd, dt) {
     leave(state, it, av, false);
     return;
   }
+  // The crew's own turret is for a fight: it can only be set down while one is on, and it is gone when the
+  // fight is over.
   if (cmd.deploy && av.sentries > 0) {
-    av.sentries--;
-    it.sentries.push({ id: state.nextId++, x: av.x, y: av.y, hp: B.SENTRY_HP, heading: av.heading, cool: 0.3 });
-    state.events.push({ type: 'sentryDown' });
+    if (!fighting(it)) state.events.push({ type: 'sentryNoFight' });
+    else {
+      av.sentries--;
+      const sentry = { id: state.nextId++, x: av.x, y: av.y, hp: B.SENTRY_HP, heading: av.heading, cool: 0.3, calm: 0 };
+      it.sentries.push(sentry);
+      state.events.push({ type: 'sentryDown' });
+    }
+  }
+  // The Engineer turns a turret by holding the use key next to it.
+  const near = cmd.use ? useTarget(it, av) : null;
+  if (near && near.type === 'turret') {
+    it.turning = Math.min(1, it.turning + dt / B.TURRET_TURN_TIME);
+    it.working = true;
+    if (it.turning >= 1) {
+      near.turret.turned = B.TURRET_TURNED;
+      near.turret.out = 0;
+      near.turret.hot = 0;
+      it.turning = 0;
+      state.events.push({ type: 'turretTurned' });
+    }
   }
   workVaultDoor(state, it, av, cmd, dt);
   workTerminal(state, it, av, cmd, dt);
@@ -583,7 +655,7 @@ function stepSentry(state, it, s, dt) {
   s.cool -= dt;
   let target = null,
     best = B.SENTRY_RANGE;
-  for (const e of [...it.guards.filter(awake), ...it.turrets]) {
+  for (const e of [...it.guards.filter(awake), ...(it.mood ? [] : it.turrets)]) {
     const d = dist(s.x, s.y, e.x, e.y);
     if (d < best && los(it, s.x, s.y, e.x, e.y)) {
       best = d;
@@ -608,21 +680,14 @@ function stepSentry(state, it, s, dt) {
   }
 }
 
+// Says whether the turret has just noticed someone, for the place to act on.
 function stepTurret(state, it, t, dt) {
   t.cool -= dt;
-  let target = null,
-    best = B.TURRET_SIGHT;
-  for (const av of it.avatars) {
-    const d = dist(t.x, t.y, av.x, av.y);
-    if (d < best && los(it, t.x, t.y, av.x, av.y)) {
-      best = d;
-      target = av;
-    }
+  if (t.out > 0) {
+    t.out -= dt;
+    return false;
   }
-  if (!target) return;
-  const want = headingTo(target.x - t.x, target.y - t.y);
-  t.heading = turnToward(t.heading, want, B.TURRET_TURN * dt);
-  if (t.cool <= 0 && Math.abs(angleDiff(want, t.heading)) < 0.1) {
+  const shoot = (owner, dmg) => {
     const f = forward(t.heading);
     it.bolts.push({
       x: t.x + f.x * 9,
@@ -630,11 +695,66 @@ function stepTurret(state, it, t, dt) {
       vx: f.x * B.TURRET_BOLT_SPEED,
       vy: f.y * B.TURRET_BOLT_SPEED,
       ttl: 1.4,
-      owner: 'enemy',
-      dmg: B.TURRET_DMG,
+      owner,
+      dmg,
     });
     t.cool = B.TURRET_COOLDOWN;
+  };
+  const nearest = (list, ok) => {
+    let found = null,
+      best = B.TURRET_SIGHT;
+    for (const e of list) {
+      const d = dist(t.x, t.y, e.x, e.y);
+      if (d < best && ok(e) && los(it, t.x, t.y, e.x, e.y)) {
+        best = d;
+        found = e;
+      }
+    }
+    return found;
+  };
+  // Turned by the Engineer, it fires at the guards for a while, all round.
+  if (t.turned > 0) {
+    t.turned -= dt;
+    const foe = nearest(it.guards.filter(awake), () => true);
+    if (!foe) return false;
+    const want = headingTo(foe.x - t.x, foe.y - t.y);
+    t.heading = turnToward(t.heading, want, B.TURRET_TURN * dt);
+    if (t.cool <= 0 && Math.abs(angleDiff(want, t.heading)) < 0.1) shoot('crew', B.TURRET_DMG);
+    return false;
   }
+  // It watches a narrow cone. Awake, it follows what it sees within a wider arc about the way it rests.
+  const wasHot = t.hot > 0 || it.mood === 'alarm';
+  const arc = wasHot ? B.TURRET_ARC : B.TURRET_FOV;
+  const off = (e) => angleDiff(headingTo(e.x - t.x, e.y - t.y), t.rest);
+  const target = nearest(it.avatars, (e) => Math.abs(off(e)) < arc);
+  if (!target) {
+    t.hot = Math.max(0, t.hot - dt);
+    if (t.hot <= 0) t.heading = turnToward(t.heading, t.rest, B.TURRET_TURN * 0.5 * dt);
+    return false;
+  }
+  t.hot = B.TURRET_HOLD;
+  const want = headingTo(target.x - t.x, target.y - t.y);
+  t.heading = turnToward(t.heading, want, B.TURRET_TURN * dt);
+  if (t.cool <= 0 && Math.abs(angleDiff(want, t.heading)) < 0.1) shoot('enemy', B.TURRET_DMG);
+  if (!wasHot) t.seen = { x: target.x, y: target.y };
+  return !wasHot;
+}
+
+// A camera sees a boarder that is in its cone, in the light or not. It gives them away like a guard does:
+// not at once, but when it has watched them for long enough.
+function stepCamera(state, it, c, dt) {
+  if (it.mood === 'alarm') return null;
+  const way = cameraWay(state, c);
+  for (const av of it.avatars) {
+    const d = dist(c.x, c.y, av.x, av.y);
+    if (d > B.CAMERA_RANGE || d < 4) continue;
+    if (Math.abs(angleDiff(headingTo(av.x - c.x, av.y - c.y), way)) > B.CAMERA_FOV) continue;
+    if (!los(it, c.x, c.y, av.x, av.y)) continue;
+    av.spotted = Math.min(1, av.spotted + dt / B.GUARD_NOTICE);
+    av.watched = true;
+    if (av.spotted >= 1) return av;
+  }
+  return null;
 }
 
 // People on a trading station wander about near where they started.
@@ -677,7 +797,7 @@ function stepInsideBolts(state, it, dt) {
         }
         continue;
       }
-      e.hp -= b.dmg;
+      if (guard || !it.mood) e.hp -= b.dmg;
       spark(b, 0.15);
       // A guard that is shot wakes if it slept, and knows roughly where the shot came from.
       if (guard) {
@@ -755,6 +875,9 @@ function stepInterior(state, wreck, cmds, dt) {
   const it = wreck.interior;
   it.cutting = false;
   it.hacking = false;
+  // Work on a turret that is let go of is lost.
+  if (!it.working) it.turning = 0;
+  it.working = false;
   for (const f of it.fx) f.t += dt;
   it.fx = it.fx.filter((f) => f.t < f.dur);
   for (const av of [...it.avatars]) stepAvatar(state, it, av, cmds.away ? cmds.away[av.player] : null, dt);
@@ -764,10 +887,21 @@ function stepInterior(state, wreck, cmds, dt) {
     const found = stepGuard(state, it, g, dt);
     if (found) foundOut(state, it, found.intruder || found.body);
   }
-  for (const av of it.avatars) if (!av.watched) av.spotted = Math.max(0, av.spotted - dt * 1.5);
   for (const c of it.civilians) stepCivilian(state, it, c, dt);
-  for (const t of it.turrets) stepTurret(state, it, t, dt);
-  for (const s of it.sentries) stepSentry(state, it, s, dt);
+  for (const t of it.turrets) if (stepTurret(state, it, t, dt)) foundOut(state, it, t.seen);
+  for (const c of it.cameras) {
+    const caught = stepCamera(state, it, c, dt);
+    if (caught) foundOut(state, it, caught);
+  }
+  // A boarder that nobody is watching any more is forgotten again, little by little.
+  for (const av of it.avatars) if (!av.watched) av.spotted = Math.max(0, av.spotted - dt * 1.5);
+  // The crew's own turrets are gone a little while after the fight is over.
+  const on = fighting(it);
+  for (const s of it.sentries) {
+    s.calm = on ? 0 : s.calm + dt;
+    stepSentry(state, it, s, dt);
+  }
+  it.sentries = it.sentries.filter((s) => s.calm < B.SENTRY_LINGER);
   stepInsideBolts(state, it, dt);
   stepGrenades(state, it, dt);
   stepFlares(it, dt);

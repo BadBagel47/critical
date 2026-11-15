@@ -166,6 +166,24 @@ export const B = {
   TURRET_COOLDOWN: 0.85,
   TURRET_DMG: 9,
   TURRET_BOLT_SPEED: 210,
+  // A turret watches a narrow cone straight ahead. Once someone has stepped into it, or the alarm has gone,
+  // it follows them within a wider arc, for a while after it last saw them. On a station it cannot be
+  // destroyed, only put out for a while by a grenade, or turned to the crew's side by the Engineer.
+  TURRET_FOV: 0.32,
+  TURRET_ARC: 1.15,
+  TURRET_HOLD: 4,
+  TURRET_OUT: 20,
+  TURRET_TURNED: 15,
+  TURRET_TURN_TIME: 2.5,
+  // A camera sweeps from side to side and gives the crew away, but hurts nobody.
+  CAMERA_RANGE: 118,
+  CAMERA_FOV: 0.38,
+  CAMERA_SWEEP: 0.9,
+  CAMERA_SPEED: 0.7,
+  // How long a guard looks about where it has seen a light, and how long the crew's own turret stays once
+  // the fight is over.
+  GUARD_CURIOUS: 3.5,
+  SENTRY_LINGER: 6,
   DOOR_CUT_TIME: 3,
   REACTOR_TIME: [0, 170, 150, 130],
   // A failed bypass of a wreck's lock shakes the reactor: it costs this much of its time, and the third one

@@ -39,6 +39,8 @@ export const newGuard = (state, p, heading) => ({
   // Put to sleep by a dart for this many seconds more, or taken down for the rest of the boarding.
   sleep: 0,
   down: false,
+  // A light it has seen and is on its way to look at, or nothing.
+  curious: null,
 });
 export const awake = (g) => !g.down && g.sleep <= 0;
 
@@ -269,7 +271,48 @@ function watch(it, g, dt) {
     if (av.spotted >= 1) return { intruder: av };
   }
   const body = it.guards.find((o) => o !== g && !awake(o) && inSight(it, g, o));
-  return body ? { body } : null;
+  if (body) return { body };
+  // A light where there should be none is worth a look, once: the guard goes there, and so can be led away.
+  if (!g.curious) {
+    const flare = it.flares.find((f) => f.left <= 0 && !f.seen.includes(g.id) && lightSeen(it, g, f));
+    if (flare) {
+      flare.seen.push(g.id);
+      g.curious = { x: flare.x, y: flare.y, wait: B.GUARD_CURIOUS };
+      g.path = [];
+      g.pause = 0;
+    }
+  }
+  return null;
+}
+// Whether a guard sees a light that burns at p: in front of it, within its sight, with no wall in between.
+function lightSeen(it, g, p) {
+  const d = dist(g.x, g.y, p.x, p.y);
+  if (d > B.GUARD_SIGHT) return false;
+  if (Math.abs(angleDiff(headingTo(p.x - g.x, p.y - g.y), g.heading)) > B.GUARD_FOV) return false;
+  return los(it, g.x, g.y, p.x, p.y);
+}
+// A guard that has seen a light walks to it, looks about for a while and goes back to what it was doing.
+function lookInto(it, g, dt) {
+  const c = g.curious;
+  if (dist(g.x, g.y, c.x, c.y) > 22 && c.wait === B.GUARD_CURIOUS) {
+    if (!g.path.length) {
+      const at = tileOf(g),
+        to = tileOf(c);
+      g.path = wayTo(it, waysFrom(it, at.tx, at.ty), to.tx, to.ty);
+      if (!g.path.length) {
+        g.curious = null;
+        return;
+      }
+    }
+    // It stops a little short of the light.
+    if (g.path.length <= 1 && dist(g.x, g.y, c.x, c.y) < 30) g.path = [];
+    else follow(it, g, dt, 0.6);
+    if (g.path.length) return;
+  }
+  g.path = [];
+  c.wait -= dt;
+  g.heading += 1.4 * dt;
+  if (c.wait <= 0) g.curious = null;
 }
 
 // Returns what the guard has found this step, for the place to act on: see boarding.js.
@@ -289,9 +332,11 @@ export function stepGuard(state, it, g, dt) {
   if (g.mode !== 'alert') {
     const found = watch(it, g, dt);
     if (!found) {
-      patrol(it, g, dt);
+      if (g.curious) lookInto(it, g, dt);
+      else patrol(it, g, dt);
       return null;
     }
+    g.curious = null;
     alertGuard(g, found.intruder || found.body);
     return found;
   }
