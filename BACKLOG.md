@@ -30,94 +30,98 @@ Prioritet: Hög, Medel, Låg.
 - F-122 – Ett övertagande i steg: belägring, bordning och avgörande, som inte går att fuska sig ur genom att skjuta det dockade skeppet
 - F-123 – Regler för hur ofta det sker, och ordnade anfall från faktioner man är ovän med
 
-**H** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
+**H** – strong model, high level – Världen steg 1: ett system som känns rätt
+- F-196 – Runda system med en stjärna i mitten och ett asteroidbälte, i stället för fyrkantiga
+- F-199 – Prova att ta bort fog of war inuti ett system, eftersom systemen själva måste upptäckas
+
+**I** – strong model, high level – Världen steg 2: bränsle och färd (efter steg 1)
+- F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
+- F-197 – En speed boost som laddas upp och bryts av beskjutning, så att långa sträckor går fort. Samma regel för hoppet till ett nytt system
+- F-198 – Ta bort överladdningen av vapen och sköld, så att bara motorernas finns kvar
+- F-194 – Solceller som man köper och som laddar bränslet
+- D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
+
+**J** – strong model, high level – Världen steg 3: många system (efter steg 2)
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
+- F-195 – En systemradar som man köper och som visar om närliggande system är vänliga och vems de är
+
+**K** – strong model, high level – Världen steg 4: uppdrag och story (efter steg 3)
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
-- D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
-- F-196 – Runda system med en stjärna i mitten och ett asteroidbälte, i stället för fyrkantiga
-- F-199 – Prova att ta bort fog of war inuti ett system, eftersom systemen själva måste upptäckas
-- F-197 – En speed boost som laddas upp och bryts av beskjutning, så att långa sträckor går fort. Samma regel för hoppet till ett nytt system
-- F-194 – Solceller som man köper och som laddar bränslet
-- F-195 – En systemradar som man köper och som visar om närliggande system är vänliga och vems de är
 
-**I** – strong model, high level – Förslag: ekonomi och belöningar
+**L** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**J** – strong model, high level – Baser i två storlekar
+**M** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 
-**K** – strong model, high level – Sällsynta skepp
+**N** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**L** – strong model, high level – Handel
+**O** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**M** – strong model, medium level – Butik med bilder
+**P** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**N** – strong model, high level – Värme
+**Q** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**O** – strong model, high level – Slå ut och borda
+**R** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**P** – strong model, high level – Missiler och raketer
+**S** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**Q** – strong model, high level – Kontakt med andra skepp
+**T** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**R** – strong model, high level – Asteroider och anomalier
-- F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
+**U** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**S** – strong model, high level – En värld som förändras
+**V** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**T** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**W** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**U** – strong model, high level – Ljudeffekter
+**X** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**V** – strong model, high level – Visuella effekter och feedback
+**Y** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 
-**W** – strong model, high level – Vad ett misslyckat lås kostar
+**Z** – strong model, high level – Vad ett misslyckat lås kostar
 - D-172 – Se över vilka minispel som straffar ett misslyckande, och hur
 
-**X** – strong model, medium level – Sköld från en station under attack (efter anfall på egna stationer)
+**AA** – strong model, medium level – Sköld från en station under attack (efter anfall på egna stationer)
 - F-173 – En station under attack ger sköld tills angriparna hackat mainframen. Första delen är byggd: en fiende ger ingen sköld
 
-**Y** – strong model, high level – Förslag: skeppets dator för små besättningar
+**AB** – strong model, high level – Förslag: skeppets dator för små besättningar
 - D-186 – Gå igenom hur skeppets dator skulle fungera i praktiken, innan något ändras
 
-**Z** – strong model, high level – Förslag: meddelanden och sensordata
+**AC** – strong model, high level – Förslag: meddelanden och sensordata
 - D-187 – Se över vad spelet och skeppet visar på skärmen, hur det prioriteras, och om sensordata ska få en egen del
 
-**AA** – strong model, high level – Uppgraderingar och ekonomi per roll
+**AD** – strong model, high level – Uppgraderingar och ekonomi per roll
 - F-188 – Uppgraderingarna sorteras efter kategori och roll
 - D-189 – Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar
 
-**AB** – strong model, medium level – Förfina rollerna
+**AE** – strong model, medium level – Förfina rollerna
 - F-190 – Märkena bredvid knappen visar också vad den bästa posten vinner, till exempel att Engineer är tyst vid valvdörren
 - F-191 – Sprängladdningar köps, och bara Gunner kan använda dem
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 
-**AC** – strong model, high level – Förslag: permanenta prylar och sådant som förbrukas
+**AF** – strong model, high level – Förslag: permanenta prylar och sådant som förbrukas
 - D-193 – Gå igenom vilka prylar som är permanenta och kan uppgraderas, och vilka som förbrukas
-
-**AD** – strong model, medium level – Enklare överladdning
-- F-198 – Ta bort överladdningen av vapen och sköld, så att bara motorernas finns kvar
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
 
