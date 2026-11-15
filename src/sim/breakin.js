@@ -145,7 +145,12 @@ export function createBreakin(state, target, bonus = 1) {
     (kind === 'code' ? B.CODE_TIME : kind === 'dial' ? B.DIAL_TIME : B.BREAKIN_TIME[target.difficulty]) * bonus;
   const bk = { kind, time: seconds, total: seconds, started: false };
   if (kind === 'pipes') Object.assign(bk, createPipes(state, target.difficulty));
-  if (kind === 'code') Object.assign(bk, { code: newCode(state), entered: [], shift: B.CODE_SHIFT, wrong: 0 });
+  if (kind === 'code') {
+    // `stage` is how many digits the Engineer has found. The needle and the mark are for the next one.
+    const ring = { angle: 0, speed: B.HACK_SPEED, width: B.HACK_WIDTH, stage: 0, mark: 0 };
+    Object.assign(bk, { code: newCode(state), entered: [], wrong: 0 }, ring);
+    newMark(state, bk);
+  }
   if (kind === 'dial') {
     // `opening` counts down while the middle of the lock turns, once the last ring is open.
     Object.assign(bk, { angle: 0, speed: B.DIAL_SPEED, width: B.DIAL_WIDTH, stage: 0, misses: 0, mark: 0, opening: 0 });
@@ -174,14 +179,20 @@ export function stepBreakin(state, target, cmds, dt) {
     }
     solved = flow(bk).solved;
   } else if (bk.kind === 'code') {
-    if (bk.started) {
-      // The code changes now and then, so it has to be read and entered quickly.
-      bk.shift -= dt;
-      if (bk.shift <= 0) {
-        bk.code = newCode(state);
-        bk.entered = [];
-        bk.shift = B.CODE_SHIFT;
-        state.events.push({ type: 'codeChanged' });
+    // The Engineer finds the digits one at a time, on their own screen: a needle goes round a ring, and has
+    // to be stopped in the mark. A miss costs time. Whoever is at the lock enters the code.
+    const hacking = bk.started && bk.stage < B.CODE_LEN;
+    if (hacking) bk.angle = (bk.angle + dialWay(bk) * bk.speed * dt + TAU) % TAU;
+    if (hacking && cmds.engineer && cmds.engineer.ring && state.ship.docked === target.id) {
+      if (Math.abs(angleDiff(bk.angle, bk.mark)) <= bk.width / 2) {
+        bk.stage++;
+        bk.speed *= B.HACK_FASTER;
+        bk.width *= B.HACK_NARROWER;
+        if (bk.stage < B.CODE_LEN) newMark(state, bk);
+        state.events.push({ type: 'digitFound', left: B.CODE_LEN - bk.stage });
+      } else {
+        bk.time -= B.CODE_PENALTY;
+        state.events.push({ type: 'dialMiss' });
       }
     }
     for (const c of orders) {

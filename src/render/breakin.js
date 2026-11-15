@@ -21,11 +21,11 @@ const TEXT = {
   pipes: {
     title: 'BYPASS THE DOCKING LOCK',
     hint: 'CLICK A TILE TO TURN IT',
-    fail: 'IF TIME RUNS OUT THE WRECK BLOWS UP',
+    fail: 'A FAILED BYPASS COSTS REACTOR TIME  ·  THE THIRD BLOWS THE WRECK',
   },
   code: {
     title: 'ENTER THE STATION CODE',
-    hint: 'THE ENGINEER SCREEN SHOWS THE CODE',
+    hint: 'THE ENGINEER FINDS THE CODE, ONE DIGIT AT A TIME',
     fail: 'IF TIME RUNS OUT THE STATION FIGHTS BACK',
   },
   dial: {
@@ -140,7 +140,9 @@ function drawCode(ctx, font, bk, mouse) {
   }
   font.draw(
     ctx,
-    bk.wrong ? `WRONG CODE  ·  ${B.CODE_PENALTY} S LOST EACH TIME` : `THE CODE CHANGES IN ${Math.ceil(bk.shift)} S`,
+    bk.wrong
+      ? `WRONG CODE  ·  ${B.CODE_PENALTY} S LOST EACH TIME`
+      : `THE ENGINEER HAS FOUND ${bk.stage} OF ${B.CODE_LEN} DIGITS`,
     VIEW_W / 2,
     DY + DIGIT.w + 8,
     bk.wrong ? COL.ember[2] : COL.dim,

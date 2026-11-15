@@ -150,6 +150,10 @@ export const B = {
   TURRET_BOLT_SPEED: 210,
   DOOR_CUT_TIME: 3,
   REACTOR_TIME: [0, 170, 150, 130],
+  // A failed bypass of a wreck's lock shakes the reactor: it costs this much of its time, and the third one
+  // blows the wreck up.
+  LOCK_FAIL_REACTOR: 40,
+  LOCK_FAILS_BLOW: 3,
   WRECK_BLAST_DMG: 60,
   // break-in game, seconds per difficulty
   BREAKIN_TIME: [0, 60, 50, 42],
@@ -235,7 +239,12 @@ export const B = {
   CODE_TIME: 50,
   CODE_LEN: 4,
   CODE_DIGITS: 6,
-  CODE_SHIFT: 16,
+  // The Engineer finds the code one digit at a time, by stopping a needle in a mark on a ring. Every ring is a
+  // little faster and its mark a little narrower.
+  HACK_SPEED: 2.5,
+  HACK_WIDTH: 0.9,
+  HACK_FASTER: 1.18,
+  HACK_NARROWER: 0.82,
   CODE_PENALTY: 6,
   // break-in game for cargo pods: stop the needle inside the mark three times
   DIAL_TIME: 25,

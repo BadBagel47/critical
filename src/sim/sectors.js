@@ -99,6 +99,8 @@ export function createWreck(s, x, y, difficulty, hull = null) {
     y,
     heading,
     difficulty: Math.max(low, Math.min(high, difficulty)),
+    // How many times the crew has failed to bypass its lock, see boarding.js.
+    lockFails: 0,
     interior: null,
     lock: 'locked',
     breakin: null,

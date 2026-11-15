@@ -716,14 +716,31 @@ test('boarding a locked wreck opens the break-in game, and solving it opens the 
   assert.equal(s.players[0].inside, w.id);
 });
 
-test('running out of time blows the wreck up and hurts the docked ship', () => {
+test('a failed bypass costs the reactor time, and the third one blows the wreck up and hurts the docked ship', () => {
   const s = quiet(createState(1)),
     w = wrecks(s)[0];
   s.ship.docked = w.id;
-  step(s, { system: { board: [0] } }, DT);
-  const before = s.ship.hull + s.ship.shield;
-  run(s, {}, w.breakin.total + 1);
-  assert.ok(!wrecks(s).includes(w));
+  const fail = () => {
+    step(s, { system: { board: [0] } }, DT);
+    run(s, {}, w.breakin.total + 1);
+  };
+  fail();
+  assert.ok(wrecks(s).includes(w), 'the wreck is still there after one failure');
+  assert.equal(w.lockFails, 1);
+  assert.equal(w.breakin, null, 'with a fresh lock to try');
+  fail();
+  assert.ok(wrecks(s).includes(w));
+  // Getting in after two failures: the reactor has that much less time.
+  const other = quiet(createState(1)),
+    w2 = wrecks(other)[0];
+  other.ship.docked = w2.id;
+  w2.lockFails = 2;
+  w2.lock = 'open';
+  step(other, { system: { board: [0] } }, DT);
+  assert.ok(Math.abs(w2.interior.timer - (B.REACTOR_TIME[w2.difficulty] - 2 * B.LOCK_FAIL_REACTOR)) < 1);
+  const before = s.ship.hull + s.ship.shield + s.ship.dockShield;
+  fail();
+  assert.ok(!wrecks(s).includes(w), 'the third failure blows it up');
   assert.equal(s.ship.docked, null);
   assert.ok(s.ship.hull + s.ship.shield < before);
 });
@@ -1262,7 +1279,7 @@ test('the enemy alarm counts pirates far out, and a higher level reaches further
 });
 
 // ---------- cargo pods, more break-in games and distress calls ----------
-test('a station lock wants the code the engineer can see, and the code changes', () => {
+test('the Engineer finds a station code one digit at a time, and someone enters it at the lock', () => {
   const s = quiet(createState(1)),
     st = station(s, 'neutral');
   turnHostile(s, st);
@@ -1273,14 +1290,32 @@ test('a station lock wants the code the engineer can see, and the code changes',
   const bk = st.breakin;
   assert.equal(bk.kind, 'code');
   assert.equal(bk.code.length, B.CODE_LEN);
+  assert.equal(bk.stage, 0, 'no digit is found from the start');
+  // Stopping the needle outside the mark costs time and finds nothing.
+  bk.angle = (bk.mark + Math.PI) % (Math.PI * 2);
+  const t0 = bk.time;
+  step(s, { engineer: { ring: true } }, DT);
+  assert.equal(bk.stage, 0);
+  assert.ok(bk.time < t0 - B.CODE_PENALTY + 0.1, 'a miss costs time');
+  const ways = [];
+  for (let i = 0; i < B.CODE_LEN; i++) {
+    const from = bk.angle;
+    step(s, {}, DT);
+    ways.push(Math.sign(angleDiff(bk.angle, from)));
+    bk.angle = bk.mark;
+    step(s, { engineer: { ring: true } }, DT);
+    assert.equal(bk.stage, i + 1);
+  }
+  assert.deepEqual(ways, [1, -1, 1, -1], 'the needle changes direction for every ring');
+  assert.equal(st.lock, 'locked', 'finding the code does not open the lock');
   const wrong = bk.code.map((d) => (d % B.CODE_DIGITS) + 1),
-    t0 = bk.time;
+    t1 = bk.time;
   step(s, { hack: { 0: wrong.map((digit) => ({ wreck: st.id, digit })) } }, DT);
   assert.equal(st.lock, 'locked');
-  assert.ok(bk.time < t0 - B.CODE_PENALTY + 0.1, 'a wrong code costs time');
-  const first = bk.code.join('');
-  run(s, {}, B.CODE_SHIFT + 0.5);
-  assert.notEqual(bk.code.join(''), first, 'the code has changed');
+  assert.ok(bk.time < t1 - B.CODE_PENALTY + 0.1, 'a wrong code costs time');
+  const code = bk.code.join('');
+  run(s, {}, 20);
+  assert.equal(bk.code.join(''), code, 'the code no longer changes by itself');
   step(s, { hack: { 0: bk.code.map((digit) => ({ wreck: st.id, digit })) } }, DT);
   assert.equal(st.lock, 'open');
 });

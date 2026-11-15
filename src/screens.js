@@ -18,7 +18,7 @@ import { drawBoarding, insideOrigin } from './render/boarding.js';
 import { drawBreakin, breakinAction, breakinButtons } from './render/breakin.js';
 import { drawMap, mapPoint, chartClick, mapButtons } from './render/map.js';
 import { drawShop, shopClick, shopButtons } from './render/shop.js';
-import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS } from './render/engineer.js';
+import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS, hackTarget, hackBox } from './render/engineer.js';
 import { drawActions, actionButtons } from './render/actions.js';
 
 // What is kept about the screen. None of it is part of the game: two players look at the same game differently.
@@ -152,6 +152,11 @@ function engineerInput(game, out) {
   if (keys.hit(...after)) view.engRow = (view.engRow + 1) % rows;
   if (keys.hit(...more)) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: 1 });
   if (keys.hit(...less)) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: -1 });
+  // While a station's code lock is being worked on, Space or a click on it stops the needle of the hack.
+  const m = keys.mouse;
+  const box = hackBox();
+  const onHack = m.clicked && m.x >= box.x && m.x < box.x + box.w && m.y >= box.y && m.y < box.y + box.h;
+  if (hackTarget(state) && (keys.hit('Space') || onHack)) cmd.ring = true;
   // Z builds up an overcharge for the system that is picked.
   if (keys.hit('KeyZ')) cmd.surge = SYSTEM_KEYS[view.engRow];
   if (keys.mouse.clicked && view.engOpen) {
@@ -295,7 +300,10 @@ export const SCREENS = {
     input: engineerInput,
     draw: drawOnBoard,
     toasts: [44],
-    buttons: (game) => (game.view.engOpen ? engineerButtons(game.state) : []),
+    buttons: (game) => [
+      ...(game.view.engOpen ? engineerButtons(game.state) : []),
+      ...(hackTarget(game.state) ? [hackBox()] : []),
+    ],
   },
   crew: { pad: 'captain', input: onBoard, draw: drawOnBoard, toasts: [44] },
   radar: {

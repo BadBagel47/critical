@@ -231,7 +231,10 @@ export function tryBoard(state, playerId) {
   }
   if (!wreck.interior) wreck.interior = createInterior(state, wreck);
   const it = wreck.interior;
-  if (wreck.kind === 'wreck' && it.timer === null) it.timer = B.REACTOR_TIME[wreck.difficulty];
+  if (wreck.kind === 'wreck' && it.timer === null) {
+    // Every failed bypass has cost the reactor some of its time.
+    it.timer = Math.max(30, B.REACTOR_TIME[wreck.difficulty] - wreck.lockFails * B.LOCK_FAIL_REACTOR);
+  }
   it.live = true;
   if (!it.avatars.length) useAirlock(state, wreck, it);
   player.inside = wreck.id;
@@ -740,7 +743,22 @@ function lootPod(state, pod) {
 }
 
 // What happens to each kind of thing when its lock is failed, and when it is opened without an inside to board.
-const LOCK_FAILED = { wreck: blowUp, station: fightBack, pod: soundAlarm };
+// A failed bypass shakes the wreck's reactor: it loses time, and the third failure blows it up.
+function shakeReactor(state, wreck) {
+  wreck.lockFails++;
+  if (wreck.lockFails >= B.LOCK_FAILS_BLOW) {
+    blowUp(state, wreck);
+    return;
+  }
+  wreck.breakin = null;
+  state.events.push({
+    type: 'reactorShaken',
+    lost: B.LOCK_FAIL_REACTOR,
+    last: wreck.lockFails === B.LOCK_FAILS_BLOW - 1,
+  });
+}
+
+const LOCK_FAILED = { wreck: shakeReactor, station: fightBack, pod: soundAlarm };
 const LOCK_OPENED = { pod: lootPod };
 
 export function stepBoarding(state, cmds, dt) {

@@ -34,14 +34,17 @@ const TOAST = {
   doorOpen: () => ['VAULT OPEN', LOOT],
   wreckExploded: () => ['THE WRECK BLEW UP', BAD],
   lockOpen: (e) => (e.kind === 'pod' ? null : ['LOCK BYPASSED  ·  F TO BOARD', GOOD]),
-  lockFailed: (e) => (e.kind === 'wreck' ? ['BYPASS FAILED', BAD] : null),
+  reactorShaken: (e) => [
+    `BYPASS FAILED  ·  THE REACTOR LOSES ${e.lost} S` + (e.last ? '  ·  ONE MORE BLOWS THE WRECK' : ''),
+    BAD,
+  ],
   podLooted: (e) => [
     `POD OPEN  ·  +${e.credits} CREDITS` + (e.fuel ? `  ·  +${e.fuel} FUEL` : '') + (e.part ? '  ·  A SPARE SLOT' : ''),
     LOOT,
   ],
   podAlarm: () => ['THE POD ALARM IS RINGING  ·  PIRATES INCOMING', BAD],
   codeWrong: () => ['WRONG CODE', BAD],
-  codeChanged: () => ['THE STATION CODE CHANGED', WARM],
+  digitFound: (e) => [e.left ? `DIGIT FOUND  ·  ${e.left} TO GO` : 'THE WHOLE CODE IS FOUND', TECH],
   distress: (e) => [`DISTRESS CALL FROM ${e.name}`, LOOT],
   distressSaved: (e) => [
     e.favor ? `${e.name} OWES YOU  ·  DISCOUNT FOR A WHILE` : `${e.name} IS SAFE  ·  +${e.reward} CREDITS`,

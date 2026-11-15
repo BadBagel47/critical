@@ -266,16 +266,64 @@ export function drawEngineer(ctx, state, view, assets) {
 
 // While a station lock is being worked on, only the Engineer is shown its code: on this screen, and beside
 // the view of space when the screen is folded away.
+// The lock that the Engineer is hacking, or nothing: a station's code lock that someone has started on.
+export const hackTarget = (state) =>
+  state.things.find((st) => st.breakin && st.breakin.kind === 'code' && st.breakin.started && st.lock !== 'open');
+const HACK = { x: 8, y: 28, w: 136, h: 150, cx: 76, cy: 88, rings: [46, 36, 26, 16] };
+const RING_COL = [COL.ochre[2], COL.ion[1], '#a878c8', '#6ebeaa'];
+// Where a click stops the needle.
+export const hackBox = () => ({ name: 'hack', x: HACK.x, y: HACK.y, w: HACK.w, h: HACK.h });
 export function drawLockCode(ctx, font, state) {
-  const locked = state.things.find(
-    (st) => st.breakin && st.breakin.kind === 'code' && st.breakin.started && st.lock !== 'open',
-  );
+  const locked = hackTarget(state);
   if (!locked) return;
-  rect(ctx, 8, 28, 132, 58, COL.panel, COL.ochre[1]);
-  font.draw(ctx, 'STATION LOCK CODE', 14, 34, COL.ochre[2]);
-  font.draw(ctx, locked.breakin.code.join('  '), 74, 48, COL.white, { align: 'c', scale: 2 });
-  const soon = locked.breakin.shift < 5;
-  font.draw(ctx, `CHANGES IN ${Math.ceil(locked.breakin.shift)} S`, 14, 72, soon ? COL.ember[2] : COL.dim);
+  const bk = locked.breakin;
+  const { cx, cy } = HACK;
+  const turn = (a) => a - Math.PI / 2;
+  rect(ctx, HACK.x, HACK.y, HACK.w, HACK.h, COL.panel, COL.ochre[1]);
+  font.draw(ctx, 'STATION LOCK', HACK.x + 6, HACK.y + 6, COL.ochre[2]);
+  const secs = Math.max(0, Math.ceil(bk.time));
+  font.draw(ctx, secs + ' S', HACK.x + HACK.w - 6, HACK.y + 6, secs < 10 ? COL.ember[2] : COL.dim, { align: 'r' });
+  HACK.rings.forEach((r, i) => {
+    const ring = (color, from = 0, to = 7) => {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, from, to);
+      ctx.stroke();
+    };
+    if (i < bk.stage) ring(COL.acid[2]);
+    else if (i > bk.stage) ring('#262a44');
+    else {
+      ctx.globalAlpha = 0.4;
+      ring(RING_COL[i]);
+      ctx.globalAlpha = 1;
+      ring(RING_COL[i], turn(bk.mark - bk.width / 2), turn(bk.mark + bk.width / 2));
+      const sx = Math.sin(bk.angle),
+        sy = -Math.cos(bk.angle);
+      ctx.strokeStyle = COL.white;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + sx * (r - 5), cy + sy * (r - 5));
+      ctx.lineTo(cx + sx * (r + 5), cy + sy * (r + 5));
+      ctx.stroke();
+    }
+  });
+  // The digits that are found so far. Only the Engineer sees them: someone has to enter them at the lock.
+  for (let i = 0; i < B.CODE_LEN; i++) {
+    const got = i < bk.stage;
+    const x = cx - 44 + i * 23;
+    rect(ctx, x, HACK.y + 116, 19, 18, got ? '#16281c' : '#141420', got ? COL.acid[2] : COL.line);
+    font.draw(ctx, got ? String(bk.code[i]) : '?', x + 9.5, HACK.y + 121, got ? COL.acid[2] : COL.dim, { align: 'c' });
+  }
+  const done = bk.stage >= B.CODE_LEN;
+  font.draw(
+    ctx,
+    done ? 'ENTER IT AT THE LOCK' : 'SPACE  STOP THE NEEDLE',
+    cx,
+    HACK.y + 139,
+    done ? COL.acid[2] : COL.dim,
+    { align: 'c' },
+  );
 }
 
 // What the Engineer keeps an eye on while looking at space: the power, with the system that the keys work
