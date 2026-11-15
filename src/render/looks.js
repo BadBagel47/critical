@@ -232,15 +232,21 @@ const spriteOf = (name) => (ctx, t, env) =>
 
 //   margin  how far outside the screen it is still drawn
 //   draw    how it is drawn in space
+//   image   its own picture, which the light of the star is laid over
 //   mark    how it is drawn on the big map, for the kinds the map remembers. It draws the mark itself and
 //           gives back the lines of text that belong to it, which the map puts where there is room
 //   dot     its size and colour on the small map
 //   arrow   the colour of the arrow at the screen edge that points to it, for the kinds that get one
 export const THING_LOOK = {
-  rock: { margin: 30, draw: spriteOf((rock) => 'rock' + rock.variant) },
+  rock: {
+    margin: 30,
+    draw: spriteOf((rock) => 'rock' + rock.variant),
+    image: (rock, env) => env.img['rock' + rock.variant],
+  },
   wreck: {
     margin: 110,
     draw: spriteOf((wreck) => (wreck.hull === 'hull' ? 'wreck' : 'wreck_' + wreck.hull)),
+    image: (wreck, env) => env.img[wreck.hull === 'hull' ? 'wreck' : 'wreck_' + wreck.hull],
     mark: markWreck,
     dot: { size: 3, color: () => COL.ochre[2] },
     arrow: () => COL.ochre[2],
@@ -248,11 +254,18 @@ export const THING_LOOK = {
   station: {
     margin: 170,
     draw: drawStation,
+    image: (st, env) => env.img['station_' + stationLook(st)],
     mark: markStation,
     dot: { size: 4, color: (k) => ALIGN_COL[k.align] },
     arrow: (k) => ALIGN_COL[k.align],
   },
-  pod: { margin: 40, draw: drawPod, mark: markPod, dot: { size: 2, color: () => COL.ochre[2] } },
+  pod: {
+    margin: 40,
+    draw: drawPod,
+    image: (pod, env) => env.img.pod,
+    mark: markPod,
+    dot: { size: 2, color: () => COL.ochre[2] },
+  },
   salvage: { margin: 20, draw: drawSalvage },
   buoy: { margin: 20, draw: drawBuoy },
 };

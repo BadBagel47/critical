@@ -386,7 +386,10 @@ test('the game starts by the home yard, pointing at it', () => {
     assert.ok(Math.abs(angleDiff(s.ship.heading, way)) < 0.01, 'with its nose toward it');
     assert.ok(Math.hypot(s.ship.x, s.ship.y) > Math.hypot(yard.x, yard.y), 'on the side away from the star');
     assert.equal(s.ship.throttle, 0);
-    assert.ok(!s.sectors.some((sec) => sec.star || sec.haze), 'the star and the haze wait to be approved');
+    assert.ok(
+      s.sectors.every((sec) => sec.haze && !sec.star),
+      'every system has its haze, and the star waits to be approved',
+    );
   }
   const trial = createState(1, { test: true });
   assert.ok(

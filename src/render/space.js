@@ -13,7 +13,7 @@ import { drawNebula, drawRipples } from './effects.js';
 import { THING_LOOK, lookOf, spriteOfVessel, hpBar, SIDE_COL, armLights, podLamp } from './looks.js';
 import { CREW, PIRATE, enemies } from '../sim/sides.js';
 import { drawFlame, steering, FLAME_ION, FLAME_FIRE } from './flames.js';
-import { drawStar, drawHaze } from './system.js';
+import { drawStar, drawHaze, starLight } from './system.js';
 import { currentSector } from '../sim/sectors.js';
 
 // Three layers of stars that move at different speeds, always the same ones.
@@ -513,10 +513,12 @@ export function drawSpace(ctx, state, view, assets) {
   ctx.imageSmoothingQuality = 'high';
   const near = (o, margin) =>
     Math.abs(o.x - cam.x) < VIEW_W / 2 / ZOOM + margin && Math.abs(o.y - cam.y) < VIEW_H / 2 / ZOOM + margin;
-  if (currentSector(state).star) drawStar(ctx, cam, state.time);
+  if (currentSector(state).star) drawStar(ctx, cam, state.time, state.sector);
   for (const t of state.things) {
     const look = THING_LOOK[t.kind];
-    if (look && near(t, look.margin)) look.draw(ctx, t, env);
+    if (!look || !near(t, look.margin)) continue;
+    look.draw(ctx, t, env);
+    if (look.image) starLight(ctx, state, look.image(t, env), t.x, t.y, t.heading, undefined, undefined, t);
   }
   const dock = dockingInfo(state);
   if (dock && !dock.docked && post === 'captain') {
@@ -533,10 +535,17 @@ export function drawSpace(ctx, state, view, assets) {
     ctx.globalAlpha = 1;
   }
   if (view.lights) for (const v of [...state.vessels, ship]) if (near(v, 110)) drawShadow(ctx, state, v, env);
-  for (const v of state.vessels) if (near(v, 110)) drawVessel(ctx, v, env);
+  for (const v of state.vessels) {
+    if (!near(v, 110)) continue;
+    drawVessel(ctx, v, env);
+    starLight(ctx, state, spriteOfVessel(v, img), v.x, v.y, v.heading);
+  }
   for (const d of state.darts) drawDart(ctx, d, img);
   if (fx) fx.space.draw(ctx);
-  if (!state.over) drawShip(ctx, state, img, fx);
+  if (!state.over) {
+    drawShip(ctx, state, img, fx);
+    starLight(ctx, state, img.frigate, ship.x, ship.y, ship.heading, 36, 54);
+  }
   // Shots are drawn over the ships, so that they are seen to leave the turrets and not to come from under the hull.
   for (const b of state.beams) drawBeam(ctx, b);
   for (const b of state.bolts) drawBolt(ctx, b);

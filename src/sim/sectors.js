@@ -84,10 +84,10 @@ export const createSectors = () =>
     tier: s.tier,
     // How far it is from the middle of the system to its edge.
     radius: B.SYSTEM_R[s.size],
-    // Whether it has a star in its middle, and a haze at its edge. Both are built but wait for the user to
-    // approve how they look. Until then only a test game has them, see gatherForTesting.
+    // Whether it has a haze at its edge, and a star in its middle. The star waits for the user to approve how
+    // it looks. Until then only a test game has one, see gatherForTesting.
+    haze: true,
     star: false,
-    haze: false,
     links: s.links,
     hint: s.hint,
     boss: !!s.boss,
