@@ -7,6 +7,7 @@ import { toWorld, forward, headingTo, dist } from '../sim/util.js';
 import { hullMax, jumpCharge } from '../sim/upgrades.js';
 import { Particles } from './particles.js';
 import { lookOf } from './looks.js';
+import { steering } from './flames.js';
 import { CREW, PIRATE } from '../sim/sides.js';
 
 const FIRE = ['#fff3c4', COL.ochre[3], COL.ochre[2], COL.ember[1], COL.ember[0]];
@@ -36,6 +37,8 @@ export function createEffects() {
     nebula: new Map(),
     // How far out the docking arms of each station are, see looks.js.
     arms: new Map(),
+    // How hard the frigate's engines burn, as the flames show it. It follows the throttle with a little lag.
+    burn: 0,
     offset: { x: 0, y: 0 },
   };
 }
@@ -45,6 +48,7 @@ export function resetEffects(fx) {
   fx.ripples.length = 0;
   fx.arms.clear();
   fx.shake = 0;
+  fx.burn = 0;
 }
 
 // Emit `rate` things per second, spread evenly over frames.
@@ -184,6 +188,21 @@ function shipTrails(fx, state, dt) {
         colors: ship.boosting ? ['#ffffff', ...FIRE] : ION,
       });
     });
+    // Sparks that break loose from the flames.
+    tick(fx, 'sparks', 9 * th * (ship.boosting ? 2.5 : 1), dt, () => {
+      const n = toWorld(ship, { x: Math.random() < 0.5 ? -6 : 6, y: 56 });
+      p.add({
+        x: n.x,
+        y: n.y,
+        vx: ship.vx - f.x * (90 + Math.random() * 70) + rnd(50),
+        vy: ship.vy - f.y * (90 + Math.random() * 70) + rnd(50),
+        life: 0.25 + Math.random() * 0.25,
+        drag: 2.2,
+        size0: 1.2,
+        size1: 0.6,
+        colors: ship.boosting ? FIRE : ION,
+      });
+    });
     if (ship.boosting) {
       tick(fx, 'boost', 16, dt, () => {
         const n = toWorld(ship, { x: 0, y: 54 });
@@ -200,6 +219,23 @@ function shipTrails(fx, state, dt) {
         });
       });
     }
+  }
+  for (const [i, t] of steering(ship).entries()) {
+    tick(fx, 'steer' + i, 14 * t.power, dt, () => {
+      const n = toWorld(ship, { x: t.x, y: t.y + t.way * 4 });
+      const out = t.way * (40 + Math.random() * 30);
+      p.add({
+        x: n.x,
+        y: n.y,
+        vx: ship.vx - f.x * out + rnd(14),
+        vy: ship.vy - f.y * out + rnd(14),
+        life: 0.18 + Math.random() * 0.15,
+        drag: 2.5,
+        size0: 1.4,
+        size1: 0.6,
+        colors: ION,
+      });
+    });
   }
   const hurt = ship.nodes.filter((n) => nodeStatus(n.hp) !== 'ok');
   if (hurt.length || ship.hull < hullMax(ship) * 0.4) {
@@ -338,6 +374,8 @@ export function updateEffects(fx, state, view, dt) {
   const near = (o, m = 80) =>
     Math.abs(o.x - cam.x) < VIEW_W / 2 / ZOOM + m && Math.abs(o.y - cam.y) < VIEW_H / 2 / ZOOM + m;
   if (!state.paused) {
+    const th = state.ship.docked ? 0 : Math.max(0, state.ship.throttle);
+    fx.burn += (th - fx.burn) * Math.min(1, dt * 7);
     watchBlasts(fx, state, near);
     watchShots(fx, state, near);
     shipTrails(fx, state, dt);

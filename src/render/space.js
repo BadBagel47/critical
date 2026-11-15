@@ -12,6 +12,7 @@ import { sprite, dashed, brackets } from './draw.js';
 import { drawNebula, drawRipples } from './effects.js';
 import { THING_LOOK, lookOf, spriteOfVessel, hpBar, SIDE_COL, armLights, podLamp } from './looks.js';
 import { CREW, PIRATE, enemies } from '../sim/sides.js';
+import { drawFlame, steering, FLAME_ION, FLAME_FIRE } from './flames.js';
 
 // Three layers of stars that move at different speeds, always the same ones.
 const STARS = (() => {
@@ -175,50 +176,20 @@ function drawEffect(ctx, f) {
 
 // ---------- the frigate ----------
 // Drawn in the ship's own pixels: the engine flames, the hull, the upgrades that show, and what is charging.
-// The steering thrusters sit at the ends of the pods on the wings, pointing forward and back. To turn right
-// the left pod pushes forward and the right one back, and the other way round to turn left. Both forward
-// ones fire when the ship backs. Each is { x, y, way, power }: where it is on the ship, whether its flame
-// goes back (1) or forward (-1), and how hard it fires from 0 to 1.
-const POD_X = 27.5;
-const POD_FRONT = 8;
-const POD_REAR = 34;
-function steering(ship) {
-  if (ship.docked) return [];
-  const back = Math.max(0, -ship.throttle) / B.REVERSE;
-  const list = [];
-  const add = (x, y, way, power) => {
-    if (power > 0.08) list.push({ x, y, way, power: Math.min(1, power) });
-  };
-  add(-POD_X, POD_REAR, 1, ship.turn);
-  add(POD_X, POD_FRONT, -1, Math.max(ship.turn, back));
-  add(POD_X, POD_REAR, 1, -ship.turn);
-  add(-POD_X, POD_FRONT, -1, Math.max(-ship.turn, back));
-  return list;
-}
-
-function drawHull(ctx, state, img) {
+function drawHull(ctx, state, img, fx) {
   const ship = state.ship;
-  const th = Math.max(0, ship.throttle);
-  for (const t of steering(ship)) {
-    const len = 2 + t.power * 6 + Math.random() * 1.5;
-    ctx.fillStyle = COL.ion[1];
-    ctx.fillRect(t.x - 1.5, t.way > 0 ? t.y : t.y - len, 3, len);
-    ctx.fillStyle = COL.ion[3];
-    ctx.fillRect(t.x - 0.5, t.way > 0 ? t.y : t.y - len * 0.6, 1, len * 0.6);
+  const time = state.time;
+  for (const [i, t] of steering(ship).entries()) {
+    drawFlame(ctx, t.x, t.y, t.way, 3 + t.power * 10, 2.8, FLAME_ION, time, 10 + i);
   }
-  if (th > 0.02 && !ship.docked) {
-    const len = (3 + th * 9 + Math.random() * 2) * (ship.boosting ? 2.2 : 1);
-    ctx.globalAlpha = 0.35;
-    ctx.fillStyle = COL.ion[1];
-    circle(ctx, 0, 52, 5 + th * 7);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    for (const x of [-8, 4]) {
-      ctx.fillStyle = COL.ion[1];
-      ctx.fillRect(x, 50, 4, len);
-      ctx.fillStyle = COL.ion[3];
-      ctx.fillRect(x + 1, 50, 2, len * 0.6);
-    }
+  // The flames follow the throttle with a little lag, so that they grow and die down instead of jumping.
+  const burn = fx ? fx.burn : Math.max(0, ship.throttle);
+  if (burn > 0.02 && !ship.docked) {
+    const hot = ship.boosting;
+    const len = (4 + burn * 13) * (hot ? 2 : 1);
+    const colors = hot ? FLAME_FIRE : FLAME_ION;
+    drawFlame(ctx, -6, 50, 1, len, hot ? 6.5 : 5.2, colors, time, 1);
+    drawFlame(ctx, 6, 50, 1, len, hot ? 6.5 : 5.2, colors, time, 2);
   }
   ctx.drawImage(img.frigate, -36, -54);
   // Bought upgrades are drawn on top of the bare hull.
@@ -285,7 +256,7 @@ function drawShip(ctx, state, img, fx) {
     draw();
     ctx.restore();
   };
-  inShipSpace(() => drawHull(ctx, state, img));
+  inShipSpace(() => drawHull(ctx, state, img, fx));
   // Every turret is drawn the way it points, which is the way it fires.
   const turret = (mount, angle) => {
     const p = toWorld(ship, mount);
@@ -308,14 +279,16 @@ function drawVessel(ctx, v, env) {
   const look = lookOf(v);
   const c = SHIPS[v.kind];
   const ship = env.state.ship;
-  ctx.globalAlpha = 0.5;
-  ctx.fillStyle = v.side === PIRATE ? COL.ember[1] : COL.ion[1];
-  for (const g of look.glow) {
-    const p = toWorld(v, g);
-    circle(ctx, p.x, p.y, g.r);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
+  // A flame from every engine, longer the faster the ship goes.
+  const going = Math.min(1, speedOf(v) / (c.speed || 100));
+  const colors = v.side === PIRATE ? FLAME_FIRE : FLAME_ION;
+  ctx.save();
+  ctx.translate(v.x, v.y);
+  ctx.rotate(v.heading);
+  look.glow.forEach((g, i) => {
+    drawFlame(ctx, g.x, g.y - g.r * 0.5, 1, g.r * (0.8 + going * 2.4), g.r * 1.5, colors, env.state.time, v.id * 3 + i);
+  });
+  ctx.restore();
   sprite(ctx, spriteOfVessel(v, env.img), v.x, v.y, v.heading);
   if (look.turrets) {
     for (const mount of c.guns) {
