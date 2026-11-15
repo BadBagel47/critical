@@ -43,7 +43,7 @@ Idéer spånas i chatten och samlas i designskissen. Det som ska byggas läggs i
 
 ## Publicering
 
-GitHub Pages direkt från main, rotmappen. Spelet har inget byggsteg, så det som ligger på main är det som publiceras. Agentens grenar (claude/) slås ihop med main automatiskt, men först när alla tester har gått igenom hos GitHub (användaren, 2026-11-15). Misslyckas de publiceras ingenting och den gamla versionen ligger kvar. Det är en avvikelse från agentreglernas mall, som slår ihop direkt, och den gäller bara det här projektet. En publicering tar därför några minuter. Testerna körs av `.github/workflows/test.yml`, som `auto-merge.yml` anropar och väntar på. Adress: https://badbagel47.github.io/critical/
+GitHub Pages direkt från main, rotmappen. Spelet har inget byggsteg, så det som ligger på main är det som publiceras. Agentens grenar (claude/) slås ihop med main automatiskt, men först när alla tester har gått igenom hos GitHub (användaren, 2026-11-15). Misslyckas de publiceras ingenting och den gamla versionen ligger kvar. Det är en avvikelse från agentreglernas mall, som slår ihop direkt, och den gäller bara det här projektet. En publicering som rör spelet tar därför ungefär två minuter. En ändring som bara rör dokument (filer som slutar på .md och allt under docs/) slås ihop direkt utan att vänta på testerna, eftersom det måste gå snabbt att lägga till saker i backloggen (användaren, 2026-11-15). Agenten väntar inte heller in publiceringen av en ren dokumentändring innan den svarar. Testerna körs av `.github/workflows/test.yml`, som `auto-merge.yml` anropar och väntar på. Adress: https://badbagel47.github.io/critical/
 
 Pages slogs på 2026-11-14. Flytt till Cloudflare sker när nätverksmotorn byggs in.
 
