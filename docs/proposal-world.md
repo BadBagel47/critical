@@ -24,6 +24,9 @@ Fler besked samma dag:
 
 - **Omfattning.** En kort omgång i co-op ska gå att spela på ett par timmar, och längre om man vill. Spelet ska inte bli så stort som Escape Velocity, och det ska inte ha en handskriven fast story.
 
+- **Fler än fem system.** Fem låter lite om systemen är små, så det minsta valet ska vara fler.
+- **Dolda system.** Storyn ska kunna låsa upp färdvägar till system man inte kan hitta själv på kartan. Kartan dit får man genom ett uppdrag, eller genom att borda ett skepp och plocka upp den. Att borda skepp finns inte än (F-081).
+
 Öppet efter beskeden:
 - Vilka antal system man får välja mellan.
 - Om det mystiska uppdraget med Cruisern är en del av den röda tråden eller ett sidospår.
