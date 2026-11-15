@@ -100,6 +100,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - `node tests/outside.mjs`: kontrollerar att spelet och designsidan inte laddar något från andra tjänster, och visar vad som sparas i webbläsaren.
 - I webbläsarens konsol finns `window.__critical` med spelets tillstånd, aktuellt läge (`mode`) och genvägar till vrak, stationer och containrar.
 - När ett test i `tests/saves.test.js` säger att tillståndet bytt form: höj `SAVE_VERSION` i `src/saves.js` och skriv in de nya värdena i testet.
+- Kör `npm run check` och läs om det gick bra på dess utgångskod, inte genom att söka i utskriften. 2026-11-15 gömde en sökning ett typfel, och det stoppades först av testerna hos GitHub.
 
 ## Decisions
 
