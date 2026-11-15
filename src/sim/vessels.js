@@ -70,6 +70,8 @@ export function makeVessel(state, kind, x, y, side = PIRATE) {
     siege: null,
     boarding: false,
     hunt: false,
+    // A shield it is lent while docked, see siege.js.
+    shield: 0,
     legs: null,
     hold: 0,
     fleeing: false,
@@ -91,7 +93,10 @@ export function struckByCrew(state, v) {
 // Damage a ship, and handle what happens when it is destroyed. `by` is the side that did it.
 export function hurtVessel(state, v, dmg, by = CREW) {
   if (v.hp <= 0) return;
-  v.hp -= dmg;
+  const absorbed = Math.min(v.shield, dmg);
+  v.shield -= absorbed;
+  if (absorbed > 0) state.fx.push({ type: 'shield', x: v.x, y: v.y, t: 0, dur: 0.2 });
+  v.hp -= dmg - absorbed;
   const c = SHIPS[v.kind];
   const crew = by === CREW;
   // Shooting at someone who is not an enemy costs their good will. They fight back, or run if they cannot.

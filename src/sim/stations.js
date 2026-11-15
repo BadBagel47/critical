@@ -9,6 +9,7 @@ import { currentSector } from './sectors.js';
 import { teleportAllHome } from './boarding.js';
 import { buyUpgrade, hullMax, fuelMax, CATALOG } from './upgrades.js';
 import { payBounty } from './bounty.js';
+import { turnOnCrew } from './mainframe.js';
 import { forward, headingTo, turnToward, angleDiff, toWorld, dist, rand, randRange, TAU } from './util.js';
 
 // `off` is a gun of the crew's own station that has been mended and waits to be switched on at the mainframe.
@@ -76,14 +77,19 @@ export function createStation(s, x, y, side, shipyard, name, home = false) {
 
 // ---------- how a station treats the crew ----------
 function goHostile(state, st) {
-  // Anyone walking around inside is sent back to the ship, and the trading floor is gone.
-  teleportAllHome(state, st.id);
-  st.interior = null;
   st.breakin = null;
   st.align = 'hostile';
   st.lock = 'locked';
-  if (state.ship.docked === st.id) state.ship.docked = null;
   state.events.push({ type: 'stationHostile', name: st.name });
+  // Those walking around inside stay, and the station sounds the alarm on them (docs/station-boarding.md,
+  // section 1). With nobody inside, the trading floor is just gone.
+  const it = st.interior;
+  if (it && it.avatars.length) {
+    turnOnCrew(state, st, null, false);
+    return;
+  }
+  st.interior = null;
+  if (state.ship.docked === st.id) state.ship.docked = null;
 }
 
 function makePeace(state, st, align) {

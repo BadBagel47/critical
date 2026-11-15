@@ -707,7 +707,17 @@ await page.evaluate(() => {
   window.__critical.input.mouse.down = true;
 });
 // Firing goes on until the cruiser is gone, for as long as six seconds, so that a slow machine is not a failure.
-await page.waitForFunction(() => window.__critical.state.won, null, { timeout: 6000 }).catch(() => {});
+// The aim follows the cruiser, since the camera keeps moving with the ship.
+for (let i = 0; i < 40 && !(await get('s.won')); i++) {
+  await page.evaluate(() => {
+    const s = window.__critical.state,
+      c = s.vessels.find((p) => p.kind === 'cruiser');
+    if (!c) return;
+    window.__critical.input.mouse.x = 320 + (c.x - window.__critical.view.cam.x);
+    window.__critical.input.mouse.y = 180 + (c.y - window.__critical.view.cam.y);
+  });
+  await page.waitForTimeout(150);
+}
 await page.evaluate(() => {
   window.__critical.input.mouse.down = false;
 });

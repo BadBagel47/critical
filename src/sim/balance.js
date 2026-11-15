@@ -229,6 +229,8 @@ export const B = {
   // How long a guard looks about where it has seen a light, and how long the crew's own turret stays once
   // the fight is over.
   GUARD_CURIOUS: 3.5,
+  // How long a technician works on a knocked-out turret before it is on again.
+  TECH_MEND: 3,
   SENTRY_LINGER: 6,
   DOOR_CUT_TIME: 3,
   REACTOR_TIME: [0, 170, 150, 130],

@@ -8,11 +8,74 @@ import { B } from './balance.js';
 import { TILE, tileAt, solidTile, move, los, waysFrom, wayTo, middleOf } from './floor.js';
 import { forward, headingTo, angleDiff, turnToward, dist, rand, randRange, TAU } from './util.js';
 
-export const newGuard = (state, p, heading) => ({
+// The kinds of guard (F-126). Each is a share of what a plain guard has:
+//   hp, speed, dmg  its health, how fast it walks and how hard it hits
+//   notice          how long it takes to be sure it has seen someone. Less is quicker
+//   cover           whether it fights from cover. One that does not fights in the open
+//   range           how close it likes to be to the one it fights, in game pixels
+//   sleep           how long a dart puts it to sleep. A drone cannot be put to sleep, nor taken down
+//   rouses          a watchman that has seen someone wakes every guard in the place, also in a wreck
+//   mends           a technician switches back on turrets that a grenade has knocked out
+//   from            how dangerous a place must be for it to be there: the place's own danger plus the sector's
+export const GUARD_KINDS = {
+  watchman: {
+    name: 'WATCHMAN',
+    hp: 0.6,
+    speed: 1,
+    dmg: 0.6,
+    notice: 0.6,
+    cover: true,
+    range: 100,
+    sleep: 1,
+    rouses: true,
+    from: 0,
+  },
+  soldier: { name: 'SOLDIER', hp: 1, speed: 1, dmg: 1, notice: 1, cover: true, range: 100, sleep: 1, from: 0 },
+  tech: {
+    name: 'TECHNICIAN',
+    hp: 0.8,
+    speed: 1.05,
+    dmg: 0.7,
+    notice: 1,
+    cover: true,
+    range: 110,
+    sleep: 1,
+    mends: true,
+    from: 2,
+  },
+  drone: { name: 'DRONE', hp: 0.5, speed: 1.7, dmg: 0.5, notice: 0.8, cover: false, range: 40, sleep: 0, from: 2 },
+  heavy: { name: 'HEAVY', hp: 2.6, speed: 0.6, dmg: 1.5, notice: 1.2, cover: false, range: 80, sleep: 0.5, from: 4 },
+};
+// Which kinds can be met where: in a wreck, on a pirate station, and on the stations of everyone else.
+const KINDS_AT = {
+  wreck: ['soldier', 'soldier', 'drone', 'heavy'],
+  pirate: ['soldier', 'soldier', 'drone', 'heavy'],
+  other: ['watchman', 'soldier', 'soldier', 'tech', 'heavy'],
+};
+// A kind for a guard of a place, by how dangerous it is. Easy places only have the plain kinds.
+export function guardKind(state, where, danger) {
+  const pool = KINDS_AT[where].filter((k) => GUARD_KINDS[k].from <= danger);
+  return pool[Math.floor(rand(state) * pool.length)];
+}
+// Whether a spot is in the staff rooms of a trading station, where visitors are not let. See makeTrade.
+export function inStaff(it, p) {
+  if (!it.trade || !it.staff) return false;
+  const tx = Math.floor(p.x / TILE),
+    ty = Math.floor(p.y / TILE);
+  return it.staff.some((i) => {
+    const r = it.rooms[i];
+    return tx > r.c0 && tx < r.c1 && ty > r.r0 && ty < r.r1;
+  });
+}
+export const kindOf = (g) => GUARD_KINDS[g.kind || 'soldier'];
+export const hpMaxOf = (g) => B.GUARD_HP * kindOf(g).hp;
+
+export const newGuard = (state, p, heading, kind = 'soldier') => ({
   id: state.nextId++,
+  kind,
   x: p.x,
   y: p.y,
-  hp: B.GUARD_HP,
+  hp: B.GUARD_HP * GUARD_KINDS[kind].hp,
   heading,
   mode: 'idle',
   cool: 1,
@@ -41,6 +104,10 @@ export const newGuard = (state, p, heading) => ({
   down: false,
   // A light it has seen and is on its way to look at, or nothing.
   curious: null,
+  // How long a technician has worked on a turret, see mend.
+  mending: 0,
+  // One of the attackers that boarded a station of the crew's, see siege.js.
+  boarder: false,
 });
 export const awake = (g) => !g.down && g.sleep <= 0;
 
@@ -156,7 +223,7 @@ function follow(it, g, dt, pace = 1) {
   const to = g.path[0];
   g.heading = turnToward(g.heading, headingTo(to.x - g.x, to.y - g.y), 8 * dt);
   const d = dist(g.x, g.y, to.x, to.y);
-  const sp = Math.min(d, B.GUARD_SPEED * pace * dt);
+  const sp = Math.min(d, B.GUARD_SPEED * kindOf(g).speed * pace * dt);
   move(it, g, ((to.x - g.x) / d) * sp, ((to.y - g.y) / d) * sp, B.CREW_RADIUS);
   return true;
 }
@@ -170,7 +237,7 @@ function fire(state, it, g) {
     vy: s.y * B.GUARD_BOLT_SPEED,
     ttl: 1.4,
     owner: 'enemy',
-    dmg: B.GUARD_DMG,
+    dmg: B.GUARD_DMG * kindOf(g).dmg,
   });
   g.cool = B.GUARD_COOLDOWN * randRange(state, 0.85, 1.2);
   // The others nearby hear the shot and know where the intruder is.
@@ -220,14 +287,15 @@ const AROUND = [
 function decide(state, it, g) {
   g.think = randRange(state, 0.7, 1.1);
   const at = tileOf(g);
-  const hurt = g.hp < B.GUARD_HP * 0.4;
+  const hurt = g.hp < hpMaxOf(g) * 0.4;
   if (hurt && !g.bold) g.plan = 'retreat';
   else if (g.plan !== 'flank') {
     // With several on the same intruder, the one furthest from it goes round. One at a time.
     const others = it.guards.filter((o) => o !== g && o.mode === 'alert');
     const far = dist(g.x, g.y, g.seen.x, g.seen.y);
     const furthest = others.every((o) => dist(o.x, o.y, g.seen.x, g.seen.y) < far);
-    g.plan = others.length && furthest && !others.some((o) => o.plan === 'flank') && !g.flanked ? 'flank' : 'fight';
+    const can = others.length && furthest && !others.some((o) => o.plan === 'flank') && !g.flanked;
+    g.plan = can && kindOf(g).cover ? 'flank' : 'fight';
   }
   if (g.plan === 'flank') {
     // The way round: ground that the intruder sees costs more than ground that they do not.
@@ -245,7 +313,8 @@ function decide(state, it, g) {
     return;
   }
   const ways = waysFrom(it, at.tx, at.ty);
-  const spot = findCover(it, g, ways, g.plan === 'retreat');
+  // A heavy guard and a drone do not hide. They fight in the open, at the distance they like.
+  const spot = kindOf(g).cover ? findCover(it, g, ways, g.plan === 'retreat') : null;
   g.cover = spot ? spot.cover : null;
   g.peek = spot ? spot.peek : null;
   // Where to go now depends on whether it is time to hide or to look out.
@@ -264,9 +333,11 @@ const HIDE = { bold: [0.5, 0.9], careful: [1.1, 1.8], retreat: [2.4, 3.4] };
 // boarder in sight is `spotted` a little more for every moment, and it is the boarding that lets it sink again.
 function watch(it, g, dt) {
   for (const av of it.avatars) {
+    // On a trading station the staff only take notice of a visitor in the staff rooms.
+    if (it.trade && !inStaff(it, av)) continue;
     if (!inSight(it, g, av)) continue;
     const near = 1 + 1.5 * (1 - dist(g.x, g.y, av.x, av.y) / B.GUARD_SIGHT);
-    av.spotted = Math.min(1, av.spotted + (dt * near) / B.GUARD_NOTICE);
+    av.spotted = Math.min(1, av.spotted + (dt * near) / (B.GUARD_NOTICE * kindOf(g).notice));
     av.watched = true;
     if (av.spotted >= 1) return { intruder: av };
   }
@@ -315,6 +386,32 @@ function lookInto(it, g, dt) {
   if (c.wait <= 0) g.curious = null;
 }
 
+// A technician goes to a turret that a grenade has knocked out and switches it back on. Says whether it is busy
+// with one. One that the Engineer has turned, or that the mainframe has switched off, it leaves alone.
+function mend(state, it, g, dt) {
+  const t = it.turrets.find((x) => x.out > 0 && x.turned <= 0 && dist(x.x, x.y, g.x, g.y) < B.GUARD_SIGHT * 2);
+  if (!t) return false;
+  if (dist(t.x, t.y, g.x, g.y) < 16) {
+    g.path = [];
+    g.heading = turnToward(g.heading, headingTo(t.x - g.x, t.y - g.y), 6 * dt);
+    g.mending += dt;
+    if (g.mending >= B.TECH_MEND) {
+      t.out = 0;
+      g.mending = 0;
+      state.events.push({ type: 'turretMended' });
+    }
+    return true;
+  }
+  if (!g.path.length) {
+    const at = tileOf(g),
+      to = tileOf(t);
+    g.path = wayTo(it, waysFrom(it, at.tx, at.ty), to.tx, to.ty);
+    if (!g.path.length) return false;
+  }
+  follow(it, g, dt, 0.8);
+  return true;
+}
+
 // Returns what the guard has found this step, for the place to act on: see boarding.js.
 export function stepGuard(state, it, g, dt) {
   if (g.down) return null;
@@ -332,6 +429,7 @@ export function stepGuard(state, it, g, dt) {
   if (g.mode !== 'alert') {
     const found = watch(it, g, dt);
     if (!found) {
+      if (kindOf(g).mends && mend(state, it, g, dt)) return null;
       if (g.curious) lookInto(it, g, dt);
       else patrol(it, g, dt);
       return null;
@@ -384,10 +482,12 @@ export function stepGuard(state, it, g, dt) {
     if (g.think <= 0) decide(state, it, g);
     const moving = follow(it, g, dt, g.plan === 'retreat' ? 1.15 : 1);
     if (!moving && !g.cover && target) {
-      // Nowhere to hide: it fights in the open, and keeps its distance.
-      const dir = best > 95 ? 1 : best < 55 ? -0.7 : 0;
+      // Nowhere to hide: it fights in the open, at the distance its kind likes.
+      const k = kindOf(g);
+      const dir = best > k.range ? 1 : best < k.range * 0.55 ? -0.7 : 0;
       const f = forward(headingTo(target.x - g.x, target.y - g.y));
-      if (dir) move(it, g, f.x * B.GUARD_SPEED * dir * dt, f.y * B.GUARD_SPEED * dir * dt, B.CREW_RADIUS);
+      const sp = B.GUARD_SPEED * k.speed * dir * dt;
+      if (dir) move(it, g, f.x * sp, f.y * sp, B.CREW_RADIUS);
     } else if (!moving && !g.cover && !target && dist(g.x, g.y, g.seen.x, g.seen.y) > 8) {
       // Nothing in sight and nowhere to fight from: go and look where the intruder was last seen.
       const at = tileOf(g),

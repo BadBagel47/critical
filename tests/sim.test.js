@@ -1989,7 +1989,7 @@ test('a friendly station is walked into without a lock, and its desks open the s
   assert.equal(s.players[0].tele < 30.1 && s.players[0].lockedOut === null, true, 'walking out is not a teleport');
 });
 
-test('undocking calls people back from a trading station without a teleport, and a station that turns hostile throws them out', () => {
+test('undocking calls people back from a trading station without a teleport, and one that turns hostile keeps them in', () => {
   const s = quiet(createState(1)),
     st = atStation(s, station(s, 'neutral'));
   step(s, { system: { board: [0] } }, DT);
@@ -1999,8 +1999,9 @@ test('undocking calls people back from a trading station without a teleport, and
   atStation(s, st);
   step(s, { system: { board: [0] } }, DT);
   turnHostile(s, st);
-  assert.equal(s.players[0].inside, null);
-  assert.equal(st.interior, null, 'the trading floor is gone');
+  assert.equal(s.players[0].inside, st.id, 'nobody is thrown out');
+  assert.equal(st.interior.trade, false, 'the trading floor is gone');
+  assert.equal(st.interior.mood, 'alarm', 'and the station sounds the alarm on them');
 });
 
 test('a station that is taken over becomes a trading floor', () => {

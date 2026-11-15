@@ -12,7 +12,7 @@
 // The panel itself is drawn by render/mainframe.js. Orders from it come in as cmds.mainframe.
 import { B } from './balance.js';
 import { CREW, isFaction, changeStanding } from './sides.js';
-import { newGuard, alertGuard } from './guards.js';
+import { newGuard, alertGuard, guardKind } from './guards.js';
 import { takeOver, stationShieldMax, gunHpMax, defenseOf } from './stations.js';
 import { foundOut, gearUp, openVault, spotIn } from './boarding.js';
 import { callHelp, putBounty } from './bounty.js';
@@ -80,8 +80,15 @@ function startHack(state, it, av, level) {
   state.events.push({ type: 'hackStarted', level });
 }
 
-// Taking a station that trades with the crew, from its mainframe. It turns on them at once.
-function seize(state, st, it, av) {
+// A station that traded with the crew turns on those inside: the alarm sounds, the trading stops, the boarders
+// get their gear out and more guards come, from the rooms furthest from where it began. Nobody is thrown out
+// (docs/station-boarding.md, section 1). `caught` is when the crew brought it on themselves, by being seen in the
+// staff rooms or by starting to take the station: then its side thinks much less of them, its guns turn on the
+// ship and it calls for help.
+export function turnOnCrew(state, st, at, caught) {
+  const it = st.interior;
+  if (!it.trade) return;
+  const from = at || it.mainframe;
   it.trade = false;
   it.seize = true;
   it.desks = [];
@@ -89,22 +96,27 @@ function seize(state, st, it, av) {
   it.dark = true;
   it.mood = 'alarm';
   for (const a of it.avatars) gearUp(state, a);
-  // Guards come from the rooms furthest from the mainframe, and know where to look.
   const tier = currentSector(state).tier;
   const n = B.SEIZE_GUARDS + tier + defenseOf(st).inner;
-  const away = (r) => dist(r.mid.x, r.mid.y, it.mainframe.x, it.mainframe.y);
+  const away = (r) => dist(r.mid.x, r.mid.y, from.x, from.y);
   const rooms = [...it.rooms].sort((a, b) => away(b) - away(a));
   const taken = [it.mainframe, ...it.avatars.map((a) => ({ x: a.x, y: a.y }))];
   for (let i = 0; i < n; i++) {
-    const g = newGuard(state, spotIn(state, it, rooms[i % rooms.length], taken), 0);
-    alertGuard(g, it.mainframe);
-    it.guards.push(g);
+    const p = spotIn(state, it, rooms[i % rooms.length], taken);
+    it.guards.push(newGuard(state, p, 0, guardKind(state, 'other', tier + 2)));
   }
+  for (const g of it.guards) alertGuard(g, from);
+  state.events.push({ type: 'redAlert', name: st.name });
+  if (!caught) return;
   changeStanding(state, st.side, -B.SEIZE_STANDING);
   holdGrudge(state, st);
   callHelp(state, st);
+}
+
+// Taking a station that trades with the crew, from its mainframe. It turns on them at once.
+function seize(state, st, it, av) {
+  turnOnCrew(state, st, it.mainframe, true);
   it.hack = { level: 2, by: av.player };
-  state.events.push({ type: 'redAlert', name: st.name });
 }
 
 // A station that is being taken from the inside fights back outside too: its guns turn on the ship.

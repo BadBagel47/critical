@@ -663,6 +663,48 @@ function drawWatch(ctx, font, state, it, me) {
   }
 }
 
+// A guard, by its kind (F-126): a drone is a small machine with four rotors, a heavy guard is bigger and darker,
+// a watchman wears a yellow cap, a technician carries a blue tool, and a boarder on the crew's own station has a
+// red band.
+function drawGuard(ctx, img, g, time) {
+  if (g.kind === 'drone') {
+    ctx.save();
+    ctx.translate(g.x, g.y);
+    ctx.rotate(g.heading);
+    ctx.fillStyle = COL.out;
+    const spin = time * 30;
+    for (let i = 0; i < 4; i++) {
+      const a = (i * Math.PI) / 2 + Math.PI / 4;
+      ctx.fillRect(Math.round(Math.cos(a) * 4) - 1, Math.round(Math.sin(a) * 4) - 1, 3, 3);
+      ctx.fillStyle = Math.floor(spin + i) % 2 ? COL.steel[2] : COL.steel[1];
+    }
+    rect(ctx, -2, -2, 4, 4, COL.steel[1], COL.out);
+    ctx.fillStyle = COL.ember[2];
+    ctx.fillRect(-1, -3, 2, 1);
+    ctx.restore();
+    return;
+  }
+  ctx.save();
+  ctx.translate(g.x, g.y);
+  ctx.rotate(g.heading);
+  if (g.kind === 'heavy') ctx.scale(1.35, 1.35);
+  ctx.drawImage(img.guard, -img.guard.width / 2, -img.guard.height / 2);
+  const mark = { heavy: COL.steel[0], watchman: COL.ochre[2], tech: COL.ion[2] }[g.kind];
+  if (mark) rect(ctx, -1, -1, 2, 2, mark);
+  if (g.boarder) rect(ctx, -3, 1, 6, 1, COL.ember[2]);
+  ctx.restore();
+}
+
+// On a trading station the doors to the staff rooms are marked, so that a visitor knows where not to go.
+function drawStaffDoors(ctx, font, it) {
+  for (const i of it.staff) {
+    const d = it.rooms[i].door;
+    if (!d) continue;
+    for (let k = -6; k < 6; k += 4) rect(ctx, d.x + k, d.y - 1, 2, 2, COL.ochre[2]);
+    font.draw(ctx, 'STAFF', d.x, d.y - 10, COL.ochre[2], { align: 'c' });
+  }
+}
+
 // Everything on the floor, in the interior's own pixels.
 function drawFloor(ctx, state, place, me, assets, fx, origin) {
   const { img, font } = assets;
@@ -671,6 +713,7 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
   drawTunnel(ctx, img, it);
   drawTiles(ctx, it, origin, style);
   for (const desk of it.desks) drawDesk(ctx, img, font, place, desk);
+  if (it.trade) drawStaffDoors(ctx, font, it);
   for (const c of it.civilians) {
     shadow(ctx, c.x, c.y, 5);
     sprite(ctx, img.boarder, c.x, c.y, c.heading);
@@ -702,10 +745,10 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
     sprite(ctx, img.turret_pulse, s.x, s.y, s.heading, 6, 10.5);
   }
   for (const g of it.guards) {
-    shadow(ctx, g.x, g.y, 5);
+    shadow(ctx, g.x, g.y, g.kind === 'heavy' ? 7 : 5);
     // One that is taken down lies still, and is drawn fainter.
     ctx.globalAlpha = g.down ? 0.45 : 1;
-    sprite(ctx, img.guard, g.x, g.y, g.heading);
+    drawGuard(ctx, img, g, state.time);
     ctx.globalAlpha = 1;
   }
   for (const a of it.avatars) {
@@ -760,9 +803,17 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
 }
 
 // The line at the top that says where the player is and what is going on there.
-function drawPlaceLine(ctx, font, place) {
+function drawPlaceLine(ctx, font, state, place) {
   const it = place.interior;
   const x = VIEW_W / 2 + 60;
+  // Boarders in the crew's own station: how long until they have the mainframe.
+  const s = state.siege;
+  if (s && s.inside && s.station === place.id) {
+    const left = s.stage === 'hack' ? B.SIEGE_HACK_TIME - s.t : B.SIEGE_BOARD_TIME + B.SIEGE_HACK_TIME - s.t;
+    const text = `BOARDERS INSIDE  ·  ${Math.ceil(s.boarders)} LEFT  ·  MAINFRAME LOST IN ${fmt(Math.max(0, left))}`;
+    label(ctx, font, x, 8, text, { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
+    return;
+  }
   if (it.trade) {
     const text = `${place.name}  ·  ${place.align.toUpperCase()} STATION`;
     label(ctx, font, x, 8, text, { anchor: 'c', fg: place.align === 'friendly' ? COL.engineer : COL.text });
@@ -876,7 +927,7 @@ export function drawBoarding(ctx, state, view, assets) {
     captain: 'CAPTAIN  ·  RADAR  ·  SEES INTO THE VAULT',
   }[me && !it.trade ? me.role : ''];
   if (gift) label(ctx, font, 8, 24, gift, { fg: COL.text });
-  drawPlaceLine(ctx, font, place);
+  drawPlaceLine(ctx, font, state, place);
   // An alarm puts a red frame round the picture, so that it is seen at once and without sound. It swells and
   // fades slowly and does not flash, see "Lagar och regler" in HANDOFF.md.
   if (it.mood === 'alarm') {

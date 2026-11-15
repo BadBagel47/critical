@@ -6,8 +6,10 @@
 //   boarding  the boarders are inside, on their way to the mainframe. The security bought for the station wears
 //             them down, and if it beats them the attack is over.
 //   hack      the boarders are at the mainframe. When they have it, the station falls to them.
-// The boarding and the hack are always worked out, also where the crew is: going in to fight the boarders is
-// the next round of building (F-122). Shooting the ship that brought them changes nothing once they are in.
+// The boarding and the hack are worked out, unless the crew goes into the station while it is boarded: then the
+// boarders are there as guards to be fought, and every one put out of the fight weakens the attack. The clock to
+// the mainframe runs all the same. Shooting the ship that brought them changes nothing once they are in, and the
+// station's docking shield covers it like any docked ship.
 // The station warns with a risk of LOW, MEDIUM or HIGH, worked out from where the attack stands.
 //   state.siege       { id, station, sector, side, stage, t, ships, here, boarders, start, luck, level }
 //                     `ships` are the attacking ships as { kind, hp } while the crew is not there to see them.
@@ -18,6 +20,8 @@ import { CREW, PIRATE, FACTIONS, isFaction, moodOf, standingOf, nameOfSide } fro
 import { allStations, fall, gunDmg, defenseOf } from './stations.js';
 import { makeVessel, fleeFrom } from './vessels.js';
 import { portsOf, mapInfo } from './things.js';
+import { newGuard, alertGuard, guardKind } from './guards.js';
+import { gearUp, spotIn, TILE } from './boarding.js';
 import { clamp, dist, rand, randRange, TAU } from './util.js';
 
 export const RISK_NAMES = ['LOW', 'MEDIUM', 'HIGH'];
@@ -78,6 +82,10 @@ export function startSiege(state, st, sector, side) {
     here: false,
     boarders,
     start: boarders,
+    // Whether the boarders are in the station as guards, because the crew has come in to fight them, and how much
+    // of a boarder the station's own security has worn down since.
+    inside: false,
+    wear: 0,
     // How well it goes for the attackers where nobody sees it, a little better or worse than their strength.
     luck: randRange(state, 0.8, 1.2),
     level: -1,
@@ -225,9 +233,71 @@ function next(state, s, stage) {
   if (found && (stage === 'boarding' || stage === 'hack')) warn(state, found.st, true);
 }
 
+// ---------- the crew inside ----------
+// The boarders come in through the arm their ship docked at, and make for the mainframe. The station is no
+// trading floor while they are there, and the crew gets their gear out.
+function boardersIn(state, s, st) {
+  const it = st.interior;
+  it.trade = false;
+  it.desks = [];
+  it.civilians = [];
+  it.mood = 'alarm';
+  for (const a of it.avatars) gearUp(state, a);
+  const away = (a) => dist(a.x, a.y, it.entry.x, it.entry.y);
+  const lock = [...it.airlocks].sort((a, b) => away(b) - away(a))[0] || it.entry;
+  const tier = tierOf(state, s.sector);
+  const where = isFaction(s.side) ? 'other' : 'pirate';
+  const taken = it.avatars.map((a) => ({ x: a.x, y: a.y }));
+  // Somewhere a few steps inside the airlock.
+  const tx = Math.floor(lock.x / TILE),
+    ty = Math.floor(lock.y / TILE);
+  const box = { c0: tx - 4, c1: tx + 4, r0: ty - 4, r1: ty + 4 };
+  for (let i = 0; i < Math.ceil(s.boarders); i++) {
+    const g = newGuard(state, spotIn(state, it, box, taken), 0, guardKind(state, where, tier + 2));
+    g.boarder = true;
+    alertGuard(g, it.mainframe);
+    it.guards.push(g);
+  }
+  s.inside = true;
+  s.wear = 0;
+  state.events.push({ type: 'boardersMet', name: st.name });
+}
+const boardersLeft = (it) => it.guards.filter((g) => g.boarder && !g.down && g.hp > 0);
+// The crew has left: what is left of the boarders goes on unseen.
+function boardersOut(s, st) {
+  const it = st.interior;
+  s.boarders = boardersLeft(it).length;
+  it.guards = it.guards.filter((g) => !g.boarder);
+  s.inside = false;
+}
+function fightInside(s, st, dt) {
+  const it = st.interior;
+  s.wear += innerOf(st) * B.SIEGE_INNER * dt;
+  const left = boardersLeft(it);
+  if (s.wear >= 1 && left.length) {
+    s.wear -= 1;
+    left[left.length - 1].hp = 0;
+  }
+  s.boarders = left.filter((g) => g.hp > 0).length;
+}
+// The boarding ship lies under the station's docking shield, like any docked ship.
+function shieldBoat(state, s, dt) {
+  for (const v of state.vessels) {
+    if (v.siege !== s.id || !v.boarding) continue;
+    v.shield = Math.min(B.DOCK_SHIELD, v.shield + B.DOCK_SHIELD_RECHARGE * dt);
+  }
+}
+
 // The attack is over. Those of the attackers that are left leave.
 function end(state, won, st) {
   const s = state.siege;
+  // Boarders that are left inside a station that held are gone, and it is calm in there again.
+  const it = st && st.interior;
+  if (it && s.inside && !won) {
+    it.guards = it.guards.filter((g) => !g.boarder);
+    it.mood = null;
+    it.bolts = [];
+  }
   for (const v of state.vessels) {
     if (v.siege !== s.id) continue;
     v.siege = null;
@@ -266,8 +336,14 @@ function stepAttack(state, s, st, sector, dt) {
     warn(state, st, false);
     return;
   }
-  // Inside: the security wears the boarders down while they make for the mainframe and take it.
-  s.boarders -= innerOf(st) * B.SIEGE_INNER * dt;
+  // Inside: the security wears the boarders down while they make for the mainframe and take it. With the crew
+  // in there too, the boarders are guards, and those the crew puts out of the fight are gone from the attack.
+  if (here) shieldBoat(state, s, dt);
+  const crewIn = here && st.interior && st.interior.avatars.length > 0;
+  if (crewIn && !s.inside) boardersIn(state, s, st);
+  if (s.inside && !crewIn) boardersOut(s, st);
+  if (s.inside) fightInside(s, st, dt);
+  else s.boarders -= innerOf(st) * B.SIEGE_INNER * dt;
   if (s.boarders <= 0) return end(state, false, st);
   if (s.stage === 'boarding' && s.t >= B.SIEGE_BOARD_TIME) next(state, s, 'hack');
   else if (s.stage === 'hack' && s.t >= B.SIEGE_HACK_TIME) {

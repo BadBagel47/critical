@@ -5,12 +5,12 @@ import { addThing, removeThing, thingsOf, dockTargets, findDock, portsOf } from 
 import { shipNose } from './ship.js';
 import { layOut } from './layout.js';
 import { TILE, tileAt, solidAt, blocked, move, los } from './floor.js';
-import { newGuard, stepGuard, alertGuard, planRounds, awake } from './guards.js';
+import { newGuard, stepGuard, alertGuard, planRounds, awake, guardKind, kindOf, inStaff } from './guards.js';
 import { makeVessel } from './vessels.js';
-import { PIRATE } from './sides.js';
+import { PIRATE, CREW } from './sides.js';
 import { playerById, leavePost, returnToPost } from './players.js';
 import { isTrading } from './stations.js';
-import { stepHack, stepMainframe, MAINFRAME_REACH } from './mainframe.js';
+import { stepHack, stepMainframe, turnOnCrew, MAINFRAME_REACH } from './mainframe.js';
 import { has, level, fuelMax, crewHpMax, carryMax, rifleDmg, teleCooldown, breakinBonus } from './upgrades.js';
 import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
@@ -146,6 +146,8 @@ export function createInterior(state, wreck) {
     // Whether the crew is taking a station that traded with them, from the inside.
     seize: false,
     trade: false,
+    // The rooms of a trading station that are for its staff only, by number. See makeTrade.
+    staff: [],
     desks: [],
     civilians: [],
     avatars: [],
@@ -173,7 +175,7 @@ export function createInterior(state, wreck) {
   }
   // A friendly or neutral station is a place to walk around and trade in, with nothing to fight.
   if (isTrading(wreck)) {
-    makeTrade(state, it);
+    makeTrade(state, it, wreck);
     return it;
   }
   // Nothing is put down on top of the mainframe.
@@ -190,11 +192,15 @@ export function createInterior(state, wreck) {
     it.loot.push({ id: state.nextId++, ...what(), ...p });
   };
 
-  // Guards: the first one in the corridor, the rest in the rooms. More of them where it is more dangerous.
+  // Guards: the first one in the corridor, the rest in the rooms. More of them where it is more dangerous, and of
+  // harder kinds the more dangerous the place and the sector are.
+  const where = wreck.kind !== 'station' ? 'wreck' : wreck.side === PIRATE ? 'pirate' : 'other';
+  const danger = difficulty + currentSector(state).tier;
+  const kind = () => guardKind(state, where, danger);
   for (let i = 0; i < difficulty + 1; i++) {
     const hall = it.halls[Math.floor(rand(state) * it.halls.length)];
     const p = i === 0 ? spot(hall, 12 * TILE) : spot(anyRoom(), 7 * TILE);
-    it.guards.push(newGuard(state, p, rand(state) * TAU));
+    it.guards.push(newGuard(state, p, rand(state) * TAU, kind()));
   }
   // Turrets: the first one at the far end of the corridor.
   for (let i = 0; i < difficulty - 1; i++) {
@@ -221,7 +227,7 @@ export function createInterior(state, wreck) {
   // security that the crew bought for it while it was theirs.
   if (wreck.kind === 'station') {
     const more = 2 + ((wreck.defense && wreck.defense.inner) || 0);
-    for (let i = 0; i < more; i++) it.guards.push(newGuard(state, spot(anyRoom(), 8 * TILE), 0));
+    for (let i = 0; i < more; i++) it.guards.push(newGuard(state, spot(anyRoom(), 8 * TILE), 0, kind()));
     // A station that counts the crew as an enemy is in lockdown: dark, and on its guard.
     it.mood = 'lockdown';
     it.dark = true;
@@ -249,8 +255,10 @@ export function createInterior(state, wreck) {
   return it;
 }
 
-// Turn an interior into a trading floor: doors open, desks to trade at, people walking about.
-export function makeTrade(state, it) {
+// Turn an interior into a trading floor: doors open, desks to trade at, people walking about. The rooms without a
+// desk are for the staff (docs/station-boarding.md, section 3): guards walk there and cameras watch them, and a
+// visitor who is seen there gives the crew away. The crew's own station has no staff to hide from.
+export function makeTrade(state, it, st) {
   it.trade = true;
   it.mood = null;
   it.dark = false;
@@ -275,10 +283,13 @@ export function makeTrade(state, it) {
   const area = (rm) => (rm.c1 - rm.c0) * (rm.r1 - rm.r0);
   const largest = [...open].sort((a, b) => area(b) - area(a) || a.c0 - b.c0 || a.r0 - b.r0);
   it.desks = ['services', 'shipyard', 'armory'].map((type, k) => ({ type, ...largest[k % largest.length].mid }));
+  const front = largest.slice(0, 3);
+  it.staff = it.rooms.map((r, i) => i).filter((i) => !front.includes(it.rooms[i]));
   it.civilians = [];
   const taken = it.desks.map((d) => ({ x: d.x, y: d.y }));
+  if (it.mainframe) taken.push(it.mainframe);
   for (let i = 0; i < 6; i++) {
-    const box = i < 3 ? it.halls[i % it.halls.length] : open[(i * 2) % open.length];
+    const box = i < 3 ? it.halls[i % it.halls.length] : front[i % front.length];
     const { x, y } = spotIn(state, it, box, taken);
     it.civilians.push({
       id: state.nextId++,
@@ -290,6 +301,25 @@ export function makeTrade(state, it) {
       wait: rand(state) * 3,
     });
   }
+  if (st && st.side !== CREW) staffUp(state, it, st, taken);
+}
+
+// Guards and cameras for the staff rooms of a trading station. They keep to their rounds, and only take notice of
+// a visitor who is somewhere they should not be.
+function staffUp(state, it, st, taken) {
+  const rooms = it.staff.map((i) => it.rooms[i]);
+  if (!rooms.length) return;
+  const tier = currentSector(state).tier;
+  const n = 1 + tier + ((st.defense && st.defense.inner) || 0);
+  for (let i = 0; i < n; i++) {
+    const p = spotIn(state, it, rooms[i % rooms.length], taken);
+    it.guards.push(newGuard(state, p, rand(state) * TAU, guardKind(state, 'other', tier + 1)));
+  }
+  for (const room of rooms.filter((r) => r.door).slice(0, 2)) {
+    const rest = headingTo(room.door.x - room.mid.x, room.door.y - room.mid.y);
+    it.cameras.push({ id: state.nextId++, x: room.mid.x, y: room.mid.y, rest, phase: rand(state) * TAU });
+  }
+  planRounds(state, it, 0.5);
 }
 
 // Where a boarder stands when they have just come in: a step inside the airlock, side by side.
@@ -328,7 +358,7 @@ export function tryBoard(state, playerId) {
   if (isTrading(wreck)) {
     if (!wreck.interior) wreck.interior = createInterior(state, wreck);
     const floor = wreck.interior;
-    if (!floor.trade) makeTrade(state, floor);
+    if (!floor.trade) makeTrade(state, floor, wreck);
     floor.live = true;
     if (!floor.avatars.length) useAirlock(state, wreck, floor);
     player.inside = wreck.id;
@@ -450,6 +480,11 @@ export function foundOut(state, it, at) {
   if (it.mood !== 'alarm') state.events.push({ type: 'foundOut' });
   it.mood = 'alarm';
   for (const g of it.guards) alertGuard(g, at);
+}
+// The crew is seen where it should not be. On a trading station that turns the station on them, see mainframe.js.
+function giveAway(state, place, it, at) {
+  if (it.trade) turnOnCrew(state, place, at, true);
+  else foundOut(state, it, at);
 }
 // A loud noise at `at`: guards near enough to hear it come looking, and it gives the crew away.
 function heard(state, it, at) {
@@ -871,6 +906,8 @@ function stepCamera(state, it, c, dt) {
   if (it.mood === 'alarm' || it.blackout > 0) return null;
   const way = cameraWay(state, c);
   for (const av of it.avatars) {
+    // On a trading station a camera only cares about who is in the staff rooms.
+    if (it.trade && !inStaff(it, av)) continue;
     const d = dist(c.x, c.y, av.x, av.y);
     if (d > B.CAMERA_RANGE || d < 4) continue;
     if (Math.abs(angleDiff(headingTo(av.x - c.x, av.y - c.y), way)) > B.CAMERA_FOV) continue;
@@ -913,9 +950,10 @@ function stepInsideBolts(state, it, dt) {
       if (!e) continue;
       b.ttl = 0;
       if (b.tranq) {
-        // A dart only works on a guard. It falls asleep where it stands, and nobody hears it.
-        if (guard) {
-          guard.sleep = B.TRANQ_SLEEP;
+        // A dart only works on a guard, and not on a drone. A heavy guard sleeps for a shorter while. It falls
+        // asleep where it stands, and nobody hears it.
+        if (guard && kindOf(guard).sleep > 0) {
+          guard.sleep = B.TRANQ_SLEEP * kindOf(guard).sleep;
           guard.mode = 'idle';
           guard.path = [];
           state.events.push({ type: 'guardAsleep' });
@@ -1011,13 +1049,17 @@ function stepInterior(state, wreck, cmds, dt) {
   for (const av of it.avatars) av.watched = false;
   for (const g of it.guards) {
     const found = stepGuard(state, it, g, dt);
-    if (found) foundOut(state, it, found.intruder || found.body);
+    if (!found) continue;
+    const at = found.intruder || found.body;
+    // A watchman calls everyone, also in a wreck where there is no alarm.
+    if (kindOf(g).rouses) for (const o of it.guards) alertGuard(o, at);
+    giveAway(state, wreck, it, at);
   }
   for (const c of it.civilians) stepCivilian(state, it, c, dt);
   for (const t of it.turrets) if (stepTurret(state, it, t, dt)) foundOut(state, it, t.seen);
   for (const c of it.cameras) {
     const caught = stepCamera(state, it, c, dt);
-    if (caught) foundOut(state, it, caught);
+    if (caught) giveAway(state, wreck, it, caught);
   }
   // A boarder that nobody is watching any more is forgotten again, little by little.
   for (const av of it.avatars) if (!av.watched) av.spotted = Math.max(0, av.spotted - dt * 1.5);

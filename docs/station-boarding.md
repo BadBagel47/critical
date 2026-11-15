@@ -160,7 +160,7 @@ Nivå 3 är dagens övertagande vid terminalen, flyttat till mainframen. Det tar
 - Aldrig mer än en grupp åt gången, och tre till fyra minuter mellan grupperna.
 - Prissumman är 300 krediter. Den betalas på valfri station som handlar med er, eller försvinner när tre grupper är besegrade.
 
-**Byggt (2026-11-15, F-114):** som förslaget, med två skillnader. Handelsstationer har ännu ingen personaldel, så mainframen nås fritt och vakterna kommer först när övertagandet startar (F-206). Övertagandet startas med två klick i panelen och tar 30 sekunder. Stationens kanoner vänder sig mot skeppet medan det pågår.
+**Byggt (2026-11-15, F-114):** som förslaget, med två skillnader. Personaldelen (F-206, byggd 2026-11-15) är rummen utan disk, inte navet, eftersom stationernas planlösning ännu inte har något nav. Mainframen står där. Övertagandet startas med två klick i panelen och tar 30 sekunder. Stationens kanoner vänder sig mot skeppet medan det pågår.
 
 ## 10. Anseende
 
@@ -241,7 +241,7 @@ Meddelandet säger vilken station, vem som anfaller, nivån och ungefär hur lå
 - En faktion anfaller bara när anseendet är "fientlig". Vid "stängd" nöjer den sig med att hålla er ute.
 - **Bestämt 2026-11-14:** en station som faller blir angriparens. Halva det försvar ni köpt finns kvar, så den är svårare att ta tillbaka än den var att ta första gången, och ni får tillbaka den halvan om ni tar den igen.
 
-**Byggt (2026-11-15, F-121, F-123 och första omgången av F-122):** som förslaget. Ett anfall som inte syns räknas ut med samma styrkor: skadan per sekund för varje sorts skepp, stationens kanontorn som träffar en fjärdedel av gångerna, och bordare som nöts ner av säkerheten inuti. Där besättningen är blir belägringen en riktig strid, och bordningsskeppet dockar vid den arm som ligger längst från fregatten. Bordningen och avgörandet räknas alltid ut. Kvar till andra omgången: att själv gå in och slå ut bordarna, och att bordningsskeppet skyddas av dockningsskölden. Gunner bemannar ett kanontorn (idé ur D-180) är inte byggt.
+**Byggt (2026-11-15, F-121, F-123 och första omgången av F-122):** som förslaget. Ett anfall som inte syns räknas ut med samma styrkor: skadan per sekund för varje sorts skepp, stationens kanontorn som träffar en fjärdedel av gångerna, och bordare som nöts ner av säkerheten inuti. Där besättningen är blir belägringen en riktig strid, och bordningsskeppet dockar vid den arm som ligger längst från fregatten. Bordningen och avgörandet räknas alltid ut. Andra omgången är också byggd (2026-11-15): bordningsskeppet skyddas av dockningsskölden, och går besättningen in medan stationen bordas möter den bordarna som vakter. Varje bordare som slås ut försvagar anfallet, och klockan fram till mainframen går ändå. Gunner bemannar ett kanontorn (idé ur D-180) är inte byggt.
 
 ## 15. Byggordning
 

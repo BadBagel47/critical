@@ -10,6 +10,7 @@ import { takeOver, stationShieldMax, gunHpMax, allStations, servicePrices } from
 import { moodOf, enemies, HUNTER } from '../src/sim/sides.js';
 import { startSiege, attackChoices, riskOf } from '../src/sim/siege.js';
 import { hurtVessel } from '../src/sim/vessels.js';
+import { guardKind, GUARD_KINDS, newGuard } from '../src/sim/guards.js';
 import { B } from '../src/sim/balance.js';
 import { dist } from '../src/sim/util.js';
 
@@ -351,4 +352,140 @@ test('only one attack at a time in the whole world', () => {
   s.siegeTimer = 0;
   step(s, {}, DT);
   assert.equal(s.siege.id, id, 'and no other while it lasts');
+});
+
+// ---------- kinds of guard (F-126) ----------
+test('easy places only have plain guards, and dangerous ones have harder kinds', () => {
+  const s = quiet();
+  for (let i = 0; i < 40; i++) assert.equal(guardKind(s, 'wreck', 1), 'soldier');
+  const seen = new Set();
+  for (let i = 0; i < 200; i++) seen.add(guardKind(s, 'other', 6));
+  assert.deepEqual([...seen].sort(), ['heavy', 'soldier', 'tech', 'watchman']);
+  const pirates = new Set();
+  for (let i = 0; i < 200; i++) pirates.add(guardKind(s, 'pirate', 6));
+  assert.ok(pirates.has('drone') && pirates.has('heavy') && !pirates.has('watchman'));
+});
+
+test('a drone cannot be put to sleep, a heavy guard sleeps shorter, and both are tougher or quicker', () => {
+  assert.equal(GUARD_KINDS.drone.sleep, 0);
+  assert.ok(GUARD_KINDS.heavy.sleep < 1 && GUARD_KINDS.heavy.hp > 2);
+  assert.ok(GUARD_KINDS.drone.speed > 1.5);
+  const s = quiet();
+  const st = hostile(s);
+  const { it, av } = inside(s, st);
+  it.guards = [];
+  it.turrets = [];
+  it.cameras = [];
+  const at = { x: av.x + 40, y: av.y };
+  const drone = newGuard(s, at, 0, 'drone');
+  it.guards.push(drone);
+  it.bolts.push({ x: drone.x - 3, y: drone.y, vx: 10, vy: 0, ttl: 1, owner: 'crew', dmg: 0, tranq: true });
+  step(s, { away: { 0: {} } }, DT);
+  assert.equal(drone.sleep, 0, 'a dart does nothing to a drone');
+  const heavy = newGuard(s, at, 0, 'heavy');
+  it.guards = [heavy];
+  it.bolts.push({ x: heavy.x - 3, y: heavy.y, vx: 10, vy: 0, ttl: 1, owner: 'crew', dmg: 0, tranq: true });
+  step(s, { away: { 0: {} } }, DT);
+  assert.ok(heavy.sleep > 0 && heavy.sleep <= B.TRANQ_SLEEP * 0.5);
+  assert.equal(heavy.hp, B.GUARD_HP * GUARD_KINDS.heavy.hp);
+});
+
+test('a technician switches a knocked-out turret back on', () => {
+  const s = quiet();
+  const st = hostile(s);
+  const { it, av } = inside(s, st);
+  av.x = it.entry.x;
+  av.y = it.entry.y;
+  it.cameras = [];
+  const t = it.turrets[0];
+  assert.ok(t, 'a hostile station has turrets');
+  t.out = 1e3;
+  const tech = newGuard(s, { x: t.x, y: t.y + 10 }, 0, 'tech');
+  it.guards = [tech];
+  run(s, { away: { 0: {} } }, B.TECH_MEND + 2);
+  assert.equal(t.out, 0);
+});
+
+// ---------- the staff rooms of a trading station (F-206) ----------
+test('a trading station has staff rooms with guards and cameras, and only cares about visitors in them', () => {
+  const s = quiet();
+  const st = post(s);
+  const { it, av } = inside(s, st);
+  assert.ok(it.staff.length > 0, 'it has rooms for the staff');
+  assert.ok(it.guards.length >= 1 && it.cameras.length >= 1);
+  assert.ok(!it.staff.some((i) => it.desks.some((d) => d.x === it.rooms[i].mid.x && d.y === it.rooms[i].mid.y)));
+  // A visitor in the open part can walk right past the guards.
+  const g = it.guards[0];
+  av.x = it.entry.x;
+  av.y = it.entry.y;
+  g.x = av.x + 20;
+  g.y = av.y;
+  g.heading = Math.atan2(-20, 0);
+  run(s, { away: { 0: {} } }, 2);
+  assert.equal(it.trade, true, 'nobody minds a visitor where visitors may go');
+  // In the staff rooms, being seen sounds the alarm.
+  const room = it.rooms[it.staff[0]];
+  av.x = room.mid.x;
+  av.y = room.mid.y;
+  g.x = av.x;
+  g.y = av.y + 20;
+  g.path = [];
+  g.route = [];
+  g.home = { x: g.x, y: g.y };
+  g.looks = [0];
+  g.heading = 0;
+  run(s, { away: { 0: {} } }, 2);
+  assert.equal(it.trade, false);
+  assert.equal(it.mood, 'alarm');
+  assert.equal(s.players[0].inside, st.id, 'and nobody is thrown out');
+  assert.ok(s.standing[st.side] < -B.SEIZE_STANDING + 1, 'and its side thinks much less of the crew');
+});
+
+test('the crew’s own station has no staff to hide from', () => {
+  const s = quiet();
+  const st = yard(s);
+  const { it } = inside(s, st);
+  assert.equal(it.guards.length, 0);
+  assert.equal(it.cameras.length, 0);
+});
+
+// ---------- fighting boarders inside (F-122) ----------
+test('going into a station that is being boarded, the crew meets the boarders and can beat the attack', () => {
+  const s = quiet();
+  const st = post(s);
+  takeOver(s, st);
+  startSiege(s, st, 0, 'pirate');
+  s.vessels = [];
+  Object.assign(s.siege, { stage: 'boarding', t: 0, boarders: 3 });
+  const { it } = inside(s, st);
+  s.players[0].hp = 1e4;
+  step(s, { away: { 0: {} } }, DT);
+  const boarders = it.guards.filter((g) => g.boarder);
+  assert.equal(boarders.length, 3, 'one guard for each boarder');
+  assert.equal(it.mood, 'alarm');
+  boarders[0].hp = 0;
+  run(s, { away: { 0: {} } }, 0.2);
+  assert.ok(s.siege.boarders <= 2, 'each one beaten weakens the attack');
+  for (const g of it.guards) if (g.boarder) g.hp = 0;
+  run(s, { away: { 0: {} } }, 0.2);
+  assert.equal(s.siege, null, 'with all of them beaten, the attack is over');
+  assert.equal(st.side, 'crew');
+  assert.equal(it.mood, null, 'and it is calm again');
+});
+
+test('the boarding ship lies under the station’s docking shield', () => {
+  const s = quiet();
+  const st = post(s);
+  takeOver(s, st);
+  s.ship.x = st.x + 3000;
+  startSiege(s, st, 0, 'pirate');
+  const boat = s.vessels.find((v) => v.siege === s.siege.id);
+  boat.boarding = true;
+  boat.legs = [{ x: boat.x, y: boat.y, hold: 1e9 }];
+  Object.assign(s.siege, { stage: 'boarding', t: 0, boarders: 50 });
+  run(s, {}, 5);
+  assert.ok(boat.shield > 0);
+  const hp = boat.hp;
+  hurtVessel(s, boat, 10);
+  assert.equal(boat.hp, hp, 'the shield takes the hit');
 });

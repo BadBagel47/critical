@@ -117,6 +117,8 @@ const TOAST = {
     e.level === 2 ? BAD : WARM,
   ],
   siegeBeaten: (e) => [`${e.name} BEAT THE ATTACK OFF`, GOOD],
+  boardersMet: () => ['BOARDERS INSIDE  ·  STOP THEM BEFORE THEY TAKE THE MAINFRAME', BAD],
+  turretMended: () => ['A TECHNICIAN SWITCHED A TURRET BACK ON', WARM],
   hackStarted: () => null,
   hackDone: (e) => [HACKED[e.level], TECH],
   cannotHack: (e) => [e.reason, WARM],
