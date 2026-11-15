@@ -75,12 +75,14 @@ Byggs på dagens fem system, så att stjärnkartan inte behöver röras än.
 - En sond skickas till ett närliggande system, ett steg bort, och visar vad som finns där.
 - En boj håller sitt system uppdaterat, och det syns också på stjärnkartan.
 - En systemradar som man köper visar om närliggande system är vänliga och vems de är (F-195).
+- **Ankomst.** Vid hopp till ett utforskat system väljer Captain vilken bas skeppet ska anlända vid. Captain ser senast kända status på baserna, eller aktuell status om en boj ligger där. Utan val gäller en förvald bas: i första hand en känd vänlig, sedan en neutral, sist en fientlig. Vid hopp till ett system man inte vet något om slumpas ankomstplatsen, och då får man scanna eller utforska.
 - Det går att hoppa tillbaka, och ett system är som det lämnades. Den egna varvsstationen anfalls aldrig.
 
 **Agentens förslag**
 - Stjärnkartan blir en bild med punkter och linjer, i stället för dagens lista.
 - Hemsystemet är alltid av samma slag, och farligheten stiger med avståndet hemifrån.
 - Alla hoppvägar går åt båda håll.
+- Man anländer en bit från basen, och utanför räckvidden för en fientlig bas. En slumpad ankomst hamnar aldrig i stjärnans farliga del eller intill en fientlig bas.
 - Varje faktion har ett eget område av grannsystem.
 - Namnen sätts ihop av egna ordlistor.
 
