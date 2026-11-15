@@ -25,6 +25,8 @@ export function createShip() {
     ramCooldown: 0,
     fuel: B.FUEL_START,
     turretAngle: 0,
+    // The turrets on the wings turn by themselves, so that all of them point at what the Gunner aims at.
+    wingAngles: [0, 0],
     fireCooldown: 0,
     firing: false,
     power: { weapons: 2, shields: 2, engines: 2, repair: 2 },

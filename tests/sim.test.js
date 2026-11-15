@@ -18,8 +18,8 @@ import { weaponsOf } from '../src/sim/weapons.js';
 import { SHIPS, HULLS } from '../src/sim/kinds.js';
 import { summon } from '../src/sim/testing.js';
 import { createWreck, jumpBlocked } from '../src/sim/sectors.js';
-import { B, SHIP_GEOM } from '../src/sim/balance.js';
-import { headingTo, dist } from '../src/sim/util.js';
+import { B, SHIP_GEOM, WING_MOUNTS } from '../src/sim/balance.js';
+import { headingTo, dist, toWorld, angleDiff } from '../src/sim/util.js';
 
 const wrecks = (s) => thingsOf(s, 'wreck');
 const stations = (s) => thingsOf(s, 'station');
@@ -964,6 +964,30 @@ test('twin turrets add two more bolts to every pulse shot', () => {
   s.ship.mods.twin = 1;
   step(s, { gunner: { aim: { x: 0, y: -300 }, fire: true } }, DT);
   assert.equal(s.bolts.length, 3);
+});
+
+test('every turret points at what the Gunner aims at, and fires the way it points', () => {
+  const s = quiet(createState(1));
+  s.ship.mods.twin = 1;
+  // Something close by and off to one side, where the three turrets have to point in clearly different ways.
+  const aim = { x: s.ship.x + 60, y: s.ship.y - 30 };
+  run(s, { gunner: { aim, fire: false } }, 1);
+  const mounts = [SHIP_GEOM.turret, ...WING_MOUNTS].map((m) => toWorld(s.ship, m));
+  const angles = [s.ship.turretAngle, ...s.ship.wingAngles];
+  mounts.forEach((m, i) => {
+    assert.ok(
+      Math.abs(angleDiff(angles[i], headingTo(aim.x - m.x, aim.y - m.y))) < 0.01,
+      `turret ${i} points at the aim`,
+    );
+  });
+  assert.ok(Math.abs(angleDiff(angles[1], angles[2])) > 0.3, 'the wing turrets do not point the same way');
+  s.ship.fireCooldown = 0;
+  step(s, { gunner: { aim, fire: true } }, DT);
+  assert.equal(s.bolts.length, 3);
+  s.bolts.forEach((b, i) => {
+    const way = headingTo(b.vx - s.ship.vx, b.vy - s.ship.vy);
+    assert.ok(Math.abs(angleDiff(way, angles[i])) < 0.03, `bolt ${i} flies the way its turret points`);
+  });
 });
 
 test("darts launch on the captain's order, fight pirates and come home again", () => {

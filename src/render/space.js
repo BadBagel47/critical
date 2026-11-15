@@ -258,11 +258,13 @@ function drawShip(ctx, state, img, fx) {
     ctx.restore();
   };
   inShipSpace(() => drawHull(ctx, state, img));
-  const mounts = [SHIP_GEOM.turret, ...(has(ship, 'twin') ? WING_MOUNTS : [])];
-  for (const mount of mounts) {
+  // Every turret is drawn the way it points, which is the way it fires.
+  const turret = (mount, angle) => {
     const p = toWorld(ship, mount);
-    sprite(ctx, img.turret_pulse, p.x, p.y, ship.turretAngle, 6, 10.5);
-  }
+    sprite(ctx, img.turret_pulse, p.x, p.y, angle, 6, 10.5);
+  };
+  turret(SHIP_GEOM.turret, ship.turretAngle);
+  if (has(ship, 'twin')) WING_MOUNTS.forEach((w, i) => turret(w, ship.wingAngles[i]));
   // Sparks from critical parts of the ship.
   for (const n of ship.nodes) {
     if (nodeStatus(n.hp) !== 'critical' || Math.random() > 0.3) continue;
@@ -511,14 +513,15 @@ export function drawSpace(ctx, state, view, assets) {
     ctx.stroke();
     ctx.globalAlpha = 1;
   }
-  for (const b of state.beams) drawBeam(ctx, b);
-  for (const b of state.bolts) drawBolt(ctx, b);
-  for (const r of state.rockets) drawRocket(ctx, r, img);
   if (view.lights) for (const v of [...state.vessels, ship]) if (near(v, 110)) drawShadow(ctx, state, v, env);
   for (const v of state.vessels) if (near(v, 110)) drawVessel(ctx, v, env);
   for (const d of state.darts) drawDart(ctx, d, img);
   if (fx) fx.space.draw(ctx);
   if (!state.over) drawShip(ctx, state, img, fx);
+  // Shots are drawn over the ships, so that they are seen to leave the turrets and not to come from under the hull.
+  for (const b of state.beams) drawBeam(ctx, b);
+  for (const b of state.bolts) drawBolt(ctx, b);
+  for (const r of state.rockets) drawRocket(ctx, r, img);
   for (const f of state.fx) drawEffect(ctx, f);
   if (view.lights) drawSpaceLights(ctx, state, env, near);
   ctx.restore();

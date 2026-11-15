@@ -11,7 +11,7 @@ import { hurtVessel, classOf, struckByCrew } from './vessels.js';
 import { damageStation, struckBy } from './stations.js';
 import { CREW } from './sides.js';
 import { has } from './upgrades.js';
-import { forward, headingTo, toWorld, dist, randRange } from './util.js';
+import { forward, toWorld, dist, randRange } from './util.js';
 
 export const WEAPONS = {
   pulse: { name: 'PULSE', mod: null, work: workPulse },
@@ -27,9 +27,9 @@ function workPulse(state, ship, ctl) {
   ship.firing = true;
   if (ship.fireCooldown > 0) return;
   const mount = turretMount(ship);
-  const shoot = (from, dmg) => {
-    const aim = ctl.aim ? headingTo(ctl.aim.x - from.x, ctl.aim.y - from.y) : ship.turretAngle;
-    const d = forward((from === mount ? ship.turretAngle : aim) + randRange(state, -0.012, 0.012));
+  // Every turret fires the way it points.
+  const shoot = (from, dmg, angle) => {
+    const d = forward(angle + randRange(state, -0.012, 0.012));
     state.bolts.push({
       x: from.x + d.x * 9,
       y: from.y + d.y * 9,
@@ -40,8 +40,8 @@ function workPulse(state, ship, ctl) {
       dmg,
     });
   };
-  shoot(mount, B.BOLT_DMG);
-  if (has(ship, 'twin')) for (const w of WING_MOUNTS) shoot(toWorld(ship, w), B.WING_BOLT_DMG);
+  shoot(mount, B.BOLT_DMG, ship.turretAngle);
+  if (has(ship, 'twin')) WING_MOUNTS.forEach((w, i) => shoot(toWorld(ship, w), B.WING_BOLT_DMG, ship.wingAngles[i]));
   ship.fireCooldown = B.FIRE_INTERVAL / ctl.power;
   state.events.push({ type: 'shot' });
 }

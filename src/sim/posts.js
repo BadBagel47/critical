@@ -1,13 +1,13 @@
 // The three posts on the frigate. Each takes the command of whoever holds the post,
 // or null when nobody does, in which case the post keeps running as it was set.
-import { B } from './balance.js';
+import { B, WING_MOUNTS } from './balance.js';
 import { nodeFactor, powerAvailable, powerUsed, setPower, dockCandidate, dockPose, weaponPower } from './ship.js';
 import { findDock } from './things.js';
 import { WEAPONS, weaponsOf, turretMount } from './weapons.js';
 import { teleportAllHome } from './boarding.js';
 import { useTool } from './map.js';
 import { has, hullMax } from './upgrades.js';
-import { clamp, forward, headingTo, turnToward, dist, TAU } from './util.js';
+import { clamp, forward, headingTo, turnToward, toWorld, dist, TAU } from './util.js';
 
 // ---------- Captain ----------
 function undock(state) {
@@ -113,6 +113,11 @@ export function stepGunner(state, cmd, dt) {
     const mount = turretMount(ship);
     const want = headingTo(cmd.aim.x - mount.x, cmd.aim.y - mount.y);
     ship.turretAngle = turnToward(ship.turretAngle, want, B.TURRET_SLEW * dt);
+    WING_MOUNTS.forEach((w, i) => {
+      const from = toWorld(ship, w);
+      const way = headingTo(cmd.aim.x - from.x, cmd.aim.y - from.y);
+      ship.wingAngles[i] = turnToward(ship.wingAngles[i], way, B.TURRET_SLEW * dt);
+    });
   }
   ship.fireCooldown = Math.max(0, ship.fireCooldown - dt);
   ship.heavyCool = Math.max(0, ship.heavyCool - dt);
