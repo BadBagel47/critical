@@ -59,7 +59,7 @@ export function shopRows(state, st, tab) {
     const item = CATALOG[id],
       why = blockedReason(state, id, k),
       lv = level(ship, id);
-    const owned = why === 'INSTALLED' || why === 'MAXED' || why === 'OWNED';
+    const owned = why === 'INSTALLED' || why === 'MAXED' || why === 'OWNED' || why === 'CARRIED';
     rows.push({
       x: RX,
       y: PY + 66 + i * 15,

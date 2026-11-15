@@ -1823,10 +1823,13 @@ test('boarding gear changes what a boarder can do', () => {
   assert.equal(teleCooldown(s.ship), B.COIL_TELEPORT);
   run(s, {}, 0.1);
   assert.equal(s.players[0].hp, B.CREW_HP + B.SUIT_HP);
+  // The ship carries one breaching charge at a time, and it is the Gunner who takes it along.
+  assert.equal(blockedReason(s, 'charge'), 'CARRIED');
+  s.players[0].post = 'gunner';
   step(s, { system: { board: [0] } }, DT);
   const it = w.interior,
     av = it.avatars[0];
-  assert.equal(av.charges, B.CHARGES);
+  assert.equal(av.charges, 1);
   assert.equal(av.sentries, 1);
   // The breaching charge opens the vault at once and alerts the guards.
   const door = it.rooms[it.vault].door;
@@ -1835,6 +1838,8 @@ test('boarding gear changes what a boarder can do', () => {
   step(s, { away: { 0: { charge: true } } }, DT);
   assert.equal(it.doorOpen, true);
   assert.ok(it.guards.every((g) => g.mode === 'alert'));
+  assert.equal(av.charges, 0, 'the charge is used up');
+  assert.equal(blockedReason(s, 'charge'), null, 'and a new one can be bought');
   // The deployable turret shoots a guard on its own.
   it.turrets = [];
   it.guards = it.guards.slice(0, 1);
@@ -1940,7 +1945,7 @@ test('test mode starts with everything installed, room for it, credits and all c
   const s = createState(1, { test: true });
   assert.equal(s.test, true);
   for (const id of Object.keys(CATALOG))
-    assert.ok(['INSTALLED', 'MAXED', 'OWNED'].includes(blockedReason(s, id)), id + ' is in place');
+    assert.ok(['INSTALLED', 'MAXED', 'OWNED', 'CARRIED'].includes(blockedReason(s, id)), id + ' is in place');
   assert.ok(slotsUsed(s.ship, 'hard') <= s.ship.slots.hard && slotsUsed(s.ship, 'system') <= s.ship.slots.system);
   assert.equal(s.ship.hull, hullMax(s.ship));
   assert.equal(s.ship.fuel, fuelMax(s.ship));
@@ -2617,12 +2622,19 @@ test('the post a boarder left makes a difference inside', () => {
   assert.ok(eng.t < cap.t, 'the Engineer is quicker');
   assert.equal(eng.mood, 'lockdown', 'and is not heard');
   assert.equal(cap.mood, 'alarm', 'cutting the lock is heard');
-  // A Gunner always brings a charge.
-  const s = quiet(createState(1));
-  s.players[0].post = 'gunner';
-  const w = dockAt(s);
-  step(s, { system: { board: [0] } }, DT);
-  assert.equal(w.interior.avatars[0].charges, 1);
+  // The breaching charge is the Gunner's: nobody else takes it along, and without one bought there is none.
+  for (const [post, bought, carried] of [
+    ['gunner', 1, 1],
+    ['gunner', 0, 0],
+    ['engineer', 1, 0],
+  ]) {
+    const s = quiet(createState(1));
+    s.players[0].post = post;
+    s.ship.mods.charge = bought;
+    const w = dockAt(s);
+    step(s, { system: { board: [0] } }, DT);
+    assert.equal(w.interior.avatars[0].charges, carried, `${post} with ${bought} bought`);
+  }
 });
 
 test('the Engineer steadies the reactor of a wreck and buys the crew more time, once', () => {

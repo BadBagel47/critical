@@ -119,12 +119,14 @@ export const CATALOG = {
   rifle: { tab: 'armory', name: 'RIFLE UPGRADE', slot: null, price: 120, levels: 2, desc: 'BOARDERS HIT HARDER' },
   pack: { tab: 'armory', name: 'CARGO PACK', slot: null, price: 140, desc: 'CARRY TWO MORE THINGS PER TRIP' },
   suit: { tab: 'armory', name: 'SUIT ARMOR', slot: null, price: 160, desc: 'BOARDERS TAKE MORE BEFORE THE TELEPORT' },
+  // The one thing in the armory that is used up: the ship carries one at a time, and buys a new one after.
   charge: {
     tab: 'armory',
-    name: 'BREACHING CHARGES',
+    name: 'BREACHING CHARGE',
     slot: null,
-    price: 130,
-    desc: 'C BLOWS A VAULT DOOR, BUT WAKES EVERYONE',
+    price: 50,
+    used: true,
+    desc: 'THE GUNNER BLOWS A VAULT DOOR OPEN WITH C  ·  WAKES EVERYONE  ·  USED UP',
   },
   tranq: {
     tab: 'armory',
@@ -167,7 +169,10 @@ export function blockedReason(state, id, discount = 1) {
     ship = state.ship,
     lv = level(ship, id);
   if (!item) return 'UNKNOWN';
-  if (lv >= (item.levels || 1)) return item.levels ? 'MAXED' : item.tab === 'armory' ? 'OWNED' : 'INSTALLED';
+  if (lv >= (item.levels || 1)) {
+    if (item.used) return 'CARRIED';
+    return item.levels ? 'MAXED' : item.tab === 'armory' ? 'OWNED' : 'INSTALLED';
+  }
   if (item.needs && !has(ship, item.needs)) return 'NEEDS ' + CATALOG[item.needs].name;
   if (item.slot && lv === 0 && slotsUsed(ship, item.slot) + item.size > ship.slots[item.slot])
     return item.slot === 'hard' ? 'NO FREE HARDPOINT' : 'NO FREE SYSTEM SLOT';

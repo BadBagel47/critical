@@ -9,6 +9,7 @@
 //   off       it cannot be done right now. The label says why
 //   who       which posts can do it: 'can', 'best' for the post that is better at it than the others, and
 //             'no' for a post that cannot. It is shown beside the button, see WHO below
+//   gain      one or two words on what the post that is best at it gains, shown beside its mark
 //   tip       a line that says what it is, shown the first times the button comes up
 import { POSTS } from './sim/players.js';
 import { THINGS } from './sim/kinds.js';
@@ -16,6 +17,7 @@ import { dockCandidate } from './sim/ship.js';
 import { findDock, nameOf } from './sim/things.js';
 import { isTrading } from './sim/stations.js';
 import { useTarget } from './sim/boarding.js';
+import { level } from './sim/upgrades.js';
 
 const LOCK_VERB = { pipes: 'BYPASS', code: 'BYPASS', dial: 'PICK' };
 // Who can do what, for the things that are not the same for every post. [captain, gunner, engineer].
@@ -29,9 +31,12 @@ const WHO = {
   turn: [only('engineer'), 'ONLY THE ENGINEER CAN TURN A TURRET TO YOUR SIDE'],
   disarm: [only('engineer'), 'ONLY THE ENGINEER CAN SWITCH OFF AN ALARMED DOOR'],
   steady: [only('engineer'), 'ONLY THE ENGINEER CAN STEADY THE REACTOR'],
-  cut: [best('engineer'), 'ANYONE CAN CUT THE LOCK, BUT IT IS HEARD. THE ENGINEER IS QUIET AND QUICK'],
-  blow: [best('gunner'), 'A CHARGE OPENS THE DOOR AT ONCE AND WAKES EVERYONE. THE GUNNER ALWAYS HAS ONE'],
-  takeover: [best('engineer'), 'ANYONE CAN TAKE THE STATION OVER. THE ENGINEER IS QUICKER'],
+  cut: [best('engineer'), 'ANYONE CAN CUT THE LOCK, BUT IT IS HEARD. THE ENGINEER IS QUIET AND QUICK', 'QUIET'],
+  blow: [
+    only('gunner'),
+    'ONLY THE GUNNER CARRIES THE CHARGE. IT OPENS THE DOOR AT ONCE, WAKES EVERYONE AND IS USED UP',
+  ],
+  takeover: [best('engineer'), 'ANYONE CAN TAKE THE STATION OVER. THE ENGINEER IS QUICKER', 'FASTER'],
   takedown: [ALL, 'A SLEEPING GUARD THAT IS TAKEN DOWN IS OUT FOR THE REST OF THE BOARDING'],
 };
 // Every action has the same shape. `more` holds what differs from a plain press of a key.
@@ -46,6 +51,7 @@ const act = (name, code, label, short, more = {}) => ({
   off: false,
   who: (WHO[name] || [ALL])[0],
   tip: (WHO[name] || [])[1] || null,
+  gain: (WHO[name] || [])[2] || null,
   ...more,
 });
 const use = (name, label, short, more = {}) => act(name, 'KeyF', label, short, { main: true, ...more });
@@ -58,7 +64,11 @@ function dockedUse(state, me, t) {
     if (t.breakin && t.breakin.started) return use('lock', 'BACK TO THE LOCK', 'LOCK');
     const code = THINGS[t.kind].lock === 'code';
     const more = code
-      ? { who: best('engineer'), tip: 'THE ENGINEER FINDS THE CODE. ANYONE CAN ENTER IT AT THE LOCK' }
+      ? {
+          who: best('engineer'),
+          tip: 'THE ENGINEER FINDS THE CODE. ANYONE CAN ENTER IT AT THE LOCK',
+          gain: 'FINDS THE CODE',
+        }
       : {};
     return use('lock', LOCK_VERB[THINGS[t.kind].lock] + ' THE LOCK', 'LOCK', more);
   }
@@ -116,7 +126,10 @@ function away(state, me) {
       }),
     );
   }
+  // The charge is the Gunner's. The others see that the ship has one, and who can use it.
+  const carried = level(state.ship, 'charge') > 0;
   if (av.charges > 0) list.push(act('blow', 'KeyC', 'BLOW THE DOOR', 'BLOW', { main: !at.cut }));
+  else if (carried && av.role !== 'gunner') list.push(act('blow', 'KeyC', 'BLOW THE DOOR', 'BLOW', { off: true }));
   return list;
 }
 

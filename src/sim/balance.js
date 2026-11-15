@@ -378,7 +378,6 @@ export const B = {
   SUIT_HP: 50,
   COIL_TELEPORT: 25,
   HACK_BONUS: 1.4,
-  CHARGES: 2,
   SENTRY_HP: 40,
   SENTRY_RANGE: 190,
   SENTRY_DMG: 6,

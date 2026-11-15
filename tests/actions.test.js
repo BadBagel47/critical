@@ -101,8 +101,17 @@ test('at a vault door the lock can be cut by holding, or blown with a charge', (
   av.y = door.y + 8;
   assert.deepEqual(names(s, 'away'), ['cut']);
   assert.equal(offered(s, 'away')[0].hold, true);
-  av.charges = 1;
+  // With a charge on the ship, the others see that the door can be blown, but not by them.
+  s.ship.mods.charge = 1;
   assert.deepEqual(names(s, 'away'), ['cut', 'blow']);
+  const shownTo = offered(s, 'away')[1];
+  assert.equal(shownTo.off, true);
+  assert.deepEqual(shownTo.who, { captain: 'no', gunner: 'can', engineer: 'no' });
+  assert.equal(offered(s, 'away')[0].gain, 'QUIET', 'what the Engineer gains at the lock is said in a word');
+  av.charges = 1;
+  av.role = 'gunner';
+  assert.deepEqual(names(s, 'away'), ['cut', 'blow']);
+  assert.equal(offered(s, 'away')[1].off, false);
   for (let i = 0; i < 30; i++) step(s, { away: { 0: { use: true } } }, DT);
   const cut = offered(s, 'away')[0];
   assert.ok(cut.progress > 0 && cut.progress < 1, 'the button shows how far the cutting has come');

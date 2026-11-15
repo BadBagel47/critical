@@ -10,7 +10,7 @@ import { makeVessel } from './vessels.js';
 import { PIRATE } from './sides.js';
 import { playerById, leavePost, returnToPost } from './players.js';
 import { takeOver, isTrading } from './stations.js';
-import { has, fuelMax, crewHpMax, carryMax, rifleDmg, teleCooldown, breakinBonus } from './upgrades.js';
+import { has, level, fuelMax, crewHpMax, carryMax, rifleDmg, teleCooldown, breakinBonus } from './upgrades.js';
 import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
 import { clamp, forward, headingTo, angleDiff, turnToward, dist, rand, randRange, TAU } from './util.js';
@@ -356,7 +356,8 @@ export function tryBoard(state, playerId) {
     cool: 0,
     grenades: B.GRENADES,
     // A Gunner always brings one charge, with or without the ones that are bought.
-    charges: (has(ship, 'charge') ? B.CHARGES : 0) + (player.backTo === 'gunner' ? 1 : 0),
+    // Only the Gunner carries the ship's breaching charge.
+    charges: player.backTo === 'gunner' ? level(ship, 'charge') : 0,
     sentries: has(ship, 'sentry') ? 1 : 0,
     flares: has(ship, 'flare') ? B.FLARES : 0,
     lamp: true,
@@ -621,8 +622,9 @@ function workVaultDoor(state, it, av, cmd, dt) {
   const door = it.rooms[it.vault].door;
   const away = dist(av.x, av.y, door.x, door.y);
   if (cmd.charge && av.charges > 0 && away < 28) {
-    // A breaching charge opens the door at once, and every guard comes running.
+    // A breaching charge opens the door at once, and every guard comes running. It is used up.
     av.charges--;
+    state.ship.mods.charge = Math.max(0, level(state.ship, 'charge') - 1);
     openVault(it);
     it.fx.push({ type: 'boom', x: door.x, y: door.y, t: 0, dur: 0.45, size: 24 });
     for (const g of it.guards) alertGuard(g, door);

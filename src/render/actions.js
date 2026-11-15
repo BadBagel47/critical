@@ -307,7 +307,11 @@ function drawWho(ctx, font, b) {
     const can = who[post] !== 'no';
     rect(ctx, x, b.y + 4, 10, 10, can ? COL.panel : '#101018', can ? color : COL.line);
     font.draw(ctx, letter, x + 5, b.y + 6, can ? color : COL.faint, { align: 'c' });
-    if (who[post] === 'best') rect(ctx, x + 2, b.y + 1, 6, 2, color);
+    if (who[post] === 'best') {
+      rect(ctx, x + 2, b.y + 1, 6, 2, color);
+      // What that post gains, in a word or two.
+      if (b.action.gain) font.draw(ctx, b.action.gain, b.x - 45, b.y + 6, color, { align: 'r' });
+    }
   });
 }
 // How many times each kind of button has come up, to show its line of explanation only the first times.
