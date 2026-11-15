@@ -12,6 +12,7 @@ import { turretMount } from './sim/weapons.js';
 import { createEffects, drawFlash } from './render/effects.js';
 import { drawSpace, drawStars } from './render/space.js';
 import { drawHud, drawOverlay, drawHelp, drawToasts } from './render/hud.js';
+import { nextCourse } from './render/instruments.js';
 import { drawBoarding, insideOrigin } from './render/boarding.js';
 import { drawBreakin, breakinAction, breakinButtons } from './render/breakin.js';
 import { drawMap, mapPoint, chartClick, mapButtons } from './render/map.js';
@@ -34,6 +35,8 @@ export function createView(input) {
     engRow: 0,
     // The Engineer's own screen is folded away from the start, so that they see space like the others.
     engOpen: false,
+    // The place the Captain has set a course for, see render/instruments.js.
+    course: null,
     // Light in space: lights that fall on hulls, and shadows on stations and wrecks.
     lights: true,
     padAim: 0,
@@ -86,6 +89,8 @@ function onBoard(game, out) {
 function captainInput(game, out) {
   const { keys } = game;
   onBoard(game, out);
+  // The course is the Captain's own instrument. It changes nothing in the game, so it lives in the view.
+  if (keys.hit('KeyC')) game.view.course = nextCourse(game.state, game.view);
   out.captain = {
     throttle: axis(keys, ['KeyW', 'ArrowUp'], ['KeyS', 'ArrowDown']) + keys.pad.rt - keys.pad.lt,
     turn: axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx,

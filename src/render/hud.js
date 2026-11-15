@@ -14,6 +14,7 @@ import { rect, label, bar } from './draw.js';
 import { drawMiniMap } from './map.js';
 import { drawEngineerStrip } from './engineer.js';
 import { RISK } from './looks.js';
+import { drawTargets, drawCourse } from './instruments.js';
 
 const fmtTime = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 // Colours for the status lines at the top: calm, a warning, an alarm, good news.
@@ -232,9 +233,13 @@ export function drawHud(ctx, state, view, assets, dock) {
       label(ctx, font, VIEW_W / 2, 8 + i * 16, l.text, { anchor: 'c', fg: l.color, border: l.border }),
     );
   drawBars(ctx, font, state);
-  if (me.post === 'captain') drawCaptainPanel(ctx, font, state);
-  else if (me.post === 'gunner') drawGunnerPanel(ctx, font, state, view);
-  else if (me.post === 'engineer') {
+  if (me.post === 'captain') {
+    drawCaptainPanel(ctx, font, state);
+    drawCourse(ctx, font, state, view, view.cam);
+  } else if (me.post === 'gunner') {
+    drawTargets(ctx, font, state, view.cam);
+    drawGunnerPanel(ctx, font, state, view);
+  } else if (me.post === 'engineer') {
     drawEngineerStrip(ctx, font, state, view);
     font.draw(ctx, 'Q PULSE  ·  B BUOY', VIEW_W - 8, 346, COL.faint, { align: 'r' });
   } else if (!me.post) font.draw(ctx, '1 2 3  TAKE A FREE POST', VIEW_W - 8, 346, COL.faint, { align: 'r' });
@@ -257,6 +262,7 @@ export function drawOverlay(ctx, font, title, lines, color = COL.text) {
 const HELP = [
   ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     F  USE WHAT YOU ARE DOCKED AT'],
   ['CAPTAIN', 'W S  THROTTLE     A D  TURN     X  FULL STOP     E  DOCK AND UNDOCK     R  DARTS     SHIFT  BOOST'],
+  ['', 'C  SET A COURSE FOR THE NEXT PLACE ON THE MAP'],
   ['', 'ON THE MAP  CLICK A STAR CHART TO JUMP TO THAT SECTOR'],
   ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE     Q E  CHANGE WEAPON'],
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW     SHIFT CLICK  QUEUE'],
