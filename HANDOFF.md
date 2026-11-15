@@ -114,6 +114,8 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - När ett test i `tests/saves.test.js` säger att tillståndet bytt form: höj `SAVE_VERSION` i `src/saves.js` och skriv in de nya värdena i testet.
 - Kör `npm run check` och läs om det gick bra på dess utgångskod, inte genom att söka i utskriften. 2026-11-15 gömde en sökning ett typfel, och det stoppades först av testerna hos GitHub.
 
+- Mätläge (F-204): `?fps` visar bildrutor per sekund och den långsammaste bildrutan. `?test&at=star`, `at=haze` och `at=rocks` startar testläget vid stjärnan, i diset eller vid asteroidfältet. Tänkt för mobil, där det inte går att styra än. Se `drawMeter` och `startAt` i `src/main.js`.
+
 ## Decisions
 
 Spelet

@@ -16,6 +16,7 @@ import { findThing, thingsOf } from './sim/things.js';
 import { playerById } from './sim/players.js';
 import { resetEffects, updateEffects, updateInside } from './render/effects.js';
 import { pressActions } from './render/actions.js';
+import { label } from './render/draw.js';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('game'));
 const ctx = canvas.getContext('2d');
@@ -202,8 +203,43 @@ function runGame(dt) {
   if (place && place.interior) updateInside(view.fx, place.interior, dt, state.paused);
 }
 
+// For trying how fast the game runs, on a phone above all, where there is no other way to see it. Adding ?fps to
+// the address shows how many frames a second are drawn, and how long the slowest of the last second took.
+const asked = new window.URLSearchParams(window.location.search);
+const meter = asked.has('fps') ? { times: [], fps: 0, worst: 0, shown: 0 } : null;
+function drawMeter(now, dt) {
+  meter.times.push(dt);
+  if (meter.times.length > 60) meter.times.shift();
+  // The numbers are brought up to date a few times a second, so that they can be read.
+  if (now - meter.shown > 400) {
+    meter.shown = now;
+    const sum = meter.times.reduce((a, b) => a + b, 0);
+    meter.fps = Math.round(meter.times.length / sum);
+    meter.worst = Math.round(Math.max(...meter.times) * 1000);
+  }
+  const slow = meter.fps < 50;
+  const opts = { fg: slow ? COL.ember[2] : COL.ion[2], border: slow ? COL.ember[0] : COL.ion[0] };
+  label(ctx, game.assets.font, 8, 150, `FPS  ${meter.fps}`, opts);
+  label(ctx, game.assets.font, 8, 166, `SLOWEST FRAME  ${meter.worst} MS`, opts);
+}
+
+// ?test&at=star starts a test game right by the star, ?test&at=haze at the edge of the system and
+// ?test&at=rocks by the field of asteroids, so that the heaviest sights can be looked at without flying there.
+function startAt(where) {
+  const state = game.state;
+  const radius = state.sectors[state.sector].radius;
+  const field = state.field && state.field.clusters[0];
+  const spots = {
+    star: { x: -260, y: 250, heading: 0.6 },
+    haze: { x: 0, y: radius + 120, heading: Math.PI },
+    rocks: field && { x: field.x, y: field.y + 230, heading: 0 },
+  };
+  if (spots[where]) Object.assign(state.ship, spots[where]);
+}
+
 let last = performance.now();
 function frame(now) {
+  const real = (now - last) / 1000;
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
   const mode = settle(game);
@@ -220,6 +256,7 @@ function frame(now) {
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ctx.imageSmoothingEnabled = false;
   drawScreen(game, settle(game), now / 1000);
+  if (meter && real > 0) drawMeter(now, real);
   // Where the game draws a sight of its own, the pointer of the system is hidden, so that there are not two.
   const pointer = drawsPointer(game, settle(game)) ? 'none' : 'crosshair';
   if (canvas.style.cursor !== pointer) canvas.style.cursor = pointer;
@@ -237,7 +274,10 @@ loadAssets()
     refreshSaves();
     openPage(game, 'title');
     // Adding ?test to the address starts straight in test mode.
-    if (/[?&]test\b/.test(window.location.search)) game.actions.newGame({ test: true });
+    if (/[?&]test\b/.test(window.location.search)) {
+      game.actions.newGame({ test: true });
+      startAt(asked.get('at'));
+    }
     // A handle for the browser smoke test and for trying things out in the console.
     window['__critical'] = {
       get state() {
