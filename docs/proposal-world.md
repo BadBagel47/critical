@@ -27,6 +27,9 @@ Fler besked samma dag:
 - **Fler än fem system.** Fem låter lite om systemen är små, så det minsta valet ska vara fler.
 - **Dolda system.** Storyn ska kunna låsa upp färdvägar till system man inte kan hitta själv på kartan. Kartan dit får man genom ett uppdrag, eller genom att borda ett skepp och plocka upp den. I första hand är det vrak man bordar, men skepp blir också bra när de går att borda (F-081). Man får aldrig låsas av att man råkar förstöra ett skepp man skulle borda.
 
+- **Upptäcka själv.** Man ska kunna upptäcka systemen själv, som i Escape Velocity, och inte bara genom kartor. Det ändrar det som står under Bestämt i avsnitt 2 om att system nås med stjärnkartor.
+- **Fog of war inuti system.** Ska provas utan (F-199). Inte bestämt.
+
 Öppet efter beskeden:
 - Vilka antal system man får välja mellan.
 - Om det mystiska uppdraget med Cruisern är en del av den röda tråden eller ett sidospår.
