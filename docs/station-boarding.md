@@ -31,7 +31,7 @@ Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **F
 | Fientlig station | Lockdown |
 | Vrak | Som i dag: inget smygande, vakter och turrets slåss direkt, reaktorn räknar ner |
 
-- **Bestämt:** smygande gäller inte i vrak.
+- **Bestämt:** smygande gäller inte i vrak. Tillägg 2026-11-15: mörker och ljus spelar ändå roll i vrak (F-161). Vakter ser åt ett håll, ser spelare i ljus på långt håll och i mörker bara på nära håll. Men i vrak finns inget larm, inga kameror och ingen lockdown: den som blir sedd får vakten på sig, inte hela stället.
 - **Förslag (2026-11-15):** ljuset talar om vad det är för ställe.
   - Vrak som man hittar i rymden är strömlösa: nästan helt mörka, med ficklampa (F-159). Inget rött ljus.
   - Ett skepp som spelarna själva slagit ut (F-081) har besättning och ström kvar. Det är i lockdown, som en fientlig station.
@@ -79,6 +79,15 @@ Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **F
   - En vakt som fått TAKE DOWN är borta resten av bordningen, men kroppen ligger kvar och kan hittas av en annan vakt.
   - Tranq gun har sex pilar per bordning. Man växlar mellan den och geväret med en tangent.
   - En vakt som vaknar av sig själv och inte ser någon går tillbaka till sin runda. Den utlöser inte larmet.
+
+**Rundor (förslag 2026-11-15, inte bestämt).** I dag står varje vakt vid en plats och går slumpvis några steg runt den. Det går inte att planera efter. Förslag:
+- Varje vakt har en fast runda mellan bestämda punkter. Rundan görs tillsammans med planlösningen, så varje ställe har sina egna, men den är densamma under hela besöket.
+- Vid vissa punkter stannar vakten och ser sig om åt bestämda håll. Somliga vakter står på post och vrider bara blicken i ett mönster.
+- Rundan ändras bara av något spelaren gör: ljus från en flare eller ficklampa, ett skott, en sövd vakt. En vakt som undersökt något och inte hittat någon går tillbaka till sin runda.
+- Svårigheten ligger i rundorna, inte i slump: lätta ställen har korta rundor med luckor, svåra har längre rundor som överlappar.
+- En vakttyp längre fram kan välja nästa rum själv, men visar vart den är på väg innan den går (F-126).
+- Radarn visar var vakterna är. Planritningen från hack nivå 1 visar också rundorna.
+- I vrak står de flesta vakter på post och ser sig om i ett mönster. Ett fåtal går en kort runda.
 
 ## 6. Turrets inomhus
 
