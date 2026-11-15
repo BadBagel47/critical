@@ -156,7 +156,7 @@ function placeLabels(ctx, font, labels, own) {
       [mid, above - LINE],
     ];
     // How much of a text at this spot would lie over something else, or outside the map.
-    const clash = ([x, y]) => {
+    const clash = (x, y) => {
       const out = x < MAP.x || y < MAP.y || x + w > MAP.x + MAP.size || y + h > MAP.y + MAP.size;
       let area = out ? w * h : 0;
       for (const t of taken) {
@@ -167,7 +167,10 @@ function placeLabels(ctx, font, labels, own) {
       return area;
     };
     // The first spot that is free, or else the one where the least is covered.
-    const [x, y] = spots.reduce((best, spot) => (clash(spot) < clash(best) ? spot : best));
+    let best = spots[0];
+    for (const spot of spots) if (clash(spot[0], spot[1]) < clash(best[0], best[1])) best = spot;
+    const x = best[0],
+      y = best[1];
     taken.push({ x, y, w, h });
     l.lines.forEach(([text, color], i) => font.draw(ctx, text, x, y + i * LINE, color));
   }
