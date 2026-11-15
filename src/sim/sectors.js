@@ -8,6 +8,8 @@ import { createMap } from './map.js';
 import { layRocks, layTestRocks } from './rocks.js';
 import { placeShip } from './system.js';
 import { createStation } from './stations.js';
+import { leaveSiege } from './siege.js';
+import { huntAfterJump } from './bounty.js';
 import { jumpCharge, jumpFuel } from './upgrades.js';
 import { rand, randRange, TAU, dist } from './util.js';
 
@@ -283,6 +285,9 @@ function orderJump(state, to) {
 // Store this sector as it is, then load or create the next one.
 function arrive(state, to) {
   const ship = state.ship;
+  // An attack on a station of the crew's goes on without them, and those hunting them lose track of them.
+  leaveSiege(state);
+  huntAfterJump(state);
   const from = currentSector(state);
   const next = state.sectors[to];
   // Ships come and go, but the one that has to be destroyed to win stays where it was left.

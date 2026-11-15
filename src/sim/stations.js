@@ -8,9 +8,27 @@ import { makeVessel } from './vessels.js';
 import { currentSector } from './sectors.js';
 import { teleportAllHome } from './boarding.js';
 import { buyUpgrade, hullMax, fuelMax, CATALOG } from './upgrades.js';
+import { payBounty } from './bounty.js';
 import { forward, headingTo, turnToward, angleDiff, toWorld, dist, rand, randRange, TAU } from './util.js';
 
-const mountGuns = () => THINGS.station.guns.map((g) => ({ ...g, hp: B.STATION_GUN_HP, heading: 0, cool: 1 }));
+// `off` is a gun of the crew's own station that has been mended and waits to be switched on at the mainframe.
+const mountGuns = (st) => THINGS.station.guns.map((g) => ({ ...g, hp: gunHpMax(st), heading: 0, cool: 1, off: false }));
+// What has been bought for a station's defence, level by level. It stays with the station whoever holds it.
+export const defenseOf = (st) => st.defense || { shield: 0, guns: 0, inner: 0 };
+export const stationShieldMax = (st) => B.STATION_SHIELD * (1 + B.DEFENSE_SHIELD * defenseOf(st).shield);
+export const gunHpMax = (st) => B.STATION_GUN_HP * (1 + B.DEFENSE_GUN * defenseOf(st).guns);
+export const gunDmg = (st) =>
+  (st.side === PIRATE ? B.PIRATE_STATION_GUN_DMG : B.STATION_GUN_DMG) * (1 + B.DEFENSE_GUN * defenseOf(st).guns);
+
+// Every station in the world, also those in sectors the crew has left, each with the sector it is in.
+export function allStations(state) {
+  const list = thingsOf(state, 'station').map((st) => ({ st, sector: state.sector }));
+  for (const sec of state.sectors) {
+    if (!sec.saved) continue;
+    for (const t of sec.saved.things) if (t.kind === 'station') list.push({ st: t, sector: sec.id });
+  }
+  return list;
+}
 // A station the crew can walk into and trade at.
 export const isTrading = (t) => !!t && t.kind === 'station' && t.align !== 'hostile' && !t.closed;
 const alignFor = (mood) => (mood === 'hostile' ? 'hostile' : mood === 'friendly' ? 'friendly' : 'neutral');
@@ -41,8 +59,15 @@ export function createStation(s, x, y, side, shipyard, name, home = false) {
     hp: B.STATION_HP,
     shield: B.STATION_SHIELD,
     lastHit: -99,
-    guns: mountGuns(),
+    defense: { shield: 0, guns: 0, inner: 0 },
+    // On a station of the crew's: the part being mended from the mainframe, 'hull' or a gun by number.
+    fix: null,
+    // When the crew took it, and whose it was before.
+    takenAt: null,
+    from: null,
+    guns: [],
   };
+  st.guns = mountGuns(st);
   if (st.side !== CREW && st.side !== PIRATE) s.standing[st.side] = s.standing[st.side] || 0;
   st.align = alignFor(moodOf(s, st.side));
   if (st.align === 'hostile') st.lock = 'locked';
@@ -72,42 +97,74 @@ function makePeace(state, st, align) {
 // Bring a station in line with what its side thinks of the crew right now.
 function syncStation(state, st) {
   const mood = moodOf(state, st.side);
-  // A station that is busy fighting the crew off lets nobody in either.
+  // A station that is busy fighting the crew off lets nobody in either. But a crew that is taking it from the
+  // inside is not thrown out: the fight is in there.
   const closed = mood === 'closed' || isAngry(state, st.side);
-  if (closed && !st.closed) teleportAllHome(state, st.id);
+  const seized = !!st.interior && st.interior.seize;
+  if (closed && !st.closed && !seized) teleportAllHome(state, st.id);
   st.closed = closed;
   const want = alignFor(mood);
   if (want === st.align) return;
-  if (want === 'hostile') goHostile(state, st);
+  if (want === 'hostile' && seized) {
+    st.align = 'hostile';
+    st.lock = 'locked';
+  } else if (want === 'hostile') goHostile(state, st);
   else if (st.align === 'hostile') makePeace(state, st, want);
   else st.align = want;
 }
 
 // The crew takes a station over. It becomes theirs, with a shipyard.
+// It is left in peace for a while, see siege.js. What was bought for its defence before is still there.
 export function takeOver(state, st) {
+  st.from = st.side;
   st.side = CREW;
+  st.takenAt = state.time;
+  // The first attack on a station of theirs does not come at once.
+  state.siegeTimer = Math.max(state.siegeTimer, B.SIEGE_FIRST);
   st.align = 'friendly';
   st.closed = false;
   st.shipyard = true;
   st.lock = 'open';
+  st.breakin = null;
   st.hp = B.STATION_HP;
-  st.guns = mountGuns();
-  if (st.interior) {
-    st.interior.guards = [];
-    st.interior.turrets = [];
+  st.shield = stationShieldMax(st);
+  st.fix = null;
+  st.guns = mountGuns(st);
+  const it = st.interior;
+  if (it) {
+    it.guards = [];
+    it.turrets = [];
+    it.cameras = [];
+    it.alarmed = [];
+    it.hack = null;
+    it.seize = false;
+    it.mood = null;
+    it.dark = false;
+    it.desks = [];
   }
   state.events.push({ type: 'stationTaken', name: st.name });
 }
 
-// Pirates overrun a station that nobody came to help. It is theirs until the crew takes it back.
-function fall(state, st) {
-  st.side = PIRATE;
+// A station falls to those who attacked it: pirates that overran it, or the attackers on a station of the
+// crew's. Half of what was bought for its defence is left, so it is harder to take back than it was to take.
+export function fall(state, st, by = PIRATE) {
+  st.from = st.side;
+  st.side = by;
   st.hp = B.STATION_HP / 2;
   st.shield = 0;
-  st.guns = mountGuns();
+  st.fix = null;
+  const d = defenseOf(st);
+  st.defense = { shield: Math.floor(d.shield / 2), guns: Math.floor(d.guns / 2), inner: Math.floor(d.inner / 2) };
+  st.guns = mountGuns(st);
   st.favor = 0;
-  state.events.push({ type: 'stationFell', name: st.name });
-  syncStation(state, st);
+  state.events.push({ type: 'stationFell', name: st.name, side: by });
+  if (state.things.includes(st)) syncStation(state, st);
+  else {
+    // A station in a sector the crew is not in is brought in line when they come back.
+    st.align = 'hostile';
+    st.lock = 'locked';
+    st.interior = null;
+  }
 }
 
 // ---------- trade ----------
@@ -133,6 +190,8 @@ export function servicePrices(state, st) {
     repair: { need: Math.ceil(wear), price: Math.ceil(wear * B.REPAIR_PRICE[a] * k) },
     rockets: { need: rockets, price: Math.ceil(rockets * B.ROCKET_PRICE[a] * k) },
     chart: { need: chart, price: Math.ceil(B.CHART_PRICE[a] * k) },
+    // A bounty is paid in full wherever it is paid, and a station of the crew's own takes it too.
+    bounty: { need: state.bounty ? 1 : 0, price: state.bounty ? state.bounty.amount : 0 },
   };
 }
 
@@ -148,6 +207,10 @@ function pay(state, price) {
 
 // Each service, once it is known that the ship needs it.
 const SERVICES = {
+  bounty(state, st, info) {
+    if (!pay(state, info.price)) return;
+    payBounty(state);
+  },
   // With too few credits the tank is filled as far as the money goes.
   refuel(state, st, info) {
     const ship = state.ship;
@@ -231,8 +294,9 @@ export function damageStation(state, st, dmg, at, by) {
   }
   st.hp = Math.max(0, st.hp - rest);
   if (st.hp > 0) return;
-  // Pirates take a beaten station for themselves. Anyone else just silences its guns.
-  if (by === PIRATE && st.side !== PIRATE) fall(state, st);
+  // Pirates take a beaten station for themselves. Anyone else just silences its guns. A station of the crew's
+  // only falls when attackers take its mainframe, see siege.js.
+  if (by === PIRATE && st.side !== PIRATE && st.side !== CREW) fall(state, st);
   else for (const gun of st.guns) gun.hp = 0;
 }
 
@@ -261,7 +325,7 @@ function gunTarget(state, st, p) {
 
 function stepGuns(state, st, dt) {
   for (const g of st.guns) {
-    if (g.hp <= 0) continue;
+    if (g.hp <= 0 || g.off) continue;
     const p = toWorld(st, g);
     g.cool -= dt;
     const target = gunTarget(state, st, p);
@@ -279,20 +343,45 @@ function stepGuns(state, st, dt) {
       vy: f.y * B.PIRATE_BOLT_SPEED,
       ttl: 1.8,
       side: st.side,
-      dmg: st.side === PIRATE ? B.PIRATE_STATION_GUN_DMG : B.STATION_GUN_DMG,
+      dmg: gunDmg(st),
     });
     g.cool = B.STATION_GUN_COOLDOWN;
   }
 }
 
-// The shield comes back after a pause without hits. The hull and the guns are mended after a longer one.
+// The shield comes back after a pause without hits. The hull and the guns of other stations are mended after a
+// longer one. The crew's own are mended from the mainframe instead, see stepOwned.
 function stepRepairs(st, time, dt) {
   const quiet = time - st.lastHit;
   if (quiet > B.STATION_SHIELD_DELAY)
-    st.shield = Math.min(B.STATION_SHIELD, st.shield + B.STATION_SHIELD_RECHARGE * dt);
-  if (quiet <= B.STATION_REPAIR_DELAY) return;
+    st.shield = Math.min(stationShieldMax(st), st.shield + B.STATION_SHIELD_RECHARGE * dt);
+  if (quiet <= B.STATION_REPAIR_DELAY || st.side === CREW) return;
   st.hp = Math.min(B.STATION_HP, st.hp + B.STATION_REPAIR * dt);
-  for (const g of st.guns) g.hp = Math.min(B.STATION_GUN_HP, g.hp + B.STATION_REPAIR * dt);
+  for (const g of st.guns) g.hp = Math.min(gunHpMax(st), g.hp + B.STATION_REPAIR * dt);
+}
+
+// The part of a station of the crew's that is being mended comes along, also while the crew is far away. A gun
+// that is whole again waits to be switched on. Where the crew is not, the shield comes back too.
+function stepOwned(state, dt) {
+  for (const { st, sector } of allStations(state)) {
+    if (st.side !== CREW) continue;
+    if (sector !== state.sector) st.shield = Math.min(stationShieldMax(st), st.shield + B.STATION_SHIELD_RECHARGE * dt);
+    if (st.fix === null) continue;
+    if (st.fix === 'hull') {
+      st.hp = Math.min(B.STATION_HP, st.hp + B.STATION_FIX_HULL * dt);
+      if (st.hp >= B.STATION_HP) mended(state, st);
+      continue;
+    }
+    const g = st.guns[st.fix];
+    const was = g.hp;
+    g.hp = Math.min(gunHpMax(st), g.hp + B.STATION_FIX_GUN * dt);
+    if (was <= 0 && g.hp > 0) g.off = true;
+    if (g.hp >= gunHpMax(st)) mended(state, st);
+  }
+}
+function mended(state, st) {
+  state.events.push({ type: 'fixDone', name: st.name, part: st.fix });
+  st.fix = null;
 }
 
 // ---------- distress calls ----------
@@ -300,7 +389,10 @@ function stepRepairs(st, time, dt) {
 // so that there is always somewhere to refuel and repair.
 export function startRaid(state) {
   const ship = state.ship;
-  const open = thingsOf(state, 'station').filter((st) => st.align !== 'hostile' && !st.home && st.id !== ship.docked);
+  // The crew's own stations are attacked in a way of their own, see siege.js.
+  const open = thingsOf(state, 'station').filter(
+    (st) => st.align !== 'hostile' && !st.home && st.side !== CREW && st.id !== ship.docked,
+  );
   if (!open.length) {
     state.raidTimer = 60;
     return;
@@ -378,6 +470,7 @@ export function stepStations(state, cmds, dt) {
     syncStation(state, st);
     stepRepairs(st, state.time, dt);
   }
+  stepOwned(state, dt);
   stepRaids(state, dt);
   for (const st of stations) stepGuns(state, st, dt);
 }

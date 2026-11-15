@@ -36,7 +36,11 @@ const WHO = {
     only('gunner'),
     'ONLY THE GUNNER CARRIES THE CHARGE. IT OPENS THE DOOR AT ONCE, WAKES EVERYONE AND IS USED UP',
   ],
-  takeover: [best('engineer'), 'ANYONE CAN TAKE THE STATION OVER. THE ENGINEER IS QUICKER', 'FASTER'],
+  mainframe: [
+    best('engineer'),
+    'ANYONE CAN WORK THE MAINFRAME. THE ENGINEER IS QUICKER, AND ALONE CAN SWITCH OFF CAMERAS AND TURRETS',
+    'FASTER',
+  ],
   takedown: [ALL, 'A SLEEPING GUARD THAT IS TAKEN DOWN IS OUT FOR THE REST OF THE BOARDING'],
 };
 // Every action has the same shape. `more` holds what differs from a plain press of a key.
@@ -112,8 +116,9 @@ function away(state, me) {
     return [use('steady', 'STEADY THE REACTOR', 'STEADY', { hold: true, progress: it.turning })];
   if (at.type === 'airlock') return [use('leave', 'BACK TO THE SHIP', 'LEAVE')];
   if (at.type === 'desk') return [use('trade', DESK[at.desk.type], 'TRADE')];
-  if (at.type === 'terminal') {
-    return [use('takeover', 'TAKE OVER THE STATION', 'TAKE OVER', { hold: true, progress: it.takeover })];
+  if (at.type === 'mainframe') {
+    const working = it.hack ? { progress: it.work[it.hack.level], hold: true } : {};
+    return [use('mainframe', 'MAINFRAME', 'MAINFRAME', working)];
   }
   const list = [];
   // The Engineer goes round the lock without a sound. Anyone else cuts it, which is heard.
@@ -138,7 +143,7 @@ export function actionsOf(game, mode) {
   const { state, me } = game;
   if (!me || state.paused || state.over) return [];
   if (mode === 'lock') return [use('back', 'STEP AWAY', 'BACK', { main: false })];
-  if (mode === 'shop') return [use('back', 'CLOSE', 'CLOSE', { main: false })];
+  if (mode === 'shop' || mode === 'mainframe') return [use('back', 'CLOSE', 'CLOSE', { main: false })];
   if (mode === 'away') return away(state, me);
   if (mode !== 'crew' && !POSTS.includes(mode)) return [];
   const list = onBoard(state, me);

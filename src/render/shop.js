@@ -54,6 +54,7 @@ export function shopRows(state, st, tab) {
   service('REPAIR EVERYTHING', prices.repair, 'repair', 'NO DAMAGE');
   if (ship.mods.rockets) service('REARM ROCKETS', prices.rockets, 'rockets');
   if (st.chart !== null) service('STAR CHART  ' + state.sectors[st.chart].name, prices.chart, 'chart', 'OWNED');
+  if (state.bounty) service('PAY THE BOUNTY', prices.bounty, 'bounty');
   const open = tab === 'armory' || yardOpen(st);
   itemsOf(tab).forEach((id, i) => {
     const item = CATALOG[id],

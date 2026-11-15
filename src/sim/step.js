@@ -3,6 +3,7 @@
 //   cmds.captain / gunner / engineer   the command for each post, or null when nobody is working it
 //   cmds.system                        { pause, by, board: [player ids] }
 //   cmds.away / hack / shop            what players inside, at a lock or at a station desk are doing
+//   cmds.mainframe                     orders from players at a station's mainframe, see mainframe.js
 // stepPlayers() builds these from what each player asks for, and decides who may do what.
 import { B } from './balance.js';
 import { stepCaptain, stepGunner, stepEngineer, stepDrones } from './posts.js';
@@ -16,6 +17,8 @@ import { stepVessels, stepAlarm } from './vessels.js';
 import { stepBolts, stepRockets, stepCollisions } from './shots.js';
 import { stepStations } from './stations.js';
 import { stepTraffic } from './traffic.js';
+import { stepSiege } from './siege.js';
+import { stepHunt } from './bounty.js';
 import { CREW, enemies, stepStanding, stepStrife } from './sides.js';
 import { stepDarts } from './darts.js';
 import { stepJump } from './sectors.js';
@@ -79,6 +82,8 @@ export function step(state, cmds, dt) {
   stepTraffic(state, dt);
   stepVessels(state, dt);
   stepStations(state, cmds, dt);
+  stepSiege(state, dt);
+  stepHunt(state, dt);
   stepStanding(state, dt);
   stepStrife(state, dt);
   const solids = solidCircles(state);

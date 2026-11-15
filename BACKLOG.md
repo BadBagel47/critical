@@ -18,107 +18,96 @@ Prioritet: Hög, Medel, Låg.
 **D** – strong model, high level – Flera sorters vakter
 - F-126 – Flera typer av vakter, lättare i början och svårare längre fram
 
-**E** – strong model, high level – Mainframe och egna stationer
-- F-109 – En mainframe-panel på alla stationer, som Engineer hackar hos fiender och som styr stationen hos ägaren
-- F-110 – Laga och uppgradera en station man äger från panelen
+**E** – strong model, high level – Försvara egna stationer inifrån och personaldel på handelsstationer
+- F-122 – Gå själv in i en station som bordas och slå ut bordarna innan de når mainframen, och låt stationens dockningssköld skydda deras skepp, så att anfallen går att vända på plats
+- F-206 – Ge handelsstationer en personaldel med vakter och kameror, så att mainframen bara nås genom att smyga förbi vakterna
 
-**F** – strong model, high level – Ta över neutrala baser (efter gruppen om mainframen)
-- F-114 – Hacka en neutral bas med stor risk: red alert, bounty hunters som anfaller skeppet och sjunkande anseende
-
-**G** – strong model, high level – Anfall på egna stationer (efter gruppen om mainframen)
-- F-121 – Stationer kan falla även när man är i ett annat system, och varnar i tre nivåer när de anfalls
-- F-122 – Ett övertagande i steg: belägring, bordning och avgörande, som inte går att fuska sig ur genom att skjuta det dockade skeppet
-- F-123 – Regler för hur ofta det sker, och ordnade anfall från faktioner man är ovän med
-
-**H** – strong model, high level – Världen steg 1: ett system som känns rätt
+**F** – strong model, high level – Världen steg 1: ett system som känns rätt
 - F-205 – Mjukare rörelse i stjärnan på mobil, där den i dag uppdateras för sällan
 - F-202 – Ljus från rätt håll: stjärnans ljus är byggt, kvar är explosioner och andra starka ljus
 
-**I** – strong model, high level – Världen steg 2: bränsle och färd (efter steg 1)
+**G** – strong model, high level – Världen steg 2: bränsle och färd (efter steg 1)
 - F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-197 – En speed boost som laddas upp och bryts av beskjutning, så att långa sträckor går fort. Samma regel för hoppet till ett nytt system
 - F-198 – Ta bort överladdningen av vapen och sköld, så att bara motorernas finns kvar
 - F-194 – Solceller som man köper och som laddar bränslet
 - D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
 
-**J** – strong model, high level – Världen steg 3: många system (efter steg 2)
+**H** – strong model, high level – Världen steg 3: många system (efter steg 2)
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - F-195 – En systemradar som man köper och som visar om närliggande system är vänliga och vems de är
 
-**K** – strong model, high level – Världen steg 4: uppdrag och story (efter steg 3)
+**I** – strong model, high level – Världen steg 4: uppdrag och story (efter steg 3)
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 
-**L** – strong model, high level – Förslag: ekonomi och belöningar
+**J** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**M** – strong model, high level – Baser i två storlekar
+**K** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 
-**N** – strong model, high level – Sällsynta skepp
+**L** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**O** – strong model, high level – Handel
+**M** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**P** – strong model, medium level – Butik med bilder
+**N** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**Q** – strong model, high level – Värme
+**O** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**R** – strong model, high level – Slå ut och borda
+**P** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**S** – strong model, high level – Missiler och raketer
+**Q** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**T** – strong model, high level – Kontakt med andra skepp
+**R** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**U** – strong model, high level – Anomalier
+**S** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**V** – strong model, high level – En värld som förändras
+**T** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**W** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**U** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**X** – strong model, high level – Ljudeffekter
+**V** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**Y** – strong model, high level – Visuella effekter och feedback
+**W** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 
-**Z** – strong model, high level – Vad ett misslyckat lås kostar
+**X** – strong model, high level – Vad ett misslyckat lås kostar
 - D-172 – Se över vilka minispel som straffar ett misslyckande, och hur
 
-**AA** – strong model, medium level – Sköld från en station under attack (efter anfall på egna stationer)
-- F-173 – En station under attack ger sköld tills angriparna hackat mainframen. Första delen är byggd: en fiende ger ingen sköld
-
-**AB** – strong model, high level – Förslag: skeppets dator för små besättningar
+**Y** – strong model, high level – Förslag: skeppets dator för små besättningar
 - D-186 – Gå igenom hur skeppets dator skulle fungera i praktiken, innan något ändras
 
-**AC** – strong model, high level – Förslag: meddelanden och sensordata
+**Z** – strong model, high level – Förslag: meddelanden och sensordata
 - D-187 – Se över vad spelet och skeppet visar på skärmen, hur det prioriteras, och om sensordata ska få en egen del
 
-**AD** – strong model, high level – Uppgraderingar och ekonomi per roll
+**AA** – strong model, high level – Uppgraderingar och ekonomi per roll
 - F-188 – Uppgraderingarna sorteras efter kategori och roll
 - D-189 – Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar
 
-**AE** – strong model, medium level – Förfina rollerna
+**AB** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 
-**AF** – strong model, high level – Förslag: permanenta prylar och sådant som förbrukas
+**AC** – strong model, high level – Förslag: permanenta prylar och sådant som förbrukas
 - D-193 – Gå igenom vilka prylar som är permanenta och kan uppgraderas, och vilka som förbrukas
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
@@ -153,14 +142,9 @@ Väntar på användaren: F-091 (mining laser) tas upp när F-085 är provad. D-0
 | D-095 | Genomgång av faktionerna: riktiga namn och karaktär i stället för platshållarna, och hur anseende höjs och sänks Besked 2026-11-15: läggs i backloggen och tas upp senare. Platshållarnamnen gäller tills dess. | Ej påbörjad |
 | D-097 | Plan över droprates och hur de påverkas av olika skepp Förslaget är framtaget 2026-11-15 i docs/proposal-economy.md och väntar på användarens svar på frågorna där. | Väntar på användaren |
 | D-100 | Vi måste reda ut så att man inte kan hamna i en softlock och inte göra progress för att man har slut på pengar eller bränsle etc Förslaget är framtaget 2026-11-15 i docs/proposal-world.md och väntar på användarens svar på frågorna där. Besked 2026-11-15 efter att förslaget lästs: man ska kunna få slut på både bränsle och pengar, och bränslet ska inte komma tillbaka av sig självt, men man ska ändå komma vidare. Reservtanken i förslaget stryks. Vägarna ut: asteroider som ger resurser som fyller på bränsle (F-085) och solceller som laddar bränslet (F-194), där användaren tror mest på solcellerna Besked 2026-11-15: man får inte låsas av att man råkar förstöra ett skepp som storyn vill att man bordar, se D-052 | Väntar på användaren |
-| F-121 | Vi provar med att stationer kan falla till pirater även när man är i andra system. När de blir anfallna skickar de ett meddelande till spelaren och rapporterar attacken. Varningen graderas i tre nivåer: low när de inte ser någon stor risk att bli övertagna, medium när risken börjar bli stor och high när de tror att de kommer att förlora Sparad idé ur D-180 (2026-11-15): Gunner kan bemanna ett kanontorn på en egen station som anfalls. | Pågår 2026-11-15 |
-| F-122 | Hur ett övertagande av en station går till: angriparna dockar, och det sker en uträkning om de kan ta över basen beroende på hur mycket skydd spelaren har installerat genom mainframen. Det blir fuskigt om man kan skjuta sönder skeppet när det har dockat, så det måste hanteras. Agentens förslag i docs/station-boarding.md avsnitt 14: belägring, bordning och avgörande, där bordarna redan är inne när skeppet har dockat. Besked 2026-11-14: tre steg, byggda i två omgångar: först uträkningen, sedan möjligheten att själv gå in och försvara. En station som faller behåller halva försvaret | Pågår 2026-11-15 |
-| F-123 | Regler för hur ofta stationer anfalls och om angriparna kommer i grupp. Är man ovän med en faktion ska den också kunna utföra attacker. De bör vara mer organiserade och mer aggressiva. Anseendet och nivån på faktionens spridning i systemet borde också påverka | Pågår 2026-11-15 |
-| F-109 | Alla stationer har en panel där man kan ansluta till stationens mainframe. Vad man ska kunna göra där är inte bestämt. Agentens förslag: se stationens planritning, stänga av kameror och turrets en stund, öppna låsta dörrar, och hos vänliga stationer se priser och uppdrag Tillägg 2026-11-14: Engineer är den som kan hacka mainframen. På en station man äger är inställningarna i panelen att reparera stationen, aktivera externa försvarsturrets igen om de blivit förstörda och sedan lagade, och slå av lockdown mode. Mainframen kan även uppgradera basens försvar. Agentens förslag: en och samma panel på alla stationer, med olika innehåll beroende på om man äger stationen, är fiende eller neutral | Pågår 2026-11-15 |
-| F-110 | Stationer man tagit över har en panel där man kan laga stationen, med ett system som liknar skeppets Tillägg 2026-11-14: se F-109 för vad panelen ska kunna. Agentens anmärkning: i dag lagar stationer sig själva med tiden, så det måste ändras för ägda stationer om panelen ska betyda något | Pågår 2026-11-15 |
-| F-114 | En Engineer ska kunna försöka få access till en neutral bas mainframe. Det måste vara en stor risk. Att ta över en neutral bas ska vara svårt, och basen borde kunna kalla på hjälp av bounty hunters, som kommer in i systemet och börjar attackera skeppet, så att man måste avväga om det är värt risken. Då sjunker anseendet automatiskt, och tar man över basen sjunker det ytterligare om den är med i en faktion. Är den inte det är den nu en station man äger och har kontroll över. Om en neutral bas utsätts för en attack inifrån går red alert igång och vakterna blir aggressiva Besked 2026-11-14: mainframen är längst in, så man måste ta sig förbi vakterna för att nå den. Ett alternativ till prissumma är att man blir mål för bounty hunters, dock inte överdrivet mycket, eller en kombination. Agentens förslag: en prissumma som lockar en grupp bounty hunters då och då, aldrig mer än en grupp åt gången, tills den är betald eller ett visst antal grupper är besegrade. Besked 2026-11-14: prissumma och bounty hunters kommer från stationer utan faktion. Faktioner kommer själva | Pågår 2026-11-15 |
+| F-122 | Hur ett övertagande av en station går till: angriparna dockar, och det sker en uträkning om de kan ta över basen beroende på hur mycket skydd spelaren har installerat genom mainframen. Det blir fuskigt om man kan skjuta sönder skeppet när det har dockat, så det måste hanteras. Agentens förslag i docs/station-boarding.md avsnitt 14: belägring, bordning och avgörande, där bordarna redan är inne när skeppet har dockat. Besked 2026-11-14: tre steg, byggda i två omgångar: först uträkningen, sedan möjligheten att själv gå in och försvara. En station som faller behåller halva försvaret. Läget 2026-11-15: första omgången är byggd: belägring, bordning och avgörande räknas ut i alla tre stegen, och där besättningen är blir belägringen en riktig strid och bordningsskeppet dockar vid en arm. En station som faller behåller halva det köpta försvaret. Kvar: att själv gå in och slå ut bordarna, och att bordningsskeppet skyddas av stationens dockningssköld | Delvis byggd |
+| F-206 | Handelsstationer får en personaldel med vakter och kameror, enligt docs/station-boarding.md avsnitt 3 och 13, så att man måste smyga förbi vakterna för att nå mainframen. Den som blir sedd där utlöser larmet. Läget 2026-11-15: mainframen på en handelsstation går att nå fritt, och vakterna kommer först när övertagandet startar (F-114). Hit hör också att ingen kastas ut när en station blir fientlig, som i dag bara gäller den som tar över stationen inifrån | Ej påbörjad |
 | D-172 | Se över vilka minispel man blir straffad av när man misslyckas, och hur. Användaren 2026-11-15, med fel kod som exempel. Läget i dag: i rörspelet på vrak sprängs vraket när tiden går ut, och skeppet tar 60 i skada om det ligger dockat. I kodspelet på stationer kostar en fel kod 6 sekunder, och går tiden ut skickar stationen ut två jaktskepp och låset återställs. I visarspelet på pods slår poden larm efter tre missar eller när tiden går ut, och nästa piratvåg kommer direkt. Att besvara: är straffen lagom och begripliga, ska ett enstaka misstag kosta något eller bara ett helt misslyckande, och ska spelaren få veta priset i förväg. Görs tillsammans med F-171 (Engineer hackar fram koden) och F-163 (låset med ringar), eftersom båda ändrar hur låsen fungerar Förslaget är framtaget 2026-11-15 i docs/proposal-economy.md och väntar på användarens svar på frågorna där. Läget 2026-11-15: en del är bestämd och byggd. Ett misslyckat lås på ett vrak spränger inte längre vraket direkt, utan kostar 40 sekunder av reaktortiden, och det tredje misslyckandet spränger det. Resten väntar på svaren i docs/proposal-economy.md | Väntar på användaren |
-| F-173 | Sköld vid dockning. Användaren 2026-11-15: saker skeppet dockar med som är fiender ska inte ge en sköldboost. En station som är under attack ger sköld tills de som attackerar lyckas hacka mainframen. Läget i dag: allt skeppet dockar med ger den extra skölden, även en fientlig station. Första delen går att bygga nu. Andra delen kräver anfallen på stationer med mainframe (F-109, F-121 till F-123), och fram till dess ger en station under attack sköld så länge den inte har fallit. Agentens anmärkning: den som spelar ensam och bordar en fientlig station lämnar då skeppet utan extra sköld, vilket är avsikten Läget 2026-11-15: första delen är byggd. Ett skepp som ligger dockat vid en fientlig station får ingen extra sköld, och den som finns försvinner om stationen blir fientlig. Vrak och pods ger sköld som förut. Kvar: att en station under attack slutar ge sköld när angriparna hackat mainframen | Pågår 2026-11-15 |
 | D-186 | Skeppets dator i praktiken. Användaren 2026-11-15: vi behöver gå igenom hur det skulle fungera i praktiken först, och göra brainstorming innan några förändringar görs. Gäller F-034 (autopilot på lediga poster), som är parkerad och har agentens första förslag. Inget byggs förrän genomgången är gjord Besked 2026-11-15: det ska synas när datorn sköter något. När man startar en omgång väljer man vilka roller datorn får sköta, och som standard är det ingen. Då kan spelare i co-op inte bara slå på datorn och slippa göra sitt jobb. Öppet: om datorn tar en tillåten post av sig själv när ingen sitter där, om valet går att ändra under omgången, om datorn bestämmer själv eller bara utför det man pekat ut, hur mycket sämre den är än en människa, och vad den gör medan besättningen bordar Besked 2026-11-15: en roll som datorn sköter är öppen för alla spelare att handla åt i butiken, se D-189 | Ej påbörjad |
 | F-192 | Ryggsäck för utrustning. Användaren 2026-11-15: för att bära mer saker kan man köpa en backpack och sedan uppgradera den så att den håller mer. Den avgör även hur många turrets man kan ta med. Utan ryggsäck får man med sig lite, till exempel en laddning. I dag finns CARGO PACK i butiken, som låter en bordare bära två byten till per tur, och antalet granater, flares, pilar och turrets är fasta tal. Öppet: om ryggsäcken gäller både utrustning och byte eller bara utrustning, om den ersätter CARGO PACK, vilka saker som tar plats i den (laddningar, turrets, granater, flares, pilar), hur många nivåer den har, och om den är en per skepp eller en per bordare. Hör ihop med F-191 och F-188 (uppgraderingar per kategori och roll) | Ej påbörjad |
 | D-193 | Analys: permanenta prylar och sådant som förbrukas. Användaren 2026-11-15: gå igenom vilka prylar som är permanenta och eventuellt kan uppgraderas och hur, samt vilka objekt som förbrukas. En framtida analys, inget byggs. I dag är nästan allt i butiken permanent: ett köp ger granater, flares, pilar, laddningar och en turret på nytt vid varje bordning. Bara bränsle, reparation och krediter går åt. Analysen ska ge en lista över varje sak med förslag på om den är permanent, uppgraderbar eller förbrukas, vad den kostar att fylla på, var man ser vad man har, och hur det hänger ihop med ryggsäcken (F-192), laddningarna (F-191), uppgraderingar per roll (F-188) och ekonomin (D-189, D-104) | Ej påbörjad |
@@ -354,3 +338,9 @@ Väntar på användaren: F-091 (mining laser) tas upp när F-085 är provad. D-0
 | F-204 | Mätläge för att prova farten. Tillägget fps i adressen visar hur många bildrutor i sekunden som ritas och hur lång den långsammaste under senaste sekunden var, i rött under 50. I testläget startar tillägget at=star spelet intill stjärnan, at=haze i diset vid systemets kant och at=rocks vid asteroidfältet, så att det tyngsta syns utan att man behöver styra. Provat på en efterliknad mobilskärm i liggande läge, inte på en riktig mobil | 2026-11-15 |
 | F-196 | Runda system. De fem systemen har tre storlekar, kartan visar systemet som en rund yta och anpassar sig efter storleken, och asteroiderna ligger i ett bälte och i tätare fält. I mitten står en stjärna som bränner skölden först och skrovet tre gånger hårdare: ett skepp med vanlig sköld går förlorat rakt över den, och ett med den bättre skölden klarar sig med all energi på sköld och motorer. Vid kanten ligger ett dis av stoft och is som tar farten ur ett skepp på väg ut tills det stannar. Spelet börjar vid den egna varvsstationen, och efter ett hopp kommer skeppet in vid en känd bas eller på en säker plats. Andra skepp påverkas inte av stjärnan eller diset. Att Captain väljer bas kommer i steg 3 | 2026-11-15 |
 | F-201 | Snyggare stjärna, enligt förslag C: en yta som ritas pixel för pixel i få färger och mörknar mot kanten, korn som rör sig, fläckar som driver, en krans av strålar, eldbågar vid kanten och gnistor som driver ut genom området där hettan skadar. Godkänd av användaren och påslagen i alla spel. På mobil är rörelsen inte mjuk än, se F-205. Olika stjärnor i olika system (förslag D) kommer med den genererade kartan, se D-089 | 2026-11-15 |
+| F-109 | Mainframe på alla stationer, längst in i det rum som ligger längst från luftslussen (inte valvet). Panelen beror på vems stationen är. Hos en fiende hackar man i tre nivåer som var och en tar tid och fyller en spårningsmätare, och full mätare utlöser larmet: 1 läser planritningen (vakter, kameror, larmade dörrar och loot syns på kartan i hörnet för alla), 2 bara Engineer stänger av kameror och turrets i 60 sekunder och öppnar valvet, 3 tar över stationen. Alla kan ta över, så den som spelar ensam är aldrig utelåst. Larmet går nästan alltid före nivå 3 är klar. Den gamla terminalen i valvet är borta | 2026-11-15 |
+| F-110 | Egen station: lagas från mainframen del för del (skrovet och varje kanontorn), också medan man är i ett annat system. Den lagar sig inte längre själv. Ett lagat kanontorn står avslaget tills man slår på det i panelen. Försvar köps där: sköld, kanoner och säkerhet inuti, tre nivåer var för 250, 450 och 700 krediter | 2026-11-15 |
+| F-114 | Ta över en station som handlar med er, från dess mainframe (två klick). Larmet går direkt, vakter kommer, stationens kanoner vänder sig mot skeppet, anseendet hos dess sida sjunker med 40, och efter en minut kommer hjälp: bounty hunters från en fri station, egna skepp från en faktion. Övertagandet tar 30 sekunder (Engineer snabbare). Tas den: en faktion blir fiende, alla andra sidor tappar 10, och en fri station sätter en prissumma på 300 krediter. Bounty hunters (två Fighters och en Gunboat) kommer var tredje till fjärde minut, aldrig mer än en grupp åt gången, tills prissumman betalas på en station som handlar med er eller tre grupper är besegrade. Den som är inne kastas inte ut | 2026-11-15 |
+| F-121 | Anfall på egna stationer, även när besättningen är i ett annat system. Stationen rapporterar anfallet med risk LOW, MEDIUM eller HIGH och ungefär hur många minuter som är kvar, och igen när risken ändras och när bordarna är inne. Läget syns också överst på skärmen. Gunner bemannar kanontorn (idén ur D-180) är inte byggt | 2026-11-15 |
+| F-123 | Regler för anfall: högst ett åt gången i hela världen, en nytagen station lämnas i fred i fem minuter, minst åtta minuter mellan anfall, varvsstationen anfalls aldrig. Pirater kommer oftare i farliga sektorer med piratstationer, en lös grupp på fyra till sex med en Gunboat som bordar. En faktion anfaller bara när den är fientlig, oftare ju sämre anseendet och ju fler stationer den har nära, och helst stationer som tagits från den. Den kommer med en ordnad styrka med två Gunboats och håller sig till stationens försvar | 2026-11-15 |
+| F-173 | Sköld vid dockning. Ett skepp dockat vid en fiende får ingen extra sköld. En egen station under anfall ger sköld tills angriparna har tagit mainframen och stationen har fallit | 2026-11-15 |

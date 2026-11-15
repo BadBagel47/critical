@@ -6,7 +6,8 @@ import { nodeStatus, speedOf, weaponPower } from '../sim/ship.js';
 import { WEAPONS, weaponsOf } from '../sim/weapons.js';
 import { POSTS, playerById, holderOf } from '../sim/players.js';
 import { findDock, findThing, nameOf } from '../sim/things.js';
-import { isTrading } from '../sim/stations.js';
+import { isTrading, allStations } from '../sim/stations.js';
+import { RISK_NAMES } from '../sim/siege.js';
 import { currentSector } from '../sim/sectors.js';
 import { has, hullMax, shieldMax, dockShieldMax, fuelMax, jumpCharge } from '../sim/upgrades.js';
 import { dist } from '../sim/util.js';
@@ -174,6 +175,14 @@ function statusLines(state, me, dock) {
     const text = `DISTRESS CALL  ·  ${raided.name}  ·  ${far} M  ·  ${fmtTime(state.raid.timer)}`;
     lines.push({ text, color: COL.ochre[3], border: COL.ochre[1] });
   }
+  // An attack on a station of the crew's, wherever it is.
+  const siege = state.siege;
+  if (siege && siege.level >= 0) {
+    const found = allStations(state).find((x) => x.st.id === siege.station);
+    const where = found && found.sector !== state.sector ? '  ·  ' + state.sectors[found.sector].name : '';
+    const text = `${found ? found.st.name : 'YOUR STATION'} UNDER ATTACK${where}  ·  RISK ${RISK_NAMES[siege.level]}`;
+    lines.push({ text, color: COL.ember[2], border: COL.ember[0] });
+  }
   const alarm = alarmText(state);
   if (alarm) lines.push({ text: alarm, ...ALARM });
   return lines.filter(Boolean);
@@ -244,7 +253,8 @@ export function drawHud(ctx, state, view, assets, dock) {
   const { font } = assets;
   const me = playerById(state, view.playerId);
   drawTabs(ctx, font, state, view);
-  const credits = (state.test ? 'TEST MODE   ' : '') + 'CREDITS  ' + state.credits;
+  const bounty = state.bounty ? `BOUNTY ON YOU  ${state.bounty.amount}   ` : '';
+  const credits = (state.test ? 'TEST MODE   ' : '') + bounty + 'CREDITS  ' + state.credits;
   label(ctx, font, VIEW_W - 8, 8, credits, { anchor: 'r', fg: COL.ochre[2] });
   const where = `${currentSector(state).name}   KILLS  ${state.kills}   ${fmtTime(state.time)}`;
   label(ctx, font, VIEW_W - 8, 24, where, { anchor: 'r', fg: COL.dim });

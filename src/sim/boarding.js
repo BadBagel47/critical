@@ -9,7 +9,8 @@ import { newGuard, stepGuard, alertGuard, planRounds, awake } from './guards.js'
 import { makeVessel } from './vessels.js';
 import { PIRATE } from './sides.js';
 import { playerById, leavePost, returnToPost } from './players.js';
-import { takeOver, isTrading } from './stations.js';
+import { isTrading } from './stations.js';
+import { stepHack, stepMainframe, MAINFRAME_REACH } from './mainframe.js';
 import { has, level, fuelMax, crewHpMax, carryMax, rifleDmg, teleCooldown, breakinBonus } from './upgrades.js';
 import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
@@ -88,7 +89,7 @@ export const cameraWay = (state, c) => c.rest + Math.sin(state.time * B.CAMERA_S
 
 // A free spot on the floor inside a box of walls (a room or a corridor): not too close to anything in `taken`,
 // and at least `away` from the way in.
-function spotIn(state, it, box, taken, away = 0) {
+export function spotIn(state, it, box, taken, away = 0) {
   for (let n = 0; n < 60; n++) {
     const x = (box.c0 + 1.5 + rand(state) * (box.c1 - box.c0 - 2)) * TILE;
     const y = (box.r0 + 1.5 + rand(state) * (box.r1 - box.r0 - 2)) * TILE;
@@ -130,8 +131,20 @@ export function createInterior(state, wreck) {
     turning: 0,
     doorCut: 0,
     doorOpen: false,
-    terminal: null,
-    takeover: 0,
+    // The station's mainframe, in the room furthest in apart from the vault, and what has been done at it: which
+    // of the three levels of a hack are done, the one being worked on, how far each has come, and how full the
+    // trace meter is. See mainframe.js.
+    mainframe: null,
+    hack: null,
+    hacked: [false, false, false],
+    work: [0, 0, 0],
+    trace: 0,
+    // Seconds left that the cameras and turrets are switched off from the mainframe.
+    blackout: 0,
+    // Whether the boarders have the floor plan from the mainframe, with the guards, cameras and alarmed doors.
+    plan: false,
+    // Whether the crew is taking a station that traded with them, from the inside.
+    seize: false,
     trade: false,
     desks: [],
     civilians: [],
@@ -150,12 +163,21 @@ export function createInterior(state, wreck) {
     flares: [],
     fx: [],
   };
+  // Every station has a mainframe, as far in as it goes. It stands in the room furthest from the way in that is
+  // not the vault, so that a hack can open the vault.
+  if (wreck.kind === 'station') {
+    const rest = rooms.filter((_, i) => i !== vault);
+    const away = (r) => dist(r.mid.x, r.mid.y, it.entry.x, it.entry.y);
+    const far = [...rest].sort((a, b) => away(b) - away(a))[0] || rooms[vault];
+    it.mainframe = { ...far.mid };
+  }
   // A friendly or neutral station is a place to walk around and trade in, with nothing to fight.
   if (isTrading(wreck)) {
     makeTrade(state, it);
     return it;
   }
-  const taken = [];
+  // Nothing is put down on top of the mainframe.
+  const taken = it.mainframe ? [it.mainframe] : [];
   const spot = (box, away = 0) => spotIn(state, it, box, taken, away);
   const difficulty = wreck.difficulty;
   const vaultRoom = rooms[vault];
@@ -195,10 +217,11 @@ export function createInterior(state, wreck) {
     addLoot(vaultRoom, () => ({ type: 'chart', sector: missing[0] }));
   }
   if (rand(state) < 0.2) addLoot(vaultRoom, () => ({ type: 'part', slot: rand(state) < 0.5 ? 'hard' : 'system' }));
-  // A hostile station is taken over from the terminal in its vault, and has two more guards.
+  // A hostile station is taken over from its mainframe, and has two more guards, and more again for the
+  // security that the crew bought for it while it was theirs.
   if (wreck.kind === 'station') {
-    it.terminal = spot(vaultRoom);
-    for (let i = 0; i < 2; i++) it.guards.push(newGuard(state, spot(anyRoom(), 8 * TILE), 0));
+    const more = 2 + ((wreck.defense && wreck.defense.inner) || 0);
+    for (let i = 0; i < more; i++) it.guards.push(newGuard(state, spot(anyRoom(), 8 * TILE), 0));
     // A station that counts the crew as an enemy is in lockdown: dark, and on its guard.
     it.mood = 'lockdown';
     it.dark = true;
@@ -232,8 +255,10 @@ export function makeTrade(state, it) {
   it.mood = null;
   it.dark = false;
   it.doorOpen = true;
-  it.terminal = null;
   it.timer = null;
+  it.seize = false;
+  it.hack = null;
+  it.blackout = 0;
   it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
   it.guards = [];
   it.turrets = [];
@@ -242,8 +267,11 @@ export function makeTrade(state, it) {
   it.bolts = [];
   it.grenades = [];
   it.flares = [];
-  // A desk in each of the three largest rooms.
-  const open = it.rooms.filter((_, i) => i !== it.vault);
+  // A desk in each of the three largest rooms, apart from the vault and the room with the mainframe.
+  const mf = it.mainframe;
+  const all = it.rooms.filter((_, i) => i !== it.vault);
+  const free = all.filter((r) => !mf || r.mid.x !== mf.x || r.mid.y !== mf.y);
+  const open = free.length ? free : all;
   const area = (rm) => (rm.c1 - rm.c0) * (rm.r1 - rm.r0);
   const largest = [...open].sort((a, b) => area(b) - area(a) || a.c0 - b.c0 || a.r0 - b.r0);
   it.desks = ['services', 'shipyard', 'armory'].map((type, k) => ({ type, ...largest[k % largest.length].mid }));
@@ -349,17 +377,11 @@ export function tryBoard(state, playerId) {
   if (!it.avatars.length) useAirlock(state, wreck, it);
   player.inside = wreck.id;
   leavePost(player);
-  it.avatars.push({
+  const av = {
     player: playerId,
     ...comeIn(it, it.avatars.length),
     carry: [],
     cool: 0,
-    grenades: B.GRENADES,
-    // A Gunner always brings one charge, with or without the ones that are bought.
-    // Only the Gunner carries the ship's breaching charge.
-    charges: player.backTo === 'gunner' ? level(ship, 'charge') : 0,
-    sentries: has(ship, 'sentry') ? 1 : 0,
-    flares: has(ship, 'flare') ? B.FLARES : 0,
     lamp: true,
     // The post that the boarder left to come here. Some things inside can only be done by one post.
     role: player.backTo,
@@ -368,10 +390,23 @@ export function tryBoard(state, playerId) {
     watched: false,
     // The rifle, or the tranquilliser gun with its darts.
     weapon: 'rifle',
-    darts: has(ship, 'tranq') ? B.TRANQ_DARTS : 0,
-  });
+  };
+  gearUp(state, av);
+  it.avatars.push(av);
   state.events.push({ type: 'boarded', player: playerId, wreck: wreck.id });
   return true;
+}
+
+// What a boarder brings to a fight: grenades, the Gunner's breaching charge, the turret, flares and darts. A
+// visitor on a trading station brings none of it, until the station turns on the crew while they are inside.
+export function gearUp(state, av) {
+  const ship = state.ship;
+  av.grenades = B.GRENADES;
+  // Only the Gunner carries the ship's breaching charge.
+  av.charges = av.role === 'gunner' ? level(ship, 'charge') : 0;
+  av.sentries = has(ship, 'sentry') ? 1 : 0;
+  av.flares = has(ship, 'flare') ? B.FLARES : 0;
+  av.darts = has(ship, 'tranq') ? B.TRANQ_DARTS : 0;
 }
 
 function leave(state, it, av, teleported) {
@@ -392,8 +427,10 @@ function leave(state, it, av, teleported) {
   player.inside = null;
   returnToPost(state, player);
   // An alarm lasts until the last boarder has left. Then the place is on its guard again.
+  if (!it.avatars.length) it.hack = null;
   if (!it.avatars.length && it.mood === 'alarm') {
     it.mood = 'lockdown';
+    it.seize = false;
     for (const g of it.guards) {
       g.mode = 'idle';
       g.path = [];
@@ -408,7 +445,7 @@ const fighting = (it) =>
 
 // Something has given the crew away at `at`. A place with an alarm sounds it, and every guard that is awake
 // knows where to look. A wreck has no alarm: there only the guards that noticed are after the crew.
-function foundOut(state, it, at) {
+export function foundOut(state, it, at) {
   if (!it.mood) return;
   if (it.mood !== 'alarm') state.events.push({ type: 'foundOut' });
   it.mood = 'alarm';
@@ -477,7 +514,7 @@ function explode(state, it, g) {
 // ---------- what a boarder does ----------
 const atAirlockDoor = (it, av) => dist(av.x, av.y, it.entry.x, it.entry.y) < TILE * 1.8;
 // What there is to work with where a boarder stands, for the screen to show: the airlock, a desk,
-// the terminal, or the vault door (`cut` when they are near enough to cut it and not only to blow it).
+// the mainframe, or the vault door (`cut` when they are near enough to cut it and not only to blow it).
 export function useTarget(it, av) {
   // A guard that sleeps can be taken down for the rest of the boarding, by the one who gets to it in time.
   const asleep = it.guards.find((g) => g.sleep > 0 && !g.down && dist(g.x, g.y, av.x, av.y) < B.TAKE_DOWN_REACH);
@@ -493,17 +530,17 @@ export function useTarget(it, av) {
       return { type: 'reactor' };
   }
   if (atAirlockDoor(it, av)) return { type: 'airlock' };
+  if (it.mainframe && dist(av.x, av.y, it.mainframe.x, it.mainframe.y) < MAINFRAME_REACH) return { type: 'mainframe' };
   if (it.trade) {
     const desk = it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20);
     return desk ? { type: 'desk', desk } : null;
   }
-  if (it.terminal && it.doorOpen && dist(av.x, av.y, it.terminal.x, it.terminal.y) < 16) return { type: 'terminal' };
   if (it.doorOpen) return null;
   const door = it.rooms[it.vault].door;
   const away = dist(av.x, av.y, door.x, door.y);
   return away < 28 ? { type: 'door', door, cut: away < 22 } : null;
 }
-const openVault = (it) => {
+export const openVault = (it) => {
   it.doorOpen = true;
   it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
 };
@@ -645,19 +682,6 @@ function workVaultDoor(state, it, av, cmd, dt) {
   }
 }
 
-// A hostile station is taken over by holding the use key at the terminal in its vault.
-function workTerminal(state, it, av, cmd, dt) {
-  if (!it.terminal || !it.doorOpen || !cmd.use) return;
-  if (dist(av.x, av.y, it.terminal.x, it.terminal.y) >= 16) return;
-  it.takeover += (dt / B.TAKEOVER_TIME) * (av.role === 'engineer' ? B.ROLE_HACK : 1);
-  it.hacking = true;
-  if (it.takeover < 1) return;
-  const st = thingsOf(state, 'station').find((x) => x.interior === it);
-  if (st) takeOver(state, st);
-  it.terminal = null;
-  it.desks = [];
-}
-
 // On a trading station weapons stay holstered. The use key works the desks and the airlock.
 function stepVisitor(state, it, av, cmd) {
   if (!cmd.usePressed) return;
@@ -665,8 +689,10 @@ function stepVisitor(state, it, av, cmd) {
     leave(state, it, av, false);
     return;
   }
+  const at = useTarget(it, av);
+  if (at && at.type === 'mainframe') state.events.push({ type: 'mainframeUsed', player: av.player });
   const desk = it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20);
-  if (desk) state.events.push({ type: 'deskUsed', player: av.player, desk: desk.type });
+  if (desk && (!at || at.type === 'desk')) state.events.push({ type: 'deskUsed', player: av.player, desk: desk.type });
 }
 
 function stepAvatar(state, it, av, cmd, dt) {
@@ -689,6 +715,8 @@ function stepAvatar(state, it, av, cmd, dt) {
     state.events.push({ type: 'takeDown' });
     return;
   }
+  // The mainframe is worked from its own panel, see mainframe.js.
+  if (at && at.type === 'mainframe') state.events.push({ type: 'mainframeUsed', player: av.player });
   if (cmd.grenade && av.grenades > 0) throwGrenade(it, av, cmd.grenade);
   if (cmd.lampPressed) av.lamp = !av.lamp;
   if (cmd.flare && av.flares > 0) throwFlare(state, it, av, cmd.flare);
@@ -742,7 +770,6 @@ function stepAvatar(state, it, av, cmd, dt) {
     if (it.alarmed.some((d) => !d.off && d.tx === tx && d.ty === ty)) foundOut(state, it, av);
   }
   workVaultDoor(state, it, av, cmd, dt);
-  workTerminal(state, it, av, cmd, dt);
   if (player.hp <= 0) leave(state, it, av, true);
 }
 
@@ -783,6 +810,8 @@ function stepTurret(state, it, t, dt) {
     t.out -= dt;
     return false;
   }
+  // Switched off from the mainframe. One that the Engineer has turned still works for the crew.
+  if (it.blackout > 0 && t.turned <= 0) return false;
   const shoot = (owner, dmg) => {
     const f = forward(t.heading);
     it.bolts.push({
@@ -839,7 +868,7 @@ function stepTurret(state, it, t, dt) {
 // A camera sees a boarder that is in its cone, in the light or not. It gives them away like a guard does:
 // not at once, but when it has watched them for long enough.
 function stepCamera(state, it, c, dt) {
-  if (it.mood === 'alarm') return null;
+  if (it.mood === 'alarm' || it.blackout > 0) return null;
   const way = cameraWay(state, c);
   for (const av of it.avatars) {
     const d = dist(c.x, c.y, av.x, av.y);
@@ -977,6 +1006,7 @@ function stepInterior(state, wreck, cmds, dt) {
   for (const f of it.fx) f.t += dt;
   it.fx = it.fx.filter((f) => f.t < f.dur);
   for (const av of [...it.avatars]) stepAvatar(state, it, av, cmds.away ? cmds.away[av.player] : null, dt);
+  stepHack(state, wreck, it, dt);
   // Guards that have noticed nobody watch for boarders, and for other guards that lie still.
   for (const av of it.avatars) av.watched = false;
   for (const g of it.guards) {
@@ -1089,6 +1119,7 @@ const LOCK_OPENED = { pod: lootPod };
 
 export function stepBoarding(state, cmds, dt) {
   for (const id of (cmds.system && cmds.system.board) || []) tryBoard(state, id);
+  stepMainframe(state, cmds);
   for (const p of state.players) p.tele = Math.max(0, p.tele - dt);
   // The Captain marks a spot inside the place the ship is docked at. Marking it again takes the mark away.
   const pin = cmds.captain && cmds.captain.pin;

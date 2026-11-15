@@ -20,6 +20,20 @@ const MOOD_NEWS = {
   closed: 'WILL NOT TRADE WITH YOU',
   hostile: 'OPENS FIRE ON SIGHT',
 };
+const RISK = ['LOW', 'MEDIUM', 'HIGH'];
+// What an attack on a station of the crew's has come to, for its warning.
+const SIEGE_NEWS = {
+  siege: 'UNDER ATTACK',
+  docking: 'UNDER ATTACK',
+  boarding: 'BOARDERS INSIDE',
+  hack: 'BOARDERS AT THE MAINFRAME',
+};
+const HACKED = [
+  'PLAN READ  ·  GUARDS AND CAMERAS ON THE MAP',
+  'CAMERAS AND TURRETS OFF  ·  VAULT OPEN',
+  'MAINFRAME TAKEN',
+];
+const FIXED = (e) => (e.part === 'hull' ? 'HULL MENDED' : 'GUN MENDED  ·  SWITCH IT ON AT THE MAINFRAME');
 const NOT_READY = { pulse: 'SCANNER RECHARGING', probe: 'NO PROBES LEFT', buoy: 'NO BUOYS LEFT' };
 
 // Short messages for things that just happened: event type -> [text, colour], or null for no message.
@@ -97,7 +111,25 @@ const TOAST = {
     return e.kind === 'fighter' ? null : [`${e.name} DESTROYED  ·  +${e.bounty} CREDITS`, LOOT];
   },
   standing: (e) => [`${e.name}  ·  ${MOOD_NEWS[e.mood]}`, e.better ? GOOD : BAD],
-  stationFell: (e) => [`${e.name} HAS FALLEN TO THE PIRATES`, BAD],
+  stationFell: (e) => [`${e.name} HAS FALLEN${e.side === 'pirate' ? ' TO THE PIRATES' : ''}`, BAD],
+  siege: (e) => [
+    `${e.name} ${SIEGE_NEWS[e.stage]}  ·  ${e.by}  ·  RISK ${RISK[e.level]}  ·  ${e.minutes} MIN`,
+    e.level === 2 ? BAD : WARM,
+  ],
+  siegeBeaten: (e) => [`${e.name} BEAT THE ATTACK OFF`, GOOD],
+  hackStarted: () => null,
+  hackDone: (e) => [HACKED[e.level], TECH],
+  cannotHack: (e) => [e.reason, WARM],
+  traced: () => ['TRACED  ·  THE ALARM IS RAISED', BAD],
+  redAlert: (e) => [`RED ALERT ON ${e.name}  ·  IT CALLS FOR HELP`, BAD],
+  huntersIn: (e) => [e.side === 'hunter' ? 'BOUNTY HUNTERS JUMPED IN' : 'THEY SENT SHIPS AFTER YOU', BAD],
+  bounty: (e) => [`${e.name} PUT A BOUNTY ON YOU  ·  ${e.amount} CREDITS`, BAD],
+  bountyPaid: () => ['BOUNTY PAID  ·  THE HUNTERS GIVE UP', GOOD],
+  bountyGone: () => ['THE BOUNTY IS DROPPED  ·  NOBODY WANTS IT ANY MORE', GOOD],
+  fixStarted: () => ['REPAIRS STARTED', TECH],
+  fixDone: (e) => [`${e.name}  ·  ${FIXED(e)}`, GOOD],
+  gunOn: () => ['GUN SWITCHED ON', GOOD],
+  defenseBought: () => ['DEFENCE UPGRADED', GOOD],
   distressHeld: (e) => [`${e.name} HELD OUT ON ITS OWN`, COL.dim],
   stationPeace: (e) => [`${e.name} DEALS WITH YOU AGAIN`, GOOD],
   stationClosed: (e) => [`${e.name} WILL NOT LET YOU ABOARD`, WARM],
@@ -122,6 +154,7 @@ const PERSONAL = new Set([
   'lockedOut',
   'postTaken',
   'stationClosed',
+  'cannotHack',
 ]);
 
 export function toast(view, state, text, color = COL.text, seconds = 3.5) {
@@ -140,6 +173,7 @@ export function readEvents(game) {
     const mine = e.player === view.playerId;
     // The lock panel and the shop open for the player who walked up to them.
     if (e.type === 'breakinOpened' && mine) view.panel = 'lock';
+    if (e.type === 'mainframeUsed' && mine) view.panel = 'mainframe';
     if (e.type === 'deskUsed' && mine) {
       view.panel = 'shop';
       view.shopTab = e.desk === 'armory' ? 'armory' : 'hull';

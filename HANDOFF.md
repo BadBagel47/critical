@@ -22,6 +22,8 @@ Vrak är mörka inuti (2026-11-15): man letar sig fram med ficklampa (L) och fla
 
 Världen görs om i fyra steg enligt docs/proposal-world.md (2026-11-15). Steg 1 är byggt: asteroider man krockar med och skjuter sönder, en karta utan fog of war, system i tre storlekar, en stjärna i mitten som bränner, ett dis vid kanten och ankomst vid en bas. Allt är påslaget i alla spel. Fientliga stationer börjar i lockdown där man kan smyga (2026-11-15): vakter går rundor och ser åt ett håll, turrets och kameror vaktar en kon, tre dörrar är larmade, och vem som går in spelar roll. Engineer hackar fram stationens kod. Vakterna slåss från skydd och går runt, posterna har egna instrument (mållista, kurs, bordningsradar), och de kan märka saker åt varandra och ladda upp en överladdning (2026-11-15). Två förslag väntar på användaren: docs/proposal-world.md (genererad värld, röd tråd, uppdrag) och docs/proposal-economy.md (ekonomi, loot och vad ett misslyckat lås kostar).
 
+Stationerna har en mainframe (2026-11-15, F-109, F-110, F-114, F-121, F-123, F-173 och första omgången av F-122). Hos en fiende hackar man den i tre nivåer med en spårningsmätare: planritning, kameror och turrets av, övertagande. Den gamla terminalen i valvet är borta. En station som handlar med besättningen kan tas inifrån till ett högt pris: larm, vakter, hjälp utifrån och en prissumma med bounty hunters från fria stationer. Egna stationer lagas och får försvar köpt i mainframen, och de anfalls av pirater och fientliga faktioner, även när besättningen är någon annanstans, med varningar LOW, MEDIUM och HIGH. Siffrorna är startvärden i balance.js och är inte provspelade. Kvar: att själv gå in och försvara en station som bordas (F-122) och en personaldel på handelsstationer (F-206).
+
 Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-089 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
 ## Nästa steg
@@ -77,6 +79,8 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
   - `things.js`: saker som står still (stenar, vrak, stationer, containrar, bärgningsgods, bojar). De ligger i `state.things`.
   - `vessels.js`: andra skepp än fregatten. De ligger i `state.vessels`. Hur en klass flyger och slåss är dess "brain". Ett skepp med ett ärende flyger sina `legs` i tur och ordning.
   - `sides.js`: vem som står på vems sida, vad varje sida tycker om besättningen (anseendet i `state.standing`), och vilka sidor besättningen har retat upp just här (`state.strife`). Allt som kan skjuta eller bli skjutet har en `side`: besättningen, piraterna, en faktion, eller en station som står för sig själv.
+  - `mainframe.js`: mainframen på varje station och panelens order (`cmds.mainframe`): hack i tre nivåer med spårningsmätare (`it.hack`, `it.work`, `it.trace`), övertagande av en station som handlar med besättningen (`seize`), och lagning och försvar av egna stationer. Panelen ritas av `src/render/mainframe.js`.
+  - `siege.js`: anfall på besättningens egna stationer (`state.siege`): vem som anfaller och hur ofta, belägring, bordning och avgörande, och risken som stationen varnar med. Där besättningen inte är räknas allt ut. `bounty.js`: hjälp som en station kallar på (`state.hunt`) och prissumman (`state.bounty`) med bounty hunters, en egen sida (`HUNTER` i `sides.js`).
   - `stations.js`: stationerna. Hur en station behandlar besättningen (`align`, `closed`) räknas fram ur dess sida och anseendet i varje steg, så ändra sidan eller anseendet och aldrig `align` direkt. Här finns också försvaret och piratanfallen.
   - `traffic.js`: faktionernas skepp som hoppar in, gör sitt ärende och hoppar ut.
   - `layout.js`: planlösningarna för vrak och stationer. Varje plats får en egen, gjord av spelets styrda slump, och `planHolds()` kontrollerar att den går att ta sig igenom. `boarding.js` fyller planlösningen med vakter, turrets och loot.
@@ -103,7 +107,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 
 ## Test
 
-- `npm test`: tester av spellogiken, besättningen, sakerna som data och förutsägbarheten. Vilka knappar som erbjuds var testas i `tests/actions.test.js`. Faktioner, stationsförsvar, dockningssköld och trafik testas i `tests/sides.test.js`.
+- `npm test`: tester av spellogiken, besättningen, sakerna som data och förutsägbarheten. Vilka knappar som erbjuds var testas i `tests/actions.test.js`. Faktioner, stationsförsvar, dockningssköld och trafik testas i `tests/sides.test.js`. Mainframen, övertagande inifrån, prissumman och anfall på egna stationer testas i `tests/stations.test.js`.
   - `tests/determinism.test.js` kör en lång inspelad omgång med tre spelare (`tests/tour.js`) och kontrollerar att samma start och samma kommandon ger exakt samma spel, även efter att spelet sparats som text och lästs in igen. Varje ny funktion måste klara det (D-063).
   - `tests/style.test.js` vaktar radlängd och att spellogiken inte beror på något utanför `src/sim/`.
 - `npm run lint`: letar efter stavfel i namn, sådant som aldrig används och liknande. `npm run types`: kontrollerar typer utan byggsteg. `npm run check` kör tester, lint och typer i ett svep.

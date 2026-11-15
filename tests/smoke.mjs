@@ -424,6 +424,29 @@ await shot('12-station');
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(100);
 check((await get("v.panel === 'shop'")) === false, 'F closes the station panel');
+// The mainframe of the crew's own station: repairs and defence.
+await page.evaluate(() => {
+  const it = window.__critical.stations.find((x) => x.align === 'friendly').interior,
+    a = it.avatars[0];
+  a.x = it.mainframe.x;
+  a.y = it.mainframe.y;
+});
+await page.waitForTimeout(100);
+await page.keyboard.press('KeyF');
+await page.waitForTimeout(200);
+check((await get("v.panel === 'mainframe'")) === true, 'F at the mainframe opens its panel');
+const credits = await get('s.credits');
+await clickOn('mf.up.shield');
+await page.waitForTimeout(150);
+check(
+  (await get("window.__critical.stations.find((x) => x.align === 'friendly').defense.shield")) === 1 &&
+    (await get('s.credits')) < credits,
+  'defence for the station is bought at its mainframe',
+);
+await shot('12b-mainframe');
+await page.keyboard.press('KeyF');
+await page.waitForTimeout(100);
+check((await get("v.panel === 'mainframe'")) === false, 'F closes the mainframe panel');
 await page.evaluate(() => {
   const it = window.__critical.stations.find((x) => x.align === 'friendly').interior,
     a = it.avatars[0];
@@ -497,18 +520,29 @@ await page.evaluate(() => {
   it.turrets = [];
   it.doorOpen = true;
   it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
-  a.x = it.terminal.x;
-  a.y = it.terminal.y + 10;
+  a.x = it.mainframe.x;
+  a.y = it.mainframe.y + 10;
 });
 await page.waitForTimeout(200);
 await shot('12c-station-inside');
-await page.keyboard.down('KeyF');
-await page.waitForTimeout(4600);
-await page.keyboard.up('KeyF');
+await page.keyboard.press('KeyF');
+await page.waitForTimeout(200);
+check((await get("v.panel === 'mainframe'")) === true, 'F at the mainframe of a hostile station opens the hack');
+await clickOn('mf.hack.2');
+await page.waitForTimeout(300);
+await shot('12d-hack');
+// Most of the work is skipped, so that the test does not wait the whole time.
+await page.evaluate(() => {
+  window.__critical.stations.find((x) => x.name === 'DRIFT POST').interior.work[2] = 0.97;
+});
+await page.waitForTimeout(1200);
 check(
   (await get("window.__critical.stations.filter((x) => x.align === 'friendly').length")) === 2,
-  'holding F at the terminal takes the station over',
+  'level 3 of the hack takes the station over',
 );
+await page.keyboard.press('KeyF');
+// The panel has to be closed before the boarder walks to the airlock, or the next F would go to the panel.
+await page.waitForFunction(() => window.__critical.view.panel === null, null, { timeout: 3000 }).catch(() => {});
 await page.evaluate(() => {
   const it = window.__critical.stations.find((x) => x.name === 'DRIFT POST').interior,
     a = it.avatars[0];
@@ -672,7 +706,8 @@ await page.evaluate(() => {
   window.__critical.input.mouse.y = 180 + (c.y - window.__critical.view.cam.y);
   window.__critical.input.mouse.down = true;
 });
-await page.waitForTimeout(1500);
+// Firing goes on until the cruiser is gone, for as long as six seconds, so that a slow machine is not a failure.
+await page.waitForFunction(() => window.__critical.state.won, null, { timeout: 6000 }).catch(() => {});
 await page.evaluate(() => {
   window.__critical.input.mouse.down = false;
 });

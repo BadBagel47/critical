@@ -18,11 +18,15 @@ import { drawBoarding, insideOrigin } from './render/boarding.js';
 import { drawBreakin, breakinAction, breakinButtons } from './render/breakin.js';
 import { drawMap, mapPoint, chartClick, mapButtons } from './render/map.js';
 import { drawShop, shopClick, shopButtons } from './render/shop.js';
+import { drawMainframe, mainframeClick, mainframeButtons } from './render/mainframe.js';
+import { atMainframe } from './sim/mainframe.js';
 import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS, hackTarget, hackBox } from './render/engineer.js';
 import { drawActions, actionButtons } from './render/actions.js';
 
 // What is kept about the screen. None of it is part of the game: two players look at the same game differently.
-//   panel  what the player has opened on top of their place in the game: 'map', 'lock', 'shop', 'menu' or null
+//   panel  what the player has opened on top of their place in the game: 'map', 'lock', 'shop', 'mainframe',
+//          'menu' or null
+//   mfArm  whether the player has clicked once to take a trading station from its mainframe, and must click again
 //   menu   which page of the menu is open and which row is picked, see menu.js
 export function createView(input) {
   return {
@@ -30,6 +34,7 @@ export function createView(input) {
     playerId: 0,
     panel: null,
     shopTab: 'hull',
+    mfArm: false,
     menu: createMenu(),
     help: false,
     wonSeen: false,
@@ -55,17 +60,31 @@ export function modeOf(game) {
   if (view.panel === 'menu') return 'menu';
   const me = playerById(state, view.playerId);
   const docked = findDock(state, state.ship.docked);
-  if (me.inside !== null) return view.panel === 'shop' && isTrading(docked) ? 'shop' : 'away';
+  if (me.inside !== null) {
+    if (view.panel === 'shop' && isTrading(docked)) return 'shop';
+    const at = mainframeAt(game);
+    return view.panel === 'mainframe' && at ? 'mainframe' : 'away';
+  }
   if (view.panel === 'lock' && docked && docked.breakin && docked.lock !== 'open') return 'lock';
   if (view.panel === 'map') return 'map';
   if (view.panel === 'radar' && me.post === 'captain' && radarPlace(state)) return 'radar';
   // On board the ship: the post the player holds, or 'crew' when they hold none.
   return me.post || 'crew';
 }
+// The station the player is in and their boarder, while they stand at its mainframe. Otherwise null.
+export function mainframeAt(game) {
+  const { state, view } = game;
+  const me = playerById(state, view.playerId);
+  const st = me && findDock(state, me.inside);
+  const it = st && st.kind === 'station' ? st.interior : null;
+  const av = it && it.avatars.find((a) => a.player === me.id);
+  return av && atMainframe(it, av) ? { st, av } : null;
+}
 // Work out the mode and forget a panel that no longer applies.
 export function settle(game) {
   const mode = modeOf(game);
   if (game.view.panel !== mode) game.view.panel = null;
+  if (mode !== 'mainframe') game.view.mfArm = false;
   return mode;
 }
 
@@ -218,6 +237,24 @@ function shopInput(game, out) {
   if (hit && hit.order) out.shop = [hit.order];
 }
 
+// At a station's mainframe: clicks give orders. F steps away from it.
+function mainframeInput(game, out) {
+  const { keys, state, view } = game;
+  if (keys.hit('KeyF')) {
+    view.panel = null;
+    return;
+  }
+  if (!keys.mouse.clicked) return;
+  const at = mainframeAt(game);
+  const hit = at && mainframeClick(state, at.st, at.av, view.mfArm, keys.mouse.x, keys.mouse.y);
+  if (!hit) return;
+  if (hit.arm) view.mfArm = true;
+  else {
+    view.mfArm = false;
+    out.mainframe = [hit.order];
+  }
+}
+
 // Away from the ship, inside a wreck or a station.
 function awayInput(game, out) {
   const { keys, state, view, me } = game;
@@ -285,6 +322,13 @@ function drawShopScreen(game) {
   if (!state.over) drawShop(ctx, assets.font, state, findDock(state, state.ship.docked), view.shopTab, keys.mouse);
 }
 
+function drawMainframeScreen(game) {
+  const { ctx, state, view, assets, keys } = game;
+  drawAway(game);
+  const at = mainframeAt(game);
+  if (!state.over && at) drawMainframe(ctx, assets.font, state, at.st, at.av, view.mfArm, keys.mouse);
+}
+
 const docked = (game) => findDock(game.state, game.state.ship.docked);
 
 // pad: which gamepad layout applies (see input.js). cursor: the left stick moves a pointer.
@@ -337,6 +381,17 @@ export const SCREENS = {
     draw: drawShopScreen,
     toasts: [312],
     buttons: (game) => shopButtons(game.state, docked(game), game.view.shopTab),
+  },
+  mainframe: {
+    pad: 'panel',
+    cursor: true,
+    input: mainframeInput,
+    draw: drawMainframeScreen,
+    toasts: [312],
+    buttons: (game) => {
+      const at = mainframeAt(game);
+      return at ? mainframeButtons(game.state, at.st, at.av, game.view.mfArm) : [];
+    },
   },
   away: { pad: 'away', input: awayInput, draw: drawAway, toasts: [42] },
 };

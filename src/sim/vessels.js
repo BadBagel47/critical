@@ -5,7 +5,18 @@
 // fight pirates, and the crew only when the crew has made an enemy of that faction.
 import { B } from './balance.js';
 import { SHIPS } from './kinds.js';
-import { CREW, PIRATE, enemies, changeStanding, thankForPirate, provoke, isAngry, anyoneAngry } from './sides.js';
+import {
+  CREW,
+  PIRATE,
+  HUNTER,
+  isFaction,
+  enemies,
+  changeStanding,
+  thankForPirate,
+  provoke,
+  isAngry,
+  anyoneAngry,
+} from './sides.js';
 import { addThing, thingsOf, findThing } from './things.js';
 import { currentSector, createWreck } from './sectors.js';
 import { forward, headingTo, angleDiff, turnToward, toWorld, dist, rand, randRange, TAU } from './util.js';
@@ -54,6 +65,11 @@ export function makeVessel(state, kind, x, y, side = PIRATE) {
     hp,
     hpMax: hp,
     raid: null,
+    // An attack on a station of the crew's that it is part of (siege.js), whether it carries the boarders, and
+    // whether it was sent after the crew (bounty.js).
+    siege: null,
+    boarding: false,
+    hunt: false,
     legs: null,
     hold: 0,
     fleeing: false,
@@ -174,12 +190,25 @@ function nearestEnemy(state, v, reach) {
 }
 
 // What a ship goes for, or null when it has nobody to fight.
+//   attackers the crew's station they attack, see siege.js
+//   hunters   the frigate, see bounty.js
 //   raiders   the station they are raiding, unless an enemy comes close
 //   pirates   the nearest enemy, and otherwise the frigate, which they hunt wherever it is
 //   others    the nearest enemy in sight
 //             and from further away when their own side is in a fight: with the crew, or one of their
 //             stations with raiders
 function pickTarget(state, v) {
+  // Hunters that have given up are only leaving.
+  if (v.fleeing && v.side === HUNTER) return null;
+  // Attackers on a station of the crew's go for its defences. A faction keeps to them unless the crew comes
+  // close. Pirates are easier to draw off.
+  if (v.siege && state.siege && state.siege.id === v.siege) {
+    const st = findThing(state, state.siege.station);
+    const near = nearestEnemy(state, v, isFaction(v.side) ? 220 : 380);
+    return near || (st ? { x: st.x, y: st.y, vx: 0, vy: 0 } : state.ship);
+  }
+  // Ships sent after the crew hunt the frigate wherever it is.
+  if (v.hunt) return nearestEnemy(state, v, 380) || (enemies(state, v.side, CREW) ? state.ship : null);
   if (v.raid && state.raid && state.raid.id === v.raid) {
     const st = findThing(state, state.raid.station);
     return nearestEnemy(state, v, 380) || (st ? { x: st.x, y: st.y, vx: 0, vy: 0 } : state.ship);
@@ -209,7 +238,8 @@ export function fleeFrom(state, v, from) {
 // What a ship wants to get away from, if anything: an unarmed ship runs from its enemies, and nobody stays
 // to watch the crew fight someone else.
 function troubleFor(state, v, c) {
-  if (v.fleeing || v.side === PIRATE) return null;
+  // Pirates, hunters and ships on an attack do not run.
+  if (v.fleeing || v.side === PIRATE || v.side === HUNTER || v.siege || v.hunt) return null;
   const enemy = BRAINS[c.brain] ? null : nearestEnemy(state, v, B.FLEE_RANGE);
   if (enemy) return enemy;
   const ship = state.ship;
@@ -359,7 +389,8 @@ export function stepVessels(state, dt) {
     const trouble = troubleFor(state, v, c);
     if (trouble) fleeFrom(state, v, trouble);
     // A ship that can fight goes for its target. Without one, or without guns, it gets on with its errand.
-    const target = BRAINS[c.brain] ? pickTarget(state, v) : null;
+    // A ship carrying boarders to a station flies its errand there and does not stop to fight.
+    const target = BRAINS[c.brain] && !v.boarding ? pickTarget(state, v) : null;
     let { want, speed } = target ? BRAINS[c.brain](state, v, c, aimAt(v, target), dt) : stepErrand(state, v, c, dt);
     // Keep some distance to other ships.
     if (!c.aloof && speed > 0) {

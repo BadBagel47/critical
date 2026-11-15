@@ -1201,7 +1201,7 @@ test('shooting a neutral station turns it hostile, and its guns open fire', () =
   assert.ok(s.ship.shield + s.ship.hull < before, 'the station shoots back');
 });
 
-test('a hostile station is broken into, boarded and taken over from its terminal', () => {
+test('a hostile station is broken into, boarded and taken over from its mainframe', () => {
   const s = quiet(createState(1)),
     st = station(s, 'neutral');
   turnHostile(s, st);
@@ -1219,13 +1219,14 @@ test('a hostile station is broken into, boarded and taken over from its terminal
   step(s, { system: { board: [0] } }, DT);
   const it = st.interior,
     av = it.avatars[0];
-  assert.ok(it.terminal && it.timer === null, 'no reactor countdown in a station');
+  assert.ok(it.mainframe && it.timer === null, 'no reactor countdown in a station');
   it.guards = [];
   it.turrets = [];
   it.doorOpen = true;
-  av.x = it.terminal.x;
-  av.y = it.terminal.y;
-  run(s, { away: { 0: { use: true } } }, B.TAKEOVER_TIME + 0.2);
+  av.x = it.mainframe.x;
+  av.y = it.mainframe.y;
+  step(s, { away: { 0: {} }, mainframe: [{ player: 0, action: 'hack', level: 2 }] }, DT);
+  run(s, { away: { 0: {} } }, B.HACK_TIME[2] + 0.2);
   assert.equal(st.align, 'friendly');
   assert.equal(st.shipyard, true);
   assert.equal(st.side, 'crew', "the station is the crew's own now");
@@ -2015,9 +2016,10 @@ test('a station that is taken over becomes a trading floor', () => {
   it.turrets = [];
   it.doorOpen = true;
   it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
-  av.x = it.terminal.x;
-  av.y = it.terminal.y;
-  run(s, { away: { 0: { use: true } } }, B.TAKEOVER_TIME + 0.2);
+  av.x = it.mainframe.x;
+  av.y = it.mainframe.y;
+  step(s, { away: { 0: {} }, mainframe: [{ player: 0, action: 'hack', level: 2 }] }, DT);
+  run(s, { away: { 0: {} } }, B.HACK_TIME[2] + 0.2);
   assert.equal(st.align, 'friendly');
   av.x = it.entry.x;
   av.y = it.entry.y;
@@ -2248,9 +2250,10 @@ test('an alarm wakes the whole place and lasts until the crew has left', () => {
   step(s, { away: { 0: { aim: { x: av.x + 10, y: av.y }, fire: true } } }, DT);
   assert.equal(it.mood, 'alarm', 'a rifle shot is heard');
   assert.ok(it.guards.every((g) => g.mode === 'alert'));
+  // The boarder is kept alive, so that it is the alarm that is tried and not the fight.
+  s.players[0].hp = 10000;
   run(s, { away: { 0: {} } }, 30);
   assert.equal(it.mood, 'alarm', 'it cannot be waited out');
-  s.players[0].hp = 10000;
   av.x = it.entry.x;
   av.y = it.entry.y;
   step(s, { away: { 0: { usePressed: true } } }, DT);

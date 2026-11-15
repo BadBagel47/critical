@@ -1,6 +1,6 @@
 # Bordning av stationer: samlat förslag (D-117)
 
-**Godkänt av användaren 2026-11-14.** Inget av det är byggt än. Det samlar det användaren har bestämt (2026-11-14) och agentens förslag på det som var kvar, så att delarna F-102, F-107 till F-110 och F-113 till F-116 kan byggas utan att krocka.
+**Godkänt av användaren 2026-11-14.** Steg 1 till 4 och första omgången av steg 5 är byggda (2026-11-15), se Byggt under varje avsnitt. Det samlar det användaren har bestämt (2026-11-14) och agentens förslag på det som var kvar, så att delarna F-102, F-107 till F-110 och F-113 till F-116 kan byggas utan att krocka.
 
 Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **Förslag** är agentens. Användaren har godkänt förslagen i sin helhet, och siffrorna är startvärden att provspela med.
 
@@ -70,7 +70,7 @@ Det som är märkt **Bestämt** kommer från användaren. Det som är märkt **F
 - Planritningen från hack nivå 1 visar också de larmade dörrarna.
 - När larmet väl har gått spelar dörrarna ingen roll längre.
 - Larmade dörrar finns bara där smygande gäller, alltså inte i vrak.
-- **Byggt (2026-11-15):** tre larmade dörrar per fientlig station, gul lampa på nära håll, gula rutor på radarn, och Engineer stänger av en på två och en halv sekund. Vakterna öppnar inga dörrar i dag, så de går inte igenom dem. Planritningen från hacket väntar på mainframen (F-109).
+- **Byggt (2026-11-15):** tre larmade dörrar per fientlig station, gul lampa på nära håll, gula rutor på radarn, och Engineer stänger av en på två och en halv sekund. Vakterna öppnar inga dörrar i dag, så de går inte igenom dem. Planritningen från hack nivå 1 visar dem (byggt 2026-11-15).
 
 ## 5. Vakter, tranq gun och TAKE DOWN
 
@@ -141,6 +141,8 @@ Nivå 3 är dagens övertagande vid terminalen, flyttat till mainframen. Det tar
 - Uppgraderingar kostar krediter: starkare sköld, fler eller starkare kanontorn.
 - En ägd station ger inkomst över tid (F-088), så att den är värd att försvara och bygga ut.
 
+**Byggt (2026-11-15, F-109 och F-110):** mainframen står i det rum som ligger längst från luftslussen, utom valvet, så att nivå 2 kan öppna valvet. Nivåerna tar 8, 10 och 20 sekunder (Engineer en och en halv gång så snabbt, som för lås) och fyller mätaren med 15, 30 och 115 procent, så att larmet alltid går före nivå 3 är klar. Kameror och turrets är av i 60 sekunder. På egna stationer lagas skrovet och kanontornen del för del, också när man är borta, och ett lagat kanontorn slås på i panelen. Försvaret köps i tre nivåer för sköld, kanoner och säkerhet inuti. Säkerheten ger också fler vakter om stationen faller och ska tas tillbaka. Avvikelse: Engineer hackar en och en halv gång så snabbt, inte dubbelt, som rollerna redan byggts (F-113).
+
 ## 9. Ta över en neutral bas
 
 **Bestämt.** Det ska vara svårt och en stor risk. Basen kallar på bounty hunters som anfaller skeppet, anseendet sjunker, och det sjunker ytterligare vid övertagande om basen tillhör en faktion.
@@ -157,6 +159,8 @@ Nivå 3 är dagens övertagande vid terminalen, flyttat till mainframen. Det tar
 - En grupp är två Fighters och en Gunboat. De slåss bara mot besättningen.
 - Aldrig mer än en grupp åt gången, och tre till fyra minuter mellan grupperna.
 - Prissumman är 300 krediter. Den betalas på valfri station som handlar med er, eller försvinner när tre grupper är besegrade.
+
+**Byggt (2026-11-15, F-114):** som förslaget, med två skillnader. Handelsstationer har ännu ingen personaldel, så mainframen nås fritt och vakterna kommer först när övertagandet startar (F-206). Övertagandet startas med två klick i panelen och tar 30 sekunder. Stationens kanoner vänder sig mot skeppet medan det pågår.
 
 ## 10. Anseende
 
@@ -236,6 +240,8 @@ Meddelandet säger vilken station, vem som anfaller, nivån och ungefär hur lå
 
 - En faktion anfaller bara när anseendet är "fientlig". Vid "stängd" nöjer den sig med att hålla er ute.
 - **Bestämt 2026-11-14:** en station som faller blir angriparens. Halva det försvar ni köpt finns kvar, så den är svårare att ta tillbaka än den var att ta första gången, och ni får tillbaka den halvan om ni tar den igen.
+
+**Byggt (2026-11-15, F-121, F-123 och första omgången av F-122):** som förslaget. Ett anfall som inte syns räknas ut med samma styrkor: skadan per sekund för varje sorts skepp, stationens kanontorn som träffar en fjärdedel av gångerna, och bordare som nöts ner av säkerheten inuti. Där besättningen är blir belägringen en riktig strid, och bordningsskeppet dockar vid den arm som ligger längst från fregatten. Bordningen och avgörandet räknas alltid ut. Kvar till andra omgången: att själv gå in och slå ut bordarna, och att bordningsskeppet skyddas av dockningsskölden. Gunner bemannar ett kanontorn (idé ur D-180) är inte byggt.
 
 ## 15. Byggordning
 

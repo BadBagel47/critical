@@ -250,6 +250,22 @@ function drawPlan(ctx, it, me, x, y, radar = []) {
     ctx.fillStyle = '#9cf7b0';
     ctx.fillRect(x + Math.floor(it.pin.x / TILE) - 1, y + Math.floor(it.pin.y / TILE) - 1, 3, 3);
   }
+  // The mainframe is on the plan, so that it can be found.
+  if (it.mainframe) {
+    ctx.fillStyle = it.trade || !it.mood ? COL.acid[1] : COL.ember[1];
+    ctx.fillRect(x + Math.floor(it.mainframe.x / TILE) - 1, y + Math.floor(it.mainframe.y / TILE) - 1, 3, 3);
+  }
+  // With the plan read from the mainframe, everyone sees the guards, the cameras, the alarmed doors and the loot.
+  if (it.plan) {
+    const dot = (p, col, n = 2) => {
+      ctx.fillStyle = col;
+      ctx.fillRect(x + Math.floor(p.x / TILE) - 1, y + Math.floor(p.y / TILE) - 1, n, n);
+    };
+    for (const l of it.loot) dot(l, COL.ochre[3], 1);
+    for (const c of it.cameras) dot(c, COL.ion[2]);
+    for (const d of it.alarmed) if (!d.off) dot(d, COL.ochre[2]);
+    for (const g of it.guards) if (!g.down) dot(g, COL.ember[1]);
+  }
   // The Captain carries a small radar: enemies that are after someone show on the plan when they are near.
   for (const e of radar) {
     ctx.fillStyle = COL.ember[2];
@@ -372,16 +388,20 @@ function drawDesk(ctx, img, font, place, desk) {
   font.draw(ctx, name, desk.x, desk.y + (up ? 10 : -16), color, { align: 'c' });
 }
 
-// The terminal a hostile station is taken over from.
-function drawTerminal(ctx, it, time) {
-  const t = it.terminal;
-  glow(ctx, t.x, t.y, 12, COL.ember[1], 0.16);
-  rect(ctx, t.x - 7, t.y - 6, 14, 12, '#1c1c28', COL.out);
-  rect(ctx, t.x - 5, t.y - 4, 10, 5, Math.floor(time * 3) % 2 ? COL.ember[1] : COL.ember[0]);
-  rect(ctx, t.x - 5, t.y + 3, 3, 1, COL.ochre[2]);
-  if (it.takeover <= 0) return;
+// The station's mainframe: a tall cabinet with a screen, red at an enemy and green at a station that is the
+// crew's or trades with them. A bar under it shows how far a hack has come.
+function drawMainframe(ctx, place, it, time) {
+  const t = it.mainframe;
+  const own = place.side === 'crew' || it.trade;
+  const col = own ? COL.acid : COL.ember;
+  glow(ctx, t.x, t.y, 14, col[1], 0.16);
+  rect(ctx, t.x - 8, t.y - 8, 16, 16, '#1c1c28', COL.out);
+  rect(ctx, t.x - 6, t.y - 6, 12, 6, Math.floor(time * 3) % 2 ? col[1] : col[0]);
+  for (let i = 0; i < 3; i++)
+    rect(ctx, t.x - 6 + i * 4, t.y + 3, 2, 2, i === Math.floor(time * 4) % 3 ? COL.ochre[2] : COL.dim);
+  if (!it.hack) return;
   ctx.fillStyle = COL.acid[2];
-  ctx.fillRect(t.x - 7, t.y + 8, Math.round(14 * Math.min(1, it.takeover)), 2);
+  ctx.fillRect(t.x - 8, t.y + 10, Math.round(16 * Math.min(1, it.work[it.hack.level])), 2);
 }
 
 function drawInsideBolt(ctx, b) {
@@ -564,6 +584,10 @@ function drawWatch(ctx, font, state, it, me) {
       font.draw(ctx, 'YOURS  ' + Math.ceil(t.turned), t.x, t.y - 18, COL.acid[2], { align: 'c' });
       continue;
     }
+    if (it.blackout > 0) {
+      font.draw(ctx, 'OFF', t.x, t.y - 18, COL.ion[2], { align: 'c' });
+      continue;
+    }
     const hot = t.hot > 0 || it.mood === 'alarm';
     const f = forward(t.rest);
     const area = litArea(it, t.x, t.y, B.TURRET_SIGHT, Math.atan2(f.y, f.x), hot ? B.TURRET_ARC : B.TURRET_FOV);
@@ -578,7 +602,7 @@ function drawWatch(ctx, font, state, it, me) {
   }
   // A camera, and what it sees right now. It sweeps, and hurts nobody.
   for (const c of it.cameras) {
-    const live = it.mood !== 'alarm';
+    const live = it.mood !== 'alarm' && it.blackout <= 0;
     if (live) {
       const f = forward(cameraWay(state, c));
       const area = litArea(it, c.x, c.y, B.CAMERA_RANGE, Math.atan2(f.y, f.x), B.CAMERA_FOV);
@@ -656,7 +680,7 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
     glow(ctx, l.x, l.y, 9, l.type === 'crate' ? COL.ochre[2] : COL.ion[2], 0.14);
     sprite(ctx, img[l.type], l.x, l.y);
   }
-  if (it.terminal) drawTerminal(ctx, it, state.time);
+  if (it.mainframe) drawMainframe(ctx, place, it, state.time);
   if (it.reactor) {
     const r = it.reactor;
     rect(ctx, r.x - 7, r.y - 7, 14, 14, '#1c1c28', COL.out);
@@ -743,8 +767,9 @@ function drawPlaceLine(ctx, font, place) {
     const text = `${place.name}  ·  ${place.align.toUpperCase()} STATION`;
     label(ctx, font, x, 8, text, { anchor: 'c', fg: place.align === 'friendly' ? COL.engineer : COL.text });
   } else if (place.kind === 'station') {
-    const text = it.terminal ? `${place.name}  ·  FIND THE TERMINAL IN THE VAULT` : `${place.name} IS YOURS`;
-    const col = it.terminal ? COL.ember : COL.acid;
+    const mine = place.side === 'crew';
+    const text = mine ? `${place.name} IS YOURS` : `${place.name}  ·  THE MAINFRAME IS FURTHEST IN`;
+    const col = mine ? COL.acid : COL.ember;
     label(ctx, font, x, 8, text, { anchor: 'c', fg: col[2], border: col[0] });
     // How the place takes the crew: on its guard, or hunting them.
     if (it.mood === 'alarm')
@@ -807,10 +832,16 @@ function drawBoarderHud(ctx, font, state, view, player, place, me, origin) {
   }
   // What is being worked on shows where it happens. The key for it is on a button, see actions.js.
   const at = me && useTarget(it, me);
-  if (at && at.type === 'terminal' && it.hacking) {
+  if (it.hacking && it.hack && it.mainframe) {
     const look = { anchor: 'c', fg: COL.acid[2], border: COL.acid[0] };
-    label(ctx, font, origin.x + it.terminal.x, origin.y + it.terminal.y - 30, 'TAKING OVER THE STATION', look);
-  } else if (at && at.type === 'door' && it.cutting) {
+    const what = ['READING THE PLAN', 'TAKING CONTROL', 'TAKING THE STATION'][it.hack.level];
+    label(ctx, font, origin.x + it.mainframe.x, origin.y + it.mainframe.y - 30, what, look);
+  }
+  if (it.blackout > 0) {
+    const look = { anchor: 'c', fg: COL.ion[2], border: COL.ion[0] };
+    label(ctx, font, VIEW_W / 2 + 60, 40, `CAMERAS AND TURRETS OFF  ·  ${Math.ceil(it.blackout)} S`, look);
+  }
+  if (at && at.type === 'door' && it.cutting) {
     const look = { anchor: 'c', fg: COL.ochre[2], border: COL.ochre[0] };
     label(ctx, font, origin.x + at.door.x, origin.y + at.door.y + 22, 'CUTTING THE LOCK', look);
   }

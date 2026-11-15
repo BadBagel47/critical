@@ -281,7 +281,54 @@ export const B = {
   REPAIR_PRICE: { friendly: 0.25, neutral: 0.5 },
   ROCKET_PRICE: { friendly: 2, neutral: 4 },
   CHART_PRICE: { friendly: 100, neutral: 150 },
-  TAKEOVER_TIME: 4,
+  // The mainframe (docs/station-boarding.md, section 8). Seconds of work for each level of a hack: read the plan,
+  // control the cameras, turrets and doors, and take the station over. The Engineer works ROLE_HACK times as fast.
+  // Each level fills the trace meter by this much over its work. A full meter sounds the alarm.
+  HACK_TIME: [8, 10, 20],
+  HACK_TRACE: [0.15, 0.3, 1.15],
+  // How long cameras and turrets stay off after level 2.
+  BLACKOUT: 60,
+  // Taking a station that trades with the crew takes longer, and the alarm sounds at once.
+  SEIZE_TIME: 30,
+  SEIZE_GUARDS: 3,
+  // What the crew's own station is mended by each second, from its mainframe: the hull, and a gun.
+  STATION_FIX_HULL: 8,
+  STATION_FIX_GUN: 1.5,
+  // What the crew can buy for a station they own: a stronger shield, stronger guns, and security inside.
+  // Price of each level, and how much stronger each level makes the shield and the guns.
+  DEFENSE_MAX: 3,
+  DEFENSE_PRICE: [250, 450, 700],
+  DEFENSE_SHIELD: 0.5,
+  DEFENSE_GUN: 0.35,
+  // Breaking into a station that trades (section 9). What the alarm costs with the station's own side, and
+  // what taking it costs with everyone else. The help it calls comes this many seconds after the alarm.
+  SEIZE_STANDING: 40,
+  SEIZE_RUMOUR: 10,
+  HUNT_FIRST: 60,
+  // A bounty from a free station: what it costs to pay off, how many groups of hunters it takes to be rid of it
+  // without paying, and how long there is between two groups. Never more than one group at a time.
+  BOUNTY: 300,
+  BOUNTY_GROUPS: 3,
+  HUNT_GAP: [180, 240],
+  // Attacks on stations the crew owns (section 14). How long there is between two, and how long a station that
+  // was just taken over is left in peace. The first attack comes at the earliest SIEGE_FIRST seconds after that.
+  // Only one attack at a time in the whole world.
+  SIEGE_FIRST: 180,
+  SIEGE_GAP: [480, 840],
+  SIEGE_CALM: 300,
+  // How an attack is worked out where the crew is not: the damage each kind of ship does to a station each
+  // second, and the share of a station gun's shots that hit a ship.
+  SIEGE_DPS: { fighter: 1.2, gunboat: 2.5, cruiser: 8 },
+  SIEGE_GUN_HITS: 0.25,
+  // Once the outer defence is down the boarders are inside. They need this long to reach the mainframe, and
+  // this long more to take it. Each second, the defence inside wears them down by SIEGE_INNER per level of it.
+  SIEGE_BOARD_TIME: 70,
+  SIEGE_HACK_TIME: 20,
+  SIEGE_INNER: 0.02,
+  // How strong the boarders are: pirates, and a faction, plus one for each tier of the sector.
+  SIEGE_BOARDERS: { pirate: 3, faction: 5 },
+  // When the station warns of MEDIUM and HIGH risk.
+  SIEGE_RISK: [0.25, 0.5],
   // more weapons
   WING_BOLT_DMG: 4,
   HEAVY_CHARGE: 1.3,

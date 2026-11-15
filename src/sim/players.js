@@ -83,7 +83,8 @@ export function returnToPost(state, player) {
 
 // Turn what each player asks for into commands for the ship. `inputs` is { [player id]: input }, where an input
 // may hold: take (a post to move to), pause, board, captain / gunner / engineer (the command for that post),
-// away (controls while inside), hack (break-in orders) and shop (orders at a station desk).
+// away (controls while inside), hack (break-in orders), shop (orders at a station desk) and mainframe (orders at
+// a station's mainframe).
 // Only the holder of a post can work it, and only what fits where the player is gets through.
 export function crewCommands(state, inputs) {
   const cmds = { system: {}, captain: null, gunner: null, engineer: null };
@@ -99,6 +100,7 @@ export function crewCommands(state, inputs) {
     if (player.inside !== null) {
       if (input.away) (cmds.away ||= {})[player.id] = input.away;
       if (input.shop) (cmds.shop ||= []).push(...input.shop);
+      if (input.mainframe) (cmds.mainframe ||= []).push(...input.mainframe.map((o) => ({ ...o, player: player.id })));
       continue;
     }
     if (input.take) takePost(state, player, input.take);

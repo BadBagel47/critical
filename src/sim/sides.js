@@ -5,6 +5,9 @@ import { B } from './balance.js';
 
 export const CREW = 'crew';
 export const PIRATE = 'pirate';
+// Bounty hunters, sent by free stations after a crew that has broken into one. They fight the crew and nobody
+// else, apart from the pirates, who fight everyone.
+export const HUNTER = 'hunter';
 
 // The factions. Names and characters are placeholders until they have been gone through (D-095).
 //   home     the sectors where most of its stations and ships are, by sector number
@@ -28,7 +31,7 @@ export const standingOf = (state, side) => state.standing[side] || 0;
 //   hostile   its stations and ships open fire
 export function moodOf(state, side) {
   if (side === CREW) return 'friendly';
-  if (side === PIRATE) return 'hostile';
+  if (side === PIRATE || side === HUNTER) return 'hostile';
   const s = standingOf(state, side);
   if (s >= B.STANDING.friendly) return 'friendly';
   if (s > B.STANDING.wary) return 'neutral';
@@ -56,7 +59,7 @@ export const anyoneAngry = (state) => Object.keys(state.strife).some((side) => s
 // The crew has shot at a side that is not their enemy. The first time they are told to stop. If they go on,
 // the side fights back for a while: its ships and its station guns here treat the crew as an enemy.
 export function provoke(state, side) {
-  if (side === CREW || side === PIRATE || moodOf(state, side) === 'hostile') return;
+  if (side === CREW || side === PIRATE || side === HUNTER || moodOf(state, side) === 'hostile') return;
   const now = state.strife[side] || (state.strife[side] = { warned: 0, angry: 0 });
   const name = nameOfSide(state, side);
   if (now.angry > 0) {
@@ -92,6 +95,7 @@ export function stepStrife(state, dt) {
 export function nameOfSide(state, side) {
   if (isFaction(side)) return FACTIONS[side].name;
   if (side === PIRATE) return 'THE PIRATES';
+  if (side === HUNTER) return 'BOUNTY HUNTERS';
   if (side === CREW) return 'YOUR CREW';
   const station = state.things.find((t) => t.side === side);
   return station ? station.name : 'A FREE STATION';
@@ -99,7 +103,7 @@ export function nameOfSide(state, side) {
 
 // The crew's standing with a side changes. Says so when it moves into another mood.
 export function changeStanding(state, side, by) {
-  if (side === CREW || side === PIRATE || !by) return;
+  if (side === CREW || side === PIRATE || side === HUNTER || !by) return;
   const before = moodOf(state, side);
   let next = Math.max(-100, Math.min(100, standingOf(state, side) + by));
   // Once it has come to shooting there is no quick way back.

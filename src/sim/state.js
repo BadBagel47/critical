@@ -50,6 +50,11 @@ export function createState(seed = 1, options = {}) {
     spawn: { timer: 0, wave: 0 },
     raid: null,
     raidTimer: 0,
+    // Attacks on the crew's own stations (siege.js), and help or bounty hunters sent after the crew (bounty.js).
+    siege: null,
+    siegeTimer: 0,
+    hunt: null,
+    bounty: null,
     traffic: { timer: 0 },
     // sides that the crew is in trouble with right here, see sides.js
     strife: {},
