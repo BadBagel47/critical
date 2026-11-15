@@ -1,7 +1,7 @@
 // The shared map screen and the small map on the space HUD.
 import { VIEW_W, VIEW_H, COL } from '../config.js';
 import { B } from '../sim/balance.js';
-import { MAP_N, cellOf, visionSources, isVisible } from '../sim/map.js';
+import { visionSources, isVisible } from '../sim/map.js';
 import { currentSector, jumpBlocked } from '../sim/sectors.js';
 import { playerById } from '../sim/players.js';
 import { has, jumpCharge, jumpFuel } from '../sim/upgrades.js';
@@ -10,12 +10,18 @@ import { THING_LOOK, lookOf, SIDE_COL, MOOD_COL } from './looks.js';
 import { CREW, FACTIONS, enemies, moodOf, standingOf } from '../sim/sides.js';
 
 export const MAP = { x: 12, y: 12, size: 336 };
-const CELL = MAP.size / MAP_N;
-const K = MAP.size / (B.MAP_HALF * 2);
+// The map is drawn to fit the system the ship is in: `HALF` is how far it reaches from the middle, and `K` how
+// many pixels on the screen one step in space is.
+let HALF = B.SYSTEM_R[2] + B.MAP_MARGIN;
+let K = MAP.size / (HALF * 2);
+function fit(state) {
+  HALF = currentSector(state).radius + B.MAP_MARGIN;
+  K = MAP.size / (HALF * 2);
+}
 // The panel to the right of the map.
 const PX = 364;
 const PW = VIEW_W - PX;
-const toMap = (wx, wy) => ({ x: MAP.x + (wx + B.MAP_HALF) * K, y: MAP.y + (wy + B.MAP_HALF) * K });
+const toMap = (wx, wy) => ({ x: MAP.x + (wx + HALF) * K, y: MAP.y + (wy + HALF) * K });
 const SOURCE_COL = {
   ship: COL.captain,
   pulse: COL.ion[2],
@@ -40,9 +46,10 @@ const CROSSHAIR = [
 const over = (m, r) => m.x >= r.x && m.x < r.x + r.w && m.y >= r.y && m.y < r.y + r.h;
 
 // World position under the mouse on the map screen, or null when outside the map.
-export function mapPoint(mx, my) {
+export function mapPoint(state, mx, my) {
   if (mx < MAP.x || my < MAP.y || mx >= MAP.x + MAP.size || my >= MAP.y + MAP.size) return null;
-  return { x: (mx - MAP.x) / K - B.MAP_HALF, y: (my - MAP.y) / K - B.MAP_HALF };
+  fit(state);
+  return { x: (mx - MAP.x) / K - HALF, y: (my - MAP.y) / K - HALF };
 }
 // The star chart rows in the side panel, one per sector that can be reached from here.
 export function chartRows(state) {
@@ -84,21 +91,13 @@ function diamond(ctx, x, y, r, color) {
   shape(r);
 }
 
-// Seen cells are lit, unseen ones only show a faint grid.
-function drawFog(ctx, seen) {
-  for (let cy = 0; cy < MAP_N; cy++) {
-    for (let cx = 0; cx < MAP_N; cx++) {
-      const x = MAP.x + cx * CELL;
-      const y = MAP.y + cy * CELL;
-      if (seen[cy * MAP_N + cx]) {
-        ctx.fillStyle = (cx + cy) % 2 ? '#141830' : '#12162c';
-        ctx.fillRect(x, y, CELL, CELL);
-      } else if ((cx + cy) % 2) {
-        ctx.fillStyle = '#0d0d17';
-        ctx.fillRect(x + 2, y + 2, 2, 2);
-      }
-    }
-  }
+// The system itself: a round patch of space as far out as it reaches.
+function drawSystem(ctx, state) {
+  const mid = toMap(0, 0);
+  ctx.fillStyle = '#12162c';
+  ctx.beginPath();
+  ctx.arc(mid.x, mid.y, currentSector(state).radius * K, 0, 7);
+  ctx.fill();
 }
 
 function drawOwnShip(ctx, ship) {
@@ -177,13 +176,17 @@ function placeLabels(ctx, font, labels, own) {
 }
 
 function drawMapContents(ctx, font, state, sources) {
-  const seen = state.map.seen;
   const env = { state, scan: has(state.ship, 'tscan') };
-  ctx.fillStyle = '#3b3840';
+  // Asteroids are on the map where someone can see them, and everywhere once the system has been scanned.
+  const scanned = state.map.scanned;
   for (const t of state.things) {
-    if (t.kind !== 'rock' || !seen[cellOf(t.y) * MAP_N + cellOf(t.x)]) continue;
+    if (t.kind !== 'rock') continue;
+    const inSight = isVisible(state, t.x, t.y, sources);
+    if (!scanned && !inSight) continue;
+    ctx.fillStyle = inSight ? '#9a96a4' : '#5c5868';
     const p = toMap(t.x, t.y);
-    ctx.fillRect(Math.round(p.x), Math.round(p.y), 1, 1);
+    const size = t.variant === 1 ? 1 : 2;
+    ctx.fillRect(Math.round(p.x), Math.round(p.y), size, size);
   }
   for (const s of sources) {
     const p = toMap(s.x, s.y);
@@ -323,7 +326,8 @@ export function drawMap(ctx, state, view, assets) {
   ctx.fillStyle = '#0d0d18';
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
   rect(ctx, MAP.x - 1, MAP.y - 1, MAP.size + 2, MAP.size + 2, '#08080f', COL.line);
-  drawFog(ctx, state.map.seen);
+  fit(state);
+  drawSystem(ctx, state);
   ctx.save();
   ctx.beginPath();
   ctx.rect(MAP.x, MAP.y, MAP.size, MAP.size);
@@ -331,7 +335,7 @@ export function drawMap(ctx, state, view, assets) {
   const hostiles = drawMapContents(ctx, font, state, sources);
   ctx.restore();
   drawSidePanel(ctx, font, state, post, m, hostiles);
-  if (post === 'engineer' && mapPoint(m.x, m.y)) {
+  if (post === 'engineer' && mapPoint(state, m.x, m.y)) {
     ctx.fillStyle = COL.ion[3];
     for (const [dx, dy, w, h] of CROSSHAIR) ctx.fillRect(Math.round(m.x) + dx, Math.round(m.y) + dy, w, h);
   }
@@ -359,7 +363,6 @@ export function drawMiniMap(ctx, state, x, y) {
   const size = 60;
   const range = 1000;
   const k = size / (range * 2);
-  const seen = state.map.seen;
   const sources = visionSources(state);
   const at = (wx, wy) => ({ x: x + (wx - ship.x + range) * k, y: y + (wy - ship.y + range) * k });
   const dot = (wx, wy, w, h, color) => {
@@ -371,17 +374,6 @@ export function drawMiniMap(ctx, state, x, y) {
   ctx.beginPath();
   ctx.rect(x, y, size, size);
   ctx.clip();
-  const cellSize = Math.ceil(B.MAP_CELL * k) + 1;
-  const c0x = cellOf(ship.x - range);
-  const c0y = cellOf(ship.y - range);
-  ctx.fillStyle = '#141830';
-  for (let cy = c0y; cy <= c0y + 20; cy++) {
-    for (let cx = c0x; cx <= c0x + 20; cx++) {
-      if (cx < 0 || cy < 0 || cx >= MAP_N || cy >= MAP_N || !seen[cy * MAP_N + cx]) continue;
-      const p = at(cx * B.MAP_CELL - B.MAP_HALF, cy * B.MAP_CELL - B.MAP_HALF);
-      ctx.fillRect(Math.floor(p.x), Math.floor(p.y), cellSize, cellSize);
-    }
-  }
   ring(ctx, x + size / 2, y + size / 2, B.VISION_SHIP * k, COL.ion[0]);
   for (const known of state.known) {
     const look = THING_LOOK[known.kind];

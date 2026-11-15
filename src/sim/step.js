@@ -9,6 +9,7 @@ import { stepCaptain, stepGunner, stepEngineer, stepDrones } from './posts.js';
 import { crewCommands } from './players.js';
 import { nodeFactor, surging } from './ship.js';
 import { stepSurge, stepMarks } from './teamwork.js';
+import { stepRocks } from './rocks.js';
 import { solidCircles, stepSalvage, findThing } from './things.js';
 import { stepVessels, stepAlarm } from './vessels.js';
 import { stepBolts, stepRockets, stepCollisions } from './shots.js';
@@ -85,6 +86,7 @@ export function step(state, cmds, dt) {
   stepRockets(state, dt, solids);
   state.vessels = state.vessels.filter((v) => v.hp > 0 && !v.gone);
   stepSalvage(state, dt);
+  stepRocks(state, dt);
   stepAlarm(state, B.ALARM_RANGE[level(ship, 'alarm')]);
   const inSight = (v) => enemies(state, v.side, CREW) && dist(v.x, v.y, ship.x, ship.y) < B.VISION_SHIP;
   const hostilesNear = state.alarm.count > 0 || state.vessels.some(inSight);

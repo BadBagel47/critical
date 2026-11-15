@@ -4,16 +4,19 @@ import { B } from './balance.js';
 import { THINGS, HULLS, SHIPS } from './kinds.js';
 import { addThing, dockTargets, mapInfo } from './things.js';
 import { makeVessel, firstWaveDelay } from './vessels.js';
-import { createMap, reveal } from './map.js';
+import { createMap } from './map.js';
+import { layRocks, layTestRocks } from './rocks.js';
 import { createStation } from './stations.js';
 import { jumpCharge, jumpFuel } from './upgrades.js';
-import { rand, randRange, TAU, dist } from './util.js';
+import { rand, randRange, TAU } from './util.js';
 
-// links: the sectors that can be reached from here. stations: [side, shipyard, distance out, name].
+// links: the sectors that can be reached from here. size: which of the three sizes in B.SYSTEM_R it has.
+// stations: [side, shipyard, how far out it lies in the largest size, name].
 // A station's side is 'crew', 'pirate', a faction, or null for one that stands on its own.
 const SECTORS = [
   {
     name: 'KESTREL DRIFT',
+    size: 1,
     tier: 0,
     links: [1, 2],
     hint: 'QUIET  ·  A FRIENDLY SHIPYARD',
@@ -25,6 +28,7 @@ const SECTORS = [
   },
   {
     name: 'ASH BELT',
+    size: 0,
     tier: 1,
     links: [0, 3],
     hint: 'RICH IN FUEL  ·  ONE HOSTILE STATION',
@@ -36,6 +40,7 @@ const SECTORS = [
   },
   {
     name: 'HOLLOW REACH',
+    size: 2,
     tier: 1,
     links: [0, 3],
     hint: 'MANY WRECKS  ·  PIRATE PATROLS',
@@ -47,6 +52,7 @@ const SECTORS = [
   },
   {
     name: 'THE NARROWS',
+    size: 1,
     tier: 2,
     links: [1, 2, 4],
     hint: 'GUNBOATS  ·  TWO HOSTILE STATIONS',
@@ -59,6 +65,7 @@ const SECTORS = [
   },
   {
     name: 'THE MAW',
+    size: 0,
     tier: 3,
     links: [3],
     boss: 'cruiser',
@@ -74,6 +81,8 @@ export const createSectors = () =>
     id,
     name: s.name,
     tier: s.tier,
+    // How far it is from the middle of the system to its edge.
+    radius: B.SYSTEM_R[s.size],
     links: s.links,
     hint: s.hint,
     boss: !!s.boss,
@@ -124,7 +133,6 @@ export function createPod(s, x, y) {
   };
 }
 
-const ROCK_RADIUS = [13, 8, 19];
 const at = (angle, d) => ({ x: Math.sin(angle) * d, y: -Math.cos(angle) * d });
 
 // Everything that only lasts while the crew is in the sector.
@@ -149,10 +157,13 @@ export function generateSector(s, id) {
   s.things = [];
   s.map = createMap();
   s.known = [];
+  // Distances are given for the largest size. Nothing lies in the very middle.
+  const k = sec.radius / B.SYSTEM_R[2];
+  const out = (d) => Math.max(B.SYSTEM_CORE, d * k);
   const base = rand(s) * TAU;
   for (let i = 0; i < spec.wrecks; i++) {
     const angle = base + i * (TAU / spec.wrecks) + randRange(s, -0.3, 0.3);
-    const p = at(angle, i === 0 ? 620 : randRange(s, 1000, 1900));
+    const p = at(angle, out(i === 0 ? 620 : randRange(s, 1000, 1900)));
     // The first sector has easy wrecks. Later ones are a gamble.
     const difficulty = tier === 0 ? (i === 2 ? 2 : 1) : Math.min(3, 1 + Math.floor(rand(s) * (tier + 1)));
     addThing(s, createWreck(s, p.x, p.y, difficulty));
@@ -160,7 +171,7 @@ export function generateSector(s, id) {
   // Each trading station sells the chart to one of the sectors you can jump to from here.
   const onward = sec.links.filter((l) => l !== 0);
   spec.stations.forEach(([side, yard, d, name], i) => {
-    const p = at(base + 1.1 + i * 2.3 + randRange(s, -0.2, 0.2), d);
+    const p = at(base + 1.1 + i * 2.3 + randRange(s, -0.2, 0.2), out(d));
     // The crew's own yard in the first sector is their home.
     const st = createStation(s, p.x, p.y, side, yard, name, side === 'crew');
     if (side !== 'pirate') st.chart = onward[i % Math.max(1, onward.length)] ?? null;
@@ -168,20 +179,10 @@ export function generateSector(s, id) {
   });
   for (let i = 0; i < 3; i++) {
     const angle = base + 0.5 + i * 2.1 + randRange(s, -0.4, 0.4);
-    const p = at(angle, randRange(s, 700, 2000));
+    const p = at(angle, out(randRange(s, 700, 2000)));
     addThing(s, createPod(s, p.x, p.y));
   }
-  const sites = dockTargets(s);
-  for (let i = 0; i < 46; i++) {
-    const angle = rand(s) * TAU;
-    const p = at(angle, randRange(s, 260, 2400));
-    const id = s.nextId++;
-    const variant = Math.floor(rand(s) * 3);
-    const heading = randRange(s, 0, TAU);
-    // Keep the space around wrecks, stations and pods clear.
-    if (sites.some((w) => dist(w.x, w.y, p.x, p.y) < 190)) continue;
-    addThing(s, { id, kind: 'rock', x: p.x, y: p.y, heading, variant, r: ROCK_RADIUS[variant] });
-  }
+  layRocks(s, sec.radius);
   clearTraffic(s, B.RAID_FIRST);
   if (spec.boss) {
     const p = at(base + 3.3, 1000);
@@ -232,8 +233,9 @@ export function gatherForTesting(s) {
     const p = at(turn(deg), 250);
     addThing(s, createPod(s, p.x, p.y));
   }
-  // All of it is on the map from the start, with the fog lifted, so that nothing has to be looked for.
-  reveal(s, 0, 0, 1600);
+  const rocks = at(turn(30), 850);
+  layTestRocks(s, rocks.x, rocks.y);
+  // All of it is on the map from the start, so that nothing has to be looked for.
   s.known = dockTargets(s).map(mapInfo);
 }
 
@@ -277,6 +279,7 @@ function arrive(state, to) {
     things: state.things.filter((t) => THINGS[t.kind].persist),
     map: state.map,
     known: state.known,
+    field: state.field,
     bosses,
   };
   ship.fuel -= jumpFuel(ship);
@@ -289,6 +292,7 @@ function arrive(state, to) {
     state.things = next.saved.things;
     state.map = next.saved.map;
     state.known = next.saved.known;
+    state.field = next.saved.field;
     const bosses = next.saved.bosses || [];
     next.saved = null;
     clearTraffic(state, B.RAID_GAP);

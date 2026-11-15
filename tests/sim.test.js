@@ -21,6 +21,7 @@ import { summon } from '../src/sim/testing.js';
 import { createWreck, jumpBlocked } from '../src/sim/sectors.js';
 import { B, SHIP_GEOM, WING_MOUNTS } from '../src/sim/balance.js';
 import { headingTo, dist, toWorld, angleDiff } from '../src/sim/util.js';
+import { newRock, hurtRock } from '../src/sim/rocks.js';
 
 const wrecks = (s) => thingsOf(s, 'wreck');
 const stations = (s) => thingsOf(s, 'station');
@@ -201,19 +202,109 @@ test('pirates arrive, attack and can destroy an idle ship', () => {
   assert.ok(s.ship.hull < B.HULL_MAX, 'ship took damage');
 });
 
-test('the ship cannot fly through a wreck, and ramming hurts', () => {
-  const s = quiet(createState(1));
-  const w = wrecks(s)[0];
-  s.ship.x = w.x;
-  s.ship.y = w.y + 400;
-  s.ship.heading = 0;
-  s.ship.vy = -150;
-  s.ship.shield = 0;
+// A ship that flies straight up at something that lies in its way.
+function flyAt(s, thing) {
+  Object.assign(s.ship, { x: thing.x, y: thing.y + 400, heading: 0, vx: 0, vy: -150, shield: 0 });
   s.ship.power.shields = 0;
   s.ship.power.repair = 0;
   run(s, { captain: { throttle: 1 } }, 6);
-  assert.ok(Math.hypot(s.ship.x - w.x, s.ship.y - w.y) > 40, 'the ship stays outside the wreck');
+}
+const rocks = (s) => s.things.filter((t) => t.kind === 'rock');
+// One rock alone in empty space, for trying things on.
+function loneRock(s, variant = 2) {
+  s.things = s.things.filter((t) => t.kind !== 'rock');
+  const rock = newRock(s, 0, -3000, variant);
+  s.things.unshift(rock);
+  return rock;
+}
+
+test('the ship cannot fly through an asteroid, and ramming one hurts', () => {
+  const s = quiet(createState(1));
+  const rock = loneRock(s);
+  flyAt(s, rock);
+  assert.ok(s.ship.y > rock.y, 'the ship is stopped by the rock');
   assert.ok(s.ship.hull < B.HULL_MAX, 'ramming damages the hull');
+});
+
+test('the ship flies over wrecks, stations and pods without touching them', () => {
+  for (const kind of ['wreck', 'station', 'pod']) {
+    const s = quiet(createState(1));
+    s.traffic.timer = 1e9;
+    const thing = s.things.find((t) => t.kind === kind);
+    s.things = s.things.filter((t) => t.kind !== 'rock');
+    flyAt(s, thing);
+    assert.ok(s.ship.y < thing.y - 100, 'the ship goes on past a ' + kind);
+    assert.equal(s.ship.hull, B.HULL_MAX);
+  }
+});
+
+test('shots break an asteroid into smaller pieces, down to nothing', () => {
+  const s = quiet(createState(1));
+  const rock = loneRock(s);
+  s.ship.y = rock.y + 300;
+  hurtRock(s, rock, B.ROCK_HP[2] - 1);
+  assert.equal(rocks(s).length, 1, 'a rock takes a number of hits');
+  hurtRock(s, rock, 1);
+  assert.deepEqual(
+    rocks(s).map((r) => r.variant),
+    [0, 0],
+    'a large rock leaves two middling ones',
+  );
+  assert.ok(s.events.some((e) => e.type === 'rockBroken'));
+  hurtRock(s, rocks(s)[0], 1000);
+  assert.deepEqual(
+    rocks(s)
+      .map((r) => r.variant)
+      .sort(),
+    [0, 1, 1],
+    'a middling one leaves two small ones',
+  );
+  for (const r of rocks(s).filter((r) => r.variant === 1)) hurtRock(s, r, 1000);
+  assert.equal(rocks(s).length, 1, 'and a small one is gone');
+});
+
+test('the Gunner clears an asteroid out of the way with the guns', () => {
+  const s = quiet(createState(1));
+  const rock = loneRock(s, 1);
+  Object.assign(s.ship, { x: rock.x, y: rock.y + 200, heading: 0 });
+  const aim = { x: rock.x, y: rock.y };
+  run(s, { gunner: { aim, fire: true } }, 4);
+  assert.equal(rocks(s).length, 0);
+});
+
+test('asteroids lie in a belt and in fields, never near a station, and new ones come where nobody looks', () => {
+  for (let seed = 1; seed <= 6; seed++) {
+    const s = quiet(createState(seed));
+    const radius = s.sectors[0].radius;
+    assert.ok(rocks(s).length > 30, 'there is plenty to fly round and to shoot at');
+    for (const r of rocks(s)) {
+      for (const st of stations(s)) assert.ok(dist(r.x, r.y, st.x, st.y) >= B.ROCK_GAP_STATION, 'none by a station');
+    }
+    const inBelt = rocks(s).filter((r) => {
+      const d = Math.hypot(r.x, r.y);
+      return d >= radius * B.BELT[0] && d <= radius * B.BELT[1];
+    });
+    assert.ok(inBelt.length > rocks(s).length / 3, 'many of them are in the belt');
+    // Shoot half of them away, and the field fills up again, out of sight of the ship.
+    const before = rocks(s).length;
+    s.things = s.things.filter((t) => t.kind !== 'rock' || t.id % 2);
+    const ids = new Set(rocks(s).map((r) => r.id));
+    run(s, {}, B.ROCK_REGROW * 10);
+    const fresh = rocks(s).filter((r) => !ids.has(r.id));
+    assert.ok(fresh.length >= 4, 'new rocks have come');
+    assert.ok(fresh.every((r) => dist(r.x, r.y, s.ship.x, s.ship.y) > B.VISION_SHIP));
+    run(s, {}, B.ROCK_REGROW * 200);
+    assert.ok(rocks(s).length <= before + 6, 'but never more than the field had');
+  }
+});
+
+test('systems come in three sizes, and nothing lies in the very middle', () => {
+  const s = quiet(createState(1));
+  assert.deepEqual([...new Set(s.sectors.map((sec) => sec.radius))].sort(), [...B.SYSTEM_R].sort());
+  for (const t of s.things.filter((x) => x.kind !== 'rock')) {
+    const d = Math.hypot(t.x, t.y);
+    assert.ok(d >= B.SYSTEM_CORE - 1 && d <= s.sectors[0].radius, t.kind + ' lies inside the system');
+  }
 });
 
 // ---------- boarding ----------
@@ -526,7 +617,8 @@ test('a careful guard that is badly hurt falls back, and a bold one fights on', 
     s.players[0].hp = 10000;
     const [here, there] = stretch(it);
     Object.assign(av, here);
-    Object.assign(g, there, { bold, hp: B.GUARD_HP * 0.3 });
+    post(g, there, headingTo(here.x - there.x, here.y - there.y));
+    Object.assign(g, { bold, hp: B.GUARD_HP * 0.3 });
     run(s, { away: { 0: {} } }, 3);
     assert.equal(g.plan, bold ? 'fight' : 'retreat');
   }
@@ -754,26 +846,39 @@ test('a failed bypass costs the reactor time, and the third one blows the wreck 
 });
 
 // ---------- map, scanner pulse, probes and buoys ----------
-import { isSeen, isVisible, visionSources } from '../src/sim/map.js';
+import { isVisible, visionSources } from '../src/sim/map.js';
 
-test('the map starts dark and the ship lifts the fog around itself', () => {
+test('the map has no fog: it shows what is in sight, and one scan shows everything in the system', () => {
   const s = quiet(createState(1));
-  assert.equal(isSeen(s, 0, 0), false);
   run(s, {}, 0.5);
-  assert.equal(isSeen(s, 0, 0), true);
-  assert.equal(isSeen(s, 2400, 2400), false, 'far corners are still dark');
-  s.ship.x = 2300;
-  s.ship.y = 2300;
-  run(s, {}, 0.5);
-  assert.equal(isSeen(s, 2400, 2400), true, 'going there reveals it');
+  const all = s.things.filter((t) => ['wreck', 'station', 'pod'].includes(t.kind));
+  assert.ok(s.known.length < all.length, 'what is out of sight is not on the map yet');
+  assert.equal(s.map.scanned, false);
+  step(s, { engineer: { tool: { type: 'pulse' } } }, DT);
+  assert.equal(s.known.length, all.length, 'a scan finds all of it at once');
+  assert.equal(s.map.scanned, true);
+  assert.ok(s.events.some((e) => e.type === 'scanned' && e.fresh > 0));
+  // A scan is a picture of how things are right now. What changes afterwards is not seen from afar.
+  const far = stations(s).find((st) => !st.home);
+  s.standing[far.side] = -100;
+  run(s, {}, 1);
+  assert.equal(far.align, 'hostile', 'the station has turned on the crew');
+  assert.notEqual(s.known.find((k) => k.id === far.id).align, 'hostile', 'the map still shows it as it was');
+  run(s, {}, B.PULSE_COOLDOWN);
+  step(s, { engineer: { tool: { type: 'pulse' } } }, DT);
+  assert.equal(s.known.find((k) => k.id === far.id).align, 'hostile', 'a new scan brings it up to date');
 });
 
 test('a wreck stays on the map as last seen, and pirates show only while in sight', () => {
   const s = quiet(createState(1)),
     w = wrecks(s)[0];
+  // The wreck lies far from the start, on the other side of the system from the yard and its radar.
+  const yard = stations(s).find((st) => st.home),
+    far = 1500 / Math.hypot(yard.x, yard.y);
+  Object.assign(w, { x: -yard.x * far, y: -yard.y * far });
   run(s, {}, 0.5);
-  const wrecksKnown = () => s.known.filter((k) => k.kind === 'wreck').length;
-  assert.equal(wrecksKnown(), 0, 'the first wreck is out of sight at the start');
+  const wrecksKnown = () => s.known.filter((k) => k.id === w.id).length;
+  assert.equal(wrecksKnown(), 0, 'the wreck is out of sight at the start');
   s.ship.x = w.x + 300;
   s.ship.y = w.y;
   run(s, {}, 0.5);
@@ -795,10 +900,10 @@ test('the scanner pulse sees far for a moment and then needs to recharge', () =>
   const s = quiet(createState(1));
   step(s, { engineer: { tool: { type: 'pulse' } } }, DT);
   run(s, {}, 1.5);
-  assert.equal(isSeen(s, B.PULSE_RADIUS - 150, 0), true);
+  assert.ok(isVisible(s, s.ship.x + B.PULSE_RADIUS - 150, s.ship.y), 'ships that far away are seen for a moment');
   assert.ok(
     s.known.some((k) => k.kind === 'wreck'),
-    'the pulse finds the nearest wreck',
+    'the pulse finds the wrecks',
   );
   run(s, {}, B.PULSE_TIME);
   assert.equal(s.ship.pulse, null);
@@ -811,11 +916,17 @@ test('the scanner pulse sees far for a moment and then needs to recharge', () =>
 
 test('a probe flies to its target, reveals the way, burns out and is restocked', () => {
   const s = quiet(createState(1));
+  const [near, far] = wrecks(s);
+  Object.assign(near, { x: 900, y: 60 });
+  Object.assign(far, { x: 1500, y: 60 });
   step(s, { engineer: { tool: { type: 'probe', x: 1500, y: 0 } } }, DT);
   assert.equal(s.ship.probeStock, B.PROBE_STOCK - 1);
   run(s, {}, 1500 / B.PROBE_SPEED + 1);
-  assert.equal(isSeen(s, 1500, 0), true);
-  assert.equal(isSeen(s, 900, 0), true, 'the way there is revealed too');
+  assert.ok(s.known.some((k) => k.id === far.id));
+  assert.ok(
+    s.known.some((k) => k.id === near.id),
+    'what lies along the way is found too',
+  );
   assert.equal(s.probes.length, 1);
   run(s, {}, B.PROBE_LINGER + 1);
   assert.equal(s.probes.length, 0);
@@ -1212,7 +1323,8 @@ test('jumping takes time and fuel, changes the sector, and the old sector is rem
   s.ship.fuel = 80;
   run(s, {}, 0.5);
   const oldWrecks = wrecks(s).map((w) => w.id),
-    seenBefore = s.map.seen.filter(Boolean).length;
+    knownBefore = s.known.length,
+    fieldBefore = s.field.target;
   step(s, { captain: { jump: 1 } }, DT);
   assert.ok(s.jump);
   run(s, {}, B.JUMP_CHARGE / 2);
@@ -1234,7 +1346,8 @@ test('jumping takes time and fuel, changes the sector, and the old sector is rem
     oldWrecks,
     'the first sector is as it was left',
   );
-  assert.ok(s.map.seen.filter(Boolean).length >= seenBefore);
+  assert.ok(s.known.length >= knownBefore, 'and so is the map of it');
+  assert.equal(s.field.target, fieldBefore, 'and its asteroid fields');
 });
 
 test('a star chart can be bought at a station or carried out of a vault', () => {
@@ -1641,16 +1754,18 @@ test('a test game has one of everything that can be docked with close to the sta
       if (a !== b) assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > 200, 'nothing stands on top of anything else');
     }
   }
+  const field = s.field.clusters[0];
+  const inField = (t) => Math.hypot(t.x - field.x, t.y - field.y) <= field.r;
   assert.ok(
-    s.things.every((t) => t.kind !== 'rock' || near(t) > 1500),
+    s.things.every((t) => t.kind !== 'rock' || near(t) > 1500 || inField(t)),
     'and no rocks are in the way',
   );
+  assert.ok(s.things.filter((t) => t.kind === 'rock' && inField(t)).length >= 8, 'but one field of them is close by');
   assert.equal(s.known.length, all.length, 'all of it is on the map from the start');
   assert.ok(s.known.some((k) => k.id === pirate.id));
-  assert.equal(isSeen(s, pirate.x, pirate.y), true, 'and the fog is lifted over it');
   const usual = createState(4);
   assert.equal(stations(usual).length, 2, 'an ordinary game is laid out as before');
-  assert.ok(stations(usual).some((st) => near(st) > 1200));
+  assert.ok(stations(usual).some((st) => near(st) > 1000));
 });
 
 test('a test game has no pirates of its own, and they can be called in', () => {
@@ -1986,8 +2101,10 @@ test('being seen takes a moment, and stepping out of sight in time is forgiven',
 });
 
 test('an alarm wakes the whole place and lasts until the crew has left', () => {
-  const { s, it, av } = sneaking();
+  const { s, it, av, g } = sneaking();
   const st = s.things.find((t) => t.interior === it);
+  const { at, toward } = spotNear(it, av, 120);
+  post(g, at, toward + Math.PI);
   step(s, { away: { 0: { aim: { x: av.x + 10, y: av.y }, fire: true } } }, DT);
   assert.equal(it.mood, 'alarm', 'a rifle shot is heard');
   assert.ok(it.guards.every((g) => g.mode === 'alert'));

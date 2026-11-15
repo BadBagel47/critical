@@ -39,6 +39,8 @@ export function createState(seed = 1, options = {}) {
     // The map: what has been seen, and where things were when last seen.
     map: null,
     known: [],
+    // Where the asteroids of this system lie, and how rich the field is meant to be. See rocks.js.
+    field: null,
     alarm: { count: 0, eta: null },
     // What each faction thinks of the crew, from -100 to 100. Free stations get an entry of their own.
     standing: { charter: 0, wardens: 0, drifters: 0 },

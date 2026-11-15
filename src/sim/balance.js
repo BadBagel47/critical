@@ -92,6 +92,23 @@ export const B = {
   RAM_SPEED: 60,
   RAM_DMG: 0.12,
   // fuel and loot
+  // Systems come in three sizes: how far it is from the middle to the edge.
+  SYSTEM_R: [1200, 1800, 2400],
+  // Nothing that can be docked with lies closer to the middle than this.
+  SYSTEM_CORE: 450,
+  // Asteroids. How much a rock takes before it breaks, by variant: middling, small, large.
+  ROCK_HP: [30, 12, 60],
+  // How far rocks keep from a station, and from wrecks and pods.
+  ROCK_GAP_STATION: 330,
+  ROCK_GAP: 190,
+  // The belt runs between these parts of the way out, about one rock for every square with this side.
+  BELT: [0.56, 0.7],
+  BELT_SPACING: 150,
+  BELT_MAX: 170,
+  CLUSTER_R: [150, 230],
+  CLUSTER_ROCKS: [9, 14],
+  // Seconds between new rocks while a field is poorer than it was.
+  ROCK_REGROW: 14,
   FUEL_MAX: 100,
   FUEL_START: 60,
   FUEL_BURN: 0.2,
@@ -204,8 +221,8 @@ export const B = {
   // break-in game, seconds per difficulty
   BREAKIN_TIME: [0, 60, 50, 42],
   // map, scanner pulse, probes and buoys
-  MAP_HALF: 2800,
-  MAP_CELL: 100,
+  // How much room the map leaves round a system.
+  MAP_MARGIN: 300,
   VISION_SHIP: 420,
   PULSE_RADIUS: 1100,
   PULSE_TIME: 4,

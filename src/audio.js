@@ -175,6 +175,14 @@ const SOUNDS = {
     },
   ],
   guardDown: [0.08, () => noise(0.2, 0.25, 1400)],
+  // An asteroid cracks apart: a short dull thud.
+  rockBroken: [
+    0.06,
+    () => {
+      noise(0.22, 0.2, 520);
+      tone(120, 55, 0.18, 'sine', 0.16);
+    },
+  ],
   // A part of the ship has become critical: two falling notes, once.
   partCritical: [
     1,

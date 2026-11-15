@@ -182,7 +182,7 @@ function mapInput(game, out) {
   const m = keys.mouse;
   onBoard(game, out);
   if (me.post === 'engineer') {
-    const at = m.clicked ? mapPoint(m.x, m.y) : null;
+    const at = m.clicked ? mapPoint(state, m.x, m.y) : null;
     const tool = at ? { type: 'probe', x: at.x, y: at.y } : quickTool(keys);
     if (tool) out.engineer = { power: [], repair: null, tool };
   }
@@ -347,7 +347,7 @@ export function drawsPointer(game, mode) {
   if (!view.started || state.paused || state.over || view.help) return false;
   const me = playerById(state, view.playerId);
   if (mode === 'gunner' || mode === 'radar') return true;
-  if (mode === 'map') return me.post === 'engineer' && !!mapPoint(keys.mouse.x, keys.mouse.y);
+  if (mode === 'map') return me.post === 'engineer' && !!mapPoint(state, keys.mouse.x, keys.mouse.y);
   if (mode !== 'away') return false;
   const place = findDock(state, me.inside);
   return !!place && !place.interior.trade;

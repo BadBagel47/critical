@@ -6,6 +6,7 @@ import { damageShip } from './damage.js';
 import { CREW, enemies } from './sides.js';
 import { hurtVessel, classOf, struckByCrew } from './vessels.js';
 import { damageStation, struckBy } from './stations.js';
+import { hurtRock } from './rocks.js';
 import { has } from './upgrades.js';
 import { forward, headingTo, turnToward, toWorld, dist, rand } from './util.js';
 
@@ -60,6 +61,7 @@ function boltMeetsThings(state, b, solids) {
     b.ttl = 0;
     spark(state, b, 0.15);
     if (station) damageStation(state, station, b.dmg, b, b.side);
+    else if (c.thing.kind === 'rock') hurtRock(state, c.thing, b.dmg);
     return;
   }
 }
@@ -97,18 +99,24 @@ export function stepRockets(state, dt, solids) {
     }
     const station = wall && wall.thing.kind === 'station' ? wall.thing : null;
     if (station && struckBy(state, station, CREW)) damageStation(state, station, B.ROCKET_DMG, r, CREW);
+    for (const c of solids) {
+      if (c.thing.kind === 'rock' && dist(c.x, c.y, r.x, r.y) < B.ROCKET_RADIUS + c.r)
+        hurtRock(state, c.thing, B.ROCKET_DMG);
+    }
     state.events.push({ type: 'rocketHit' });
   }
   state.rockets = state.rockets.filter((r) => r.ttl > 0);
 }
 
-// The frigate cannot fly through solid things, and hitting them hard hurts.
+// Asteroids are the only things the frigate cannot fly through, and hitting them hard hurts. It passes over
+// stations, wrecks and other ships.
 export function stepCollisions(state, dt, solids) {
   const ship = state.ship;
   ship.ramCooldown = Math.max(0, ship.ramCooldown - dt);
   if (ship.docked) return;
   for (const h of SHIP_GEOM.hit) {
     for (const c of solids) {
+      if (c.thing.kind !== 'rock') continue;
       const p = toWorld(ship, h);
       const d = dist(p.x, p.y, c.x, c.y);
       const min = c.r + h.r;

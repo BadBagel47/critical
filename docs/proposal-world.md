@@ -2,7 +2,7 @@
 
 **Förslag, inte byggt.** Skrivet 2026-11-15 efter dina besked. Det ersätter det långa förslaget, som ligger kvar i [proposal-world-v1.md](proposal-world-v1.md).
 
-Varje steg går att provspela innan nästa börjar. Under varje steg står vad du har bestämt, vad agenten föreslår och vilka frågor som behöver svar innan just det steget byggs. **Steg 1 är färdigt att bygga när du säger till.** Frågorna i steg 2 behöver svar först när steg 1 är provspelat.
+Varje steg går att provspela innan nästa börjar. Under varje steg står vad du har bestämt, vad agenten föreslår och vilka frågor som behöver svar innan just det steget byggs. **Steg 1 byggs nu.** Asteroiderna, krockarna, kartan utan fog of war och de tre storlekarna är byggda. Stjärnan, diset och ankomsten återstår, och de visas för dig först. Frågorna i steg 2 behöver svar först när steg 1 är provspelat.
 
 ## Riktningen (bestämt)
 

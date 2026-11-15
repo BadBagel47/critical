@@ -1,15 +1,13 @@
-// The shared map: fog of war lifted by what the ship and its tools can see.
-// Space itself is never hidden. Only the map remembers what has been seen.
+// The shared map. Space itself is never hidden, and neither is the map: it shows the system, what the ship and
+// its tools can see right now, and what has been seen before as it was then. One scan shows everything in the
+// system at once, as it is at that moment.
 import { B } from './balance.js';
 import { addThing, thingsOf, mapInfo } from './things.js';
 import { dist, forward, headingTo } from './util.js';
 
-export const MAP_N = Math.round((B.MAP_HALF * 2) / B.MAP_CELL);
-export const cellOf = (v) => Math.floor((v + B.MAP_HALF) / B.MAP_CELL);
-export const inMap = (x, y) => Math.abs(x) < B.MAP_HALF && Math.abs(y) < B.MAP_HALF;
-
+// `scanned` is set once the system has been scanned, and the map then shows its asteroid fields too.
 export function createMap() {
-  return { seen: new Array(MAP_N * MAP_N).fill(0), timer: 0 };
+  return { timer: 0, scanned: false };
 }
 
 // Everything that currently sees: the ship, an active scanner pulse, probes, buoys and friendly stations.
@@ -31,30 +29,6 @@ export function visionSources(state) {
 export function isVisible(state, x, y, sources = visionSources(state)) {
   return sources.some((s) => dist(s.x, s.y, x, y) <= s.r);
 }
-export const isSeen = (state, x, y) => inMap(x, y) && state.map.seen[cellOf(y) * MAP_N + cellOf(x)] === 1;
-
-function liftFog(state, sources) {
-  const seen = state.map.seen;
-  const c = B.MAP_CELL;
-  for (const s of sources) {
-    const x0 = Math.max(0, cellOf(s.x - s.r));
-    const x1 = Math.min(MAP_N - 1, cellOf(s.x + s.r));
-    const y0 = Math.max(0, cellOf(s.y - s.r));
-    const y1 = Math.min(MAP_N - 1, cellOf(s.y + s.r));
-    for (let cy = y0; cy <= y1; cy++) {
-      for (let cx = x0; cx <= x1; cx++) {
-        if (seen[cy * MAP_N + cx]) continue;
-        if (dist(s.x, s.y, (cx + 0.5) * c - B.MAP_HALF, (cy + 0.5) * c - B.MAP_HALF) <= s.r) seen[cy * MAP_N + cx] = 1;
-      }
-    }
-  }
-}
-
-// Lift the fog over a round area at once, as if it had been seen.
-export function reveal(state, x, y, r) {
-  liftFog(state, [{ x, y, r }]);
-}
-
 // Things that stand still stay on the map as they were last seen.
 function remember(state, sources) {
   for (const t of state.things) {
@@ -73,6 +47,25 @@ function remember(state, sources) {
   state.known = state.known.filter((k) => exists(k) || !isVisible(state, k.x, k.y, sources));
 }
 
+// A scan puts everything that stands still in the system on the map as it is right now, and takes away what
+// is no longer there. What happens afterwards is only seen by looking, or by scanning again.
+export function scan(state) {
+  let fresh = 0;
+  for (const t of state.things) {
+    const info = mapInfo(t);
+    if (!info) continue;
+    const known = state.known.find((k) => k.id === t.id);
+    if (known) Object.assign(known, info);
+    else {
+      state.known.push(info);
+      fresh++;
+    }
+  }
+  state.known = state.known.filter((k) => state.things.some((t) => t.id === k.id));
+  state.map.scanned = true;
+  state.events.push({ type: 'scanned', fresh });
+}
+
 // The Engineer's tools: the scanner pulse, probes and radar buoys.
 const notReady = (state, tool) => {
   state.events.push({ type: 'toolNotReady', tool });
@@ -83,6 +76,7 @@ const TOOLS = {
     if (ship.pulseCool > 0) return notReady(state, 'pulse');
     ship.pulse = { x: ship.x, y: ship.y, t: 0 };
     ship.pulseCool = B.PULSE_COOLDOWN;
+    scan(state);
     return true;
   },
   // A probe flies to where it was sent, no further than its range.
@@ -166,7 +160,5 @@ export function stepMap(state, dt) {
   state.map.timer -= dt;
   if (state.map.timer > 0) return;
   state.map.timer = 0.2;
-  const sources = visionSources(state);
-  liftFog(state, sources);
-  remember(state, sources);
+  remember(state, visionSources(state));
 }
