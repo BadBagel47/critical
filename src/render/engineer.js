@@ -269,7 +269,7 @@ export function drawEngineer(ctx, state, view, assets) {
 // The lock that the Engineer is hacking, or nothing: a station's code lock that someone has started on.
 export const hackTarget = (state) =>
   state.things.find((st) => st.breakin && st.breakin.kind === 'code' && st.breakin.started && st.lock !== 'open');
-const HACK = { x: 8, y: 28, w: 136, h: 150, cx: 76, cy: 88, rings: [46, 36, 26, 16] };
+const HACK = { x: 8, y: 28, w: 136, h: 162, cx: 76, cy: 98, rings: [46, 36, 26, 16] };
 const RING_COL = [COL.ochre[2], COL.ion[1], '#a878c8', '#6ebeaa'];
 // Where a click stops the needle.
 export const hackBox = () => ({ name: 'hack', x: HACK.x, y: HACK.y, w: HACK.w, h: HACK.h });
@@ -312,15 +312,15 @@ export function drawLockCode(ctx, font, state) {
   for (let i = 0; i < B.CODE_LEN; i++) {
     const got = i < bk.stage;
     const x = cx - 44 + i * 23;
-    rect(ctx, x, HACK.y + 116, 19, 18, got ? '#16281c' : '#141420', got ? COL.acid[2] : COL.line);
-    font.draw(ctx, got ? String(bk.code[i]) : '?', x + 9.5, HACK.y + 121, got ? COL.acid[2] : COL.dim, { align: 'c' });
+    rect(ctx, x, HACK.y + 126, 19, 18, got ? '#16281c' : '#141420', got ? COL.acid[2] : COL.line);
+    font.draw(ctx, got ? String(bk.code[i]) : '?', x + 9.5, HACK.y + 131, got ? COL.acid[2] : COL.dim, { align: 'c' });
   }
   const done = bk.stage >= B.CODE_LEN;
   font.draw(
     ctx,
     done ? 'ENTER IT AT THE LOCK' : 'SPACE  STOP THE NEEDLE',
     cx,
-    HACK.y + 139,
+    HACK.y + 150,
     done ? COL.acid[2] : COL.dim,
     { align: 'c' },
   );
