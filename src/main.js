@@ -6,7 +6,7 @@ import { initAudio, isMuted } from './audio.js';
 import { readEvents, toast } from './events.js';
 import { openPage, menuInput } from './menu.js';
 import { AUTO, listSaves, latestSlot, readSlot, writeSlot, packSave, parseSave, clearRun } from './saves.js';
-import { sceneOf } from './scene.js';
+import { sceneOf, foundOutFor } from './scene.js';
 import { updateMusic } from './music.js';
 import { createView, settle, playerInput, viewKeys, drawScreen, buttonsOf, drawsPointer, SCREENS } from './screens.js';
 import { createState } from './sim/state.js';
@@ -225,7 +225,8 @@ function frame(now) {
   if (canvas.style.cursor !== pointer) canvas.style.cursor = pointer;
   const { state, view } = game;
   const scene = sceneOf(state, view.playerId, view.started);
-  updateMusic({ scene, sector: state.sector, paused: state.paused, won: state.won }, dt);
+  const alarm = foundOutFor(state, game.view.playerId);
+  updateMusic({ scene, sector: state.sector, paused: state.paused, won: state.won, alarm }, dt);
   keys.endFrame();
   requestAnimationFrame(frame);
 }

@@ -18,6 +18,16 @@ import { dist } from './sim/util.js';
 // How long after the last hit the ship still counts as in a fight, in seconds.
 const UNDER_FIRE = 4;
 
+// Whether the boarding that this player is on has been found out: the place has sounded its alarm, or, where
+// there is no alarm, a guard is after someone. The music changes from sneaking to a chase.
+export function foundOutFor(state, playerId) {
+  const me = playerById(state, playerId);
+  const place = me && me.inside !== null ? findDock(state, me.inside) : null;
+  const it = place && place.interior;
+  if (!it || it.trade) return false;
+  return it.mood ? it.mood === 'alarm' : it.guards.some((g) => g.mode === 'alert');
+}
+
 export function sceneOf(state, playerId, started = true) {
   if (!started) return 'title';
   if (state.over) return 'lost';

@@ -5,7 +5,7 @@ import { addThing, removeThing, thingsOf, dockTargets, findDock, portsOf } from 
 import { shipNose } from './ship.js';
 import { layOut } from './layout.js';
 import { TILE, tileAt, solidAt, blocked, move, los } from './floor.js';
-import { newGuard, stepGuard, alertGuard } from './guards.js';
+import { newGuard, stepGuard, alertGuard, planRounds, awake } from './guards.js';
 import { makeVessel } from './vessels.js';
 import { PIRATE } from './sides.js';
 import { playerById, leavePost, returnToPost } from './players.js';
@@ -53,6 +53,9 @@ export function createInterior(state, wreck) {
     live: false,
     // A wreck has no power. It is dark inside, and the crew finds its way by lamp and flare.
     dark: wreck.kind === 'wreck',
+    // How a place that counts the crew as an enemy takes them: 'lockdown' until someone is found out, then
+    // 'alarm' until they have all left. A wreck has nobody to sound an alarm, and a place that trades is calm.
+    mood: null,
     // A spot that the Captain has marked on the boarding radar, for the boarders to see.
     pin: null,
     doorCut: 0,
@@ -121,13 +124,20 @@ export function createInterior(state, wreck) {
   if (wreck.kind === 'station') {
     it.terminal = spot(vaultRoom);
     for (let i = 0; i < 2; i++) it.guards.push(newGuard(state, spot(anyRoom(), 8 * TILE), 0));
+    // A station that counts the crew as an enemy is in lockdown: dark, and on its guard.
+    it.mood = 'lockdown';
+    it.dark = true;
   }
+  // On a station most guards walk a round. In a wreck most of them stand at a post.
+  planRounds(state, it, wreck.kind === 'station' ? 0.7 : 0.34);
   return it;
 }
 
 // Turn an interior into a trading floor: doors open, desks to trade at, people walking about.
 export function makeTrade(state, it) {
   it.trade = true;
+  it.mood = null;
+  it.dark = false;
   it.doorOpen = true;
   it.terminal = null;
   it.timer = null;
@@ -210,6 +220,10 @@ export function tryBoard(state, playerId) {
       sentries: 0,
       flares: 0,
       lamp: false,
+      spotted: 0,
+      watched: false,
+      weapon: 'rifle',
+      darts: 0,
     });
     state.events.push({ type: 'boarded', player: playerId, wreck: wreck.id, trade: true });
     return true;
@@ -249,6 +263,12 @@ export function tryBoard(state, playerId) {
     sentries: has(ship, 'sentry') ? 1 : 0,
     flares: has(ship, 'flare') ? B.FLARES : 0,
     lamp: true,
+    // How sure the guards are that they have seen this boarder, from 0 to 1, and whether one is watching now.
+    spotted: 0,
+    watched: false,
+    // The rifle, or the tranquilliser gun with its darts.
+    weapon: 'rifle',
+    darts: has(ship, 'tranq') ? B.TRANQ_DARTS : 0,
   });
   state.events.push({ type: 'boarded', player: playerId, wreck: wreck.id });
   return true;
@@ -271,6 +291,29 @@ function leave(state, it, av, teleported) {
   }
   player.inside = null;
   returnToPost(state, player);
+  // An alarm lasts until the last boarder has left. Then the place is on its guard again.
+  if (!it.avatars.length && it.mood === 'alarm') {
+    it.mood = 'lockdown';
+    for (const g of it.guards) {
+      g.mode = 'idle';
+      g.path = [];
+      g.pause = 0;
+    }
+  }
+}
+
+// Something has given the crew away at `at`. A place with an alarm sounds it, and every guard that is awake
+// knows where to look. A wreck has no alarm: there only the guards that noticed are after the crew.
+function foundOut(state, it, at) {
+  if (!it.mood) return;
+  if (it.mood !== 'alarm') state.events.push({ type: 'foundOut' });
+  it.mood = 'alarm';
+  for (const g of it.guards) alertGuard(g, at);
+}
+// A loud noise at `at`: guards near enough to hear it come looking, and it gives the crew away.
+function heard(state, it, at) {
+  for (const g of it.guards) if (dist(g.x, g.y, at.x, at.y) < B.SHOT_HEARD) alertGuard(g, at);
+  foundOut(state, it, at);
 }
 
 // The ship is leaving: everyone still inside is teleported home, at the usual cost.
@@ -320,6 +363,7 @@ function explode(state, it, g) {
   for (const e of it.guards) if (inBlast(e)) e.hp -= B.GRENADE_DMG;
   for (const e of it.turrets) if (inBlast(e)) e.hp -= B.GRENADE_DMG;
   for (const av of [...it.avatars]) if (inBlast(av)) hurtAvatar(state, it, av, B.GRENADE_SELF_DMG);
+  heard(state, it, g);
 }
 
 // ---------- what a boarder does ----------
@@ -327,6 +371,9 @@ const atAirlockDoor = (it, av) => dist(av.x, av.y, it.entry.x, it.entry.y) < TIL
 // What there is to work with where a boarder stands, for the screen to show: the airlock, a desk,
 // the terminal, or the vault door (`cut` when they are near enough to cut it and not only to blow it).
 export function useTarget(it, av) {
+  // A guard that sleeps can be taken down for the rest of the boarding, by the one who gets to it in time.
+  const asleep = it.guards.find((g) => g.sleep > 0 && !g.down && dist(g.x, g.y, av.x, av.y) < B.TAKE_DOWN_REACH);
+  if (asleep) return { type: 'guard', guard: asleep };
   if (atAirlockDoor(it, av)) return { type: 'airlock' };
   if (it.trade) {
     const desk = it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20);
@@ -366,6 +413,26 @@ function fireRifle(state, it, av) {
   });
   av.cool = B.RIFLE_INTERVAL;
   state.events.push({ type: 'rifle' });
+  heard(state, it, av);
+}
+
+// A dart from the tranquilliser gun makes no sound, and puts the guard it hits to sleep.
+function fireDart(state, it, av) {
+  const f = forward(av.heading);
+  it.bolts.push({
+    x: av.x + f.x * 7,
+    y: av.y + f.y * 7,
+    vx: f.x * B.TRANQ_SPEED,
+    vy: f.y * B.TRANQ_SPEED,
+    ttl: 1,
+    owner: 'crew',
+    dmg: 0,
+    tranq: true,
+  });
+  av.darts--;
+  av.cool = B.TRANQ_INTERVAL;
+  if (av.darts <= 0) av.weapon = 'rifle';
+  state.events.push({ type: 'dart' });
 }
 
 function throwGrenade(it, av, at) {
@@ -432,6 +499,7 @@ function workVaultDoor(state, it, av, cmd, dt) {
     openVault(it);
     it.fx.push({ type: 'boom', x: door.x, y: door.y, t: 0, dur: 0.45, size: 24 });
     for (const g of it.guards) alertGuard(g, door);
+    foundOut(state, it, door);
     state.events.push({ type: 'breached' });
   }
   if (cmd.use && away < 22) {
@@ -478,7 +546,16 @@ function stepAvatar(state, it, av, cmd, dt) {
     stepVisitor(state, it, av, cmd);
     return;
   }
-  if (cmd.fire && av.cool <= 0) fireRifle(state, it, av);
+  if (cmd.swap && av.darts > 0) av.weapon = av.weapon === 'rifle' ? 'tranq' : 'rifle';
+  if (cmd.fire && av.cool <= 0) (av.weapon === 'tranq' ? fireDart : fireRifle)(state, it, av);
+  // Take down a guard that sleeps, before anything else that the use key does here.
+  const at = cmd.usePressed ? useTarget(it, av) : null;
+  if (at && at.type === 'guard') {
+    at.guard.down = true;
+    at.guard.sleep = 0;
+    state.events.push({ type: 'takeDown' });
+    return;
+  }
   if (cmd.grenade && av.grenades > 0) throwGrenade(it, av, cmd.grenade);
   if (cmd.lampPressed) av.lamp = !av.lamp;
   if (cmd.flare && av.flares > 0) throwFlare(state, it, av, cmd.flare);
@@ -506,7 +583,7 @@ function stepSentry(state, it, s, dt) {
   s.cool -= dt;
   let target = null,
     best = B.SENTRY_RANGE;
-  for (const e of [...it.guards, ...it.turrets]) {
+  for (const e of [...it.guards.filter(awake), ...it.turrets]) {
     const d = dist(s.x, s.y, e.x, e.y);
     if (d < best && los(it, s.x, s.y, e.x, e.y)) {
       best = d;
@@ -586,14 +663,27 @@ function stepInsideBolts(state, it, dt) {
       continue;
     }
     if (b.owner === 'crew') {
-      const guard = it.guards.find((g) => dist(g.x, g.y, b.x, b.y) < 6.5);
+      const guard = it.guards.find((g) => !g.down && dist(g.x, g.y, b.x, b.y) < 6.5);
       const e = guard || it.turrets.find((t) => dist(t.x, t.y, b.x, b.y) < 7.5);
       if (!e) continue;
-      e.hp -= b.dmg;
       b.ttl = 0;
+      if (b.tranq) {
+        // A dart only works on a guard. It falls asleep where it stands, and nobody hears it.
+        if (guard) {
+          guard.sleep = B.TRANQ_SLEEP;
+          guard.mode = 'idle';
+          guard.path = [];
+          state.events.push({ type: 'guardAsleep' });
+        }
+        continue;
+      }
+      e.hp -= b.dmg;
       spark(b, 0.15);
-      // A guard that is shot knows roughly where the shot came from.
-      if (e.mode) alertGuard(e, e.mode === 'alert' ? e.seen : { x: b.x - b.vx * 0.2, y: b.y - b.vy * 0.2 });
+      // A guard that is shot wakes if it slept, and knows roughly where the shot came from.
+      if (guard) {
+        guard.sleep = 0;
+        alertGuard(guard, guard.mode === 'alert' ? guard.seen : { x: b.x - b.vx * 0.2, y: b.y - b.vy * 0.2 });
+      }
       continue;
     }
     const av = it.avatars.find((a) => dist(a.x, a.y, b.x, b.y) < 6);
@@ -668,7 +758,13 @@ function stepInterior(state, wreck, cmds, dt) {
   for (const f of it.fx) f.t += dt;
   it.fx = it.fx.filter((f) => f.t < f.dur);
   for (const av of [...it.avatars]) stepAvatar(state, it, av, cmds.away ? cmds.away[av.player] : null, dt);
-  for (const g of it.guards) stepGuard(state, it, g, dt);
+  // Guards that have noticed nobody watch for boarders, and for other guards that lie still.
+  for (const av of it.avatars) av.watched = false;
+  for (const g of it.guards) {
+    const found = stepGuard(state, it, g, dt);
+    if (found) foundOut(state, it, found.intruder || found.body);
+  }
+  for (const av of it.avatars) if (!av.watched) av.spotted = Math.max(0, av.spotted - dt * 1.5);
   for (const c of it.civilians) stepCivilian(state, it, c, dt);
   for (const t of it.turrets) stepTurret(state, it, t, dt);
   for (const s of it.sentries) stepSentry(state, it, s, dt);

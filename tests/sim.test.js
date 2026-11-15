@@ -218,6 +218,7 @@ test('the ship cannot fly through a wreck, and ramming hurts', () => {
 
 // ---------- boarding ----------
 import { createInterior, tryBoard, tileAt, TILE, blocked, los } from '../src/sim/boarding.js';
+import { inSight, isLit } from '../src/sim/guards.js';
 
 test('docking works from a little way off, and the ship is pulled in until its nose rests at the port', () => {
   const s = quiet(createState(1));
@@ -447,7 +448,9 @@ test('guards shoot at a player they can see, and the rifle kills them', () => {
   const g = it.guards[0];
   const [here, there] = stretch(it);
   Object.assign(av, here);
-  Object.assign(g, there);
+  // A bold guard, that fights on when it is hurt, looking the boarder's way.
+  Object.assign(g, there, { bold: true, route: [], looks: [headingTo(here.x - there.x, here.y - there.y)] });
+  g.heading = g.looks[0];
   g.home = { x: g.x, y: g.y };
   // Guards do not hit with every shot, so give this one a little time.
   for (let i = 0; i < 20 && s.players[0].hp === B.CREW_HP && s.players[0].inside !== null; i++)
@@ -1885,4 +1888,171 @@ test('the moment a part of the ship becomes critical is told once', () => {
   const critical = s.ship.nodes.filter((n) => n.hp < 30).length;
   assert.ok(critical > 0);
   assert.equal(told, critical, 'once for each part, and not again while it stays critical');
+});
+
+// ---------- sneaking: lockdown, alarm, guards that watch, the dart gun ----------
+// Inside a hostile station with one guard, far from the boarder and looking away, and no turrets.
+function sneaking() {
+  const s = quiet(createState(1)),
+    st = station(s, 'neutral');
+  turnHostile(s, st);
+  s.ship.x = st.x;
+  s.ship.y = st.y + 2000;
+  atStation(s, st);
+  st.lock = 'open';
+  step(s, { system: { board: [0] } }, DT);
+  const it = st.interior,
+    av = it.avatars[0];
+  it.turrets = [];
+  it.guards = it.guards.slice(0, 1);
+  const g = it.guards[0];
+  // Somewhere with a clear line between two spots: where the boarder came in, and a little further in.
+  const far = it.rooms
+    .map((r) => r.mid)
+    .filter((p) => los(it, av.x, av.y, p.x, p.y) && dist(av.x, av.y, p.x, p.y) > 60)
+    .sort((a, b) => dist(av.x, av.y, a.x, a.y) - dist(av.x, av.y, b.x, b.y))[0];
+  return { s, st, it, av, g, far };
+}
+// A free spot at a given distance from the boarder, with nothing between them, and the way from it to the boarder.
+function spotNear(it, av, far) {
+  for (let k = 0; k < 64; k++) {
+    const a = (k / 64) * Math.PI * 2;
+    const p = { x: av.x + Math.sin(a) * far, y: av.y - Math.cos(a) * far };
+    if (!blocked(it, p.x, p.y, 6) && los(it, p.x, p.y, av.x, av.y))
+      return { at: p, toward: headingTo(av.x - p.x, av.y - p.y) };
+  }
+  throw new Error('no free spot near the boarder');
+}
+// Put a guard at a spot as one that stands at its post and looks one way only.
+function post(g, at, heading) {
+  Object.assign(g, at, {
+    route: [],
+    path: [],
+    looks: [heading],
+    look: 0,
+    heading,
+    home: { ...at },
+    mode: 'idle',
+    pause: 0,
+  });
+}
+
+test('a hostile station is in lockdown and dark, and a wreck has no alarm to sound', () => {
+  const { it } = sneaking();
+  assert.equal(it.mood, 'lockdown');
+  assert.equal(it.dark, true);
+  assert.equal(boarded().it.mood, null);
+});
+
+test('a guard sees what is in front of it and in the light, and not what is behind it or in the dark', () => {
+  const { s, it, av, g } = sneaking();
+  const { at, toward } = spotNear(it, av, 50);
+  post(g, at, toward);
+  av.lamp = true;
+  assert.equal(inSight(it, g, av), true, 'in front and lit');
+  post(g, at, toward + Math.PI);
+  assert.equal(inSight(it, g, av), false, 'behind its back');
+  post(g, at, toward);
+  av.lamp = false;
+  assert.equal(isLit(it, av.x, av.y), false, 'with the lamp off the boarder stands in the dark');
+  const far = spotNear(it, av, B.GUARD_SIGHT_DARK + 20);
+  post(g, far.at, far.toward);
+  assert.equal(inSight(it, g, av), false, 'too far off to be seen in the dark');
+  const close = spotNear(it, av, B.GUARD_SIGHT_DARK - 10);
+  post(g, close.at, close.toward);
+  assert.equal(inSight(it, g, av), true, 'near enough to be seen even so');
+  assert.equal(s.players[0].inside !== null, true);
+});
+
+test('being seen takes a moment, and stepping out of sight in time is forgiven', () => {
+  const { s, it, av, g } = sneaking();
+  const { at, toward } = spotNear(it, av, 50);
+  post(g, at, toward);
+  run(s, { away: { 0: {} } }, B.GUARD_NOTICE * 0.2);
+  assert.ok(av.spotted > 0 && av.spotted < 1, 'the guard is not sure yet');
+  assert.equal(it.mood, 'lockdown');
+  post(g, at, toward + Math.PI);
+  run(s, { away: { 0: {} } }, 2);
+  assert.equal(av.spotted, 0, 'it lets it go when it sees nothing more');
+  post(g, at, toward);
+  run(s, { away: { 0: {} } }, B.GUARD_NOTICE + 0.2);
+  assert.equal(it.mood, 'alarm', 'watched for long enough, the boarder is found out');
+  assert.equal(g.mode, 'alert');
+});
+
+test('an alarm wakes the whole place and lasts until the crew has left', () => {
+  const { s, it, av } = sneaking();
+  const st = s.things.find((t) => t.interior === it);
+  step(s, { away: { 0: { aim: { x: av.x + 10, y: av.y }, fire: true } } }, DT);
+  assert.equal(it.mood, 'alarm', 'a rifle shot is heard');
+  assert.ok(it.guards.every((g) => g.mode === 'alert'));
+  run(s, { away: { 0: {} } }, 30);
+  assert.equal(it.mood, 'alarm', 'it cannot be waited out');
+  s.players[0].hp = 10000;
+  av.x = it.entry.x;
+  av.y = it.entry.y;
+  step(s, { away: { 0: { usePressed: true } } }, DT);
+  assert.equal(s.players[0].inside, null);
+  assert.equal(st.interior.mood, 'lockdown', 'with everyone out, the place is on its guard again');
+});
+
+test('a dart puts a guard to sleep without a sound, and it wakes again and goes back to its round', () => {
+  const { s, it, av, g } = sneaking();
+  s.ship.mods.tranq = 1;
+  av.darts = B.TRANQ_DARTS;
+  const { at, toward } = spotNear(it, av, 50);
+  post(g, at, toward + Math.PI);
+  step(s, { away: { 0: { swap: true } } }, DT);
+  assert.equal(av.weapon, 'tranq');
+  step(s, { away: { 0: { aim: { x: g.x, y: g.y }, fire: true } } }, DT);
+  assert.equal(av.darts, B.TRANQ_DARTS - 1);
+  run(s, { away: { 0: {} } }, 0.6);
+  assert.ok(g.sleep > 0, 'the guard sleeps');
+  assert.equal(it.mood, 'lockdown', 'and nobody heard a thing');
+  run(s, { away: { 0: {} } }, B.TRANQ_SLEEP);
+  assert.equal(g.sleep <= 0 && g.mode === 'idle', true, 'it wakes by itself and has seen nothing');
+  assert.equal(it.mood, 'lockdown');
+});
+
+test('a sleeping guard can be taken down, and one that is found by another guard gives the crew away', () => {
+  const { s, it, av, g } = sneaking();
+  const { at, toward } = spotNear(it, av, 30);
+  post(g, at, toward + Math.PI);
+  g.sleep = B.TRANQ_SLEEP;
+  const stood = { x: av.x, y: av.y };
+  Object.assign(av, { x: g.x + Math.sin(toward) * 8, y: g.y - Math.cos(toward) * 8 });
+  step(s, { away: { 0: { usePressed: true } } }, DT);
+  assert.equal(g.down, true);
+  run(s, { away: { 0: {} } }, B.TRANQ_SLEEP + 1);
+  assert.equal(g.down, true, 'it is out for the rest of the boarding');
+  assert.equal(it.mood, 'lockdown');
+  // Another guard comes by and sees it lying there.
+  const other = { ...JSON.parse(JSON.stringify(g)), id: s.nextId++, down: false, sleep: 0 };
+  it.guards.push(other);
+  // The boarder is back where they stood, in the dark, and the other guard stands there looking at the body.
+  av.lamp = false;
+  Object.assign(av, stood);
+  post(other, { x: g.x + Math.sin(toward) * 14, y: g.y - Math.cos(toward) * 14 }, toward + Math.PI);
+  assert.equal(inSight(it, other, g), true, 'the body is right in front of it');
+  run(s, { away: { 0: {} } }, 0.2);
+  assert.equal(it.mood, 'alarm');
+});
+
+test('guards walk the same round every time, and one at a post looks about in the same order', () => {
+  const rounds = () => {
+    const { s, st } = sneaking();
+    const it = createInterior(s, st);
+    return it.guards.map((g) => [g.route.length, g.looks.map((a) => a.toFixed(3)).join()]);
+  };
+  assert.deepEqual(rounds(), rounds());
+  const { s, st } = sneaking();
+  const guards = createInterior(s, st).guards;
+  assert.ok(
+    guards.some((g) => g.route.length >= 2),
+    'some of them walk a round',
+  );
+  assert.ok(
+    guards.every((g) => g.looks.length === 3),
+    'and every one has ways to look',
+  );
 });

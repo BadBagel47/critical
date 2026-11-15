@@ -140,6 +140,24 @@ export const B = {
   // How far a guard hears a shot from another guard, how many tiles it looks for cover within, and how long
   // it goes on looking for an intruder that it no longer sees.
   GUARD_HEARING: 150,
+  // What a guard that has noticed nobody sees: this far to each side of straight ahead, this far in the
+  // dark, and this near all round. How long it has to watch a boarder to be sure, how far its round may
+  // take it in steps, how long it stops at each end of it, and how long it looks each way.
+  GUARD_FOV: 0.85,
+  GUARD_SIGHT_DARK: 58,
+  GUARD_FEEL: 20,
+  GUARD_NOTICE: 1,
+  GUARD_ROUND: 22,
+  GUARD_PAUSE: 4.5,
+  GUARD_LOOK: 1.5,
+  // The tranquilliser gun: darts for each boarding, how fast one flies, and how long a guard sleeps.
+  TRANQ_DARTS: 6,
+  TRANQ_SPEED: 240,
+  TRANQ_SLEEP: 30,
+  TRANQ_INTERVAL: 0.6,
+  // How near a boarder has to be to take a sleeping guard down, and how far a rifle shot is heard.
+  TAKE_DOWN_REACH: 16,
+  SHOT_HEARD: 260,
   GUARD_REACH: 6,
   GUARD_FORGET: 9,
   TURRET_HP: 45,

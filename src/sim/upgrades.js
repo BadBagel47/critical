@@ -126,6 +126,13 @@ export const CATALOG = {
     price: 130,
     desc: 'C BLOWS A VAULT DOOR, BUT WAKES EVERYONE',
   },
+  tranq: {
+    tab: 'armory',
+    name: 'TRANQ GUN',
+    slot: null,
+    price: 120,
+    desc: 'R SWAPS TO SILENT DARTS THAT PUT GUARDS TO SLEEP',
+  },
   flare: { tab: 'armory', name: 'FLARES', slot: null, price: 60, desc: 'Q THROWS A FLARE THAT LIGHTS A DARK ROOM' },
   sentry: { tab: 'armory', name: 'DEPLOYABLE TURRET', slot: null, price: 180, desc: 'T SETS DOWN A SMALL TURRET' },
   hack: { tab: 'armory', name: 'HACKING KIT', slot: null, price: 150, desc: 'MORE TIME IN EVERY BREAK-IN' },

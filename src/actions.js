@@ -69,6 +69,7 @@ function away(state, me) {
   const av = it && it.avatars.find((a) => a.player === me.id);
   const at = av && useTarget(it, av);
   if (!at) return [];
+  if (at.type === 'guard') return [use('takedown', 'TAKE DOWN', 'TAKE DOWN')];
   if (at.type === 'airlock') return [use('leave', 'BACK TO THE SHIP', 'LEAVE')];
   if (at.type === 'desk') return [use('trade', DESK[at.desk.type], 'TRADE')];
   if (at.type === 'terminal') {

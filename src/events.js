@@ -44,6 +44,9 @@ const TOAST = {
   ],
   podAlarm: () => ['THE POD ALARM IS RINGING  ·  PIRATES INCOMING', BAD],
   codeWrong: () => ['WRONG CODE', BAD],
+  foundOut: () => ['ALARM  ·  THEY KNOW YOU ARE HERE', BAD],
+  guardAsleep: () => ['GUARD ASLEEP', TECH],
+  takeDown: () => ['GUARD TAKEN DOWN', TECH],
   digitFound: (e) => [e.left ? `DIGIT FOUND  ·  ${e.left} TO GO` : 'THE WHOLE CODE IS FOUND', TECH],
   distress: (e) => [`DISTRESS CALL FROM ${e.name}`, LOOT],
   distressSaved: (e) => [

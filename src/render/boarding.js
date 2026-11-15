@@ -12,6 +12,7 @@ import { alarmText } from './hud.js';
 import { shade, litArea, flareLevel, lampLevel } from './light.js';
 import { forward, dist } from '../sim/util.js';
 import { hunters, roomName } from './radar.js';
+import { awake } from '../sim/guards.js';
 
 // Where on the screen the inside of a place is drawn. The camera follows the player's own figure. A place
 // that is smaller than the screen is kept still in the middle of it, and at the edges of a larger one the
@@ -452,11 +453,21 @@ function lightsOf(state, it, style, origin) {
       const x = tx * TILE + TILE / 2,
         y = ty * TILE;
       if (tileAt(it, tx, ty) === 'L') small(x, y + 9, 20, '219,164,69', 0.5);
-      else if (lampAt(it, style, tx, ty)) round(x, y + TILE + 2, 40, COLD, 0.5 * lampLevel(scatter(tx, ty), time));
+      else if (lampAt(it, style, tx, ty)) {
+        if (!it.mood) round(x, y + TILE + 2, 40, COLD, 0.5 * lampLevel(scatter(tx, ty), time));
+        else {
+          // In lockdown the lamps are red and their light turns slowly. In an alarm it turns fast.
+          const n = scatter(tx, ty);
+          const way = time * (it.mood === 'alarm' ? 3.2 : 1.1) + (n % 63) / 10;
+          const area = litArea(it, x, y + TILE + 2, 96, way, 0.55);
+          lights.push({ x, y: y + TILE + 2, r: 96, rgb: RED, power: 0.6, area, far: true });
+          round(x, y + TILE + 2, 26, RED, 0.35);
+        }
+      }
     }
   round(it.entry.x, it.entry.y, 46, '190,236,200', 0.55);
   for (const l of it.loot) small(l.x, l.y, 11, l.type === 'crate' ? '219,164,69' : '155,228,238', 0.4);
-  for (const e of [...it.guards, ...it.turrets]) round(e.x, e.y, 19, RED, 0.6);
+  for (const e of [...it.guards.filter(awake), ...it.turrets]) round(e.x, e.y, 19, RED, 0.6);
   for (const e of it.sentries) round(e.x, e.y, 19, '155,228,238', 0.6);
   for (const a of it.avatars) {
     round(a.x, a.y, B.LAMP_NEAR, WARM, 0.6);
@@ -503,13 +514,46 @@ function drawGlows(ctx, state, it, style, origin) {
     }
   ctx.globalAlpha = 1;
   ctx.fillStyle = COL.ember[2];
-  for (const e of [...it.guards, ...it.turrets]) {
+  for (const e of [...it.guards.filter(awake), ...it.turrets]) {
     const f = forward(e.heading);
     ctx.fillRect(Math.round(e.x + f.x * 3) - 1, Math.round(e.y + f.y * 3) - 1, 2, 2);
   }
   ctx.fillStyle = COL.white;
   for (const l of it.loot) {
     if (Math.floor(time * 2 + l.x * 0.37 + l.y * 0.11) % 4 === 0) ctx.fillRect(l.x + 2, l.y - 4, 1, 1);
+  }
+}
+
+// What sneaking needs to be seen: where each guard that has noticed nobody is looking, how sure the guards
+// are of having seen the player, and which guards sleep. It is drawn over the dark, since it is there to be
+// planned by. A guard sees far in the light and only near in the dark, so the near part is drawn stronger.
+function drawWatch(ctx, font, it, me) {
+  for (const g of it.guards) {
+    if (!awake(g)) {
+      if (g.sleep > 0) font.draw(ctx, 'Z', g.x + 5, g.y - 15, COL.ion[2]);
+      continue;
+    }
+    if (g.mode === 'alert') continue;
+    const f = forward(g.heading);
+    const way = Math.atan2(f.y, f.x);
+    const wedge = (r, alpha) => {
+      const area = litArea(it, g.x, g.y, r, way, B.GUARD_FOV);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = COL.ember[2];
+      ctx.beginPath();
+      ctx.moveTo(area[0][0], area[0][1]);
+      for (let i = 1; i < area.length; i++) ctx.lineTo(area[i][0], area[i][1]);
+      ctx.closePath();
+      ctx.fill();
+    };
+    wedge(B.GUARD_SIGHT, 0.06);
+    wedge(B.GUARD_SIGHT_DARK, 0.14);
+    ctx.globalAlpha = 1;
+  }
+  // Over the player: how close the guards are to being sure.
+  if (me && me.spotted > 0) {
+    rect(ctx, me.x - 9, me.y - 20, 18, 4, COL.out, COL.out);
+    rect(ctx, me.x - 8, me.y - 19, Math.round(16 * me.spotted), 2, me.spotted > 0.66 ? COL.ember[2] : COL.ochre[2]);
   }
 }
 
@@ -541,7 +585,10 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
   }
   for (const g of it.guards) {
     shadow(ctx, g.x, g.y, 5);
+    // One that is taken down lies still, and is drawn fainter.
+    ctx.globalAlpha = g.down ? 0.45 : 1;
     sprite(ctx, img.guard, g.x, g.y, g.heading);
+    ctx.globalAlpha = 1;
   }
   for (const a of it.avatars) {
     shadow(ctx, a.x, a.y, 5);
@@ -553,9 +600,10 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
     drawGlows(ctx, state, it, style, origin);
   }
   // What is drawn from here on is not dimmed by the dark.
+  drawWatch(ctx, font, it, me);
   ctx.fillStyle = COL.ember[2];
   for (const g of it.guards) {
-    if (g.mode !== 'alert') continue;
+    if (g.mode !== 'alert' || !awake(g)) continue;
     ctx.fillRect(g.x - 1, g.y - 14, 2, 4);
     ctx.fillRect(g.x - 1, g.y - 9, 2, 2);
   }
@@ -604,6 +652,19 @@ function drawPlaceLine(ctx, font, place) {
     const text = it.terminal ? `${place.name}  ·  FIND THE TERMINAL IN THE VAULT` : `${place.name} IS YOURS`;
     const col = it.terminal ? COL.ember : COL.acid;
     label(ctx, font, x, 8, text, { anchor: 'c', fg: col[2], border: col[0] });
+    // How the place takes the crew: on its guard, or hunting them.
+    if (it.mood === 'alarm')
+      label(ctx, font, x, 24, 'ALARM  ·  THEY ARE HUNTING YOU', {
+        anchor: 'c',
+        fg: COL.ember[2],
+        border: COL.ember[0],
+      });
+    else if (it.mood)
+      label(ctx, font, x, 24, 'LOCKDOWN  ·  STAY OUT OF SIGHT', {
+        anchor: 'c',
+        fg: COL.ochre[2],
+        border: COL.ochre[0],
+      });
   } else {
     const col = it.timer < 30 ? COL.ember : COL.ochre;
     const text = 'REACTOR UNSTABLE   ' + fmt(Math.max(0, it.timer));
@@ -625,7 +686,11 @@ function drawBoarderHud(ctx, font, state, view, player, place, me, origin) {
   font.draw(ctx, 'HP', 12, 340, COL.dim);
   bar(ctx, 28, 340, 74, player.hp / crewHpMax(ship), player.hp < 40 ? COL.ember[1] : COL.engineer);
   let x = label(ctx, font, 114, 336, 'TELEPORT READY', { fg: COL.ion[2], border: COL.ion[0] }) + 6;
-  x = label(ctx, font, x, 336, 'RIFLE', { fg: COL.out, bg: COL.gunner, border: null, pad: 6 }) + 4;
+  const tranq = me && me.weapon === 'tranq';
+  const held = tranq ? 'TRANQ  ' + me.darts : 'RIFLE';
+  x = label(ctx, font, x, 336, held, { fg: COL.out, bg: tranq ? COL.ion[2] : COL.gunner, border: null, pad: 6 }) + 4;
+  if (me && me.darts > 0 && !tranq) x = label(ctx, font, x, 336, 'R  TRANQ  ' + me.darts) + 4;
+  else if (tranq) x = label(ctx, font, x, 336, 'R  RIFLE') + 4;
   const grenades = me ? me.grenades : 0;
   x = label(ctx, font, x, 336, 'GRENADES  ' + grenades, { fg: grenades ? COL.text : COL.faint }) + 4;
   if (me && me.charges) x = label(ctx, font, x, 336, 'C  CHARGES  ' + me.charges) + 4;
@@ -681,6 +746,15 @@ export function drawBoarding(ctx, state, view, assets) {
   });
   label(ctx, font, where + 4, 8, 'AWAY FROM YOUR POST', { fg: COL.faint });
   drawPlaceLine(ctx, font, place);
+  // An alarm puts a red frame round the picture, so that it is seen at once and without sound. It swells and
+  // fades slowly and does not flash, see "Lagar och regler" in HANDOFF.md.
+  if (it.mood === 'alarm') {
+    ctx.globalAlpha = 0.35 + 0.25 * Math.sin(state.time * 2.6);
+    ctx.strokeStyle = COL.ember[1];
+    ctx.lineWidth = 3;
+    ctx.strokeRect(1.5, 1.5, VIEW_W - 3, VIEW_H - 3);
+    ctx.globalAlpha = 1;
+  }
   // Only the best enemy alarm reaches the people inside.
   const alarm = level(state.ship, 'alarm') >= 3 && alarmText(state);
   if (alarm) label(ctx, font, VIEW_W / 2 + 60, 24, alarm, { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
