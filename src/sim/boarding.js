@@ -3,7 +3,9 @@ import { B } from './balance.js';
 import { createWreck, currentSector } from './sectors.js';
 import { addThing, removeThing, thingsOf, dockTargets, findDock, portsOf } from './things.js';
 import { shipNose } from './ship.js';
-import { layOut, TILE } from './layout.js';
+import { layOut } from './layout.js';
+import { TILE, tileAt, solidAt, blocked, move, los } from './floor.js';
+import { newGuard, stepGuard, alertGuard } from './guards.js';
 import { makeVessel } from './vessels.js';
 import { PIRATE } from './sides.js';
 import { playerById, leavePost, returnToPost } from './players.js';
@@ -13,53 +15,10 @@ import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
 import { clamp, forward, headingTo, angleDiff, turnToward, dist, rand, randRange, TAU } from './util.js';
 
-export { TILE };
-// Walls, the locked vault door, space outside the hull and rooms that are torn open to it.
-const SOLID = new Set(['#', 'L', ' ', 'X']);
-export const tileAt = (it, tx, ty) => (tx < 0 || ty < 0 || tx >= it.w || ty >= it.h ? ' ' : it.tiles[ty * it.w + tx]);
-const solidAt = (it, x, y) => SOLID.has(tileAt(it, Math.floor(x / TILE), Math.floor(y / TILE)));
-
-export function blocked(it, x, y, r) {
-  const x0 = Math.floor((x - r) / TILE),
-    x1 = Math.floor((x + r) / TILE),
-    y0 = Math.floor((y - r) / TILE),
-    y1 = Math.floor((y + r) / TILE);
-  for (let ty = y0; ty <= y1; ty++)
-    for (let tx = x0; tx <= x1; tx++) {
-      if (!SOLID.has(tileAt(it, tx, ty))) continue;
-      const nx = clamp(x, tx * TILE, tx * TILE + TILE),
-        ny = clamp(y, ty * TILE, ty * TILE + TILE);
-      if ((x - nx) ** 2 + (y - ny) ** 2 < r * r) return true;
-    }
-  return false;
-}
-function move(it, e, dx, dy, r) {
-  if (dx && !blocked(it, e.x + dx, e.y, r)) e.x += dx;
-  if (dy && !blocked(it, e.x, e.y + dy, r)) e.y += dy;
-}
-export function los(it, x0, y0, x1, y1) {
-  const d = dist(x0, y0, x1, y1),
-    n = Math.ceil(d / 4);
-  for (let i = 1; i < n; i++) if (solidAt(it, x0 + ((x1 - x0) * i) / n, y0 + ((y1 - y0) * i) / n)) return false;
-  return true;
-}
+export { TILE, tileAt, blocked, los };
 
 // ---------- generation ----------
 // The floor plan itself is made in layout.js. Here it is filled with guards, turrets and loot.
-const newGuard = (state, p, heading) => ({
-  id: state.nextId++,
-  x: p.x,
-  y: p.y,
-  hp: B.GUARD_HP,
-  heading,
-  mode: 'idle',
-  cool: 1,
-  home: { ...p },
-  goal: { ...p },
-  wait: 1,
-  lost: 0,
-});
-
 // A free spot on the floor inside a box of walls (a room or a corridor): not too close to anything in `taken`,
 // and at least `away` from the way in.
 function spotIn(state, it, box, taken, away = 0) {
@@ -467,11 +426,7 @@ function workVaultDoor(state, it, av, cmd, dt) {
     av.charges--;
     openVault(it);
     it.fx.push({ type: 'boom', x: door.x, y: door.y, t: 0, dur: 0.45, size: 24 });
-    for (const g of it.guards) {
-      g.mode = 'alert';
-      g.lost = 0;
-      g.seen = { x: door.x, y: door.y };
-    }
+    for (const g of it.guards) alertGuard(g, door);
     state.events.push({ type: 'breached' });
   }
   if (cmd.use && away < 22) {
@@ -539,68 +494,6 @@ function stepAvatar(state, it, av, cmd, dt) {
   workVaultDoor(state, it, av, cmd, dt);
   workTerminal(state, it, av, cmd, dt);
   if (player.hp <= 0) leave(state, it, av, true);
-}
-
-function stepGuard(state, it, g, dt) {
-  g.cool -= dt;
-  let target = null,
-    best = B.GUARD_SIGHT;
-  for (const av of it.avatars) {
-    const d = dist(g.x, g.y, av.x, av.y);
-    if (d < best && los(it, g.x, g.y, av.x, av.y)) {
-      best = d;
-      target = av;
-    }
-  }
-  if (target) {
-    g.mode = 'alert';
-    g.lost = 0;
-    g.seen = { x: target.x, y: target.y };
-    g.heading = turnToward(g.heading, headingTo(target.x - g.x, target.y - g.y), 5 * dt);
-    const f = forward(g.heading),
-      dir = best > 95 ? 1 : best < 55 ? -0.7 : 0;
-    if (dir) move(it, g, f.x * B.GUARD_SPEED * dir * dt, f.y * B.GUARD_SPEED * dir * dt, B.CREW_RADIUS);
-    if (g.cool <= 0 && Math.abs(angleDiff(headingTo(target.x - g.x, target.y - g.y), g.heading)) < 0.2) {
-      const s = forward(g.heading + randRange(state, -0.09, 0.09));
-      it.bolts.push({
-        x: g.x + s.x * 7,
-        y: g.y + s.y * 7,
-        vx: s.x * B.GUARD_BOLT_SPEED,
-        vy: s.y * B.GUARD_BOLT_SPEED,
-        ttl: 1.4,
-        owner: 'enemy',
-        dmg: B.GUARD_DMG,
-      });
-      g.cool = B.GUARD_COOLDOWN * randRange(state, 0.85, 1.2);
-    }
-    return;
-  }
-  if (g.mode === 'alert') {
-    // Walk to where the intruder was last seen, then give up.
-    g.lost += dt;
-    const d = dist(g.x, g.y, g.seen.x, g.seen.y);
-    if (d > 6 && g.lost < 4) {
-      g.heading = turnToward(g.heading, headingTo(g.seen.x - g.x, g.seen.y - g.y), 5 * dt);
-      const f = forward(g.heading);
-      move(it, g, f.x * B.GUARD_SPEED * dt, f.y * B.GUARD_SPEED * dt, B.CREW_RADIUS);
-    } else if (g.lost >= 4 || d <= 6) {
-      g.mode = 'idle';
-      g.home = { x: g.x, y: g.y };
-      g.goal = { ...g.home };
-      g.wait = 1;
-    }
-    return;
-  }
-  g.wait -= dt;
-  if (g.wait <= 0) {
-    g.goal = { x: g.home.x + randRange(state, -30, 30), y: g.home.y + randRange(state, -22, 22) };
-    g.wait = randRange(state, 2, 4.5);
-  }
-  if (dist(g.x, g.y, g.goal.x, g.goal.y) > 4) {
-    g.heading = turnToward(g.heading, headingTo(g.goal.x - g.x, g.goal.y - g.y), 4 * dt);
-    const f = forward(g.heading);
-    move(it, g, f.x * B.GUARD_SPEED * 0.45 * dt, f.y * B.GUARD_SPEED * 0.45 * dt, B.CREW_RADIUS);
-  }
 }
 
 // A turret set down by a boarder. It shoots at guards and turrets it can see.
@@ -695,11 +588,7 @@ function stepInsideBolts(state, it, dt) {
       b.ttl = 0;
       spark(b, 0.15);
       // A guard that is shot knows roughly where the shot came from.
-      if (e.mode) {
-        e.mode = 'alert';
-        e.lost = 0;
-        e.seen = e.seen || { x: b.x - b.vx * 0.2, y: b.y - b.vy * 0.2 };
-      }
+      if (e.mode) alertGuard(e, e.mode === 'alert' ? e.seen : { x: b.x - b.vx * 0.2, y: b.y - b.vy * 0.2 });
       continue;
     }
     const av = it.avatars.find((a) => dist(a.x, a.y, b.x, b.y) < 6);

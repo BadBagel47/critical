@@ -216,7 +216,7 @@ test('the ship cannot fly through a wreck, and ramming hurts', () => {
 });
 
 // ---------- boarding ----------
-import { createInterior, tryBoard, tileAt, TILE, blocked } from '../src/sim/boarding.js';
+import { createInterior, tryBoard, tileAt, TILE, blocked, los } from '../src/sim/boarding.js';
 
 test('docking works from a little way off, and the ship is pulled in until its nose rests at the port', () => {
   const s = quiet(createState(1));
@@ -453,23 +453,110 @@ test('guards shoot at a player they can see, and the rifle kills them', () => {
     run(s, { away: { 0: {} } }, 1);
   assert.ok(s.players[0].hp < B.CREW_HP || s.players[0].inside === null, 'the guard hurt the player');
   if (s.players[0].inside !== null) {
-    run(s, { away: { 0: { aim: { x: g.x, y: g.y }, fire: true } } }, 3);
+    // The guard steps in and out of cover, so the boarder has to keep aiming at it.
+    s.players[0].hp = 10000;
+    for (let i = 0; i < 60 * 40 && it.guards.length; i++) {
+      step(s, { away: { 0: { aim: { x: g.x, y: g.y }, fire: true } } }, DT);
+    }
     assert.equal(it.guards.length, 0);
   }
+});
+
+// Whether the guard and the boarder can see each other, sampled over some seconds of a fight.
+function sightings(s, it, g, av, secs) {
+  let seen = 0,
+    hidden = 0;
+  for (let i = 0; i < 60 * secs && it.guards.includes(g); i++) {
+    step(s, { away: { 0: {} } }, DT);
+    if (los(it, g.x, g.y, av.x, av.y)) seen++;
+    else hidden++;
+  }
+  return { seen, hidden };
+}
+
+test('a guard fights from cover: it steps out to fire and steps back again', () => {
+  const { s, it, av } = boarded(4);
+  it.turrets = [];
+  it.guards = it.guards.slice(0, 1);
+  const g = it.guards[0];
+  s.players[0].hp = 10000;
+  const [here, there] = stretch(it);
+  Object.assign(av, here);
+  Object.assign(g, there);
+  const before = it.bolts.length;
+  const { seen, hidden } = sightings(s, it, g, av, 14);
+  assert.equal(g.mode, 'alert');
+  assert.ok(seen > 30, 'it shows itself to fire');
+  assert.ok(hidden > 30, 'and is out of sight in between');
+  assert.ok(s.players[0].hp < 10000 || it.bolts.length > before, 'it has fired');
+  assert.ok(!blocked(it, g.x, g.y, B.CREW_RADIUS - 0.5), 'and it never ends up in a wall');
+});
+
+test('with two guards on an intruder, one of them goes round another way', () => {
+  const { s, it, av } = boarded(4);
+  it.turrets = [];
+  it.guards = it.guards.slice(0, 2);
+  s.players[0].hp = 10000;
+  const [here, there] = stretch(it);
+  Object.assign(av, here);
+  it.guards.forEach((g, i) => Object.assign(g, { x: there.x + i * 14, y: there.y }));
+  let flankers = 0;
+  for (let i = 0; i < 60 * 3; i++) {
+    step(s, { away: { 0: {} } }, DT);
+    flankers = Math.max(flankers, it.guards.filter((g) => g.plan === 'flank').length);
+  }
+  assert.equal(flankers, 1, 'one goes round, and never both');
+});
+
+test('a careful guard that is badly hurt falls back, and a bold one fights on', () => {
+  for (const bold of [false, true]) {
+    const { s, it, av } = boarded(4);
+    it.turrets = [];
+    it.guards = it.guards.slice(0, 1);
+    const g = it.guards[0];
+    s.players[0].hp = 10000;
+    const [here, there] = stretch(it);
+    Object.assign(av, here);
+    Object.assign(g, there, { bold, hp: B.GUARD_HP * 0.3 });
+    run(s, { away: { 0: {} } }, 3);
+    assert.equal(g.plan, bold ? 'fight' : 'retreat');
+  }
+});
+
+test('a guard that hears another one fire comes to help', () => {
+  const { s, it, av } = boarded(4);
+  it.turrets = [];
+  it.guards = it.guards.slice(0, 2);
+  s.players[0].hp = 10000;
+  const [here, there] = stretch(it);
+  Object.assign(av, here);
+  const [first, second] = it.guards;
+  Object.assign(first, there);
+  // The other one is round a corner, where it sees nothing but is within earshot.
+  const room = it.rooms.find(
+    (r) => !los(it, r.mid.x, r.mid.y, av.x, av.y) && dist(r.mid.x, r.mid.y, there.x, there.y) < 140,
+  );
+  assert.ok(room, 'there is a room near by that the boarder cannot see into');
+  Object.assign(second, room.mid);
+  second.home = { ...room.mid };
+  second.goal = { ...room.mid };
+  for (let i = 0; i < 60 * 20 && second.mode !== 'alert'; i++) step(s, { away: { 0: {} } }, DT);
+  assert.equal(second.mode, 'alert');
 });
 
 test('a grenade clears a group of guards', () => {
   const { s, it, av } = boarded();
   it.turrets = [];
   it.guards = it.guards.slice(0, 2);
-  const [here, there] = stretch(it, 100);
+  // Close by, so that they have no time to get out of the way.
+  const [here, there] = stretch(it, 46);
   Object.assign(av, here);
   it.guards.forEach((g, i) => {
     g.x = there.x;
-    g.y = there.y + i * 10;
+    g.y = there.y + i * 6;
     g.hp = 30;
   });
-  step(s, { away: { 0: { grenade: { x: there.x, y: there.y + 5 } } } }, DT);
+  step(s, { away: { 0: { grenade: { x: there.x, y: there.y + 3 } } } }, DT);
   assert.equal(av.grenades, B.GRENADES - 1);
   run(s, { away: { 0: {} } }, 2);
   assert.equal(it.guards.length, 0);
@@ -1460,13 +1547,13 @@ test('boarding gear changes what a boarder can do', () => {
   const g = it.guards[0];
   const [here, there] = stretch(it, 80);
   Object.assign(av, here);
-  Object.assign(g, there);
-  g.hp = 12;
   step(s, { away: { 0: { deploy: true } } }, DT);
   assert.equal(it.sentries.length, 1);
   av.x = it.entry.x;
   av.y = it.entry.y - 20;
-  run(s, { away: { 0: {} } }, 4);
+  // A guard at its post near the turret, that has not noticed anything.
+  Object.assign(g, there, { mode: 'idle', home: { ...there }, goal: { ...there }, hp: 12 });
+  for (let i = 0; i < 60 * 30 && it.guards.length; i++) step(s, { away: { 0: {} } }, DT);
   assert.equal(it.guards.length, 0, 'the sentry dealt with the guard');
 });
 

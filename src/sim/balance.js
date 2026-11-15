@@ -122,6 +122,11 @@ export const B = {
   GUARD_COOLDOWN: 1.15,
   GUARD_DMG: 8,
   GUARD_BOLT_SPEED: 185,
+  // How far a guard hears a shot from another guard, how many tiles it looks for cover within, and how long
+  // it goes on looking for an intruder that it no longer sees.
+  GUARD_HEARING: 150,
+  GUARD_REACH: 6,
+  GUARD_FORGET: 9,
   TURRET_HP: 45,
   TURRET_SIGHT: 220,
   TURRET_TURN: 2.6,
