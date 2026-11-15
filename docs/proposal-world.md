@@ -15,9 +15,14 @@ Du har läst förslaget och gett en ny riktning. Resten av texten är inte omskr
 - **Bränsle och pengar.** Man ska kunna få slut på båda, och bränslet ska inte komma tillbaka av sig självt, men man ska ändå komma vidare. Reservtanken (avsnitt 6, regel 1) stryks, och det avgör fråga 10. Vägarna ut är asteroider som ger resurser som fyller på bränsle (F-085) och solceller som man köper och som laddar bränslet (F-194). Du tror mest på solcellerna. Det man bryter ur asteroider kan också säljas på en bas, så brytningen ger både bränsle och pengar.
 - **Systemradar.** En uppgradering som visar om närliggande system är vänliga och vilken faktion de tillhör. Den scannar grannsystemen av sig själv, och statusen uppdateras när man kommer inom räckvidd (F-195).
 
+Fler besked samma dag:
+- **Asteroider.** De finns i varje system. Baser har aldrig asteroider runt sig, men en bit bort finns fler, med större samlingar i vissa områden. De genereras och är inte ett fast antal, så att den som vill kan lägga tid på att bryta.
+- **Antalet system** väljs i starten, och det avgör hur många uppdrag det finns innan man når slutet.
+- **Stjärna i mitten** och ett asteroidbälte.
+
 Öppet efter beskeden:
-- Hur många system, ungefär, och om storleken fortfarande väljs vid start.
-- Vad som är golvet för den som har slut på både bränsle och pengar och inte har köpt solceller: räcker asteroiderna, och finns de i varje system?
+- Hur man slipper långa sträckor runt stjärnan vid uppdrag: genom hur system och uppdrag läggs upp, genom ett korthopp inom systemet (F-197), eller båda.
+- Vilka antal system man får välja mellan.
 - Om det mystiska uppdraget med Cruisern är en del av den röda tråden eller ett sidospår.
 
 ## Sammanfattning
