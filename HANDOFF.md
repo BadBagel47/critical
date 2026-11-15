@@ -18,7 +18,7 @@ Den som besättningen skjuter på försvarar sig nu, skepp från samma sida komm
 
 Engineer ser rymden som de andra, med en remsa för energi och skador. Stationerna har varje sidas eget utseende, dockningsarmar som fälls ut och ljus som visar hur de behandlar besättningen. Vrak har formen av skeppet de var. Insidorna av vrak och stationer är större än skärmen, följer formen på det man bordat och görs nya för varje omgång.
 
-Vrak är mörka inuti (2026-11-15): man letar sig fram med ficklampa (L) och flares som kastas (Q), och väggar kastar skuggor. Det är första steget i ljussättningen. Förslaget för ljus i rymden (D-147) är nästa.
+Vrak är mörka inuti (2026-11-15): man letar sig fram med ficklampa (L) och flares som kastas (Q), och väggar kastar skuggor. Det är första steget i ljussättningen. Ljus i rymden (D-147) är byggt som ett förslag som är avstängt: det syns med `lights` i adressen (`?test&lights`) och visas på designsidan under "Ljus". Det väntar på användarens ja eller nej.
 
 Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra första steg. Synpunkterna blev F-065 till D-089 i BACKLOG.md. Balansen är inte genomgången än. Onlineläget saknas och väntar på användarens motor.
 
@@ -84,6 +84,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - `src/scene.js`: vilket slags ögonblick spelaren är i (lugnt, varning, strid, bordning, station), för musiken. `src/music.js`: musiken. Den anropas en gång per bildruta och kopplar sitt ljud till `musicOutput()` i `src/audio.js`. Delarna ligger i `src/music/`: `theory.js` (toner, introtemana och varje sektors färg), `sets.js` (uppsättningarna, var och en med eget tema och ett stycke per scen), `pieces.js` och `pieces-b.js` (uppsättning A och B, som rena funktioner), `director.js` (vilket stycke som ska spela, med tröghet), `synth.js` (instrumenten) och `engine.js` (spelar och tonar mellan styckena). Spelet spelar uppsättning A (`SET` i `src/music.js`) tills användaren uttryckligen säger något annat. Lyssningssidan är `docs/music/index.html`.
 - `src/render/`: skärmarna. `looks.js` beskriver hur varje sorts sak och skepp ser ut, på samma sätt som `kinds.js` beskriver vad de är. `effects.js` och `particles.js` ritar effekterna. Allt här läser bara spelets tillstånd och ändrar det aldrig.
 - `src/render/light.js`: ljuset i mörka ställen. Bilden ritas fullt upplyst och multipliceras med en karta över ljuset, och väggar stoppar det. Vilka ljus som finns räknas upp i `lightsOf()` i `render/boarding.js`. En insida är mörk när dess `dark` är sann.
+- Ljus i rymden (förslag, D-147): `drawSpaceLights()` och `drawShadow()` i `src/render/space.js`. De körs bara när `view.lights` är sann, vilket den blir med `lights` i adressen.
 - `assets/`: bilder och typsnitt som skapas av `tools/export_assets.py`.
 - Spelet ritas på 640 × 360 punkter. Text och ramar ritas på ett dubbelt så fint rutnät (typsnittet är dubbelt så stort och ritas i halv skala, se `src/font.js` och `HAIR` i `src/render/draw.js`). Bilden fyller alltid fönstret så långt formen 16:9 tillåter: den ritas i ett jämnt antal skärmpunkter per spelpunkt och webbläsaren passar sedan in den, se `resize()` i `src/main.js`.
 - Koden formateras med Prettier: `npm run format`.

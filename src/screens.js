@@ -34,6 +34,8 @@ export function createView(input) {
     engRow: 0,
     // The Engineer's own screen is folded away from the start, so that they see space like the others.
     engOpen: false,
+    // Light in space is a proposal that can be looked at with ?lights in the address (D-147).
+    lights: typeof window !== 'undefined' && /[?&]lights\b/.test(window.location.search),
     padAim: 0,
     cam: { x: 0, y: 0 },
     mouse: input.mouse,

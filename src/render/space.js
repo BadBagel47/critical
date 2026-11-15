@@ -10,7 +10,7 @@ import { has, level, shieldMax, dockShieldMax, jumpCharge } from '../sim/upgrade
 import { toWorld, dist, headingTo } from '../sim/util.js';
 import { sprite, dashed, brackets } from './draw.js';
 import { drawNebula, drawRipples } from './effects.js';
-import { THING_LOOK, lookOf, spriteOfVessel, hpBar, SIDE_COL } from './looks.js';
+import { THING_LOOK, lookOf, spriteOfVessel, hpBar, SIDE_COL, armLights } from './looks.js';
 import { CREW, PIRATE, enemies } from '../sim/sides.js';
 
 // Three layers of stars that move at different speeds, always the same ones.
@@ -396,6 +396,85 @@ function drawArrows(ctx, font, state, cam) {
   }
 }
 
+// ---------- light in space: a proposal (D-147), on only with ?lights in the address ----------
+// A light brightens the hulls and stars near it and leaves black space black.
+function shine(ctx, x, y, r, rgb, power) {
+  if (power <= 0.01) return;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(${rgb},${power})`);
+  g.addColorStop(0.5, `rgba(${rgb},${power * 0.4})`);
+  g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g;
+  circle(ctx, x, y, r);
+  ctx.fill();
+}
+const rgbOf = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(',');
+function drawSpaceLights(ctx, state, env, near) {
+  const ship = state.ship;
+  ctx.save();
+  ctx.globalCompositeOperation = 'color-dodge';
+  for (const b of state.bolts)
+    if (near(b, 40)) shine(ctx, b.x, b.y, b.small ? 22 : 34, rgbOf(BOLT_COL[boltKind(b)][2]), 0.5);
+  for (const r of state.rockets) shine(ctx, r.x, r.y, 34, rgbOf(COL.ember[2]), 0.5);
+  for (const f of state.fx)
+    if (f.type === 'boom') shine(ctx, f.x, f.y, f.size * 3, '255,214,150', 0.8 * (1 - f.t / f.dur));
+  // Engines light up what is behind them.
+  const th = Math.max(0, ship.throttle);
+  if (th > 0.02 && !ship.docked) {
+    const p = toWorld(ship, { x: 0, y: 56 });
+    shine(ctx, p.x, p.y, 26 + th * 24, rgbOf(COL.ion[2]), 0.2 + th * 0.25);
+  }
+  for (const v of state.vessels) {
+    if (!near(v, 110)) continue;
+    for (const g of lookOf(v).glow) {
+      const p = toWorld(v, g);
+      shine(ctx, p.x, p.y, 16 + g.r * 5, rgbOf(v.side === PIRATE ? COL.ember[2] : COL.ion[2]), 0.45);
+    }
+  }
+  // The lights on a station's docking arms fall on the station itself, in the colour that says how it
+  // treats the crew.
+  for (const t of state.things) {
+    if (t.kind !== 'station' || !near(t, 140)) continue;
+    const { color, tips } = armLights(t, env);
+    if (color === '#1c1c28') continue;
+    for (const p of tips) shine(ctx, p.x, p.y, 58, rgbOf(color), 0.5);
+  }
+  ctx.restore();
+}
+
+// A ship over a station or a wreck throws a shadow on it, which says that it is above it.
+const shapes = new WeakMap();
+function shapeOf(img) {
+  let c = shapes.get(img);
+  if (c) return c;
+  c = document.createElement('canvas');
+  c.width = img.width;
+  c.height = img.height;
+  const g = c.getContext('2d');
+  g.drawImage(img, 0, 0);
+  g.globalCompositeOperation = 'source-in';
+  g.fillStyle = '#000';
+  g.fillRect(0, 0, c.width, c.height);
+  shapes.set(img, c);
+  return c;
+}
+function drawShadow(ctx, state, v, env) {
+  const under = state.things.find(
+    (t) => (t.kind === 'station' || t.kind === 'wreck') && dist(t.x, t.y, v.x, v.y) < (t.kind === 'station' ? 150 : 90),
+  );
+  if (!under) return;
+  const own = v === state.ship;
+  const img = own ? env.img.frigate : spriteOfVessel(v, env.img);
+  ctx.save();
+  circle(ctx, under.x, under.y, under.kind === 'station' ? 112 : 70);
+  ctx.clip();
+  ctx.globalAlpha = 0.4;
+  // The frigate's picture turns about a point that is not its middle.
+  if (own) sprite(ctx, shapeOf(img), v.x + 5, v.y + 7, v.heading, 36, 54);
+  else sprite(ctx, shapeOf(img), v.x + 5, v.y + 7, v.heading);
+  ctx.restore();
+}
+
 export function drawSpace(ctx, state, view, assets) {
   const { img, font } = assets;
   const cam = view.cam;
@@ -435,11 +514,13 @@ export function drawSpace(ctx, state, view, assets) {
   for (const b of state.beams) drawBeam(ctx, b);
   for (const b of state.bolts) drawBolt(ctx, b);
   for (const r of state.rockets) drawRocket(ctx, r, img);
+  if (view.lights) for (const v of [...state.vessels, ship]) if (near(v, 110)) drawShadow(ctx, state, v, env);
   for (const v of state.vessels) if (near(v, 110)) drawVessel(ctx, v, env);
   for (const d of state.darts) drawDart(ctx, d, img);
   if (fx) fx.space.draw(ctx);
   if (!state.over) drawShip(ctx, state, img, fx);
   for (const f of state.fx) drawEffect(ctx, f);
+  if (view.lights) drawSpaceLights(ctx, state, env, near);
   ctx.restore();
   drawArrows(ctx, font, state, cam);
   return dock;

@@ -8,30 +8,27 @@ Prioritet: Hög, Medel, Låg.
 **A** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**B** – strong model, high level – Ljussättning
-- D-147 – Ta fram ett förslag med exempelbilder på ljus i rymden och inomhus, till exempel stationernas ljus, och visa det innan något byggs
-
-**C** – strong model, high level – Figurer och interiör
+**B** – strong model, high level – Figurer och interiör
 - F-152 – Inredning som visar vad varje rum är till för, saker att ta skydd bakom, dörrar och skyltar. Designen visas först
 - F-151 – Figurer som går, siktar, bär, blir träffade och faller, i stället för en stillbild som vrids. Bilderna visas först
 
-**D** – strong model, high level – Viewer på en extra skärm
+**C** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 
-**E** – strong model, high level – Egna instrument för posterna
+**D** – strong model, high level – Egna instrument för posterna
 - F-138 – En mållista för Gunner och navigering för Captain, så att varje post har något eget
 - F-153 – Engineers skärm visar allt som kan gå sönder, också uppgraderingarna, och säger tydligt vad som är skadat och vad det gör
 
-**F** – strong model, high level – Samspel mellan rollerna
+**E** – strong model, high level – Samspel mellan rollerna
 - F-140 – En radar för den som leder bordningen från skeppet, som en gammal terminalskärm med besättningen i grönt och jagande fiender i rött
 - F-141 – Märkning mellan posterna, så att man kan peka ut mål och skador för varandra
 - F-142 – Överladdning som Engineer förbereder och den som sköter systemet löser ut
 
-**G** – strong model, high level – Smartare vakter i flera sorter
+**F** – strong model, high level – Smartare vakter i flera sorter
 - F-125 – Vakter som tar skydd, rycker fram och kringgår, så att striderna känns levande
 - F-126 – Flera typer av vakter, lättare i början och svårare längre fram
 
-**H** – strong model, high level – Lockdown och smygande (efter smartare vakter)
+**G** – strong model, high level – Lockdown och smygande (efter smartare vakter)
 - F-102 – Lockdown på fientliga ställen: mörkare, roterande röda ljus och stängda dörrar tills spelarna slår av det vid en kontrollpanel längst in
 - F-107 – Smygande tills man blir upptäckt av patrullerande vakter, och en tranq gun som söver vakter
 - F-108 – Kameror som sveper och utlöser larmet om man blir sedd
@@ -41,76 +38,76 @@ Prioritet: Hög, Medel, Låg.
 - F-161 – Fiender ser ljus, och ser spelare som står i ljus när de tittar åt det hållet
 - F-120 – Spelet talar om för musiken när larmet har gått, så att musiken byter från smyg till larm
 
-**I** – strong model, high level – Roller vid bordning (efter lockdown och smygande)
+**H** – strong model, high level – Roller vid bordning (efter lockdown och smygande)
 - F-113 – Gunner slåss bättre, Engineer hackar och Captain ger gruppen något eget, så att det spelar roll vem som går in
 
-**J** – strong model, high level – Mainframe och egna stationer (efter lockdown och smygande)
+**I** – strong model, high level – Mainframe och egna stationer (efter lockdown och smygande)
 - F-109 – En mainframe-panel på alla stationer, som Engineer hackar hos fiender och som styr stationen hos ägaren
 - F-110 – Laga och uppgradera en station man äger från panelen
 
-**K** – strong model, high level – Ta över neutrala baser (efter gruppen om mainframen)
+**J** – strong model, high level – Ta över neutrala baser (efter gruppen om mainframen)
 - F-114 – Hacka en neutral bas med stor risk: red alert, bounty hunters som anfaller skeppet och sjunkande anseende
 
-**L** – strong model, high level – Anfall på egna stationer (efter gruppen om mainframen)
+**K** – strong model, high level – Anfall på egna stationer (efter gruppen om mainframen)
 - F-121 – Stationer kan falla även när man är i ett annat system, och varnar i tre nivåer när de anfalls
 - F-122 – Ett övertagande i steg: belägring, bordning och avgörande, som inte går att fuska sig ur genom att skjuta det dockade skeppet
 - F-123 – Regler för hur ofta det sker, och ordnade anfall från faktioner man är ovän med
 
-**M** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
+**L** – strong model, high level – Förslag: genererad värld, röd tråd och uppdrag
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 - D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
 
-**N** – strong model, high level – Förslag: ekonomi och belöningar
+**M** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**O** – strong model, high level – Baser i två storlekar
+**N** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 
-**P** – strong model, high level – Sällsynta skepp
+**O** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**Q** – strong model, high level – Handel
+**P** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**R** – strong model, medium level – Butik med bilder
+**Q** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**S** – strong model, high level – Värme
+**R** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**T** – strong model, high level – Slå ut och borda
+**S** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**U** – strong model, high level – Missiler och raketer
+**T** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**V** – strong model, high level – Kontakt med andra skepp
+**U** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**W** – strong model, high level – Asteroider och anomalier
+**V** – strong model, high level – Asteroider och anomalier
 - F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**X** – strong model, high level – En värld som förändras
+**W** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**Y** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**X** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**Z** – strong model, high level – Ljudeffekter
+**Y** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**AA** – strong model, high level – Visuella effekter och feedback
+**Z** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md och väntar på att användaren lyssnar på docs/music/ och väljer introtema.
@@ -135,7 +132,7 @@ Väntar på användaren: D-095 (faktionernas riktiga namn), D-074 (smuggelgods) 
 | F-048 | Musik för de olika lägena: startskärm, vanligt läge i rymden, varning för fiender, fientlig attack, lootattack och vänliga stationer. Musiken skapas med kod, det passar spelstilen. Görs av en annan agent enligt docs/music-brief.md. Byggd 2026-11-14, se besked i docs/music-brief.md. Väntar på att användaren lyssnar på docs/music/ och väljer introtema | Byggd, ej lyssnad |
 | F-049 | Genomgång av ljudeffekter, de som finns och de som saknas, och förbättrade effekter | Ej påbörjad |
 | F-124 | Se över hur de visuella effekterna och den visuella feedbacken kan förbättras. Från en fråga av användaren 2026-11-14. Agentens tolkning av vad som ingår: gå igenom varje sak som händer i spelet och se om skärmen svarar tydligt på den (träffar på skeppet och på fiender, sköld som går ner, skador, upplock, knapptryck, dockning, larm, anseende som ändras, låg bränslenivå), och förbättra där svaret är svagt eller saknas | Ej påbörjad |
-| D-147 | Hur vi jobbar vidare med ljussättning. Användaren 2026-11-14: ljussättning kan göra en hel del för känslan, och ljusen på stationerna kan vara ett snyggt sätt att använda ljuseffekter på. Ta fram ett förslag med exempelbilder på ljus i rymden och inomhus: stationernas ljus, fönster och motorer som lyser, skott och explosioner som lyser upp det som är nära, lampor och skuggor inomhus Läget 2026-11-15: ljuset inomhus är byggt i vraken (F-135, F-136, F-159, F-160). Kvar är förslaget för ljus i rymden. | Ej påbörjad |
+| D-147 | Hur vi jobbar vidare med ljussättning. Användaren 2026-11-14: ljussättning kan göra en hel del för känslan, och ljusen på stationerna kan vara ett snyggt sätt att använda ljuseffekter på. Ta fram ett förslag med exempelbilder på ljus i rymden och inomhus: stationernas ljus, fönster och motorer som lyser, skott och explosioner som lyser upp det som är nära, lampor och skuggor inomhus Läget 2026-11-15: ljuset inomhus är byggt i vraken (F-135, F-136, F-159, F-160). Förslaget för ljus i rymden är framtaget och visas på designsidan under "Ljus": stationernas armljus lyser upp stationen, motorer, skott och explosioner lyser upp skrov som är nära, och skepp kastar skugga på stationer och vrak. Det är byggt men avstängt, och syns med `lights` i adressen (`?test&lights`). Väntar på att användaren säger ja, nej eller vad som ska ändras. Vid ja: slå på det för alla (`lights` i `src/screens.js`) | Väntar på användaren |
 | F-151 | Bättre animationer på figurerna. Fråga från användaren 2026-11-14. I dag är varje figur en enda stillbild som vrids. Agentens förslag på vad som ingår: gång i steg, sikta och skjuta, bära loot, bli träffad, falla och teleporteras hem, och samma för vakter och folk på stationer. Nya bilder visas för användaren innan de läggs in | Ej påbörjad |
 | F-152 | Bättre interiör. Fråga från användaren 2026-11-14. I dag har rummen väggar, golv och lampor i sidans stil, men ingen inredning. Agentens förslag på vad som ingår: rum som syns vad de är till för (brygga med konsoler, maskinrum med reaktor, lastrum med lådor, sovhytter, mäss), saker att ta skydd bakom, dörrar som öppnas och stängs, och skyltar vid dörrarna. Hänger ihop med vakter som tar skydd (F-125) och rumsnamn för radarn (F-140). Designen visas först | Ej påbörjad |
 | F-153 | Engineering borde få upp alla saker som kan gå sönder i sitt läge. I dag syns till exempel inte turrets. Bättre indikationer på vad som är skadat. Från användaren 2026-11-14. Så fungerar det i dag: skeppet har sex delar som kan skadas (bow turret, bridge, reactor, två vingar och engines), och varje del styr ett system. Uppgraderingar som vingtorn, raketer och tung laser syns inte på Engineers ritning och kan inte gå sönder var för sig. Agentens förslag: rita uppgraderingarna på ritningen, säg vid varje del vad skadan gör (till exempel långsammare skott), låt skadade delar blinka och visa hur långt lagningen har kommit. Besked 2026-11-14: vi går på agentens rekommendation. Uppgraderingar går inte sönder var för sig tills vidare. De sex delarna är som i dag, och uppgraderingarna visas vid den del de hör till. Frågan om fler delar som går sönder tas upp igen tillsammans med värme (F-084) | Ej påbörjad |

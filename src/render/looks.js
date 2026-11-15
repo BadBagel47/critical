@@ -94,6 +94,20 @@ function drawArms(ctx, st, env) {
   });
 }
 
+// Where the lights at the tips of a station's docking arms are, and their colour.
+export function armLights(st, env) {
+  const state = env.state;
+  const hostile = enemies(state, CREW, st.side);
+  const color = hostile ? (blink(state, 3) ? COL.ember[3] : COL.ember[1]) : ARM_LIGHT[moodOf(state, st.side)];
+  const out = armsNow(st, env);
+  const tips = THINGS.station.ports.map((p, i) => {
+    const far = Math.hypot(p.x, p.y);
+    const tip = far - 26 + 12 * out[i] + 11;
+    return { x: st.x + (p.x / far) * tip, y: st.y + (p.y / far) * tip };
+  });
+  return { color, tips };
+}
+
 function drawStation(ctx, st, env) {
   sprite(ctx, env.img['station_' + stationLook(st)], st.x, st.y, st.heading);
   drawArms(ctx, st, env);
