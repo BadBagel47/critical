@@ -10,7 +10,7 @@ import { has, level, shieldMax, dockShieldMax, jumpCharge } from '../sim/upgrade
 import { toWorld, dist, headingTo } from '../sim/util.js';
 import { sprite, dashed, brackets } from './draw.js';
 import { drawNebula, drawRipples } from './effects.js';
-import { THING_LOOK, lookOf, spriteOfVessel, hpBar, SIDE_COL, armLights } from './looks.js';
+import { THING_LOOK, lookOf, spriteOfVessel, hpBar, SIDE_COL, armLights, podLamp } from './looks.js';
 import { CREW, PIRATE, enemies } from '../sim/sides.js';
 
 // Three layers of stars that move at different speeds, always the same ones.
@@ -175,9 +175,37 @@ function drawEffect(ctx, f) {
 
 // ---------- the frigate ----------
 // Drawn in the ship's own pixels: the engine flames, the hull, the upgrades that show, and what is charging.
+// The steering thrusters sit at the ends of the pods on the wings, pointing forward and back. To turn right
+// the left pod pushes forward and the right one back, and the other way round to turn left. Both forward
+// ones fire when the ship backs. Each is { x, y, way, power }: where it is on the ship, whether its flame
+// goes back (1) or forward (-1), and how hard it fires from 0 to 1.
+const POD_X = 27.5;
+const POD_FRONT = 8;
+const POD_REAR = 34;
+function steering(ship) {
+  if (ship.docked) return [];
+  const back = Math.max(0, -ship.throttle) / B.REVERSE;
+  const list = [];
+  const add = (x, y, way, power) => {
+    if (power > 0.08) list.push({ x, y, way, power: Math.min(1, power) });
+  };
+  add(-POD_X, POD_REAR, 1, ship.turn);
+  add(POD_X, POD_FRONT, -1, Math.max(ship.turn, back));
+  add(POD_X, POD_REAR, 1, -ship.turn);
+  add(-POD_X, POD_FRONT, -1, Math.max(-ship.turn, back));
+  return list;
+}
+
 function drawHull(ctx, state, img) {
   const ship = state.ship;
   const th = Math.max(0, ship.throttle);
+  for (const t of steering(ship)) {
+    const len = 2 + t.power * 6 + Math.random() * 1.5;
+    ctx.fillStyle = COL.ion[1];
+    ctx.fillRect(t.x - 1.5, t.way > 0 ? t.y : t.y - len, 3, len);
+    ctx.fillStyle = COL.ion[3];
+    ctx.fillRect(t.x - 0.5, t.way > 0 ? t.y : t.y - len * 0.6, 1, len * 0.6);
+  }
   if (th > 0.02 && !ship.docked) {
     const len = (3 + th * 9 + Math.random() * 2) * (ship.boosting ? 2.2 : 1);
     ctx.globalAlpha = 0.35;
@@ -426,6 +454,10 @@ function drawSpaceLights(ctx, state, env, near) {
     const p = toWorld(ship, { x: 0, y: 56 });
     shine(ctx, p.x, p.y, 26 + th * 24, rgbOf(COL.ion[2]), 0.2 + th * 0.25);
   }
+  for (const t of steering(ship)) {
+    const p = toWorld(ship, { x: t.x, y: t.y + t.way * 3 });
+    shine(ctx, p.x, p.y, 14 + t.power * 10, rgbOf(COL.ion[2]), 0.25 + t.power * 0.3);
+  }
   for (const v of state.vessels) {
     if (!near(v, 110)) continue;
     for (const g of lookOf(v).glow) {
@@ -436,6 +468,10 @@ function drawSpaceLights(ctx, state, env, near) {
   // The lights on a station's docking arms fall on the station itself, in the colour that says how it
   // treats the crew.
   for (const t of state.things) {
+    if (t.kind === 'pod' && near(t, 40)) {
+      const lamp = podLamp(t, state.time + (t.id % 7) * 0.13);
+      if (lamp) shine(ctx, t.x, t.y, 30, rgbOf(lamp), 0.5);
+    }
     if (t.kind !== 'station' || !near(t, 140)) continue;
     const { color, tips } = armLights(t, env);
     if (color === '#1c1c28') continue;

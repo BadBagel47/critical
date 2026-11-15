@@ -131,8 +131,11 @@ function createPipes(state, difficulty) {
 }
 
 const newCode = (state) => Array.from({ length: B.CODE_LEN }, () => 1 + Math.floor(rand(state) * B.CODE_DIGITS));
+// The needle goes clockwise round the outermost and the innermost ring of a pod's lock, and the other way
+// round the one between them.
+export const dialWay = (bk) => (bk.stage % 2 ? -1 : 1);
 const newMark = (state, bk) => {
-  bk.mark = (bk.angle + Math.PI * randRange(state, 0.6, 1.4)) % TAU;
+  bk.mark = (bk.angle + dialWay(bk) * Math.PI * randRange(state, 0.6, 1.4) + TAU) % TAU;
 };
 
 // `bonus` stretches the time, for crews that bought a hacking kit.
@@ -144,7 +147,8 @@ export function createBreakin(state, target, bonus = 1) {
   if (kind === 'pipes') Object.assign(bk, createPipes(state, target.difficulty));
   if (kind === 'code') Object.assign(bk, { code: newCode(state), entered: [], shift: B.CODE_SHIFT, wrong: 0 });
   if (kind === 'dial') {
-    Object.assign(bk, { angle: 0, speed: B.DIAL_SPEED, width: B.DIAL_WIDTH, stage: 0, misses: 0, mark: 0 });
+    // `opening` counts down while the middle of the lock turns, once the last ring is open.
+    Object.assign(bk, { angle: 0, speed: B.DIAL_SPEED, width: B.DIAL_WIDTH, stage: 0, misses: 0, mark: 0, opening: 0 });
     newMark(state, bk);
   }
   return bk;
@@ -194,14 +198,21 @@ export function stepBreakin(state, target, cmds, dt) {
       }
     }
   } else {
-    if (bk.started) bk.angle = (bk.angle + bk.speed * dt) % TAU;
-    for (const c of orders) {
+    if (bk.opening > 0) {
+      // Every ring is open. The lock is open when its middle has turned.
+      bk.opening -= dt;
+      if (bk.opening > 0) return null;
+      solved = true;
+    } else if (bk.started) bk.angle = (bk.angle + dialWay(bk) * bk.speed * dt + TAU) % TAU;
+    for (const c of solved ? [] : orders) {
       if (!c.stop) continue;
       if (Math.abs(angleDiff(bk.angle, bk.mark)) <= bk.width / 2) {
         bk.stage++;
         state.events.push({ type: 'dialHit' });
-        if (bk.stage >= B.DIAL_STAGES) solved = true;
-        else {
+        if (bk.stage >= B.DIAL_STAGES) {
+          bk.opening = B.DIAL_OPEN;
+          break;
+        } else {
           bk.width *= 0.78;
           bk.speed *= 1.22;
           newMark(state, bk);

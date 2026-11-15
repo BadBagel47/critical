@@ -12,7 +12,7 @@ import {
   speedOf,
 } from '../src/sim/ship.js';
 import { damageShip } from '../src/sim/damage.js';
-import { thingsOf, portsOf, solidCircles } from '../src/sim/things.js';
+import { thingsOf, portsOf, solidCircles, dockTargets } from '../src/sim/things.js';
 import { hurtVessel, makeVessel } from '../src/sim/vessels.js';
 import { weaponsOf } from '../src/sim/weapons.js';
 import { SHIPS, HULLS } from '../src/sim/kinds.js';
@@ -1204,7 +1204,11 @@ test('a cargo pod opens after three good stops of the needle and gives its cargo
   step(s, { system: { board: [0] } }, DT);
   const bk = pod.breakin;
   assert.equal(bk.kind, 'dial');
+  const ways = [];
   for (let stage = 0; stage < B.DIAL_STAGES; stage++) {
+    const from = bk.angle;
+    step(s, {}, DT);
+    ways.push(Math.sign(angleDiff(bk.angle, from)));
     for (
       let i = 0;
       i < 2000 && Math.abs(((bk.angle - bk.mark + Math.PI * 3) % (Math.PI * 2)) - Math.PI) > bk.width / 4;
@@ -1213,7 +1217,12 @@ test('a cargo pod opens after three good stops of the needle and gives its cargo
       step(s, {}, DT);
     step(s, { hack: { 0: [{ wreck: pod.id, stop: true }] } }, DT);
   }
-  assert.ok(!pods(s).includes(pod), 'the pod is emptied and gone');
+  assert.deepEqual(ways, [1, -1, 1], 'the needle goes the other way round the ring in the middle');
+  assert.equal(pod.looted, false, 'the middle of the lock has to turn first');
+  run(s, {}, B.DIAL_OPEN + 0.1);
+  assert.equal(pod.looted, true);
+  assert.ok(pods(s).includes(pod), 'the empty shell stays where it is');
+  assert.ok(!dockTargets(s).includes(pod), 'but nobody can dock with it again');
   assert.ok(s.credits >= B.POD_CREDITS[0]);
   assert.equal(s.ship.docked, null);
 });
@@ -1237,6 +1246,13 @@ test('three misses on a cargo pod set off an alarm that brings pirates', () => {
   assert.ok(pods(s).includes(pod), 'the pod is still there');
   assert.equal(pod.breakin, null, 'with a fresh lock');
   assert.ok(s.vessels.length > 0, 'and pirates are on their way');
+  assert.ok(pod.alarm > 0, 'its alarm sounds');
+  run(s, {}, B.POD_ALARM + 5);
+  assert.ok(pod.alarm > 0, 'for as long as there are pirates about');
+  s.vessels = [];
+  s.spawn.timer = 1e9;
+  run(s, {}, 2);
+  assert.equal(pod.alarm, 0, 'and stops when they are gone');
 });
 
 test('a station under attack calls for help, and a neutral one repays it with a discount', () => {

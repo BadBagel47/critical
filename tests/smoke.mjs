@@ -548,10 +548,13 @@ for (let i = 0; i < 3; i++) {
   await page.keyboard.press('Space');
   await page.waitForTimeout(120);
 }
+await shot('12g-pod-opening');
+await page.waitForTimeout(900);
 check(
-  (await get('window.__critical.pods.length')) === podsBefore - 1 && (await get('s.credits')) > creditsBefore,
+  (await get('window.__critical.pods[0].looted')) === true && (await get('s.credits')) > creditsBefore,
   'three good stops open the pod and give its cargo',
 );
+check((await get('window.__critical.pods.length')) === podsBefore, 'and the empty pod stays where it is');
 
 // Darts and weapons.
 await page.evaluate(() => {

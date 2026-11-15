@@ -44,7 +44,7 @@ export function solidCircles(state) {
 // ---------- docking ----------
 // The ports of a thing in its own pixels, as kinds.js describes them.
 export const localPorts = (t) => shapeOf(t, 'ports') || [];
-export const canDock = (t) => !!THINGS[t.kind].ports;
+export const canDock = (t) => !!THINGS[t.kind].ports && !t.looted;
 export const dockTargets = (state) => state.things.filter(canDock);
 export const findDock = (state, id) => {
   const t = findThing(state, id);

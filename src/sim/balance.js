@@ -224,6 +224,10 @@ export const B = {
   DIAL_STAGES: 3,
   DIAL_MISSES: 3,
   POD_CREDITS: [60, 140],
+  // How long a pod's alarm goes on at least. It goes on for as long as there are pirates about.
+  POD_ALARM: 20,
+  // How long the middle of a pod's lock takes to turn once the last ring is open.
+  DIAL_OPEN: 0.7,
   // traffic: seconds between arrivals, how many faction ships at most, how long a freighter stays docked,
   // and how many of the arrivals are freighters rather than patrols
   TRAFFIC_GAP: [20, 45],

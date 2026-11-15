@@ -109,6 +109,9 @@ export function createPod(s, x, y) {
   return {
     id: s.nextId++,
     kind: 'pod',
+    // An emptied pod stays where it is as a dark shell. `alarm` is how long its alarm still sounds.
+    looted: false,
+    alarm: 0,
     x,
     y,
     heading: randRange(s, 0, TAU),

@@ -16,8 +16,7 @@ const DIGIT = { w: 34, gap: 8 },
   DX = PX + (PW - (B.CODE_DIGITS * DIGIT.w + (B.CODE_DIGITS - 1) * DIGIT.gap)) / 2,
   DY = PY + 104;
 const CX = VIEW_W / 2,
-  CY = PY + 100,
-  DR = 46;
+  CY = PY + 100;
 const TEXT = {
   pipes: {
     title: 'BYPASS THE DOCKING LOCK',
@@ -149,40 +148,65 @@ function drawCode(ctx, font, bk, mouse) {
   );
 }
 
+// The lock of a pod: three rings round a middle, opened from the outside in. Every ring shows all the time,
+// so that the player sees how far there is left. The needle and the mark are on the ring that is being
+// worked on, and a ring that is open is green. When the last one is open the middle turns a quarter.
+const RINGS = [
+  { r: 50, color: COL.ochre[2], dim: '#6a4f22' },
+  { r: 37, color: COL.ion[1], dim: '#285864' },
+  { r: 24, color: '#a878c8', dim: '#54406a' },
+];
+const RING_W = 8;
+const CORE = 12;
 function drawDial(ctx, font, bk) {
   const arc = (a) => a - Math.PI / 2;
+  const ring = (r, color, from = 0, to = 7) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = RING_W;
+    ctx.beginPath();
+    ctx.arc(CX, CY, r, from, to);
+    ctx.stroke();
+  };
   ctx.fillStyle = '#151a36';
   ctx.beginPath();
-  ctx.arc(CX, CY, DR + 6, 0, 7);
+  ctx.arc(CX, CY, RINGS[0].r + 9, 0, 7);
   ctx.fill();
   ctx.strokeStyle = '#2a3160';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.arc(CX, CY, DR + 6, 0, 7);
+  ctx.arc(CX, CY, RINGS[0].r + 9, 0, 7);
   ctx.stroke();
-  ctx.strokeStyle = COL.steel[0];
-  ctx.lineWidth = 8;
+  RINGS.forEach((look, i) => {
+    if (i < bk.stage) ring(look.r, COL.acid[2]);
+    else if (i > bk.stage) ring(look.r, '#262a44');
+    else {
+      ring(look.r, look.dim);
+      ring(look.r, look.color, arc(bk.mark - bk.width / 2), arc(bk.mark + bk.width / 2));
+      // The needle is a short stroke across the ring.
+      const sx = Math.sin(bk.angle),
+        sy = -Math.cos(bk.angle);
+      ctx.strokeStyle = COL.white;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(CX + sx * (look.r - RING_W / 2 - 2), CY + sy * (look.r - RING_W / 2 - 2));
+      ctx.lineTo(CX + sx * (look.r + RING_W / 2 + 2), CY + sy * (look.r + RING_W / 2 + 2));
+      ctx.stroke();
+    }
+  });
+  // The middle, with a slot across it. It turns a quarter and goes green as the lock opens.
+  const open = bk.stage >= RINGS.length;
+  const turned = open ? Math.min(1, 1 - bk.opening / B.DIAL_OPEN) : 0;
+  ctx.fillStyle = turned >= 1 ? COL.acid[2] : open ? COL.acid[1] : COL.steel[2];
   ctx.beginPath();
-  ctx.arc(CX, CY, DR - 4, 0, 7);
-  ctx.stroke();
-  ctx.strokeStyle = COL.ochre[2];
-  ctx.beginPath();
-  ctx.arc(CX, CY, DR - 4, arc(bk.mark - bk.width / 2), arc(bk.mark + bk.width / 2));
-  ctx.stroke();
-  ctx.strokeStyle = COL.ion[3];
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(CX, CY);
-  ctx.lineTo(CX + Math.sin(bk.angle) * DR, CY - Math.cos(bk.angle) * DR);
-  ctx.stroke();
-  ctx.fillStyle = COL.ion[2];
-  ctx.beginPath();
-  ctx.arc(CX, CY, 4, 0, 7);
+  ctx.arc(CX, CY, CORE, 0, 7);
   ctx.fill();
-  font.draw(ctx, 'HITS', PX + 22, PY + 62, COL.dim);
+  ctx.save();
+  ctx.translate(CX, CY);
+  ctx.rotate((turned * Math.PI) / 2);
+  ctx.fillStyle = COL.out;
+  ctx.fillRect(-CORE, -1.5, CORE * 2, 3);
+  ctx.restore();
   font.draw(ctx, 'MISSES', PX + PW - 22, PY + 62, COL.dim, { align: 'r' });
-  for (let i = 0; i < B.DIAL_STAGES; i++)
-    rect(ctx, PX + 22 + i * 12, PY + 74, 9, 9, i < bk.stage ? COL.acid[2] : '#1c1c28', COL.out);
   for (let i = 0; i < B.DIAL_MISSES; i++)
     rect(ctx, PX + PW - 31 - i * 12, PY + 74, 9, 9, i < bk.misses ? COL.ember[1] : '#1c1c28', COL.out);
 }

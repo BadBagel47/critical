@@ -384,6 +384,20 @@ test('a patrol comes from afar when raiders are at a station of its own side, an
 });
 
 // ---------- the docking shield ----------
+test('an enemy that the ship is docked at lends it no shield', () => {
+  const s = quiet();
+  const st = yard(s);
+  dockAt(s, st);
+  run(s, {}, 2);
+  assert.ok(s.ship.dockShield > 0, 'a station that is not an enemy does');
+  st.side = 'pirate';
+  run(s, {}, 2);
+  assert.equal(s.ship.dockShield, 0, 'a hostile one does not');
+  dockAt(s, thingsOf(s, 'wreck')[0]);
+  run(s, {}, 2);
+  assert.ok(s.ship.dockShield > 0, "a wreck is nobody's, and does");
+});
+
 test('a docked ship gets an extra shield that takes the first hits, and loses it when it leaves', () => {
   const s = quiet();
   dockAt(s, yard(s));

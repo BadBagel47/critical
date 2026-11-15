@@ -204,6 +204,29 @@ function markPod(ctx, font, k, p) {
   return { reach: 3, lines: [['CARGO POD', COL.ochre[1]]] };
 }
 
+// The two lamps on the sides of a pod say how it is: a slow green blink when it can be opened, a quick double
+// red one while its alarm sounds, and nothing when it has been emptied. The rhythms differ as well as the
+// colours, for those who cannot tell red from green. `podLamp` gives the colour, or null when they are dark.
+export function podLamp(pod, time) {
+  if (pod.looted) return null;
+  if (pod.alarm > 0) {
+    const beat = time % 1;
+    return beat < 0.15 || (beat > 0.3 && beat < 0.45) ? COL.ember[2] : null;
+  }
+  return time % 2 < 1 ? COL.acid[2] : null;
+}
+function drawPod(ctx, pod, env) {
+  sprite(ctx, env.img.pod, pod.x, pod.y, pod.heading);
+  const lamp = podLamp(pod, env.state.time + (pod.id % 7) * 0.13);
+  ctx.save();
+  ctx.translate(pod.x, pod.y);
+  ctx.rotate(pod.heading);
+  ctx.fillStyle = lamp || '#1c1c28';
+  ctx.fillRect(-7, -2, 2, 4);
+  ctx.fillRect(5, -2, 2, 4);
+  ctx.restore();
+}
+
 const spriteOf = (name) => (ctx, t, env) =>
   sprite(ctx, env.img[typeof name === 'function' ? name(t) : name], t.x, t.y, t.heading);
 
@@ -229,7 +252,7 @@ export const THING_LOOK = {
     dot: { size: 4, color: (k) => ALIGN_COL[k.align] },
     arrow: (k) => ALIGN_COL[k.align],
   },
-  pod: { margin: 40, draw: spriteOf('pod'), mark: markPod, dot: { size: 2, color: () => COL.ochre[2] } },
+  pod: { margin: 40, draw: drawPod, mark: markPod, dot: { size: 2, color: () => COL.ochre[2] } },
   salvage: { margin: 20, draw: drawSalvage },
   buoy: { margin: 20, draw: drawBuoy },
 };

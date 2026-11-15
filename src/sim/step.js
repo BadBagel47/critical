@@ -8,7 +8,7 @@ import { B } from './balance.js';
 import { stepCaptain, stepGunner, stepEngineer, stepDrones } from './posts.js';
 import { crewCommands } from './players.js';
 import { nodeFactor } from './ship.js';
-import { solidCircles, stepSalvage } from './things.js';
+import { solidCircles, stepSalvage, findThing } from './things.js';
 import { stepVessels, stepAlarm } from './vessels.js';
 import { stepBolts, stepRockets, stepCollisions } from './shots.js';
 import { stepStations } from './stations.js';
@@ -39,9 +39,11 @@ function rechargeShield(state, dt) {
 }
 
 // What a ship is docked at lends it an extra shield, so that the crew has a better chance while they are away.
+// An enemy lends nothing: a ship docked at a hostile station has only its own shield.
 function stepDockShield(state, dt) {
   const ship = state.ship;
-  if (!ship.docked) ship.dockShield = 0;
+  const at = ship.docked && findThing(state, ship.docked);
+  if (!at || (at.side && enemies(state, CREW, at.side))) ship.dockShield = 0;
   else ship.dockShield = Math.min(dockShieldMax(ship), ship.dockShield + B.DOCK_SHIELD_RECHARGE * dt);
 }
 

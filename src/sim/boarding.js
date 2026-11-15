@@ -5,6 +5,7 @@ import { addThing, removeThing, thingsOf, dockTargets, findDock, portsOf } from 
 import { shipNose } from './ship.js';
 import { layOut, TILE } from './layout.js';
 import { makeVessel } from './vessels.js';
+import { PIRATE } from './sides.js';
 import { playerById, leavePost, returnToPost } from './players.js';
 import { takeOver, isTrading } from './stations.js';
 import { has, fuelMax, crewHpMax, carryMax, rifleDmg, teleCooldown, breakinBonus } from './upgrades.js';
@@ -823,6 +824,7 @@ function fightBack(state, st) {
 // A cargo pod sounds an alarm that brings the next pirate wave at once.
 function soundAlarm(state, pod) {
   pod.breakin = null;
+  pod.alarm = B.POD_ALARM;
   state.spawn.timer = 0;
   state.events.push({ type: 'podAlarm' });
 }
@@ -836,7 +838,10 @@ function lootPod(state, pod) {
   ship.fuel = Math.min(fuelMax(ship), ship.fuel + fuel);
   const part = rand(state) < 0.15 ? (rand(state) < 0.5 ? 'hard' : 'system') : null;
   if (part) ship.slots[part]++;
-  removeThing(state, pod);
+  // The empty shell stays where it is, so that the crew can see that they have been here.
+  pod.looted = true;
+  pod.breakin = null;
+  pod.alarm = 0;
   state.known = state.known.filter((k) => k.id !== pod.id);
   if (ship.docked === pod.id) ship.docked = null;
   state.fx.push({ type: 'hit', x: pod.x, y: pod.y, t: 0, dur: 0.4 });
@@ -855,6 +860,11 @@ export function stepBoarding(state, cmds, dt) {
     if (result === 'failed') LOCK_FAILED[target.kind](state, target);
     else if (result === 'solved' && LOCK_OPENED[target.kind]) LOCK_OPENED[target.kind](state, target);
     else if (target.interior && target.interior.live) stepInterior(state, target, cmds, dt);
+  }
+  // A pod that has sounded its alarm goes on doing so for as long as there are pirates about.
+  const pirates = state.vessels.some((v) => v.side === PIRATE);
+  for (const pod of thingsOf(state, 'pod')) {
+    if (pod.alarm > 0) pod.alarm = Math.max(pirates ? 1 : 0, pod.alarm - dt);
   }
   // Everyone gets their health back once the whole crew is on the ship again.
   if (!anyoneInside(state)) for (const p of state.players) p.hp = crewHpMax(state.ship);
