@@ -21,22 +21,24 @@ Byggs på dagens fem system, så att stjärnkartan inte behöver röras än.
 - Systemen är runda som ett solsystem, med en stjärna i mitten och ett asteroidbälte (F-196).
 - Asteroider finns i varje system. Aldrig runt baser, fler en bit bort, och större samlingar i vissa områden. De genereras och tar inte slut.
 - Systemen är olika stora, och mindre än i dag.
+- Skeppet krockar med asteroider, men inte med baser och skepp (F-200). Skepp och baser går att beskjuta som förut. Gunner skjuter bort asteroider som är i vägen, och det svårstyrda skeppet gör bältet till en utmaning.
 - Kartan över ett system provas utan fog of war (F-199). Den visar stjärnan och det skeppet ser. En scanning visar allt i systemet som en engångsbild.
 
 **Läget i dag**
 - Allt i ett system läggs redan ut i en rund yta, upp till 2400 punkter från mitten. Det är kartan som är fyrkantig. Det finns ingen kant: man kan flyga hur långt ut som helst.
 - Att korsa ett system tar ungefär 40 sekunder i full fart.
-- Stenarna är bara kulisser. De går inte att krocka med eller skjuta på.
+- Skeppet stöter emot stenar, vrak och stationer och tar skada i hög fart. Stenar stoppar skott men går inte att skjuta sönder.
 
 **Agentens förslag**
 - Stjärnan är något man flyger förbi. Bara det allra innersta är farligt.
 - Baserna ligger stilla på olika avstånd från stjärnan. Inget rör sig i banor, så att kartan alltid stämmer.
 - Utanför systemets kant finns inget, och kartan visar en rund gräns. Skeppet stoppas inte.
 - De fem systemen får tre storlekar att prova: 1200, 1800 och 2400 punkter från mitten.
+- Att skjuta sönder asteroider flyttas hit från steg 2, utan malm och bränsle än, så att bältet går att ta sig igenom från början.
 
 **Frågor före bygget**
 1. Ska stjärnan skada skeppet om man flyger för nära? Rekommendation: ja, men bara allra innerst, så att den är en plats och inte ett hinder.
-2. Ska asteroider gå att krocka med? Rekommendation: nej i steg 1. De blir något man skjuter på i steg 2, och krockar gör det svårt att flyga i bältet.
+2. Besvarad: asteroider går att krocka med. Ny fråga: ska vrak också gå att krocka med, som i dag? Rekommendation: nej, samma regel som för baser, så att bara asteroider är hinder.
 3. Ska det synas var systemet tar slut, utan att skeppet stoppas? Rekommendation: ja.
 
 ## Steg 2 – Bränsle och färd
@@ -75,14 +77,14 @@ Byggs på dagens fem system, så att stjärnkartan inte behöver röras än.
 - En sond skickas till ett närliggande system, ett steg bort, och visar vad som finns där.
 - En boj håller sitt system uppdaterat, och det syns också på stjärnkartan.
 - En systemradar som man köper visar om närliggande system är vänliga och vems de är (F-195).
-- **Ankomst.** Vid hopp till ett utforskat system väljer Captain vilken bas skeppet ska anlända vid. Captain ser senast kända status på baserna, eller aktuell status om en boj ligger där. Utan val gäller en förvald bas: i första hand en känd vänlig, sedan en neutral, sist en fientlig. Vid hopp till ett system man inte vet något om slumpas ankomstplatsen, och då får man scanna eller utforska.
+- **Ankomst.** Vid hopp till ett utforskat system väljer Captain vilken bas skeppet ska anlända vid. Captain ser senast kända status på baserna, eller aktuell status om en boj ligger där. Utan val gäller en förvald bas: i första hand en känd vänlig, sedan en neutral, sist en fientlig. Man anländer en liten bit från basen, med nosen mot den och motorerna på svag effekt, så att skeppet glider dit. Vid hopp till ett system man inte vet något om slumpas ankomstplatsen, och då får man scanna eller utforska.
 - Det går att hoppa tillbaka, och ett system är som det lämnades. Den egna varvsstationen anfalls aldrig.
 
 **Agentens förslag**
 - Stjärnkartan blir en bild med punkter och linjer, i stället för dagens lista.
 - Hemsystemet är alltid av samma slag, och farligheten stiger med avståndet hemifrån.
 - Alla hoppvägar går åt båda håll.
-- Man anländer en bit från basen, och utanför räckvidden för en fientlig bas. En slumpad ankomst hamnar aldrig i stjärnans farliga del eller intill en fientlig bas.
+- Vid en fientlig bas anländer man utanför dess räckvidd. En slumpad ankomst hamnar aldrig i stjärnans farliga del eller intill en fientlig bas.
 - Varje faktion har ett eget område av grannsystem.
 - Namnen sätts ihop av egna ordlistor.
 
