@@ -10,7 +10,8 @@ export const B = {
   TURN_RATE: 1.25,
   TURN_SMOOTH: 6,
   THROTTLE_RATE: 0.9,
-  ENGINE_POWER: [0.3, 0.6, 0.85, 1.0, 1.25],
+  // A system that the Engineer gives no power does not work at all.
+  ENGINE_POWER: [0, 0.6, 0.85, 1.0, 1.25],
   // standing with factions and free stations, from -100 to 100. At or above `friendly` a side is friendly.
   // At or below each of the others it turns wary (higher prices), closed (no trade) and hostile (opens fire).
   // A bad standing mends by itself up to `mends`, which is still wary.
@@ -40,6 +41,8 @@ export const B = {
   // shields
   SHIELD_DELAY: 2.5,
   SHIELD_RECHARGE: [0, 3, 6, 10, 15],
+  // How many seconds a full shield takes to fall when it has no power. Not at once, so that a slip is not a disaster.
+  SHIELD_DROP: 2,
   // pulse laser
   FIRE_INTERVAL: 0.2,
   WEAPON_POWER: [0, 0.6, 0.85, 1.0, 1.3],

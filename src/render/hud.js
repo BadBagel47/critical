@@ -80,17 +80,23 @@ export function drawToasts(ctx, font, view, time, y = 44, x = VIEW_W / 2) {
   });
 }
 
-// How the Engineer has set the power, for the other posts to see.
-export function drawPowerMini(ctx, font, state, x, y) {
-  const names = ['W', 'S', 'E', 'R'];
-  const colors = [COL.gunner, COL.ion[1], COL.captain, COL.ochre[3]];
-  B.SYSTEMS.forEach((sys, i) => {
-    const gx = x + i * 30;
-    font.draw(ctx, names[i], gx, y, COL.dim);
-    for (let k = 0; k < B.POWER_MAX_PER_SYSTEM; k++) {
-      rect(ctx, gx + 8 + k * 5, y, 4, 6, k < state.ship.power[sys] ? colors[i] : '#1c1c28');
-    }
+// The system that a post depends on, and how much power the Engineer has given it. The Captain and the
+// Gunner see only their own. The Engineer sets them all and sees them where that is done.
+const OWN_SYSTEM = {
+  captain: { sys: 'engines', name: 'ENGINES', color: COL.captain },
+  gunner: { sys: 'weapons', name: 'WEAPONS', color: COL.gunner },
+};
+function drawOwnPower(ctx, font, state, post) {
+  const own = OWN_SYSTEM[post];
+  if (!own) return;
+  const power = state.ship.power[own.sys];
+  const x = VIEW_W - 8 - B.POWER_MAX_PER_SYSTEM * 7;
+  font.draw(ctx, power ? own.name : own.name + '  NO POWER', x - 5, 332, power ? COL.dim : COL.ember[2], {
+    align: 'r',
   });
+  for (let k = 0; k < B.POWER_MAX_PER_SYSTEM; k++) {
+    rect(ctx, x + k * 7, 332, 6, 6, k < power ? own.color : '#1c1c28', COL.out);
+  }
 }
 
 // What to show at the top when the ship is docked.
@@ -128,6 +134,9 @@ function statusLines(state, me, dock) {
   const ship = state.ship;
   const captain = me.post === 'captain';
   const lines = [];
+  // Why the ship does not answer when the engines have been given no power. The Gunner is told the same about
+  // the weapons next to them, see drawGunnerPanel.
+  if (captain && ship.power.engines <= 0) lines.push({ text: 'ENGINES OFFLINE  ·  NO POWER', ...ALARM });
   if (state.jump) {
     const left = Math.ceil(jumpCharge(ship) - state.jump.t);
     lines.push({ text: `JUMPING TO ${state.sectors[state.jump.to].name} IN ${left} S`, ...READY });
@@ -229,7 +238,7 @@ export function drawHud(ctx, state, view, assets, dock) {
     drawEngineerStrip(ctx, font, state, view);
     font.draw(ctx, 'Q PULSE  ·  B BUOY', VIEW_W - 8, 346, COL.faint, { align: 'r' });
   } else if (!me.post) font.draw(ctx, '1 2 3  TAKE A FREE POST', VIEW_W - 8, 346, COL.faint, { align: 'r' });
-  drawPowerMini(ctx, font, state, VIEW_W - 126, 332);
+  drawOwnPower(ctx, font, state, me.post);
   drawMiniMap(ctx, state, VIEW_W - 70, 44);
   font.draw(ctx, 'M  MAP', VIEW_W - 8, 110, COL.faint, { align: 'r' });
 }

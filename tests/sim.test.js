@@ -966,6 +966,41 @@ test('twin turrets add two more bolts to every pulse shot', () => {
   assert.equal(s.bolts.length, 3);
 });
 
+test('engines without power give no thrust and no steering, and the ship drifts on', () => {
+  const s = quiet(createState(1));
+  s.ship.x = 5000;
+  s.ship.y = 5000;
+  run(s, { captain: { throttle: 1 } }, 2);
+  assert.ok(speedOf(s.ship) > 20, 'with power it gets going');
+  s.ship.power.engines = 0;
+  const heading = s.ship.heading;
+  const before = speedOf(s.ship);
+  run(s, { captain: { throttle: 1, turn: 1 } }, 1);
+  assert.equal(s.ship.throttle, 0, 'the throttle falls to nothing');
+  assert.ok(speedOf(s.ship) < before, 'the ship only slows down');
+  assert.ok(speedOf(s.ship) > 0, 'but it drifts on');
+  run(s, { captain: { throttle: 1, turn: 1 } }, 3);
+  const turned = Math.abs(angleDiff(s.ship.heading, heading));
+  run(s, { captain: { throttle: 1, turn: 1 } }, 1);
+  assert.ok(Math.abs(Math.abs(angleDiff(s.ship.heading, heading)) - turned) < 0.001, 'it no longer turns');
+  s.ship.power.engines = 1;
+  run(s, { captain: { throttle: 1 } }, 2);
+  assert.ok(s.ship.throttle > 0.5, 'with power back the Captain can throttle up again');
+});
+
+test('a shield without power falls in a couple of seconds, and holds as long as it has any', () => {
+  const s = quiet(createState(1));
+  s.ship.shield = shieldMax(s.ship);
+  s.ship.power.shields = 1;
+  run(s, {}, 3);
+  assert.equal(s.ship.shield, shieldMax(s.ship));
+  s.ship.power.shields = 0;
+  run(s, {}, B.SHIELD_DROP / 2);
+  assert.ok(s.ship.shield > 0 && s.ship.shield < shieldMax(s.ship), 'it is on its way down, not gone at once');
+  run(s, {}, B.SHIELD_DROP / 2 + 0.1);
+  assert.equal(s.ship.shield, 0);
+});
+
 test('every turret points at what the Gunner aims at, and fires the way it points', () => {
   const s = quiet(createState(1));
   s.ship.mods.twin = 1;

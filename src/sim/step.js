@@ -28,6 +28,11 @@ function age(list, dt) {
 
 function rechargeShield(state, dt) {
   const ship = state.ship;
+  // A shield without power falls.
+  if (ship.power.shields <= 0) {
+    ship.shield = Math.max(0, ship.shield - (shieldMax(ship) / B.SHIELD_DROP) * dt);
+    return;
+  }
   if (state.time - ship.lastHit <= B.SHIELD_DELAY) return;
   const emitters = (nodeFactor(ship, 'port') + nodeFactor(ship, 'starboard')) / 2;
   ship.shield = Math.min(shieldMax(ship), ship.shield + B.SHIELD_RECHARGE[ship.power.shields] * emitters * dt);

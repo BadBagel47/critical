@@ -66,6 +66,11 @@ export function stepCaptain(state, cmd, dt) {
       else dock(state);
     }
   }
+  // Without power the engines give nothing: no thrust and no steering. The ship drifts on.
+  if (ship.power.engines <= 0) {
+    ship.throttle = 0;
+    turnInput = 0;
+  }
   if (ship.docked) {
     settleInDock(state, dt);
     return;
