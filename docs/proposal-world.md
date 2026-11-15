@@ -21,7 +21,8 @@ Byggs på dagens fem system, så att stjärnkartan inte behöver röras än.
 - Systemen är runda som ett solsystem, med en stjärna i mitten och ett asteroidbälte (F-196).
 - Asteroider finns i varje system. Aldrig runt baser, fler en bit bort, och större samlingar i vissa områden. De genereras och tar inte slut.
 - Systemen är olika stora, och mindre än i dag.
-- Skeppet krockar med asteroider, men inte med baser och skepp (F-200). Skepp och baser går att beskjuta som förut. Gunner skjuter bort asteroider som är i vägen, och det svårstyrda skeppet gör bältet till en utmaning.
+- Stjärnans mitt skadar skeppet. Ett skepp utan bra sköld sprängs om det kör över stjärnan, men med mycket sköld klarar man sig.
+- Asteroider är det enda skeppet krockar med. Baser, skepp och vrak åker man över (F-200). Skepp och baser går att beskjuta som förut. Gunner skjuter bort asteroider som är i vägen, och det svårstyrda skeppet gör bältet till en utmaning.
 - Kartan över ett system provas utan fog of war (F-199). Den visar stjärnan och det skeppet ser. En scanning visar allt i systemet som en engångsbild.
 
 **Läget i dag**
@@ -30,16 +31,16 @@ Byggs på dagens fem system, så att stjärnkartan inte behöver röras än.
 - Skeppet stöter emot stenar, vrak och stationer och tar skada i hög fart. Stenar stoppar skott men går inte att skjuta sönder.
 
 **Agentens förslag**
-- Stjärnan är något man flyger förbi. Bara det allra innersta är farligt.
+- Det farliga området är litet, så att stjärnan är en plats och inte ett hinder. Skadan stiger ju närmare mitten man kommer.
 - Baserna ligger stilla på olika avstånd från stjärnan. Inget rör sig i banor, så att kartan alltid stämmer.
 - Utanför systemets kant finns inget, och kartan visar en rund gräns. Skeppet stoppas inte.
 - De fem systemen får tre storlekar att prova: 1200, 1800 och 2400 punkter från mitten.
 - Att skjuta sönder asteroider flyttas hit från steg 2, utan malm och bränsle än, så att bältet går att ta sig igenom från början.
 
 **Frågor före bygget**
-1. Ska stjärnan skada skeppet om man flyger för nära? Rekommendation: ja, men bara allra innerst, så att den är en plats och inte ett hinder.
-2. Besvarad: asteroider går att krocka med. Ny fråga: ska vrak också gå att krocka med, som i dag? Rekommendation: nej, samma regel som för baser, så att bara asteroider är hinder.
-3. Ska det synas var systemet tar slut, utan att skeppet stoppas? Rekommendation: ja.
+1. Ska det synas var systemet tar slut, utan att skeppet stoppas? Rekommendation: ja.
+
+Besvarade: stjärnan skadar skeppet, asteroider går att krocka med, och vrak åker man över.
 
 ## Steg 2 – Bränsle och färd
 
