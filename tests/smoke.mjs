@@ -20,6 +20,16 @@ const shot = async (name) => {
 };
 const get = (expr) =>
   page.evaluate(`(() => { const s = window.__critical.state, v = window.__critical.view; return ${expr}; })()`);
+// Wait until `read` says yes, for at most `ms`, and say whether it did. A check waits for what it looks for
+// to happen instead of looking once after a set wait, so that a slow machine is not a failure (F-225).
+const settles = async (read, ms = 4000) => {
+  const end = Date.now() + ms;
+  for (;;) {
+    if (await read()) return true;
+    if (Date.now() > end) return false;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+};
 const check = (ok, msg) => {
   if (!ok) {
     errors.push('CHECK FAILED: ' + msg);
@@ -33,7 +43,7 @@ await page.waitForTimeout(300);
 await shot('01-title');
 await page.keyboard.press('Enter');
 await page.waitForTimeout(200);
-check((await get('v.started')) === true, 'enter starts the game');
+check(await settles(async () => (await get('v.started')) === true), 'enter starts the game');
 
 // Captain: throttle up and turn.
 await page.keyboard.down('KeyW');
@@ -42,8 +52,8 @@ await page.keyboard.up('KeyW');
 await page.keyboard.down('KeyD');
 await page.waitForTimeout(500);
 await page.keyboard.up('KeyD');
-check((await get('s.ship.throttle')) > 0.8, 'W raises the throttle');
-check((await get('Math.hypot(s.ship.vx, s.ship.vy)')) > 20, 'the ship is moving');
+check(await settles(async () => (await get('s.ship.throttle')) > 0.8), 'W raises the throttle');
+check(await settles(async () => (await get('Math.hypot(s.ship.vx, s.ship.vy)')) > 20), 'the ship is moving');
 await shot('02-captain');
 
 // Gunner: the ship keeps flying, the turret follows the mouse and fires.
@@ -51,8 +61,11 @@ await page.keyboard.press('Digit2');
 await page.mouse.move(900, 200);
 await page.mouse.down();
 await page.waitForTimeout(600);
-check((await get('s.bolts.length')) > 0, 'the gunner fires bolts');
-check((await get('s.ship.throttle')) > 0.8, 'throttle persists after leaving the captain post');
+check(await settles(async () => (await get('s.bolts.length')) > 0), 'the gunner fires bolts');
+check(
+  await settles(async () => (await get('s.ship.throttle')) > 0.8),
+  'throttle persists after leaving the captain post',
+);
 await shot('03-gunner');
 await page.mouse.up();
 
@@ -60,8 +73,11 @@ await page.mouse.up();
 await page.keyboard.press('Digit3');
 await page.waitForTimeout(150);
 check(
-  (await get('v.engOpen')) === false &&
-    (await get("window.__critical.buttons().some((b) => b.name === 'action.panel')")),
+  await settles(
+    async () =>
+      (await get('v.engOpen')) === false &&
+      (await get("window.__critical.buttons().some((b) => b.name === 'action.panel')")),
+  ),
   'the Engineer sees space at first, with a button for the panel',
 );
 await shot('03b-engineer-space');
@@ -70,19 +86,19 @@ const weaponsBefore = await get('s.ship.power.weapons');
 await page.keyboard.press('ArrowDown');
 await page.waitForTimeout(80);
 check(
-  (await get('s.ship.power.weapons')) === weaponsBefore - 1,
+  await settles(async () => (await get('s.ship.power.weapons')) === weaponsBefore - 1),
   'the arrow keys still set the power while the panel is folded away',
 );
 await page.keyboard.press('ArrowUp');
 await page.waitForTimeout(80);
 await page.keyboard.press('ArrowRight');
 await page.waitForTimeout(80);
-check((await get('v.engRow')) === 1, 'and left and right pick the system');
+check(await settles(async () => (await get('v.engRow')) === 1), 'and left and right pick the system');
 await page.keyboard.press('ArrowLeft');
 await page.waitForTimeout(80);
 await page.keyboard.press('KeyV');
 await page.waitForTimeout(100);
-check((await get('v.engOpen')) === true, 'V opens the panel');
+check(await settles(async () => (await get('v.engOpen')) === true), 'V opens the panel');
 const k = await page.evaluate(() => document.getElementById('game').getBoundingClientRect().width / 640);
 const box = await page.evaluate(() => {
   const r = document.getElementById('game').getBoundingClientRect();
@@ -100,17 +116,20 @@ const clickOn = async (name, fx = 0.5, fy = 0.5) => {
 };
 await clickOn('power.repair.2'); // the second pip is lit, so a click lowers repair to 1
 await page.waitForTimeout(100);
-check((await get('s.ship.power.repair')) === 1, 'clicking a lit pip lowers the system');
+check(await settles(async () => (await get('s.ship.power.repair')) === 1), 'clicking a lit pip lowers the system');
 await clickOn('power.weapons.3');
 await page.waitForTimeout(100);
-check((await get('s.ship.power.weapons')) === 3, 'clicking a dark pip raises the system');
+check(await settles(async () => (await get('s.ship.power.weapons')) === 3), 'clicking a dark pip raises the system');
 await page.evaluate(() => {
   window.__critical.state.ship.nodes[4].hp = 20;
   window.__critical.state.ship.nodes[3].hp = 55;
 });
 await clickOn('node.engines');
 await page.waitForTimeout(150);
-check(JSON.stringify(await get('s.ship.crew.queue')) === '[4]', 'clicking a node sends the repair crew');
+check(
+  await settles(async () => JSON.stringify(await get('s.ship.crew.queue')) === '[4]'),
+  'clicking a node sends the repair crew',
+);
 await page.waitForTimeout(700);
 await shot('04-engineer');
 
@@ -119,7 +138,10 @@ await page.keyboard.press('KeyP');
 await page.waitForTimeout(100);
 const t0 = await get('s.time');
 await page.waitForTimeout(400);
-check((await get('s.paused')) === true && (await get('s.time')) === t0, 'P pauses the world');
+check(
+  await settles(async () => (await get('s.paused')) === true && (await get('s.time')) === t0),
+  'P pauses the world',
+);
 await page.keyboard.press('Digit1');
 await page.waitForTimeout(100);
 await shot('05-paused');
@@ -133,24 +155,27 @@ await page.keyboard.press('KeyH');
 await page.keyboard.press('Digit3');
 await page.keyboard.press('KeyM');
 await page.waitForTimeout(150);
-check((await get("v.panel === 'map'")) === true, 'M opens the map');
+check(await settles(async () => (await get("v.panel === 'map'")) === true), 'M opens the map');
 await clickOn('map', 0.83, 0.18);
 await page.waitForTimeout(150);
-check((await get('s.probes.length')) === 1 && (await get('s.ship.probeStock')) === 2, 'clicking the map sends a probe');
+check(
+  await settles(async () => (await get('s.probes.length')) === 1 && (await get('s.ship.probeStock')) === 2),
+  'clicking the map sends a probe',
+);
 await page.keyboard.press('KeyQ');
 await page.waitForTimeout(1500);
 check(
-  (await get('s.ship.pulseCool')) > 0 && (await get('s.known.length')) >= 1,
+  await settles(async () => (await get('s.ship.pulseCool')) > 0 && (await get('s.known.length')) >= 1),
   'Q fires the scanner pulse and it finds a wreck',
 );
 await page.keyboard.press('KeyB');
 await page.waitForTimeout(100);
-check((await get('window.__critical.buoys.length')) === 1, 'B drops a buoy');
+check(await settles(async () => (await get('window.__critical.buoys.length')) === 1), 'B drops a buoy');
 await shot('06b-map');
 await page.keyboard.press('KeyM');
 await page.keyboard.press('Digit1');
 await page.waitForTimeout(100);
-check((await get("v.panel === 'map'")) === false, 'M closes the map');
+check(await settles(async () => (await get("v.panel === 'map'")) === false), 'M closes the map');
 // Over the map the Engineer has a sight of their own, so the pointer of the system is hidden there, and only there.
 await page.keyboard.press('Digit3');
 await page.keyboard.press('KeyM');
@@ -179,13 +204,19 @@ await page.evaluate(() => {
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
 check(
-  (await get("v.panel === 'lock'")) === true && (await get('window.__critical.wrecks[0].breakin.started')) === true,
+  await settles(
+    async () =>
+      (await get("v.panel === 'lock'")) === true && (await get('window.__critical.wrecks[0].breakin.started')) === true,
+  ),
   'F opens the break-in panel',
 );
 const rot0 = await get('window.__critical.wrecks[0].breakin.tiles[0].rot');
 await clickOn('tile.0.0');
 await page.waitForTimeout(150);
-check((await get('window.__critical.wrecks[0].breakin.tiles[0].rot')) === (rot0 + 1) % 4, 'clicking a tile turns it');
+check(
+  await settles(async () => (await get('window.__critical.wrecks[0].breakin.tiles[0].rot')) === (rot0 + 1) % 4),
+  'clicking a tile turns it',
+);
 await shot('07-breakin');
 await page.evaluate(() => {
   const b = window.__critical.wrecks[0].breakin;
@@ -195,42 +226,65 @@ await page.evaluate(() => {
 });
 await page.waitForTimeout(200);
 check(
-  (await get('window.__critical.wrecks[0].lock')) === 'open' && (await get("v.panel === 'lock'")) === false,
+  await settles(
+    async () =>
+      (await get('window.__critical.wrecks[0].lock')) === 'open' && (await get("v.panel === 'lock'")) === false,
+  ),
   'a solved puzzle opens the lock',
 );
 
 // Boarding: go in, move, shoot, throw a grenade, come back.
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
-check((await get('s.players[0].inside')) !== null, 'F boards a docked wreck');
+check(await settles(async () => (await get('s.players[0].inside')) !== null), 'F boards a docked wreck');
 const x0 = await get('window.__critical.wrecks[0].interior.avatars[0].x');
 await page.keyboard.down('KeyD');
 await page.waitForTimeout(700);
 await page.keyboard.up('KeyD');
-check((await get('window.__critical.wrecks[0].interior.avatars[0].x')) > x0 + 20, 'the boarder walks');
+check(
+  await settles(async () => (await get('window.__critical.wrecks[0].interior.avatars[0].x')) > x0 + 20),
+  'the boarder walks',
+);
 await page.mouse.move(box.x + 500 * k, box.y + 180 * k);
 await page.mouse.down();
 await page.waitForTimeout(400);
 await page.mouse.up();
 await page.keyboard.press('KeyG');
 await page.waitForTimeout(250);
-check((await get('window.__critical.wrecks[0].interior.avatars[0].grenades')) === 2, 'G throws a grenade');
-check((await get('window.__critical.wrecks[0].interior.dark')) === true, 'a wreck is dark inside');
+check(
+  await settles(async () => (await get('window.__critical.wrecks[0].interior.avatars[0].grenades')) === 2),
+  'G throws a grenade',
+);
+check(
+  await settles(async () => (await get('window.__critical.wrecks[0].interior.dark')) === true),
+  'a wreck is dark inside',
+);
 await page.keyboard.press('KeyL');
 await page.waitForTimeout(120);
-check((await get('window.__critical.wrecks[0].interior.avatars[0].lamp')) === false, 'L turns the lamp off');
+check(
+  await settles(async () => (await get('window.__critical.wrecks[0].interior.avatars[0].lamp')) === false),
+  'L turns the lamp off',
+);
 await page.keyboard.press('KeyL');
 await page.waitForTimeout(120);
-check((await get('window.__critical.wrecks[0].interior.avatars[0].lamp')) === true, 'and on again');
+check(
+  await settles(async () => (await get('window.__critical.wrecks[0].interior.avatars[0].lamp')) === true),
+  'and on again',
+);
 await page.evaluate(() => (window.__critical.wrecks[0].interior.avatars[0].flares = 3));
 await page.keyboard.press('KeyQ');
 await page.waitForTimeout(250);
-check((await get('window.__critical.wrecks[0].interior.flares.length')) === 1, 'Q throws a flare');
+check(
+  await settles(async () => (await get('window.__critical.wrecks[0].interior.flares.length')) === 1),
+  'Q throws a flare',
+);
 await shot('08-boarding');
 await page.keyboard.press('Digit3');
 await page.waitForTimeout(100);
 check(
-  (await get('s.players[0].inside')) !== null && (await get('s.players[0].post')) !== 'engineer',
+  await settles(
+    async () => (await get('s.players[0].inside')) !== null && (await get('s.players[0].post')) !== 'engineer',
+  ),
   'posts cannot be taken while away',
 );
 await page.evaluate(() => {
@@ -244,7 +298,7 @@ await page.evaluate(() => {
 await page.waitForTimeout(100);
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
-check((await get('s.players[0].inside')) === null, 'F at the airlock returns to the ship');
+check(await settles(async () => (await get('s.players[0].inside')) === null), 'F at the airlock returns to the ship');
 await shot('09-docked');
 await page.evaluate(() => {
   const s = window.__critical.state;
@@ -292,18 +346,21 @@ check((await offered()) === 'action.aboard', 'only the Captain is offered to und
 await clickOn('action.aboard');
 await page.waitForTimeout(250);
 check(
-  (await get('s.players[0].inside')) !== null && (await get('s.bolts.length')) === 0,
+  await settles(async () => (await get('s.players[0].inside')) !== null && (await get('s.bolts.length')) === 0),
   'a click on a button goes aboard, and is not also taken as a shot',
 );
 check((await offered()) === 'action.leave', 'at the airlock a button offers the way back');
 await clickOn('action.leave');
 await page.waitForTimeout(250);
-check((await get('s.players[0].inside')) === null, 'and a click on it leads back to the ship');
+check(
+  await settles(async () => (await get('s.players[0].inside')) === null),
+  'and a click on it leads back to the ship',
+);
 await page.keyboard.press('Digit1');
 await page.waitForTimeout(100);
 await clickOn('action.undock');
 await page.waitForTimeout(150);
-check((await get('s.ship.docked')) === null, 'a click on the undock button undocks');
+check(await settles(async () => (await get('s.ship.docked')) === null), 'a click on the undock button undocks');
 
 // Traffic: ships of the factions jump in, go about their business and leave the crew alone.
 await page.evaluate(() => {
@@ -328,8 +385,14 @@ await page.evaluate(() => {
   c.advance(25);
 });
 await page.waitForTimeout(200);
-check((await get("s.vessels.filter((v) => v.side !== 'pirate').length")) >= 3, 'ships of the factions jump in');
-check((await get('s.alarm.count')) === 0 && (await get('s.ship.hull')) >= 100, 'and they leave the crew alone');
+check(
+  await settles(async () => (await get("s.vessels.filter((v) => v.side !== 'pirate').length")) >= 3),
+  'ships of the factions jump in',
+);
+check(
+  await settles(async () => (await get('s.alarm.count')) === 0 && (await get('s.ship.hull')) >= 100),
+  'and they leave the crew alone',
+);
 await shot('09b-traffic');
 await page.evaluate(() => {
   window.__critical.state.traffic.timer = 30;
@@ -382,11 +445,14 @@ await page.keyboard.press('Digit1');
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(250);
 check(
-  (await get('s.players[0].inside')) !== null &&
-    (await get("window.__critical.stations.find((x) => x.align === 'friendly').interior.trade")) === true,
+  await settles(
+    async () =>
+      (await get('s.players[0].inside')) !== null &&
+      (await get("window.__critical.stations.find((x) => x.align === 'friendly').interior.trade")) === true,
+  ),
   'F walks aboard a friendly station',
 );
-check((await get('s.ship.dockShield')) > 0, 'a docked ship gets an extra shield');
+check(await settles(async () => (await get('s.ship.dockShield')) > 0), 'a docked ship gets an extra shield');
 await page.waitForTimeout(400);
 await shot('12a-station-floor');
 await page.evaluate(() => {
@@ -399,31 +465,34 @@ await page.evaluate(() => {
 await page.waitForTimeout(100);
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
-check((await get("v.panel === 'shop'")) === true, 'F at a desk opens the station panel');
+check(await settles(async () => (await get("v.panel === 'shop'")) === true), 'F at a desk opens the station panel');
 await clickOn('service.refuel');
 await page.waitForTimeout(150);
-check((await get('s.ship.fuel')) === 100, 'refuelling is free at a friendly station');
+check(await settles(async () => (await get('s.ship.fuel')) === 100), 'refuelling is free at a friendly station');
 for (const item of ['twin', 'heavy']) {
   await clickOn('buy.' + item);
   await page.waitForTimeout(80);
 }
-check(await get('s.ship.mods.twin === 1 && s.ship.mods.heavy === 1'), 'clicking shipyard rows installs upgrades');
+check(
+  await settles(async () => await get('s.ship.mods.twin === 1 && s.ship.mods.heavy === 1')),
+  'clicking shipyard rows installs upgrades',
+);
 await clickOn('tab.system');
 await page.waitForTimeout(100);
-check((await get('v.shopTab')) === 'system', 'the tabs switch what is for sale');
+check(await settles(async () => (await get('v.shopTab')) === 'system'), 'the tabs switch what is for sale');
 await clickOn('buy.emit');
 await page.waitForTimeout(80);
-check((await get('s.ship.mods.emit')) === 1, 'systems can be bought from the second tab');
+check(await settles(async () => (await get('s.ship.mods.emit')) === 1), 'systems can be bought from the second tab');
 await clickOn('tab.armory');
 await page.waitForTimeout(100);
 await clickOn('buy.pack');
 await page.waitForTimeout(80);
-check((await get('s.ship.mods.pack')) === 1, 'boarding gear is in the armory tab');
-check((await get('s.credits')) < 2000, 'upgrades cost credits');
+check(await settles(async () => (await get('s.ship.mods.pack')) === 1), 'boarding gear is in the armory tab');
+check(await settles(async () => (await get('s.credits')) < 2000), 'upgrades cost credits');
 await shot('12-station');
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(100);
-check((await get("v.panel === 'shop'")) === false, 'F closes the station panel');
+check(await settles(async () => (await get("v.panel === 'shop'")) === false), 'F closes the station panel');
 // The mainframe of the crew's own station: repairs and defence.
 await page.evaluate(() => {
   const it = window.__critical.stations.find((x) => x.align === 'friendly').interior,
@@ -434,19 +503,22 @@ await page.evaluate(() => {
 await page.waitForTimeout(100);
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
-check((await get("v.panel === 'mainframe'")) === true, 'F at the mainframe opens its panel');
+check(await settles(async () => (await get("v.panel === 'mainframe'")) === true), 'F at the mainframe opens its panel');
 const credits = await get('s.credits');
 await clickOn('mf.up.shield');
 await page.waitForTimeout(150);
 check(
-  (await get("window.__critical.stations.find((x) => x.align === 'friendly').defense.shield")) === 1 &&
-    (await get('s.credits')) < credits,
+  await settles(
+    async () =>
+      (await get("window.__critical.stations.find((x) => x.align === 'friendly').defense.shield")) === 1 &&
+      (await get('s.credits')) < credits,
+  ),
   'defence for the station is bought at its mainframe',
 );
 await shot('12b-mainframe');
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(100);
-check((await get("v.panel === 'mainframe'")) === false, 'F closes the mainframe panel');
+check(await settles(async () => (await get("v.panel === 'mainframe'")) === false), 'F closes the mainframe panel');
 await page.evaluate(() => {
   const it = window.__critical.stations.find((x) => x.align === 'friendly').interior,
     a = it.avatars[0];
@@ -456,7 +528,10 @@ await page.evaluate(() => {
 await page.waitForTimeout(100);
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
-check((await get('s.players[0].inside')) === null, 'F at the airlock walks back to the ship');
+check(
+  await settles(async () => (await get('s.players[0].inside')) === null),
+  'F at the airlock walks back to the ship',
+);
 await page.evaluate(() => {
   const s = window.__critical.state;
   s.ship.mods = { twin: 1, heavy: 1, rockets: 1, bay: 1, armor: 1, emit: 1, alarm: 3, tscan: 1 };
@@ -487,8 +562,12 @@ await shot('12b-hostile-station');
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
 check(
-  (await get("v.panel === 'lock' && window.__critical.stations.find((x) => x.align === 'hostile').breakin.kind")) ===
-    'code',
+  await settles(
+    async () =>
+      (await get(
+        "v.panel === 'lock' && window.__critical.stations.find((x) => x.align === 'hostile').breakin.kind",
+      )) === 'code',
+  ),
   'a hostile station asks for a code',
 );
 await shot('12d-code-panel');
@@ -505,14 +584,19 @@ for (const d of code) {
   await page.waitForTimeout(90);
 }
 check(
-  (await get("window.__critical.stations.find((x) => x.align === 'hostile').lock")) === 'open',
+  await settles(
+    async () => (await get("window.__critical.stations.find((x) => x.align === 'hostile').lock")) === 'open',
+  ),
   'entering the code from the Engineer screen opens the station',
 );
 await page.keyboard.press('Digit1');
 await page.waitForTimeout(80);
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(250);
-check((await get('s.players[0].inside')) !== null, 'a hostile station with an open lock can be boarded');
+check(
+  await settles(async () => (await get('s.players[0].inside')) !== null),
+  'a hostile station with an open lock can be boarded',
+);
 await page.evaluate(() => {
   const it = window.__critical.stations.find((x) => x.name === 'DRIFT POST').interior,
     a = it.avatars[0];
@@ -527,7 +611,10 @@ await page.waitForTimeout(200);
 await shot('12c-station-inside');
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
-check((await get("v.panel === 'mainframe'")) === true, 'F at the mainframe of a hostile station opens the hack');
+check(
+  await settles(async () => (await get("v.panel === 'mainframe'")) === true),
+  'F at the mainframe of a hostile station opens the hack',
+);
 await clickOn('mf.hack.2');
 await page.waitForTimeout(300);
 await shot('12d-hack');
@@ -537,7 +624,9 @@ await page.evaluate(() => {
 });
 await page.waitForTimeout(1200);
 check(
-  (await get("window.__critical.stations.filter((x) => x.align === 'friendly').length")) === 2,
+  await settles(
+    async () => (await get("window.__critical.stations.filter((x) => x.align === 'friendly').length")) === 2,
+  ),
   'level 3 of the hack takes the station over',
 );
 await page.keyboard.press('KeyF');
@@ -552,7 +641,7 @@ await page.evaluate(() => {
 await page.waitForTimeout(100);
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
-check((await get('s.players[0].inside')) === null, 'the boarder returns from the station');
+check(await settles(async () => (await get('s.players[0].inside')) === null), 'the boarder returns from the station');
 await page.keyboard.press('Digit1');
 
 // A cargo pod: stop the needle in the mark three times.
@@ -567,7 +656,10 @@ await page.evaluate(() => {
 await page.waitForTimeout(150);
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
-check((await get('window.__critical.pods[0].breakin.kind')) === 'dial', 'a cargo pod has a dial lock');
+check(
+  await settles(async () => (await get('window.__critical.pods[0].breakin.kind')) === 'dial'),
+  'a cargo pod has a dial lock',
+);
 await shot('12f-pod-dial');
 const podsBefore = await get('window.__critical.pods.length'),
   creditsBefore = await get('s.credits');
@@ -585,10 +677,15 @@ for (let i = 0; i < 3; i++) {
 await shot('12g-pod-opening');
 await page.waitForTimeout(900);
 check(
-  (await get('window.__critical.pods[0].looted')) === true && (await get('s.credits')) > creditsBefore,
+  await settles(
+    async () => (await get('window.__critical.pods[0].looted')) === true && (await get('s.credits')) > creditsBefore,
+  ),
   'three good stops open the pod and give its cargo',
 );
-check((await get('window.__critical.pods.length')) === podsBefore, 'and the empty pod stays where it is');
+check(
+  await settles(async () => (await get('window.__critical.pods.length')) === podsBefore),
+  'and the empty pod stays where it is',
+);
 
 // Darts and weapons.
 await page.evaluate(() => {
@@ -601,7 +698,7 @@ await page.evaluate(() => {
 });
 await page.keyboard.press('KeyR');
 await page.waitForTimeout(1800);
-check((await get('s.darts.length')) === 3, 'R launches the Darts');
+check(await settles(async () => (await get('s.darts.length')) === 3), 'R launches the Darts');
 await page.evaluate(() => {
   const s = window.__critical.state;
   for (const [dx, dy, kind, hp] of [
@@ -632,11 +729,11 @@ await page.keyboard.press('KeyE');
 await page.waitForTimeout(80);
 await page.keyboard.press('KeyE');
 await page.waitForTimeout(100);
-check((await get('s.ship.weapon')) === 'rockets', 'E cycles the gunner weapon');
+check(await settles(async () => (await get('s.ship.weapon')) === 'rockets'), 'E cycles the gunner weapon');
 await page.mouse.move(box.x + 440 * k, box.y + 90 * k);
 await page.mouse.down();
 await page.waitForTimeout(500);
-check((await get('s.ship.rockets')) < 8, 'rockets fire');
+check(await settles(async () => (await get('s.ship.rockets')) < 8), 'rockets fire');
 await shot('13-weapons');
 await page.mouse.up();
 await page.evaluate(() => {
@@ -658,11 +755,14 @@ await page.waitForTimeout(150);
 await shot('14-starcharts');
 await clickOn('chart.1');
 await page.waitForTimeout(200);
-check((await get('s.jump !== null && s.jump.to')) === 1, 'the captain starts a jump by clicking a star chart');
+check(
+  await settles(async () => (await get('s.jump !== null && s.jump.to')) === 1),
+  'the captain starts a jump by clicking a star chart',
+);
 await page.evaluate(() => window.__critical.advance(9));
 await page.waitForTimeout(300);
-check((await get('s.sector')) === 1, 'the ship arrives in the next sector');
-check((await get("v.panel === 'map'")) === false, 'the map closes after a jump');
+check(await settles(async () => (await get('s.sector')) === 1), 'the ship arrives in the next sector');
+check(await settles(async () => (await get("v.panel === 'map'")) === false), 'the map closes after a jump');
 await shot('15-new-sector');
 await page.evaluate(() => {
   const s = window.__critical.state;
@@ -678,7 +778,9 @@ await page.waitForTimeout(100);
 await page.evaluate(() => window.__critical.advance(9));
 await page.waitForTimeout(300);
 check(
-  (await get('s.sector')) === 4 && (await get("s.vessels.some((p) => p.kind === 'cruiser')")),
+  await settles(
+    async () => (await get('s.sector')) === 4 && (await get("s.vessels.some((p) => p.kind === 'cruiser')")),
+  ),
   'the last sector holds the cruiser',
 );
 await page.evaluate(() => {
@@ -721,7 +823,7 @@ for (let i = 0; i < 40 && !(await get('s.won')); i++) {
 await page.evaluate(() => {
   window.__critical.input.mouse.down = false;
 });
-check((await get('s.won')) === true, 'destroying the cruiser wins');
+check(await settles(async () => (await get('s.won')) === true), 'destroying the cruiser wins');
 await shot('17-won');
 await page.keyboard.press('Enter');
 await page.waitForTimeout(100);
@@ -736,7 +838,7 @@ await page.evaluate(() => {
 // Let the world run: pirates arrive and attack, and an idle ship is eventually lost.
 await page.evaluate(() => window.__critical.advance(45));
 await page.waitForTimeout(300);
-check((await get('s.spawn.wave')) >= 1, 'a pirate wave arrives');
+check(await settles(async () => (await get('s.spawn.wave')) >= 1), 'a pirate wave arrives');
 await page.keyboard.press('Digit2');
 await page.waitForTimeout(1200);
 await shot('10-pirates');
@@ -744,13 +846,13 @@ await page.evaluate(() => {
   for (let i = 0; i < 40 && !window.__critical.state.over; i++) window.__critical.advance(30);
 });
 await page.waitForTimeout(300);
-check((await get('s.over')) === true, 'an undefended ship is lost in the end');
+check(await settles(async () => (await get('s.over')) === true), 'an undefended ship is lost in the end');
 await shot('11-lost');
 await page.keyboard.press('KeyR');
 await page.waitForTimeout(200);
 // The ship docked for real earlier on, so the game saved itself then, and R goes back to that.
 check(
-  (await get('s.over')) === false && (await get('s.ship.docked')) !== null,
+  await settles(async () => (await get('s.over')) === false && (await get('s.ship.docked')) !== null),
   'R after a loss loads the game that was saved when the ship docked',
 );
 
@@ -765,9 +867,12 @@ await testPage.keyboard.press('KeyT');
 await testPage.waitForTimeout(300);
 const tget = (expr) =>
   testPage.evaluate(`(() => { const s = window.__critical.state, v = window.__critical.view; return ${expr}; })()`);
-check((await tget('v.started')) === true && (await tget('s.test')) === true, 'T starts test mode');
 check(
-  (await tget('Object.keys(s.ship.mods).length')) > 20 && (await tget('s.credits')) === 5000,
+  await settles(async () => (await tget('v.started')) === true && (await tget('s.test')) === true),
+  'T starts test mode',
+);
+check(
+  await settles(async () => (await tget('Object.keys(s.ship.mods).length')) > 20 && (await tget('s.credits')) === 5000),
   'test mode has everything installed and credits to spend',
 );
 if (shots) await testPage.screenshot({ path: `${shots}/19-test-mode.png` });
@@ -779,7 +884,10 @@ await page.waitForTimeout(80);
 const mutedNow = await page.evaluate(() => window.__critical.audio.isMuted());
 await page.keyboard.press('KeyN');
 await page.waitForTimeout(80);
-check((await page.evaluate(() => window.__critical.audio.isMuted())) === !mutedNow, 'N switches the sound off and on');
+check(
+  await settles(async () => (await page.evaluate(() => window.__critical.audio.isMuted())) === !mutedNow),
+  'N switches the sound off and on',
+);
 
 // The menu: saving, loading, sound levels, the autosave, and what happens when the ship is lost.
 // It starts from a browser with nothing saved.
@@ -803,11 +911,14 @@ await page.evaluate(() => window.localStorage.clear());
   };
   await snap('20-title-menu');
   check(
-    (await at('v.menu.page')) === 'title' && (await at('v.menu.row')) === 1,
+    await settles(async () => (await at('v.menu.page')) === 'title' && (await at('v.menu.row')) === 1),
     'the title menu starts on NEW GAME when nothing is saved',
   );
   await press('Enter');
-  check((await at('v.started')) === true && (await at('s.hardcore')) === false, 'NEW GAME starts an ordinary game');
+  check(
+    await settles(async () => (await at('v.started')) === true && (await at('s.hardcore')) === false),
+    'NEW GAME starts an ordinary game',
+  );
   await p.evaluate(() => {
     const s = window.__critical.state;
     s.spawn.timer = 1e9;
@@ -815,18 +926,18 @@ await page.evaluate(() => window.localStorage.clear());
     s.credits = 777;
   });
   await press('KeyO');
-  check((await at('c.mode')) === 'menu', 'O opens the menu');
+  check(await settles(async () => (await at('c.mode')) === 'menu'), 'O opens the menu');
   await snap('21-menu');
   await press('ArrowDown', 'Enter');
-  check((await at('v.menu.page')) === 'save', 'SAVE GAME shows the slots');
+  check(await settles(async () => (await at('v.menu.page')) === 'save'), 'SAVE GAME shows the slots');
   await press('Enter');
   check(
-    (await at("localStorage.getItem('critical-save-1') !== null")) === true,
+    await settles(async () => (await at("localStorage.getItem('critical-save-1') !== null")) === true),
     'choosing a slot saves the game there',
   );
   await snap('22-save');
   await press('KeyF', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'Enter');
-  check((await at('v.menu.page')) === 'sound', 'SOUND shows the levels');
+  check(await settles(async () => (await at('v.menu.page')) === 'sound'), 'SOUND shows the levels');
   await press('ArrowLeft', 'ArrowLeft', 'ArrowDown', 'ArrowRight');
   const levels = JSON.parse(await at("localStorage.getItem('critical-volume')"));
   check(
@@ -835,18 +946,21 @@ await page.evaluate(() => window.localStorage.clear());
   );
   await snap('23-sound');
   await press('KeyF', 'KeyF');
-  check((await at('c.mode')) !== 'menu', 'F leaves the menu');
+  check(await settles(async () => (await at('c.mode')) !== 'menu'), 'F leaves the menu');
   await p.evaluate(() => (window.__critical.state.credits = 5));
   await press('KeyO', 'ArrowDown', 'ArrowDown', 'Enter');
   check(
-    (await at('v.menu.page')) === 'load' && (await at('v.menu.row')) === 1,
+    await settles(async () => (await at('v.menu.page')) === 'load' && (await at('v.menu.row')) === 1),
     'LOAD GAME starts on the first slot that holds a save',
   );
   await snap('24-load');
   await press('Enter');
-  check((await at('s.credits')) === 5, 'loading over a game in progress asks first');
+  check(await settles(async () => (await at('s.credits')) === 5), 'loading over a game in progress asks first');
   await press('Enter');
-  check((await at('s.credits')) === 777 && (await at('c.mode')) !== 'menu', 'the saved game is back');
+  check(
+    await settles(async () => (await at('s.credits')) === 777 && (await at('c.mode')) !== 'menu'),
+    'the saved game is back',
+  );
   // The game saves itself when the ship docks.
   await p.evaluate(() => {
     const s = window.__critical.state;
@@ -854,7 +968,10 @@ await page.evaluate(() => window.localStorage.clear());
     s.events.push({ type: 'dock', target: 0, kind: 'wreck' });
   });
   await p.waitForTimeout(200);
-  check((await at("localStorage.getItem('critical-save-auto') !== null")) === true, 'docking saves the game by itself');
+  check(
+    await settles(async () => (await at("localStorage.getItem('critical-save-auto') !== null")) === true),
+    'docking saves the game by itself',
+  );
   await p.evaluate(() => {
     const s = window.__critical.state;
     s.credits = 1;
@@ -864,7 +981,7 @@ await page.evaluate(() => window.localStorage.clear());
   await snap('25-lost-with-save');
   await press('KeyR');
   check(
-    (await at('s.over')) === false && (await at('s.credits')) === 888,
+    await settles(async () => (await at('s.over')) === false && (await at('s.credits')) === 888),
     'R after losing the ship loads the last save',
   );
   // A save file can be written and read back.
@@ -882,19 +999,23 @@ await page.evaluate(() => window.localStorage.clear());
   await press('KeyF', 'KeyO', 'ArrowDown', 'ArrowDown', 'Enter');
   const rows = await at('8');
   for (let i = 0; i < rows; i++) if ((await at('v.menu.row')) !== 6) await press('ArrowDown');
+  await settles(async () => (await at('v.menu.row')) === 6);
   const [chooser] = await Promise.all([p.waitForEvent('filechooser'), p.keyboard.press('Enter')]);
   await chooser.setFiles(file);
   await p.waitForTimeout(300);
-  check((await at('s.credits')) === 888 && (await at('c.mode')) !== 'menu', 'and a save file can be imported');
+  check(
+    await settles(async () => (await at('s.credits')) === 888 && (await at('c.mode')) !== 'menu'),
+    'and a save file can be imported',
+  );
   // Hardcore: one life, and the run takes its saves with it.
   await press('KeyO', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'Enter', 'Enter');
   check(
-    (await at('v.started')) === false && (await at('v.menu.row')) === 0,
+    await settles(async () => (await at('v.started')) === false && (await at('v.menu.row')) === 0),
     'quitting goes to the title screen, which now offers CONTINUE',
   );
   await snap('26-title-continue');
   await press('ArrowDown', 'ArrowDown', 'Enter');
-  check((await at('s.hardcore')) === true, 'a hardcore game can be started');
+  check(await settles(async () => (await at('s.hardcore')) === true), 'a hardcore game can be started');
   await p.evaluate(() => {
     const s = window.__critical.state;
     s.spawn.timer = 1e9;
@@ -910,12 +1031,15 @@ await page.evaluate(() => window.localStorage.clear());
   await p.waitForTimeout(200);
   await snap('28-lost-hardcore');
   check(
-    (await at("localStorage.getItem('critical-save-auto')")) === null,
+    await settles(async () => (await at("localStorage.getItem('critical-save-auto')")) === null),
     'losing the ship in hardcore removes the save of that run',
   );
-  check((await at("localStorage.getItem('critical-save-1') !== null")) === true, 'but leaves other saves alone');
+  check(
+    await settles(async () => (await at("localStorage.getItem('critical-save-1') !== null")) === true),
+    'but leaves other saves alone',
+  );
   await press('KeyR');
-  check((await at('v.started')) === false, 'and R goes back to the title screen');
+  check(await settles(async () => (await at('v.started')) === false), 'and R goes back to the title screen');
   await p.close();
 }
 
@@ -945,12 +1069,15 @@ const press = async (i, ms = 120) => {
 const pget = (expr) =>
   padPage.evaluate(`(() => { const s = window.__critical.state, v = window.__critical.view; return ${expr}; })()`);
 await press(0);
-check((await pget('v.started')) === true, 'gamepad: A starts the game');
+check(await settles(async () => (await pget('v.started')) === true), 'gamepad: A starts the game');
 await padPage.evaluate(() => {
   window.__critical.state.spawn.timer = 1e9;
 });
 await press(7, 1200);
-check((await pget('s.ship.throttle')) > 0.7, 'gamepad: the right trigger raises the throttle');
+check(
+  await settles(async () => (await pget('s.ship.throttle')) > 0.7),
+  'gamepad: the right trigger raises the throttle',
+);
 const h0 = await pget('s.ship.heading');
 await padPage.evaluate(() => {
   window.__pad.axes[0] = 1;
@@ -959,20 +1086,20 @@ await padPage.waitForTimeout(500);
 await padPage.evaluate(() => {
   window.__pad.axes[0] = 0;
 });
-check((await pget('s.ship.heading')) !== h0, 'gamepad: the left stick turns the ship');
+check(await settles(async () => (await pget('s.ship.heading')) !== h0), 'gamepad: the left stick turns the ship');
 await press(5);
-check((await pget('s.players[0].post')) === 'gunner', 'gamepad: RB switches post');
+check(await settles(async () => (await pget('s.players[0].post')) === 'gunner'), 'gamepad: RB switches post');
 await padPage.evaluate(() => {
   window.__pad.axes[2] = 1;
   window.__pad.axes[3] = 0;
 });
 await press(7, 400);
 check(
-  (await pget('s.bolts.length')) > 0 || (await pget('s.ship.fireCooldown')) > 0,
+  await settles(async () => (await pget('s.bolts.length')) > 0 || (await pget('s.ship.fireCooldown')) > 0),
   'gamepad: the right stick aims and the trigger fires',
 );
 await press(9);
-check((await pget('s.paused')) === true, 'gamepad: START pauses');
+check(await settles(async () => (await pget('s.paused')) === true), 'gamepad: START pauses');
 await padPage.close();
 
 await browser.close();

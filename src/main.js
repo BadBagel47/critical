@@ -11,6 +11,7 @@ import { updateMusic } from './music.js';
 import { starPicturesPerSecond } from './render/system.js';
 import { createView, settle, playerInput, viewKeys, drawScreen, buttonsOf, drawsPointer, SCREENS } from './screens.js';
 import { createState } from './sim/state.js';
+import { tryBoard } from './sim/boarding.js';
 import { step, stepPlayers } from './sim/step.js';
 import { summon } from './sim/testing.js';
 import { findThing, thingsOf } from './sim/things.js';
@@ -52,7 +53,22 @@ function findStorage() {
     return null;
   }
 }
-const newSeed = () => Date.now() % 100000;
+// ?still keeps the game the same every time it is opened, for screenshots that can be compared (F-226): a fixed
+// seed, random numbers on the screen from a seed of their own, and a clock that moves one sixtieth of a second for
+// every frame, whatever the machine. It is only for tests.
+const still = /[?&]still\b/.test(window.location.search);
+if (still) {
+  let r = 7;
+  Math.random = () => {
+    r = (r * 1103515245 + 12345) % 2147483648;
+    return r / 2147483648;
+  };
+  // The star works on its next picture for a set time each frame. Here that time is counted, not measured.
+  let ticks = 0;
+  performance.now = () => (ticks += 0.25);
+}
+let stillFrame = 0;
+const newSeed = () => (still ? 1 : Date.now() % 100000);
 // Everything the screen code needs: the game itself, how this player looks at it, what they are pressing,
 // where saves are kept and what they hold, and the things the menu can do.
 const game = {
@@ -242,6 +258,7 @@ function startAt(where) {
 
 let last = performance.now();
 function frame(now) {
+  if (still) now = ++stillFrame * (1000 / 60);
   const real = (now - last) / 1000;
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
@@ -305,12 +322,18 @@ loadAssets()
       view: game.view,
       input: keys,
       audio: { isMuted },
+      // How many frames have been drawn in the ?still mode, for the screenshot test to wait on.
+      get frames() {
+        return stillFrame;
+      },
+      // Go aboard what the ship is docked at, as F does. For tests.
+      board: () => tryBoard(game.state, game.view.playerId),
       advance(seconds) {
         for (let i = 0; i < seconds / STEP; i++) step(game.state, {}, STEP);
       },
     };
     requestAnimationFrame((now) => {
-      last = now;
+      last = still ? 0 : now;
       frame(now);
     });
   })
