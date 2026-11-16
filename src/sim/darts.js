@@ -4,7 +4,8 @@ import { forward, headingTo, turnToward, angleDiff, toWorld, dist, TAU } from '.
 import { dartsMax } from './upgrades.js';
 import { CREW, enemies } from './sides.js';
 
-// The Captain sends the Darts out and calls them home, by hand only (R-1127).
+// The Gunner sends the Darts out and calls them home, by hand only (R-1127, R-1187). A Dart that comes home goes
+// back into the bay, and comes out again whole. One that is lost is built anew after a while (R-729).
 function decide(state, cmd) {
   const ship = state.ship;
   if (cmd && cmd.darts) ship.dartsOut = !ship.dartsOut;

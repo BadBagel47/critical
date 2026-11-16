@@ -66,12 +66,12 @@ function inputs(state, i) {
       throttle: t % 20 < 14 ? 1 : -1,
       turn: Math.sin(t * 0.3),
       boost: t % 9 < 2,
-      darts: i % 900 === 450,
     };
     gunner.gunner = {
       aim: foe ? { x: foe.x, y: foe.y } : { x: ship.x + 100, y: ship.y - 100 },
       fire: t % 5 < 4,
       weapon: i % 600 === 300 ? 1 : null,
+      darts: i % 900 === 450,
     };
     engineer.engineer = {
       power: [],

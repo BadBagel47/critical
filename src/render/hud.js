@@ -215,13 +215,6 @@ function drawCaptainPanel(ctx, font, state) {
   rect(ctx, zero, 330, 1, 8, COL.text);
   font.draw(ctx, 'SPEED', 154, 343, COL.dim);
   font.draw(ctx, String(Math.round(speedOf(ship))), 208, 343, COL.text);
-  if (has(ship, 'bay')) {
-    const out = ship.dartsOut;
-    // Darts cannot leave the bay while the ship is docked.
-    const launch = ship.docked ? 'UNDOCK TO LAUNCH' : 'R LAUNCH';
-    const text = out ? `DARTS OUT  ${state.darts.length}  ·  R RECALL` : `DARTS  ${ship.dartStock}  ·  ${launch}`;
-    label(ctx, font, 306, 333, text, { fg: out ? COL.ion[2] : COL.text, border: out ? COL.ion[0] : COL.line });
-  }
   const keys = has(ship, 'boost')
     ? 'W S THROTTLE  ·  A D TURN  ·  X STOP  ·  SHIFT AFTERBURNER'
     : 'W S THROTTLE  ·  A D TURN  ·  X STOP';
@@ -253,6 +246,13 @@ function drawGunnerPanel(ctx, font, state, view) {
     font.draw(ctx, full ? 'RELEASE' : 'HOLD', x + 70, 338, full ? COL.ion[3] : COL.dim);
   }
   if (offline) label(ctx, font, x + 4, 333, 'WEAPONS OFFLINE  ·  NO POWER', { fg: ALARM.color, border: ALARM.border });
+  // The Gunner sends the Darts out and calls them home (R-1187). Darts cannot leave the bay while docked.
+  if (has(ship, 'bay')) {
+    const out = ship.dartsOut;
+    const launch = ship.docked ? 'UNDOCK TO LAUNCH' : 'R LAUNCH';
+    const text = out ? `DARTS OUT  ${state.darts.length}  ·  R RECALL` : `DARTS  ${ship.dartStock}  ·  ${launch}`;
+    label(ctx, font, 150, 314, text, { fg: out ? COL.ion[2] : COL.text, border: out ? COL.ion[0] : COL.line });
+  }
   const keys = weapons.length > 1 ? 'MOUSE AIM  ·  CLICK FIRE  ·  Q E WEAPON' : 'MOUSE AIM  ·  CLICK OR SPACE TO FIRE';
   font.draw(ctx, keys, VIEW_W - 8, 346, COL.faint, { align: 'r' });
   ctx.fillStyle = COL.ochre[3];
@@ -315,7 +315,10 @@ const HELP = [
   ['', 'C  SET A COURSE FOR THE NEXT PLACE ON THE MAP'],
   ['ALL POSTS', 'Z  CHARGE THE BOOST, CAPTAIN LETS IT GO     CAPTAIN AND GUNNER  T  MARK A SHIP FOR THE OTHER'],
   ['', 'ON THE STAR MAP  PICK A SYSTEM NEXT TO THIS ONE, AND WHERE TO ARRIVE'],
-  ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE     Q E  CHANGE WEAPON     X  SHIELD ON AND OFF'],
+  [
+    'GUNNER',
+    'MOUSE  AIM     CLICK OR SPACE  FIRE     Q E  CHANGE WEAPON     X  SHIELD ON AND OFF     R  DARTS OUT AND HOME',
+  ],
   ,
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW     SHIFT CLICK  QUEUE'],
   [

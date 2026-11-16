@@ -103,7 +103,7 @@ export function step(state, cmds, dt) {
   stepSalvage(state, dt);
   stepRocks(state, dt);
   stepAlarm(state, B.ALARM_RANGE[level(ship, 'alarm')]);
-  stepDarts(state, cmds.captain, dt);
+  stepDarts(state, cmds.gunner, dt);
   stepBoarding(state, cmds, dt);
   stepMap(state, dt);
   rechargeShield(state, dt);

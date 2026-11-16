@@ -124,7 +124,6 @@ function captainInput(game, out) {
     turn: axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx,
     stop: keys.hit('KeyX'),
     dock: keys.hit('KeyE'),
-    darts: keys.hit('KeyR'),
     boost: keys.down('ShiftLeft', 'ShiftRight'),
     surge: keys.hit('KeyZ'),
     mark: keys.hit('KeyT'),
@@ -148,8 +147,9 @@ function gunnerInput(game, out) {
     weapon: keys.hit('KeyE') ? 1 : keys.hit('KeyQ') ? -1 : null,
     surge: keys.hit('KeyZ'),
     mark: keys.hit('KeyT') ? aim : null,
-    // X switches the shield on and off (R-1129).
+    // X switches the shield on and off (R-1129), and R sends the Darts out and calls them home (R-1187).
     shield: keys.hit('KeyX'),
+    darts: keys.hit('KeyR'),
   };
 }
 

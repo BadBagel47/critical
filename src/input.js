@@ -44,7 +44,7 @@ const PAD_KEYS = {
     RB: 'Tab',
     LB: 'PadPrevPost',
   },
-  gunner: { RIGHT: 'KeyE', LEFT: 'KeyQ', A: 'KeyT', Y: 'KeyZ', RB: 'Tab', LB: 'PadPrevPost' },
+  gunner: { RIGHT: 'KeyE', LEFT: 'KeyQ', A: 'KeyT', Y: 'KeyZ', X: 'KeyR', UP: 'KeyX', RB: 'Tab', LB: 'PadPrevPost' },
   engineer: {
     UP: 'ArrowUp',
     DOWN: 'ArrowDown',

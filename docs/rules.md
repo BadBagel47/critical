@@ -898,7 +898,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-756 | I rymdvyn byter Engineer system med vänster och höger och ändrar energin med upp och ner. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-757 | På Engineers panel är tangenterna tvärtom, eftersom systemen där ligger i en kolumn. | byggd | HANDOFF beslut 2026-11-15 | saknas |
 | R-758 | Det finns tre poster: Captain, Gunner och Engineer. | byggd | HANDOFF beslut | saknas |
-| R-759 | Captain flyger, dockar, skickar ut Darts och avgör när skeppet lägger ut och hoppar. | byggd | HANDOFF beslut | saknas |
+| R-759 | Captain flyger, dockar och avgör när skeppet lägger ut och hoppar. | byggd | HANDOFF beslut | saknas |
 | R-760 | Gunner sköter alla vapen. | byggd | HANDOFF beslut | saknas |
 | R-761 | Engineer fördelar energi mellan vapen, sköld, motorer och reparation. | byggd | HANDOFF beslut | saknas |
 | R-762 | Engineer flyttar en reparationssymbol mellan skadepunkter på en bild av skeppet. | byggd | HANDOFF beslut | saknas |
@@ -1028,6 +1028,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1179 | Platser kan hittas som loot, men sällan. | byggd | Användaren 2026-11-16 (D-243, O3) | tests/shop.test.js |
 | R-1180 | En plats blir aktiv direkt, både när den köps och när den hittas och bärs hem. En hittad plats hör till en bestämd roll och sort, och hamnar hos den rollen. | byggd | Användaren 2026-11-16 (D-243, O4) | tests/sim.test.js |
 | R-1181 | I spelet heter platserna HULL SLOT och SYSTEM SLOT. Ordet hardpoint används inte. | byggd | Agenten 2026-11-16, efter användarens fråga om ordet | tests/shop.test.js |
+| R-1187 | Gunner skickar ut dartsen och kallar hem dem (R på tangentbordet). En dart som kommer hem går in i fighter bay och kommer ut hel nästa gång. | byggd | Användaren 2026-11-16 | tests/sim.test.js |
 | R-834 | Neutrala shipyards är alltid öppna mot betalning. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-835 | Neutrala shipyards har samma priser som vänliga så länge spelet testas. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-836 | Stationer säljer kartan till nästa sektor. | byggd | HANDOFF beslut 2026-11-14 | saknas |

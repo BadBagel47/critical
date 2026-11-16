@@ -1427,22 +1427,22 @@ test('every turret points at what the Gunner aims at, and fires the way it point
   });
 });
 
-test("darts launch on the captain's order, fight pirates and come home again", () => {
+test("R-1187: darts launch on the Gunner's order, fight pirates and come home again", () => {
   const s = quiet(createState(1));
   s.ship.x = 5000;
   s.ship.y = 5000;
-  step(s, { captain: { darts: true } }, DT);
+  step(s, { gunner: { darts: true } }, DT);
   assert.equal(s.darts.length, 0, 'no fighter bay yet');
   fit(s, 'bay', 3);
   assert.equal(s.ship.dartStock, 3, 'R-1126: one Dart for each level, three at most');
-  step(s, { captain: { darts: true } }, DT);
+  step(s, { gunner: { darts: true } }, DT);
   run(s, {}, 2);
   assert.equal(s.darts.length, 3);
   assert.equal(s.ship.dartStock, 0);
   target(s, 5200, 4900, 'fighter', 30).mode = 'approach';
   run(s, {}, 12);
   assert.equal(s.kills, 1, 'the darts shot the pirate down');
-  step(s, { captain: { darts: true } }, DT);
+  step(s, { gunner: { darts: true } }, DT);
   run(s, {}, 8);
   assert.equal(s.darts.length, 0);
   assert.equal(s.ship.dartStock, 3);
@@ -1455,9 +1455,9 @@ test('R-1127: the darts go out by hand only, also when pirates show up', () => {
   target(s, 5300, 5000, 'fighter', 500);
   run(s, {}, 3);
   assert.equal(s.darts.length, 0, 'not by themselves');
-  step(s, { captain: { darts: true } }, DT);
+  step(s, { gunner: { darts: true } }, DT);
   run(s, {}, 3);
-  assert.ok(s.darts.length > 0, 'but when the Captain sends them');
+  assert.ok(s.darts.length > 0, 'but when the Gunner sends them');
   assert.ok(!CATALOG.auto, 'there is no autolaunch to buy');
 });
 

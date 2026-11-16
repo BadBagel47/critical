@@ -731,6 +731,9 @@ await page.evaluate(() => {
   s.ship.vx = s.ship.vy = 0;
   window.__critical.view.cam = { x: 4000, y: 4000 };
 });
+// The Gunner sends the Darts out (R-1187).
+await page.keyboard.press('Digit2');
+await page.waitForTimeout(100);
 await page.keyboard.press('KeyR');
 await page.waitForTimeout(1800);
 check(await settles(async () => (await get('s.darts.length')) === 3), 'R launches the Darts');
