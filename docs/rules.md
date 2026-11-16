@@ -47,12 +47,16 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 - En sond visar ett grannsystem. I dag fungerar sonder bara inuti systemet.
 - Faktioner kan vara i krig med varandra. I dag slåss de inte med varandra.
 - Anseendet förbättras inte av sig självt med tiden. I dag gör det det, fram till avvaktande, tills uppdragen finns.
+- Ett vrak har 0 eller 1 bränslecell (R-1086), och bränslemätaren visar antalet hopp (R-1087). I dag har ett vrak 4–6 celler.
 - Kanontorn köps, och skeppet börjar med en fast kanon rakt fram. I dag har skeppet ett torn i nosen och torn på vingarna.
 
 ## Bränsle och färd
 
 | Nr | Regel | Status | Källa | Test |
 |---|---|---|---|---|
+| R-1086 | Ett vrak har 0 eller 1 bränslecell, och en cell räcker till ett hopp. Det ersätter antalet celler i R-866, R-867 och R-897 när det byggs. | bestämd | Användaren 2026-11-16 | – |
+| R-1087 | Bränslemätaren visar med markeringar hur många hopp skeppet kan göra, utan siffror. | bestämd | Användaren 2026-11-16 | – |
+| R-1088 | Krediterna från alla belöningar räknas om efter antalet spelare, gånger 1, 0,75 och 0,6 för en, två och tre, så att en besättning på tre tjänar ungefär en femtedel mer än en ensam spelare totalt. | förslag | Agenten 2026-11-16, utifrån docs/economy.md | – |
 | R-001 | Överladdningen av vapen och sköld är borttagen, och bara motorernas överladdning (boosten) finns kvar. | byggd | HANDOFF beslut 2026-11-16 | saknas |
 | R-002 | En träff på skölden nollställer en boost som håller på att laddas. | byggd | HANDOFF beslut 2026-11-16; proposal-world.md steg 2 fråga 2, BACKLOG F-197 | tests/fuel.test.js |
 | R-003 | Bränslet är gratis bara på besättningens egen varvsstation. | byggd | HANDOFF beslut 2026-11-16; proposal-world.md steg 2, BACKLOG D-100, proposal-economy.md 1.5 regel 9 (bestämt) | saknas |

@@ -101,6 +101,7 @@ Väntar på användaren: tolv krockar i regelboken (docs/rules.md, överst), fö
 | D-223 | Innehållskatalog som skapas ur koden: skeppsklasser, vakttyper, stationer, faktioner, uppgraderingar, utrustning och låsspel med sina viktigaste siffror, så att det alltid finns en överblick som stämmer. Användaren 2026-11-16: ja | Ej påbörjad |
 | D-227 | Dela upp de stora filerna för bordning (src/sim/boarding.js och src/render/boarding.js, runt 1 000 rader var) efter ämne: vakter, lås, mainframe, inredning och ritning, så att två agenter krockar mer sällan. Körs när den andra agenten är klar med insidorna. Användaren 2026-11-16: ja | Ej påbörjad |
 | F-228 | Ett verktyg för backloggen som markerar pågående, flyttar till klart och ger körförslaget nya bokstäver, så att agenterna inte skriver om backloggen för hand. Användaren 2026-11-16: ja | Ej påbörjad |
+| F-229 | Mindre bränsle i vrak och en bränslemätare som visar hopp. Användaren 2026-11-16: ett vrak har 0–1 bränslecell, och en cell räcker till ett hopp (R-1086). Bränslemätaren visar med markeringar hur många hopp skeppet kan göra, utan siffror (R-1087). Bakgrund: den simulerade spelaren visade att vraken gav ungefär 45 gånger mer bränsle än flygningen drog | Ej påbörjad |
 | F-050 | Justerade nivåer för vapen, sköld, motorer och engineering så att det känns att det är svårt i början och att det ska vara värt att uppgradera | Ej påbörjad |
 
 ## Medel
