@@ -63,7 +63,7 @@ function hostile(s) {
   return st;
 }
 // Off to the next sector, as a real jump does it.
-function jumpAway(s, to = 1) {
+function jumpAway(s, to = s.sectors[s.sector].links[0]) {
   s.ship.docked = null;
   for (const p of s.players) p.inside = null;
   s.charts.push(to);
@@ -200,8 +200,10 @@ test('taking a free station from the inside: red alert, help, and a bounty once 
   assert.equal(st.side, 'crew');
   assert.ok(s.bounty && s.bounty.amount === B.BOUNTY, 'a bounty is put on the crew');
   for (const side of ['charter', 'wardens', 'drifters']) assert.equal(s.standing[side], others[side] - B.SEIZE_RUMOUR);
-  run(s, { away: { 0: {} } }, B.HUNT_FIRST);
-  assert.equal(s.vessels.filter((v) => v.hunt && v.side === HUNTER).length, 3, 'two fighters and a gunboat');
+  // Counted as the group comes in: the guns of the station the crew has just taken may soon shoot one down.
+  for (let t = 0; t < B.HUNT_FIRST + 1 && !(s.hunt && s.hunt.out); t += DT) step(s, { away: { 0: {} } }, DT);
+  const group = s.vessels.filter((v) => v.hunt && v.side === HUNTER);
+  assert.deepEqual(group.map((v) => v.kind).sort(), ['fighter', 'fighter', 'gunboat'], 'two fighters and a gunboat');
 });
 
 test('a bounty is paid at a station that trades, or dropped when three groups of hunters are beaten', () => {

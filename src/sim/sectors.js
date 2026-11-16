@@ -98,8 +98,8 @@ export function generateSector(s, id) {
   s.things = [];
   s.map = createMap();
   s.known = [];
-  // Distances are given for the largest size. Nothing lies in the very middle.
-  const k = sec.radius / B.SYSTEM_R[2];
+  // Distances are given for a system of SYSTEM_LAYOUT_R, and grow with the system. Nothing lies in the very middle.
+  const k = sec.radius / B.SYSTEM_LAYOUT_R;
   const out = (d) => Math.max(B.SYSTEM_CORE, d * k);
   const base = rand(s) * TAU;
   for (let i = 0; i < sec.wrecks; i++) {

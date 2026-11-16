@@ -74,7 +74,7 @@ const PAGES = {
         {
           id: 'size',
           label: 'MAP SIZE',
-          right: `${SIZE_NAMES[size]}  ·  ${SIZES[size]} INHABITED SYSTEMS`,
+          right: `${SIZE_NAMES[size]}  ·  ${SIZES[size]} SYSTEMS`,
           run: () => (game.view.menu.size = SIZE_ORDER[(SIZE_ORDER.indexOf(size) + 1) % SIZE_ORDER.length]),
         },
         { id: 'load', label: 'LOAD GAME', run: () => openPage(game, 'load') },

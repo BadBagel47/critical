@@ -453,8 +453,9 @@ test('a known hostile base is the last choice to arrive at, and then out of reac
   assert.ok(dist(spot.x, spot.y, a.x, a.y) > B.STATION_RANGE + 100);
 });
 
-test('systems come in three sizes, and nothing lies in the very middle', () => {
+test('R-1200: systems come in three sizes, 3000, 4000 and 5000 to the edge, and nothing lies in the very middle', () => {
   const s = quiet(createState(1));
+  assert.deepEqual(B.SYSTEM_R, [3000, 4000, 5000]);
   assert.deepEqual([...new Set(s.sectors.map((sec) => sec.radius))].sort(), [...B.SYSTEM_R].sort());
   for (const t of s.things.filter((x) => x.kind !== 'rock')) {
     const d = Math.hypot(t.x, t.y);
@@ -531,8 +532,15 @@ test('a destroyed gunboat or freighter leaves a wreck of its own kind', () => {
   const boat = makeVessel(s, 'gunboat', 8000, 8000);
   const hauler = makeVessel(s, 'freighter', 8500, 8000, 'charter');
   s.vessels.push(boat, hauler);
-  hurtVessel(s, boat, 9999, 'pirate');
-  hurtVessel(s, hauler, 9999, 'pirate');
+  // Whether a wreck is left is a matter of chance. Here it always is.
+  const chance = B.KILL_WRECK_CHANCE;
+  B.KILL_WRECK_CHANCE = 1;
+  try {
+    hurtVessel(s, boat, 9999, 'pirate');
+    hurtVessel(s, hauler, 9999, 'pirate');
+  } finally {
+    B.KILL_WRECK_CHANCE = chance;
+  }
   const left = wrecks(s).slice(before);
   assert.deepEqual(left.map((w) => w.hull).sort(), ['freighter', 'gunboat']);
   assert.ok(left.every((w) => w.lock === 'locked'));
@@ -1675,13 +1683,16 @@ test('three misses on a cargo pod set off an alarm that brings pirates', () => {
 test('a station under attack calls for help, and a neutral one repays it with a discount', () => {
   const s = quiet(createState(1));
   s.sector = 0;
-  s.charts.push(1);
+  // A system next door with a base that is not the pirates'.
+  const next = s.sectors[0].links.find((l) => s.sectors[l].plan.some(([side]) => side !== 'pirate'));
+  s.charts.push(next);
   s.ship.fuel = 90;
-  step(s, { captain: { jump: 1 } }, DT);
+  step(s, { captain: { jump: next } }, DT);
   run(s, {}, B.JUMP_CHARGE + 0.2);
   s.spawn.timer = 1e9;
   const st = station(s, 'neutral');
-  assert.ok(st.shipyard, 'this neutral station has a shipyard');
+  // Only some bases have a shipyard (R-1194). This one is given one.
+  st.shipyard = true;
   atStation(s, st);
   fillPurses(s, 1000);
   step(s, { shop: [{ action: 'buy', item: 'emit' }] }, DT);

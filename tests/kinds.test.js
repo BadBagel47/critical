@@ -120,12 +120,13 @@ test('a new kind of thing is one entry of data: it stops shots, can be docked wi
     s.ship.y += port.y - shipNose(s.ship).y;
     assert.equal(dockCandidate(s), beacon);
     // It is still there after a jump away and back.
-    s.charts.push(1);
+    const next = s.sectors[0].links[0];
+    s.charts.push(next);
     s.ship.shieldOn = false;
     s.ship.fuel = 1e3;
-    step(s, { captain: { jump: 1 } }, DT);
+    step(s, { captain: { jump: next } }, DT);
     run(s, {}, 9);
-    assert.equal(s.sector, 1);
+    assert.equal(s.sector, next);
     assert.equal(thingsOf(s, 'beacon').length, 0);
     step(s, { captain: { jump: 0 } }, DT);
     run(s, {}, 9);

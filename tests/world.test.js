@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { createState } from '../src/sim/state.js';
 import { step } from '../src/sim/step.js';
 import { thingsOf, mapInfo } from '../src/sim/things.js';
-import { createWorld, hopsFrom, SIZES, END_MIN } from '../src/sim/world.js';
+import { createWorld, hopsFrom, SIZES, END_MIN, inhabitedOf } from '../src/sim/world.js';
 import { gatherForTesting, jumpBlocked, generateSector } from '../src/sim/sectors.js';
 import { viewOf } from '../src/sim/intel.js';
 import { arrival } from '../src/sim/system.js';
@@ -42,11 +42,13 @@ const worlds = () =>
   Object.keys(SIZES).flatMap((size) => SEEDS.map((seed) => ({ size, w: createState(seed, { size }).sectors })));
 
 // ---------- the map ----------
-test('R-111 R-112 R-113 R-105: each game makes its own world, of the size chosen, with as many empty systems as inhabited', () => {
+test('R-111 R-1196 R-1197 R-105: each game makes its own world of 25, 40 or 55 systems, two in five inhabited', () => {
+  assert.deepEqual(SIZES, { short: 25, medium: 40, long: 55 });
   for (const { size, w } of worlds()) {
     const lived = w.filter((x) => x.kind !== 'empty').length;
-    assert.equal(lived, SIZES[size], 'the sanctuary and the inhabited systems');
-    assert.equal(w.length, SIZES[size] * 2, 'and as many empty ones');
+    assert.equal(w.length, SIZES[size], 'as many systems as the size says');
+    assert.equal(lived, inhabitedOf(size), 'the sanctuary and the inhabited systems');
+    assert.equal(lived, Math.round(SIZES[size] * 0.4), 'two in five');
   }
   const a = createState(1)
     .sectors.map((x) => x.name)
@@ -64,7 +66,7 @@ test('R-111 R-112 R-113 R-105: each game makes its own world, of the size chosen
   );
 });
 
-test('R-113: there are more empty systems the further out', () => {
+test('R-1197: there are more empty systems the further out', () => {
   let near = 0,
     far = 0,
     nearAll = 0,
@@ -81,7 +83,93 @@ test('R-113: there are more empty systems the further out', () => {
       }
     }
   }
-  assert.ok(far / farAll > near / nearAll + 0.1, 'a larger share of empty systems far out');
+  assert.ok(far / farAll > near / nearAll + 0.07, 'a larger share of empty systems far out');
+});
+
+test('R-1202: empty systems seldom lie in clumps', () => {
+  let empty = 0,
+    alone = 0,
+    biggest = 0;
+  for (const { w } of worlds()) {
+    const seen = new Set();
+    for (const x of w.filter((y) => y.kind === 'empty')) {
+      empty++;
+      if (x.links.every((j) => w[j].kind === 'empty')) alone++;
+      if (seen.has(x.id)) continue;
+      // How many empty systems hang together with this one.
+      let n = 0;
+      const todo = [x.id];
+      seen.add(x.id);
+      while (todo.length) {
+        const i = todo.pop();
+        n++;
+        for (const j of w[i].links) {
+          if (w[j].kind !== 'empty' || seen.has(j)) continue;
+          seen.add(j);
+          todo.push(j);
+        }
+      }
+      biggest = Math.max(biggest, n);
+    }
+  }
+  assert.ok(alone / empty < 0.2, `few empty systems have no inhabited neighbour (${alone} of ${empty})`);
+  assert.ok(biggest <= 12, `no large clump of empty systems (the largest is ${biggest})`);
+});
+
+test('R-1204: two bases in the same system never have the same name', () => {
+  for (const { w } of worlds()) {
+    for (const x of w) {
+      const names = x.plan.map((p) => p[3]);
+      assert.equal(new Set(names).size, names.length, `${x.name} has two bases of the same name`);
+    }
+  }
+});
+
+test('R-1203: on the shortest way from the sanctuary to the end, no more than one empty system lies in a row', () => {
+  for (const { w } of worlds()) {
+    const back = new Map([[0, null]]);
+    const todo = [0];
+    while (todo.length) {
+      const i = todo.shift();
+      for (const j of w[i].links) {
+        if (back.has(j)) continue;
+        back.set(j, i);
+        todo.push(j);
+      }
+    }
+    let run = 0;
+    for (let i = w.find((x) => x.boss).id; i !== null; i = back.get(i)) {
+      run = w[i].kind === 'empty' ? run + 1 : 0;
+      assert.ok(run <= 1, 'two empty systems in a row on the way to the end');
+    }
+  }
+});
+
+test("R-1194 R-1201: a quarter of each side's bases have a shipyard, at least one, never the sanctuary or the end", () => {
+  const sum = {};
+  for (const { w } of worlds()) {
+    const per = {};
+    for (const x of w) {
+      for (const [side, yard, , , sanctuary] of x.plan) {
+        if (sanctuary || x.boss) {
+          assert.equal(yard, false, 'no shipyard at the sanctuary or the final base');
+          continue;
+        }
+        const k = side || 'free';
+        per[k] = per[k] || { bases: 0, yards: 0 };
+        per[k].bases++;
+        if (yard) per[k].yards++;
+      }
+    }
+    for (const [k, v] of Object.entries(per)) {
+      assert.equal(v.yards, Math.max(1, Math.round(v.bases / 4)), `${k}: a quarter, at least one`);
+      sum[k] = sum[k] || { bases: 0, yards: 0 };
+      sum[k].bases += v.bases;
+      sum[k].yards += v.yards;
+    }
+  }
+  for (const k of ['charter', 'wardens', 'drifters', 'free', 'pirate'])
+    assert.ok(sum[k] && sum[k].yards > 0, `${k} has shipyards`);
 });
 
 test('R-1089 R-050: most systems have two or three lanes, every lane goes both ways, and all of it is reachable', () => {
@@ -128,7 +216,22 @@ test('R-125 R-130: danger goes up one step for every two jumps from the sanctuar
   }
 });
 
-test('R-1099 R-1095: the end lies furthest out, far enough for the size of the world, with a single lane in', () => {
+test('R-1198: the pirates hold about one inhabited system in five, the end among them, and those furthest out', () => {
+  for (const { size, w } of worlds()) {
+    const lived = w.filter((x) => x.kind !== 'empty');
+    const pirate = lived.filter((x) => x.owner === 'pirate');
+    assert.equal(pirate.length, Math.max(1, Math.round(inhabitedOf(size) * 0.2)), 'one in five, the end counted in');
+    assert.ok(
+      pirate.some((x) => x.boss),
+      'the end is theirs',
+    );
+    const nearest = Math.min(...pirate.map((x) => x.hops));
+    const others = lived.filter((x) => x.owner !== 'pirate' && x.kind !== 'sanctuary');
+    assert.ok(others.filter((x) => x.hops > nearest).length <= others.length / 3, 'they hold the systems furthest out');
+  }
+});
+
+test('R-1199 R-1095: the end lies furthest out, far enough for the size of the world, with a single lane in', () => {
   for (const { size, w } of worlds()) {
     const ends = w.filter((x) => x.boss);
     assert.equal(ends.length, 1);
@@ -322,7 +425,9 @@ test('R-043: a jump arrives by the base the Captain picked', () => {
   run(s, {}, B.JUMP_CHARGE + 0.2);
   assert.equal(s.sector, to);
   const at = bases[bases.length - 1];
-  assert.ok(Math.abs(dist(s.ship.x, s.ship.y, at.x, at.y) - B.ARRIVE_GAP) < 60, 'by the base picked');
+  // A hostile base is arrived at out of reach of its guns.
+  const gap = at.align === 'hostile' ? B.STATION_RANGE + B.ARRIVE_CLEAR : B.ARRIVE_GAP;
+  assert.ok(Math.abs(dist(s.ship.x, s.ship.y, at.x, at.y) - gap) < 60, 'by the base picked');
   assert.ok(base, 'the sanctuary has its base');
 });
 

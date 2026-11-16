@@ -94,8 +94,10 @@ export const B = {
   RAM_SPEED: 60,
   RAM_DMG: 0.12,
   // fuel and loot
-  // Systems come in three sizes: how far it is from the middle to the edge.
-  SYSTEM_R: [1200, 1800, 2400],
+  // Systems come in three sizes: how far it is from the middle to the edge (R-1200).
+  SYSTEM_R: [3000, 4000, 5000],
+  // Where things lie in a system is given for one of this size, and grows with the system (R-1200).
+  SYSTEM_LAYOUT_R: 2400,
   // Nothing that can be docked with lies closer to the middle than this.
   SYSTEM_CORE: 600,
   // The star in the middle. STAR_R is how large it looks, STAR_BURN how far its heat reaches, and inside

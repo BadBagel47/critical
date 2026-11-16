@@ -86,9 +86,9 @@ Räknat över 8 världar av varje storlek, som nya spel gör dem. Ett hopp kosta
 
 | Storlek | System | Bebodda | Tomma | Omstridda | Piraternas | Stationer | Vrak | Pods | Hopp till slutet |
 |---|---|---|---|---|---|---|---|---|---|
-| SHORT | 16 | 8 | 8 | 2 | 2 | 11.6 | 6.3 | 32 | 4.8 |
-| MEDIUM | 24 | 12 | 12 | 2 | 3 | 17.5 | 14.3 | 48 | 5.9 |
-| LONG | 36 | 18 | 18 | 4 | 5 | 27.3 | 18.3 | 72 | 6.5 |
+| SHORT | 25 | 10 | 15 | 2 | 2 | 15 | 14.5 | 45 | 6.3 |
+| MEDIUM | 40 | 16 | 24 | 3 | 3 | 24.4 | 23.4 | 72 | 7.4 |
+| LONG | 55 | 22 | 33 | 4 | 4 | 36.4 | 29 | 99 | 9.4 |
 
 Vrak och pods är de som finns när man först kommer till ett system. Vrak är en bonus (R-1097): inga i fristaden, flest där piraterna håller systemet. Inga nya vrak driver in när ett har sprängts. Kommer man tillbaka till ett system efter minst 300 sekunder kan ett nytt ligga där, med chansen 0.5 där piraterna håller systemet, 0.35 i ett omstritt och 0.15 annars. En nedskjuten gunboat eller ett fraktskepp lämnar vrak med chansen 0.4. Ett vrak har en bränslecell med chansen 0.5, en station har en i valvet. Slutet nås bara när man har dess stjärnkarta från valvet på en piratbas.
 
@@ -96,25 +96,25 @@ Vrak och pods är de som finns när man först kommer till ett system. Vrak är 
 
 Spelaren flyger till närmaste vrak eller pod, bryter upp låset, bär hem lootet i vändor och skjuter ner varje piratvåg som kommer. Vraken är de som finns i systemet när man kommer. Ett bordat vrak sprängs, och inget nytt driver in, som i spelet. Vrak som nedskjutna gunboats ibland lämnar räknas inte. När det inte finns något kvar att borda bryts asteroider resten av timmen. Ensam avbryter en strid allt annat. Med fler spelare stannar någon på skeppet och slåss medan de andra bordar. Allt räknas med spelets egna avstånd, loot, vågor och priser.
 
-| | Ensam, fristaden | Ensam, grannsystem (nivå 0) | Ensam, bebott system på nivå 2 | Ensam, tomt system (nivå 1) | Tre spelare, grannsystem (nivå 0) |
+| | Ensam, fristaden | Ensam, grannsystem (nivå 0) | Ensam, bebott system på nivå 2 | Ensam, tomt system (nivå 2) | Tre spelare, grannsystem (nivå 0) |
 |---|---|---|---|---|---|
-| Krediter per timme | 2341 | 4728 | 5562 | 5922 | 8737 |
-| varav pirater | 0 | 2370 | 2951 | 2728 | 5485 |
-| varav vrak | 0 | 0 | 374 | 1260 | 0 |
+| Krediter per timme | 2333 | 4702 | 5987 | 6249 | 8711 |
+| varav pirater | 0 | 2370 | 2951 | 2951 | 5485 |
+| varav vrak | 0 | 0 | 916 | 1445 | 0 |
 | varav pods | 300 | 300 | 300 | 100 | 300 |
-| varav malm | 2041 | 1158 | 1036 | 934 | 2053 |
+| varav malm | 2033 | 1132 | 920 | 853 | 2027 |
 | varav nödanrop | 0 | 900 | 900 | 900 | 900 |
-| Nedskjutna pirater | 0 | 213 | 221 | 213 | 493 |
-| Vrak tömda | 0 | 0 | 1 | 3 | 0 |
+| Nedskjutna pirater | 0 | 213 | 221 | 221 | 493 |
+| Vrak tömda | 0 | 0 | 2 | 3 | 0 |
 | Pods öppnade | 3 | 3 | 3 | 1 | 3 |
-| Bränsle in (celler) | 38 | 38 | 38 | 38 | 38 |
-| Bränsle ut (flygning) | 9 | 5 | 5 | 6 | 5 |
+| Bränsle in (celler) | 38 | 38 | 63 | 88 | 38 |
+| Bränsle ut (flygning) | 11 | 14 | 12 | 14 | 14 |
 
 Världen är den första av storleken SHORT (frö 1). Timmen spelas i ett och samma system, så hopp mellan system räknas inte här, se avsnitt 3 för vad de kostar.
 
 ### Hur länge det dröjer till varje köp, ensam den första timmen
 
-Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: 4131 krediter. Varje roll har en egen kassa som får hela inkomsten (R-1104), och köper sitt i en enkel ordning. Bränslet, räknat som ett hopp var tionde minut (150 krediter i timmen), betalas av rollerna i tur och ordning, alltså en tredjedel var. Tiden är minuter från start.
+Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: 4110 krediter. Varje roll har en egen kassa som får hela inkomsten (R-1104), och köper sitt i en enkel ordning. Bränslet, räknat som ett hopp var tionde minut (150 krediter i timmen), betalas av rollerna i tur och ordning, alltså en tredjedel var. Tiden är minuter från start.
 
 | Roll | Köp | Minuter |
 |---|---|---|
@@ -124,7 +124,7 @@ Den första timmen räknas som en kvart i fristaden och resten i ett bebott gran
 | CAPTAIN | JUMP COILS | 9 |
 | CAPTAIN | SYSTEM RADAR | 12 |
 | CAPTAIN | FUEL TANK  LV 2 | 15 |
-| CAPTAIN | EXTRA SYSTEM SLOT  LV 2 | 19 |
+| CAPTAIN | EXTRA SYSTEM SLOT  LV 2 | 20 |
 | CAPTAIN | AFTERBURNER | 22 |
 | GUNNER | NOSE TURRET | 2 |
 | GUNNER | EXTRA HULL SLOT | 6 |

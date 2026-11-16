@@ -69,9 +69,10 @@ test('more engine power charges the boost faster, and it burns fuel as much fast
 
 test('R-025: a jump that is charging starts over when the ship is hit', () => {
   const s = quiet();
-  s.charts.push(1);
+  const next = s.sectors[0].links[0];
+  s.charts.push(next);
   s.ship.fuel = 100;
-  step(s, { captain: { jump: 1 } }, DT);
+  step(s, { captain: { jump: next } }, DT);
   run(s, {}, 2);
   assert.ok(s.jump && s.jump.t > 1);
   shoot(s);
@@ -158,7 +159,7 @@ test('R-010: a crew with no fuel and no money gets on: ore from rocks becomes en
   }
   run(s, {}, 40);
   assert.ok(s.ship.fuel >= jumpFuel(s.ship), 'enough for a jump');
-  step(s, { captain: { jump: 1 } }, DT);
+  step(s, { captain: { jump: s.sectors[0].links[0] } }, DT);
   assert.ok(s.jump, 'and the jump can start');
 });
 
