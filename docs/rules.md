@@ -139,7 +139,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-063 | Stjärnkartor kan ligga i valv. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-064 | Ett nödanrop visar var stationen ligger, även om den inte är hittad. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-065 | Scannerpuls, sonder och radarbojar finns från start tills butiken är byggd. | byggd | HANDOFF beslut 2026-11-14 | saknas |
-| R-066 | Sonder och bojar fylls på av sig själva med tiden. | byggd | HANDOFF beslut 2026-11-14 | saknas |
+| R-066 | Sonder och bojar fylls på av sig själva med tiden. | ersatt av: R-1148; fortfarande byggt | HANDOFF beslut 2026-11-14 | – |
 | R-067 | Kartan öppnas med M av vem som helst. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-068 | Kartans verktyg används från Engineer-posten. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-069 | Systemen finns i tre storlekar. | byggd | HANDOFF beslut 2026-11-15 | saknas |
@@ -985,6 +985,9 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1143 | Varor köps och säljs i butiken, så att det går att ha handelsrutter. I början är priserna fasta. | bestämd | Användaren 2026-11-16 (D-238, V6) | – |
 | R-1144 | Senare blir varupriserna rörliga, så att man inte blir rik på att köra samma rutt fram och tillbaka. | bestämd | Användaren 2026-11-16 (D-238, V6) | – |
 | R-1145 | En uppgradering som hittas som loot hamnar i förrådet hos den roll som saken hör till, oavsett vem som bar hem den. | bestämd | Användaren 2026-11-16 (L1) | – |
+| R-1146 | Kanontornen och scannerpulsen är delar som andra: de köps, installeras på varvet och kan hittas som loot. | bestämd | Användaren 2026-11-16 (L2) | – |
+| R-1147 | Sonder och radarbojar köps i antal vid disken, som raketer, och kan ibland hittas som loot. | bestämd | Användaren 2026-11-16 (L3) | – |
+| R-1148 | Sonder och radarbojar fylls inte längre på av sig själva när de går att köpa. | bestämd | Användaren 2026-11-16 (L4) | – |
 | R-834 | Neutrala shipyards är alltid öppna mot betalning. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-835 | Neutrala shipyards har samma priser som vänliga så länge spelet testas. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-836 | Stationer säljer kartan till nästa sektor. | byggd | HANDOFF beslut 2026-11-14 | saknas |
