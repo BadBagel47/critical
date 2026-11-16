@@ -107,7 +107,10 @@ Alla är besvarade. Bilderna på stjärnan, bältet och diset visas innan de lä
 - Slutet ligger slumpat i ett av de tre bebodda system som ligger längst bort. Enligt docs/proposal-bases.md (2026-11-16) är slutet piraternas slutbas, och startsystemet är en fristad nära mitten av kartan.
 - Tomma system kan ibland ha något eget: ett tätt asteroidfält eller ett vrakfält, och senare anomalier (F-053).
 - System kan ägas av en faktion, men också vara omstridda, där faktioner bråkar med varandra (användaren 2026-11-16). Hör ihop med F-119 (faktioner i krig) och F-087 (en värld som förändras).
-- Kvar att svara på: systemradarns räckvidd och pris, och detaljerna om omstridda system.
+- Omstridda system: ungefär ett av fem bebodda system, på gränsen mellan två faktioners områden. Båda faktionerna har stationer där och deras patruller skjuter på varandra när de möts. Hjälper man den ena sidan stiger anseendet hos den och sjunker hos den andra. Ett system byter inte ägare i steg 3, det kommer med F-087.
+- Stjärnkartan visar ett system i faktionens färg, och ett omstritt system randigt i båda färgerna. Statusen syns för ett system som man har köpt karta över, scannat eller satt ut en boj i. En boj rapporterar alltid aktuell status när man öppnar kartan. Systemradarn visar samma sak för grannsystemen.
+- Systemradarn (F-195): två nivåer. Nivå 1 når ett hopp och kostar 200 krediter, nivå 2 når två hopp och kostar 350.
+- Alla frågor i steg 3 är besvarade (2026-11-16).
 
 ## Steg 4 – Uppdrag och story
 
