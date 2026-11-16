@@ -211,21 +211,30 @@ test('R-275: the base of the sanctuary fights back when shot at, but forgets it'
   assert.equal(base.closed, false, 'and it trades again');
 });
 
-test('R-1090 R-882: fuel is cheap in the sanctuary, and its base sells only the simplest upgrades', () => {
+test('R-1091 R-882: every price in the sanctuary is that of a neutral base, and its base sells only the simplest upgrades', () => {
   const s = quiet(createState(1));
   const base = thingsOf(s, 'station')[0];
-  s.ship.fuel = 20;
+  // The same ship at a neutral station elsewhere.
+  const n = quiet(createState(1));
+  gatherForTesting(n);
+  const post = thingsOf(n, 'station').find((x) => x.align === 'neutral' && !x.sanctuary);
+  for (const w of [s, n]) {
+    w.ship.fuel = 20;
+    w.ship.hull = 50;
+  }
+  const here = servicePrices(s, base);
+  const there = servicePrices(n, post);
+  for (const k of ['refuel', 'repair', 'rockets', 'chart']) assert.equal(here[k].price, there[k].price, k);
+  assert.equal(here.refuel.price, Math.ceil(Math.ceil(B.FUEL_MAX - 20) * B.FUEL_PRICE.neutral));
   s.ship.docked = base.id;
-  const need = Math.ceil(B.FUEL_MAX - 20);
-  assert.equal(servicePrices(s, base).refuel.price, Math.ceil(need * B.FUEL_PRICE.sanctuary));
-  assert.ok(B.FUEL_PRICE.sanctuary < B.FUEL_PRICE.friendly);
   s.credits = 1000;
   step(s, { shop: [{ action: 'buy', item: 'armor' }] }, DT);
   assert.equal(level(s.ship, 'armor'), 0, 'armour costs too much for the sanctuary');
   assert.ok(s.events.some((e) => e.type === 'cannotBuy' && e.reason === 'NOT SOLD IN THE SANCTUARY'));
+  const price = priceOf(s.ship, 'twin');
   step(s, { shop: [{ action: 'buy', item: 'twin' }] }, DT);
   assert.equal(level(s.ship, 'twin'), 1, 'a cheap one is sold');
-  assert.ok(priceOf(s.ship, 'twin') >= 0);
+  assert.equal(s.credits, 1000 - price, 'at the full price');
 });
 
 // ---------- jumps and the star map ----------

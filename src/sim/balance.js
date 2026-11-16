@@ -284,8 +284,8 @@ export const B = {
   STATION_REPAIR_DELAY: 20,
   STATION_REPAIR: 2,
   // What fuel costs a unit: free only at the crew's own yard, a little less among friends (decided 2026-11-16).
-  // Fuel is cheap in the sanctuary, and free at a shipyard of the crew's own.
-  FUEL_PRICE: { home: 0, sanctuary: 0.5, friendly: 0.7, neutral: 1 },
+  // Fuel is free at a shipyard of the crew's own. The sanctuary charges the neutral price (R-1091).
+  FUEL_PRICE: { home: 0, friendly: 0.7, neutral: 1 },
   // The base of the sanctuary has no shipyard, but sells the upgrades that cost this much or less.
   SANCTUARY_SHOP_MAX: 150,
   // Ore from asteroids (F-085): how much fuel one piece gives, what it sells for, how much the hold takes, and how

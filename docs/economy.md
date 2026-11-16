@@ -42,7 +42,9 @@
 
 ### Tjänster på stationer
 
-| Tjänst | Hemma | Vänlig | Neutral |
+Fristaden tar samma priser som en neutral bas (R-1091). Bränslet är gratis bara på ett eget varv.
+
+| Tjänst | Eget varv | Vänlig | Neutral och fristaden |
 |---|---|---|---|
 | Bränsle, per enhet | 0 | 0.7 | 1 |
 | Lagning, per hullpoäng | 0.25 | 0.25 | 0.5 |
@@ -72,42 +74,56 @@ En avvaktande station tar 1.5 gånger priset. En station som står i skuld efter
 | Malm, per bit | 6 | eller 4 bränsle |
 | Hjälp vid nödanrop | 100 hos en vänlig | rabatt hos en neutral |
 
-## 3. En timme med den simulerade spelaren
+## 3. Världen
+
+Räknat över 8 världar av varje storlek, som nya spel gör dem. Ett hopp kostar 25 bränsle, och en bränslecell ger 25, alltså ett hopp. Full tank räcker till 4 hopp.
+
+| Storlek | System | Bebodda | Tomma | Omstridda | Piraternas | Stationer | Vrak | Pods | Hopp till slutet |
+|---|---|---|---|---|---|---|---|---|---|
+| SHORT | 16 | 8 | 8 | 2 | 2 | 11.8 | 37.5 | 32 | 2 |
+| MEDIUM | 24 | 12 | 12 | 2 | 3 | 17.9 | 57.4 | 48 | 3.6 |
+| LONG | 36 | 18 | 18 | 4 | 5 | 26.5 | 87.1 | 72 | 3.9 |
+
+Vrak och pods är de som finns när man kommer till ett system. Nya vrak driver in när de gamla har sprängts. Ett vrak har en bränslecell hälften av gångerna (0.5), en station har en i valvet.
+
+## 4. En timme med den simulerade spelaren
 
 Spelaren flyger till närmaste vrak eller pod, bryter upp låset, bär hem lootet i vändor och skjuter ner varje piratvåg som kommer. Ett bordat vrak sprängs när reaktorn har gått, och då driver ett nytt in längre ut, som i spelet. Finns inget att borda bryts asteroider. Ensam avbryter en strid allt annat. Med fler spelare stannar någon på skeppet och slåss medan de andra bordar. Allt räknas med spelets egna avstånd, loot, vågor och priser.
 
-| | Ensam, första sektorn | Ensam, The Narrows (nivå 2) | Tre spelare, första sektorn |
-|---|---|---|---|
-| Krediter per timme | 8341 | 9206 | 16073 |
-| varav pirater | 2236 | 2626 | 5218 |
-| varav vrak | 4695 | 5170 | 9445 |
-| varav pods | 300 | 300 | 300 |
-| varav malm | 210 | 210 | 210 |
-| varav nödanrop | 900 | 900 | 900 |
-| Nedskjutna pirater | 201 | 205 | 469 |
-| Vrak tömda | 11 | 12 | 22 |
-| Pods öppnade | 3 | 3 | 3 |
-| Bränsle in (celler) | 138 | 213 | 238 |
-| Bränsle ut (flygning) | 27 | 27 | 55 |
+| | Ensam, fristaden | Ensam, grannsystem (nivå 0) | Ensam, bebott system på nivå 1 | Ensam, tomt system (nivå 2) | Tre spelare, grannsystem (nivå 0) |
+|---|---|---|---|---|---|
+| Krediter per timme | 9605 | 8986 | 9251 | 9585 | 16726 |
+| varav pirater | 0 | 2236 | 2626 | 2845 | 5351 |
+| varav vrak | 9095 | 5340 | 5215 | 5530 | 9965 |
+| varav pods | 300 | 300 | 300 | 100 | 300 |
+| varav malm | 210 | 210 | 210 | 210 | 210 |
+| varav nödanrop | 0 | 900 | 900 | 900 | 900 |
+| Nedskjutna pirater | 0 | 201 | 205 | 213 | 481 |
+| Vrak tömda | 21 | 12 | 12 | 11 | 23 |
+| Pods öppnade | 3 | 3 | 3 | 1 | 3 |
+| Bränsle in (celler) | 238 | 238 | 213 | 163 | 338 |
+| Bränsle ut (flygning) | 41 | 27 | 28 | 27 | 46 |
 
-### Hur länge det dröjer till varje köp, ensam i första sektorn
+Världen är den första av storleken SHORT (frö 1). Timmen spelas i ett och samma system, så hopp mellan system räknas inte här, se avsnitt 3 för vad de kostar.
 
-Köpen görs i en enkel ordning, och tiden är minuter från start vid inkomsten ovan.
+### Hur länge det dröjer till varje köp, ensam den första timmen
+
+Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: 9141 krediter. Köpen görs i en enkel ordning, och tiden är minuter från start.
 
 | Köp | Minuter |
 |---|---|
 | TWIN WING TURRETS | 1 |
 | CARGO PACK | 2 |
 | ARMOR PLATING | 3 |
-| SHIELD EMITTERS | 5 |
+| SHIELD EMITTERS | 4 |
 | HEAVY LASER | 6 |
-| POWER CORE | 8 |
-| TRANQ GUN | 9 |
-| ENEMY ALARM | 10 |
-| ROCKET PODS | 11 |
-| SOLAR CELLS | 12 |
-| POINT DEFENSE | 14 |
-| FIGHTER BAY | 16 |
+| POWER CORE | 7 |
+| TRANQ GUN | 8 |
+| ENEMY ALARM | 9 |
+| ROCKET PODS | 10 |
+| SOLAR CELLS | 11 |
+| POINT DEFENSE | 13 |
+| FIGHTER BAY | 15 |
 
 ### Antaganden
 

@@ -3,12 +3,14 @@
 //
 //   node tools/economy.mjs        writes docs/economy.md
 //
-// The simulated player uses the game where it can: real sectors with their real distances, real wrecks with the
-// loot that is really in them, the real pace and size of the pirate waves, and the real prices. What the game
+// The simulated player uses the game where it can: real systems of a real world with their real distances, real
+// wrecks with the loot that is really in them, the real pace and size of the pirate waves (none in the
+// sanctuary), and the real prices. What the game
 // cannot answer, such as how long a person takes over a lock, is an assumption in ASSUME below, and the sheet
 // lists them. tests/economy.test.js checks that the sheet is up to date and that the income stays in its band.
 import { writeFileSync } from 'node:fs';
 import { createState } from '../src/sim/state.js';
+import { SIZES, SIZE_NAMES } from '../src/sim/world.js';
 import { generateSector } from '../src/sim/sectors.js';
 import { createInterior } from '../src/sim/boarding.js';
 import { thingsOf } from '../src/sim/things.js';
@@ -51,7 +53,9 @@ function priceSheet() {
     '',
     '### Tjänster på stationer',
     '',
-    '| Tjänst | Hemma | Vänlig | Neutral |',
+    'Fristaden tar samma priser som en neutral bas (R-1091). Bränslet är gratis bara på ett eget varv.',
+    '',
+    '| Tjänst | Eget varv | Vänlig | Neutral och fristaden |',
     '|---|---|---|---|',
     `| Bränsle, per enhet | ${B.FUEL_PRICE.home} | ${B.FUEL_PRICE.friendly} | ${B.FUEL_PRICE.neutral} |`,
     `| Lagning, per hullpoäng | ${B.REPAIR_PRICE.friendly} | ${B.REPAIR_PRICE.friendly} | ${B.REPAIR_PRICE.neutral} |`,
@@ -84,6 +88,44 @@ function priceSheet() {
   return L;
 }
 
+// ---------- the world ----------
+// What a world holds, counted over a few worlds of each size, as new games make them.
+const WORLD_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8];
+function worldSheet() {
+  const L = [
+    '## 3. Världen',
+    '',
+    `Räknat över ${WORLD_SEEDS.length} världar av varje storlek, som nya spel gör dem. Ett hopp kostar ${B.JUMP_FUEL} bränsle, och en bränslecell ger ${B.CELL_FUEL}, alltså ett hopp. Full tank räcker till ${Math.floor(B.FUEL_MAX / B.JUMP_FUEL)} hopp.`,
+    '',
+    '| Storlek | System | Bebodda | Tomma | Omstridda | Piraternas | Stationer | Vrak | Pods | Hopp till slutet |',
+    '|---|---|---|---|---|---|---|---|---|---|',
+  ];
+  for (const size of Object.keys(SIZES)) {
+    const sum = { systems: 0, lived: 0, empty: 0, contested: 0, pirate: 0, stations: 0, wrecks: 0, pods: 0, end: 0 };
+    for (const seed of WORLD_SEEDS) {
+      const w = createState(seed, { size }).sectors;
+      sum.systems += w.length;
+      sum.lived += w.filter((x) => x.kind !== 'empty').length;
+      sum.empty += w.filter((x) => x.kind === 'empty').length;
+      sum.contested += w.filter((x) => x.owner === 'contested').length;
+      sum.pirate += w.filter((x) => x.owner === 'pirate').length;
+      sum.stations += w.reduce((n, x) => n + x.plan.length, 0);
+      sum.wrecks += w.reduce((n, x) => n + x.wrecks, 0);
+      sum.pods += w.reduce((n, x) => n + x.pods, 0);
+      sum.end += w.find((x) => x.boss).hops;
+    }
+    const k = (v) => Math.round((v / WORLD_SEEDS.length) * 10) / 10;
+    L.push(
+      `| ${SIZE_NAMES[size]} | ${k(sum.systems)} | ${k(sum.lived)} | ${k(sum.empty)} | ${k(sum.contested)} | ${k(sum.pirate)} | ${k(sum.stations)} | ${k(sum.wrecks)} | ${k(sum.pods)} | ${k(sum.end)} |`,
+    );
+  }
+  L.push(
+    '',
+    `Vrak och pods är de som finns när man kommer till ett system. Nya vrak driver in när de gamla har sprängts. Ett vrak har en bränslecell hälften av gångerna (${B.WRECK_CELL_CHANCE}), en station har en i valvet.`,
+  );
+  return L;
+}
+
 // ---------- the simulated player ----------
 // The loot of a wreck as it really is, and how long it takes to bring it home in trips of `carry`.
 function wreckRun(state, wreck, carry, boarders) {
@@ -112,6 +154,7 @@ function wreckRun(state, wreck, carry, boarders) {
 
 // One hour of play in a sector, for a crew of `players`. Gives what came in and what went out, and when each of
 // a list of purchases could be afforded.
+// The sanctuary has no pirate waves and no distress calls.
 export function simulateHour(sector, players, seed = 1) {
   const state = createState(seed);
   if (sector !== 0) {
@@ -119,6 +162,7 @@ export function simulateHour(sector, players, seed = 1) {
     generateSector(state, sector);
   }
   const tier = state.sectors[sector].tier;
+  const calm = state.sectors[sector].kind === 'sanctuary';
   const pace = B.PIRATE_PACE[Math.min(3, players)];
   const carry = B.CARRY_MAX;
   let t = 0,
@@ -129,7 +173,7 @@ export function simulateHour(sector, players, seed = 1) {
     wrecks = 0,
     pods = 0;
   const income = { pirater: 0, vrak: 0, pods: 0, malm: 0, nödanrop: 0 };
-  let at = thingsOf(state, 'station').find((s) => s.home) || state.ship;
+  let at = thingsOf(state, 'station').find((s) => s.home || s.sanctuary) || state.ship;
   const targets = [...thingsOf(state, 'wreck'), ...thingsOf(state, 'pod')];
   // A wreck that has been boarded blows up when its reactor runs out, and then a new one drifts in somewhere
   // else, as long as there are fewer than three (see blowUp in boarding.js). These are the times they come.
@@ -146,7 +190,7 @@ export function simulateHour(sector, players, seed = 1) {
   };
   // Pirate waves come on their own clock, whatever the crew is doing.
   const waves = () => {
-    while (t >= nextWave && t < 3600) {
+    while (!calm && t >= nextWave && t < 3600) {
       wave++;
       const n = Math.min(1 + Math.floor(wave / 3) + (tier >= 2 ? 1 : 0), 4);
       const gunboat = tier >= 1 && wave >= 2 ? 0.2 + 0.12 * tier : 0;
@@ -213,11 +257,37 @@ export function simulateHour(sector, players, seed = 1) {
   }
   // Rocks broken on the way, and distress calls, over the hour.
   const ore = (ASSUME.rocksPerHour + mined) * ASSUME.orePerRock * B.ORE_PRICE;
-  const raids = (3600 / avg(B.RAID_GAP)) * ASSUME.raidsHelped * B.RAID_REWARD;
+  const raids = calm ? 0 : (3600 / avg(B.RAID_GAP)) * ASSUME.raidsHelped * B.RAID_REWARD;
   credits += ore + raids;
   income.malm = ore;
   income.nödanrop = raids;
-  return { credits, income, kills, wrecks, pods, fuelIn, fuelOut, tier };
+  return { credits, income, kills, wrecks, pods, fuelIn, fuelOut, tier, system: state.sectors[sector].name };
+}
+
+// The places the simulated player spends an hour in, in the first world of the smallest size: the sanctuary, an
+// inhabited system next to it, one at danger level 2 and an empty one, alone, and the one next door with three.
+const FIRST_HOUR_SANCTUARY = 0.25;
+export function places() {
+  const w = createState(1).sectors;
+  const next = w.find((x) => x.kind === 'inhabited' && x.hops === 1) || w.find((x) => x.hops === 1);
+  const deep = w.find((x) => x.kind === 'inhabited' && x.tier === 2) || w.find((x) => x.tier >= 1);
+  const empty = w.find((x) => x.kind === 'empty' && x.wrecks > 0) || w.find((x) => x.kind === 'empty');
+  return [
+    ['Ensam, fristaden', 0, 1],
+    [`Ensam, grannsystem (nivå ${next.tier})`, next.id, 1],
+    [`Ensam, bebott system på nivå ${deep.tier}`, deep.id, 1],
+    [`Ensam, tomt system (nivå ${empty.tier})`, empty.id, 1],
+    [`Tre spelare, grannsystem (nivå ${next.tier})`, next.id, 3],
+  ];
+}
+
+// What a player alone earns in the first hour: a quarter of an hour in the sanctuary, as the time budget has
+// it, and then out in the inhabited system next door.
+export function firstHourIncome() {
+  const [sanctuary, next] = places();
+  const a = simulateHour(sanctuary[1], 1).credits;
+  const b = simulateHour(next[1], 1).credits;
+  return a * FIRST_HOUR_SANCTUARY + b * (1 - FIRST_HOUR_SANCTUARY);
 }
 
 // When each purchase in a plain order could be afforded, at the income of the first hour.
@@ -238,14 +308,13 @@ export function buildSheet() {
     '',
   ];
   L.push(...priceSheet());
-  const runs = [
-    ['Ensam, första sektorn', 0, 1],
-    ['Ensam, The Narrows (nivå 2)', 3, 1],
-    ['Tre spelare, första sektorn', 0, 3],
-  ].map(([name, sector, players]) => ({ name, ...simulateHour(sector, players) }));
+  L.push('', ...worldSheet());
+  const runs = places().map(([name, sector, players]) => ({ name, ...simulateHour(sector, players) }));
+  // The first hour: a quarter of an hour in the sanctuary, as the time budget has it, and then out next door.
+  const firstHour = firstHourIncome();
   L.push(
     '',
-    '## 3. En timme med den simulerade spelaren',
+    '## 4. En timme med den simulerade spelaren',
     '',
     'Spelaren flyger till närmaste vrak eller pod, bryter upp låset, bär hem lootet i vändor och skjuter ner varje piratvåg som kommer. Ett bordat vrak sprängs när reaktorn har gått, och då driver ett nytt in längre ut, som i spelet. Finns inget att borda bryts asteroider. Ensam avbryter en strid allt annat. Med fler spelare stannar någon på skeppet och slåss medan de andra bordar. Allt räknas med spelets egna avstånd, loot, vågor och priser.',
     '',
@@ -263,13 +332,15 @@ export function buildSheet() {
     '| Bränsle in (celler) | ' + runs.map((r) => Math.round(r.fuelIn)).join(' | ') + ' |',
     '| Bränsle ut (flygning) | ' + runs.map((r) => Math.round(r.fuelOut)).join(' | ') + ' |',
     '',
-    '### Hur länge det dröjer till varje köp, ensam i första sektorn',
+    `Världen är den första av storleken ${SIZE_NAMES.short} (frö 1). Timmen spelas i ett och samma system, så hopp mellan system räknas inte här, se avsnitt 3 för vad de kostar.`,
     '',
-    'Köpen görs i en enkel ordning, och tiden är minuter från start vid inkomsten ovan.',
+    '### Hur länge det dröjer till varje köp, ensam den första timmen',
+    '',
+    `Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: ${Math.round(firstHour)} krediter. Köpen görs i en enkel ordning, och tiden är minuter från start.`,
     '',
     '| Köp | Minuter |',
     '|---|---|',
-    ...purchases(runs[0].credits).map((p) => `| ${p.name} | ${p.at} |`),
+    ...purchases(firstHour).map((p) => `| ${p.name} | ${p.at} |`),
     '',
     '### Antaganden',
     '',

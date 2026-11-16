@@ -7,101 +7,97 @@ Prioritet: Hög, Medel, Låg.
 
 Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa.
 
-**A** – strong model, medium level – Fristadens priser och ekonomibladet i takt med världen
-- F-232 – Bränslet i fristaden kostar som hos en neutral bas, så att alla priser där är som hos en neutral bas
-- F-231 – Ekonomibladet räknar med fristaden och den nya världen, så att siffrorna stämmer med spelet
-
-**B** – strong model, high level – Världen steg 4: uppdrag och story
+**A** – strong model, high level – Världen steg 4: uppdrag och story
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 
-**C** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
+**B** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
 - D-217 – Designskiss av varvet utifrån och inifrån, och en större utsida som hänger ihop med basens tre våningar (ersätter designen i F-103)
 - D-216 – Designtest av markeringar som visar snabbaste vägen ut genom de dörrar man har öppnat
 - D-218 – Demo med full design av dockningsringen som vrids i fasta lägen
 
-**D** – strong model, medium level – Provspelslista med testlägen
+**C** – strong model, medium level – Provspelslista med testlägen
 - F-222 – En lista över det som väntar på provspel, med länkar som startar rätt situation direkt, så att varje sak går att prova på några minuter
 
-**E** – strong model, medium level – Butik med bilder
+**D** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**F** – strong model, high level – Uppgraderingar och ekonomi per roll
+**E** – strong model, high level – Uppgraderingar och ekonomi per roll
 - F-188 – Uppgraderingarna sorteras efter kategori och roll
 - D-189 – Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar
 
-**G** – strong model, medium level – Förfina rollerna
+**F** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 
-**H** – strong model, medium level – Innehållskatalog
+**G** – strong model, medium level – Innehållskatalog
 - D-223 – En lista ur koden över allt som finns i spelet med sina siffror, så att överblicken alltid stämmer
 
-**I** – strong model, medium level – Verktyg för backloggen
+**H** – strong model, medium level – Verktyg för backloggen
 - F-228 – Markera, flytta till klart och ge nya bokstäver med ett verktyg, så att agenterna gör färre misstag
 
-**J** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
+**I** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
 - D-227 – Dela upp de två stora filerna efter ämne, så att två agenter krockar mer sällan
 
-**K** – strong model, high level – Pekskärm
+**J** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**L** – strong model, high level – Viewer på en extra skärm
+**K** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 
-**M** – strong model, high level – Sällsynta skepp
+**L** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**N** – strong model, high level – Värme
+**M** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**O** – strong model, high level – Slå ut och borda
+**N** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**P** – strong model, high level – Missiler och raketer
+**O** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**Q** – strong model, high level – Kontakt med andra skepp
+**P** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**R** – strong model, high level – Anomalier
+**Q** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**S** – strong model, high level – En värld som förändras
+**R** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**T** – strong model, high level – Ljudeffekter
+**S** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**U** – strong model, high level – Visuella effekter och feedback
+**T** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 
-**V** – strong model, high level – Förslag: ekonomi och belöningar
+**U** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**W** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**V** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**X** – strong model, high level – Handel
+**W** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
 
-Väntar på användaren: tio krockar i regelboken (docs/rules.md, överst), fristadens butik som bara säljer de billigaste uppgraderingarna (R-882, byggd som förslag), förslagen D-187 (meddelanden), D-193 (permanenta prylar), D-186 (skeppets dator) och de kvarvarande frågorna i D-172 (straff i låsspel). F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
+Väntar på användaren: elva krockar i regelboken (bland dem krock 14, att fristaden ger mest pengar, F-233), hur långt bort slutet ska ligga i en kort värld (F-234), (docs/rules.md, överst), fristadens butik som bara säljer de billigaste uppgraderingarna (R-882, byggd som förslag), förslagen D-187 (meddelanden), D-193 (permanenta prylar), D-186 (skeppets dator) och de kvarvarande frågorna i D-172 (straff i låsspel). F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
 
 ## Hög
 
 | ID | Vad | Status |
 |---|---|---|
-| F-232 | Bränslet i fristaden kostar som hos en neutral bas. Användaren 2026-11-16: alla priser i fristaden är som hos en neutral bas, annars kan man åka dit och köpa billigare (R-1091). I dag kostar bränslet hälften där. Ekonomibladet uppdateras samtidigt | Pågår 2026-11-16 |
-| F-231 | Ekonomibladet (tools/economy.mjs, docs/economy.md) räknar fortfarande som om första systemet har pirater och fasta sektorer. I fristaden kommer inga pirater, och världen är nu en karta av system. Modellen behöver räkna med det, se D-104. Användaren 2026-11-16: bladet ska alltid hållas i takt med spelet (AGENTS.md) | Pågår 2026-11-16 |
+| F-233 | Fristaden ger mer pengar än systemen utanför. Ekonomibladet 2026-11-16: där kommer inga pirater som avbryter, och nya vrak driver in hela tiden, så en timme i fristaden ger ungefär 9 600 krediter mot 9 000 i ett grannsystem. Det krockar med att de större pengarna ska finnas längre ut (krock 14 i docs/rules.md). Rekommendation: inga nya vrak driver in i fristaden | Väntar på användaren |
+| F-234 | Slutet ligger nära i en kort värld. Ekonomibladet 2026-11-16: i den minsta världen ligger slutet i snitt två hopp från fristaden, och det längsta avståndet är ungefär fyra hopp, så farlighetsnivå 3 nås sällan. Frågan är om vägen till slutet ska vara längre, till exempel genom att slutet läggs längst bort och systemen får färre genvägar | Väntar på användaren |
 | F-222 | Provspelslista med testlägen. En lista över det som är byggt men inte provspelat, med en direktlänk per sak, och adresser som startar rätt situation direkt (till exempel anfall på egen station, bas med personaldel, tom tank vid asteroider). Synpunkterna förs in i regelboken. Användaren 2026-11-16: ja | Ej påbörjad |
 | D-223 | Innehållskatalog som skapas ur koden: skeppsklasser, vakttyper, stationer, faktioner, uppgraderingar, utrustning och låsspel med sina viktigaste siffror, så att det alltid finns en överblick som stämmer. Användaren 2026-11-16: ja | Ej påbörjad |
 | D-227 | Dela upp de stora filerna för bordning (src/sim/boarding.js och src/render/boarding.js, runt 1 000 rader var) efter ämne: vakter, lås, mainframe, inredning och ritning, så att två agenter krockar mer sällan. Körs när den andra agenten är klar med insidorna. Användaren 2026-11-16: ja | Ej påbörjad |
@@ -352,3 +348,5 @@ Väntar på användaren: tio krockar i regelboken (docs/rules.md, överst), fris
 | F-195 | Systemradar. Användaren 2026-11-15: en uppgradering man köper, som visar om närliggande system är vänliga och vilken faktion de tillhör. Den scannar de närliggande systemen av sig själv, och statusen uppdateras när man kommer inom räckvidd. Öppet: hur många hopp bort den når, om den har nivåer, vad kartan visar utan den, och om den också visar faror och stationer. Hör ihop med D-089 och stjärnkartan som bild Besked 2026-11-16: två nivåer, nivå 1 når ett hopp för 200 krediter och nivå 2 två hopp för 350 krediter. Den visar ägare och omstridda grannsystem Byggt 2026-11-16: systemradarn köps i en varvsbutik, nivå 1 för 200 och nivå 2 för 350, och visar på stjärnkartan grannsystemen ett respektive två hopp bort som de är nu | 2026-11-16 |
 | F-213 | Fristaden: startsystemet nära kartans mitt, utan pirater och faktioner som bråkar, med en neutral bas som inte kan tas över. Inga anfall sker där och där finns inget varv. Kartan ska inte vara symmetrisk. Ersätter att den egna varvsstationen i första sektorn aldrig anfalls. Hänger ihop med D-089 och D-100 Byggt 2026-11-16: spelet börjar i fristaden nära kartans mitt med en neutral bas utan varv. Inga pirater, anfall eller prisjägare kommer dit, basen kan inte tas över och glömmer skott mot sig, bränslet kostar hälften, och butiken säljer bara uppgraderingar som kostar högst 150 (agentens förslag, väntar på användaren) | 2026-11-16 |
 | D-089 | Från D-075: fler och mindre system i ett nät av hoppvägar i stället för fem sektorer i rad. Besked 2026-11-14: genererade system, och man väljer vid start hur stor kartan ska vara, sedan anpassas innehållet Förslaget är framtaget 2026-11-15 i docs/proposal-world.md och väntar på användarens svar på frågorna där. Besked 2026-11-15 efter att förslaget lästs: utforskningen ska byggas mer som i Escape Velocity. Många system, men inte fullt så stora, och i olika storlekar så att de känns fräscha. Hoppen med bränsle blir viktiga, och äventyret gör uppgraderingarna intressantare. Systemen ska vara runda som ett solsystem, inte fyrkantiga (F-196). Förslagets tre storlekar på 6, 10 och 16 system behöver göras om efter detta Besked 2026-11-15: antalet solsystem väljs i starten Besked 2026-11-15: en kort omgång i co-op ska gå att spela på ett par timmar, och längre om man vill. Det minsta valet av antal system ska alltså ge en omgång på ungefär två timmar. Inte så stort som Escape Velocity Besked 2026-11-15: fem system låter lite om systemen är små, så det minsta valet ska vara fler än fem. Vissa system går inte att hitta själv på kartan, utan låses upp av storyn, se D-052 Besked 2026-11-15: man ska kunna upptäcka systemen själv, precis som i Escape Velocity, och inte bara genom kartor man köper eller hittar. Det ändrar det tidigare beslutet att system nås med stjärnkartor. Dolda system låses fortfarande upp av storyn. Öppet: om ett hopp ut i det okända kostar mer eller är mer riskabelt, och vad en köpt karta då ger Besked 2026-11-15: stjärnkartan visar närliggande system som man inte har besökt, märkta som outforskade, på samma sätt som i Escape Velocity. Det behövs för att sonden ska gå att använda, och det uppmanar till utforskning. Dolda system syns inte alls förrän storyn har lagt till dem Besked 2026-11-15, ankomst: när man hoppar till ett utforskat system kan Captain välja vilken bas skeppet ska anlända vid. Captain ser senast kända status på de baser skeppet har upptäckt, eller aktuell status om det ligger en boj i systemet. Har Captain inte valt en bas har spelet satt en i förväg: i första hand en känd vänlig bas, i andra hand en neutral, i tredje hand en fientlig. Hoppar man in i ett system utan att veta vad som finns där blir ankomstplatsen slumpad, och då får man scanna eller utforska för att hitta mer. Agentens tillägg, inte bestämda: man anländer en bit från basen och utanför en fientlig bas räckvidd, en slumpad ankomst hamnar aldrig i stjärnans farliga del eller intill en fientlig bas, och i ett utforskat system utan kända baser slumpas platsen Besked 2026-11-15: i ett känt system anländer man en liten bit från basen, med nosen mot den och motorerna på svag effekt, så att skeppet glider mot basen Besked 2026-11-15: när man hoppar in i ett okänt system hamnar man aldrig rakt i stjärnan, och aldrig så nära den att man inte hinner styra bort Besked 2026-11-15: olika system ska få olika stjärnor, i färg och storlek, enligt förslag D på designsidan. Det byggs tillsammans med den genererade kartan Besked 2026-11-16: startsystemet är en fristad nära kartans mitt (F-213), och kartan ska inte vara symmetrisk. Agentens förslag i docs/proposal-bases.md avsnitt 5: klungor med tomrum, hoppvägar mellan närmaste grannar med några genvägar, återvändsgränder och slingor, faktioner som klumpar och slutbasen långt ut Besked 2026-11-16: 8, 12 eller 18 system att välja mellan vid start (provas), 2–3 hoppvägar från varje system, och en köpt eller hittad stjärnkarta visar 3 system i närheten med status som vid köpet, utan uppdateringar, med samma effekt som en scanning Besked 2026-11-16: hopp till outforskade system kostar inte mer. Lika många tomma system (utan stationer) som bebodda, alltså 16, 24 eller 36 totalt, med fler tomma ju längre ut man kommer Besked 2026-11-16: ett tomt system har asteroider, ibland ett vrak eller en pod och ibland pirater. Asteroider måste alltid finnas i varje system, så att man kan skaffa bränsle om det tar slut Besked 2026-11-16: tre storlekar blandade med flest små, farligheten ökar ett steg per två hopp från start, slutet slumpas bland de tre bebodda system som ligger längst bort, och tomma system kan ibland ha ett tätt asteroidfält eller ett vrakfält Besked 2026-11-16: system kan ägas av en faktion, men också vara omstridda, där faktioner bråkar med varandra (hör ihop med F-119 och F-087) Besked 2026-11-16: ungefär ett av fem bebodda system är omstritt, med båda faktionernas stationer och patruller som skjuter på varandra, och anseende som stiger hos den man hjälper och sjunker hos den andra. Ägare byts inte i steg 3 (F-087). Kartan visar ägarens färg och randigt för omstridda, för system man köpt karta över, scannat eller har en boj i, och en boj visar alltid aktuell status. Alla frågor i steg 3 är besvarade Byggt 2026-11-16 i världssteg 3: en ny värld för varje omgång med 8, 12 eller 18 bebodda system och lika många tomma (val i titelmenyn), klungor och hoppvägar utan korsningar, 2–3 vägar per system och återvändsgränder bara bland tomma system långt ut, farlighet efter avstånd, slutet bland de tre bebodda systemen längst bort, faktionernas områden i ett stycke, omstridda system där två faktioner slåss (anseende upp hos den ena och ned hos den andra), stjärnkarta (J) där Captain väljer var man anländer och Engineer skickar sond till ett grannsystem, köpta och hittade stjärnkartor som visar tre system som vid köpet, och bojar som visar systemet som det är nu. Hopp kräver ingen karta längre. Olika stjärnor per system är inte byggt än, se F-230. Testas i tests/world.test.js | 2026-11-16 |
+| F-232 | Bränslet i fristaden kostar som hos en neutral bas. Användaren 2026-11-16: alla priser i fristaden är som hos en neutral bas, annars kan man åka dit och köpa billigare (R-1091). I dag kostar bränslet hälften där. Ekonomibladet uppdateras samtidigt Byggt 2026-11-16: bränslet i fristaden kostar som hos en neutral bas, och ett test jämför alla priser i fristaden med en neutral bas | 2026-11-16 |
+| F-231 | Ekonomibladet (tools/economy.mjs, docs/economy.md) räknar fortfarande som om första systemet har pirater och fasta sektorer. I fristaden kommer inga pirater, och världen är nu en karta av system. Modellen behöver räkna med det, se D-104. Användaren 2026-11-16: bladet ska alltid hållas i takt med spelet (AGENTS.md) Byggt 2026-11-16: bladet har ett nytt avsnitt om världen (system, stationer, vrak och hopp till slutet för varje storlek), och timmen spelas i fristaden, ett grannsystem, ett bebott system längre ut och ett tomt system. Den första timmen räknas som en kvart i fristaden och resten i grannsystemet. Fynd: fristaden ger mest (F-233), och i en kort värld ligger slutet bara två hopp bort (F-234) | 2026-11-16 |
