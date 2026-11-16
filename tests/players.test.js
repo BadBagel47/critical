@@ -6,7 +6,7 @@ import { stepPlayers } from '../src/sim/step.js';
 import { addPlayer, removePlayer, playerById, holderOf } from '../src/sim/players.js';
 import { thingsOf } from '../src/sim/things.js';
 import { speedOf } from '../src/sim/ship.js';
-import { withWreck } from './helpers.js';
+import { withWreck, oldShip } from './helpers.js';
 import { fillPurses } from '../src/sim/purses.js';
 
 const DT = 1 / 60;
@@ -18,7 +18,7 @@ const run = (s, inputs, seconds) => {
 const quiet = (s) => {
   s.spawn.timer = 1e9;
   s.raidTimer = 1e9;
-  return withWreck(s);
+  return oldShip(withWreck(s));
 };
 const crewOf = (n) => {
   const s = quiet(createState(1));
@@ -127,6 +127,7 @@ test('station desks only take orders from a player who is inside the station', (
   const s = crewOf(2);
   const station = thingsOf(s, 'station').find((st) => st.sanctuary);
   s.ship.docked = station.id;
+  s.ship.shieldOn = false;
   s.ship.fuel = 20;
   fillPurses(s, 500);
   stepPlayers(s, { 1: { shop: [{ action: 'refuel' }] } }, DT);

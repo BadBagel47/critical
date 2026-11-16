@@ -15,6 +15,7 @@ import { forward, toWorld, dist } from '../src/sim/util.js';
 import { sceneOf } from '../src/scene.js';
 import { gatherForTesting } from '../src/sim/sectors.js';
 import { fillPurses } from '../src/sim/purses.js';
+import { oldShip } from './helpers.js';
 
 const DT = 1 / 60;
 const stations = (s) => thingsOf(s, 'station');
@@ -23,6 +24,7 @@ const salvage = (s) => thingsOf(s, 'salvage');
 // stands near the start, as in a test game, but the ship has nothing bought.
 const quiet = (seed = 1) => {
   const s = createState(seed);
+  oldShip(s);
   gatherForTesting(s);
   s.spawn.timer = 1e9;
   s.raidTimer = 1e9;
@@ -77,7 +79,8 @@ test('there are three factions, and every station has a side', () => {
 test('a wary station charges more, and a closed one neither trades nor lets anyone aboard', () => {
   const s = quiet(),
     st = dockAt(s, post(s));
-  s.ship.fuel = 40;
+  s.ship.shieldOn = false;
+  s.ship.fuel = 10;
   const normal = servicePrices(s, st).refuel.price;
   s.standing[st.side] = -25;
   step(s, {}, DT);
@@ -94,7 +97,7 @@ test('a wary station charges more, and a closed one neither trades nor lets anyo
   assert.ok(s.events.some((e) => e.type === 'standing' && e.mood === 'closed' && !e.better));
   fillPurses(s, 500);
   step(s, { shop: [{ action: 'refuel' }], system: { board: [0] } }, DT);
-  assert.equal(s.ship.fuel, 40, 'no trade');
+  assert.equal(s.ship.fuel, 10, 'no trade');
   assert.equal(s.players[0].inside, null, 'and no way in');
   assert.ok(s.events.some((e) => e.type === 'stationClosed'));
   assert.equal(st.lock, 'open', 'but it does not shoot');
@@ -414,7 +417,8 @@ test('the docking field upgrade makes the extra shield stronger', () => {
   dockAt(s, yard(s));
   fillPurses(s, CATALOG.dockfield.price);
   step(s, { shop: [{ action: 'buy', item: 'dockfield' }] }, DT);
-  assert.equal(s.ship.mods.dockfield, 1);
+  step(s, { shop: [{ action: 'install', item: 'dockfield' }] }, DT);
+  assert.equal(s.ship.mods.dockfield, 1, 'bought, and installed at the yard');
   assert.equal(dockShieldMax(s.ship), B.DOCK_SHIELD + B.DOCK_SHIELD_MORE);
   run(s, {}, dockShieldMax(s.ship) / B.DOCK_SHIELD_RECHARGE + 0.5);
   assert.equal(s.ship.dockShield, B.DOCK_SHIELD + B.DOCK_SHIELD_MORE);

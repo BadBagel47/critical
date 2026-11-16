@@ -132,6 +132,11 @@ export function stepGunner(state, cmd, dt) {
   const ship = state.ship;
   ship.firing = false;
   pickWeapon(ship, cmd && cmd.weapon);
+  // The Gunner switches the shield on and off (R-1129).
+  if (cmd && cmd.shield) {
+    ship.shieldOn = !ship.shieldOn;
+    state.events.push({ type: ship.shieldOn ? 'shieldOn' : 'shieldOff' });
+  }
   if (cmd && cmd.mark) markByGunner(state, cmd.mark);
   if (cmd && cmd.aim) {
     const mount = turretMount(ship);
@@ -143,6 +148,8 @@ export function stepGunner(state, cmd, dt) {
       ship.wingAngles[i] = turnToward(ship.wingAngles[i], way, B.TURRET_SLEW * dt);
     });
   }
+  // Without the nose turret the gun is fixed and fires straight ahead (R-733).
+  if (!has(ship, 'nose')) ship.turretAngle = ship.heading;
   ship.fireCooldown = Math.max(0, ship.fireCooldown - dt);
   ship.heavyCool = Math.max(0, ship.heavyCool - dt);
   ship.rocketCool = Math.max(0, ship.rocketCool - dt);

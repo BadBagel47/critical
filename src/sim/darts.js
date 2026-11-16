@@ -1,26 +1,13 @@
 // Darts: small fighters launched from the fighter bay. They escort the ship and attack hostile ships.
 import { B } from './balance.js';
 import { forward, headingTo, turnToward, angleDiff, toWorld, dist, TAU } from './util.js';
-import { has } from './upgrades.js';
+import { dartsMax } from './upgrades.js';
 import { CREW, enemies } from './sides.js';
 
-// The Captain sends the Darts out and calls them home. With autolaunch they go out when hostile ships
-// show up, and come home when it has been quiet for a while.
-function decide(state, cmd, dt, hostilesNear) {
+// The Captain sends the Darts out and calls them home, by hand only (R-1127).
+function decide(state, cmd) {
   const ship = state.ship;
   if (cmd && cmd.darts) ship.dartsOut = !ship.dartsOut;
-  if (has(ship, 'auto')) {
-    if (hostilesNear) {
-      ship.dartsOut = true;
-      ship.dartQuiet = 0;
-    } else {
-      // They are called home once, at the moment it has been quiet for a while after a fight. Darts that the
-      // Captain sends out when all is calm stay out until the Captain calls them back.
-      const before = ship.dartQuiet;
-      ship.dartQuiet += dt;
-      if (before <= B.DART_QUIET && ship.dartQuiet > B.DART_QUIET && ship.dartsOut) ship.dartsOut = false;
-    }
-  }
   if (ship.docked) ship.dartsOut = false;
 }
 
@@ -43,7 +30,7 @@ function launchAndBuild(state, dt) {
     });
     state.events.push({ type: 'dartOut' });
   }
-  if (ship.dartStock + state.darts.length >= B.DART_COUNT) return;
+  if (ship.dartStock + state.darts.length >= dartsMax(ship)) return;
   ship.dartRegen += dt;
   if (ship.dartRegen < B.DART_REGEN) return;
   ship.dartStock++;
@@ -107,10 +94,10 @@ function patrol(state, d) {
   return { want: headingTo(gx - d.x, gy - d.y), speed: B.DART_SPEED * (dist(d.x, d.y, gx, gy) > 60 ? 1 : 0.75) };
 }
 
-export function stepDarts(state, cmd, dt, hostilesNear) {
+export function stepDarts(state, cmd, dt) {
   const ship = state.ship;
-  if (!has(ship, 'bay')) return;
-  decide(state, cmd, dt, hostilesNear);
+  if (!dartsMax(ship)) return;
+  decide(state, cmd);
   launchAndBuild(state, dt);
   for (const d of state.darts) {
     d.cool -= dt;

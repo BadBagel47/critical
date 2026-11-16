@@ -52,6 +52,11 @@ check(
 await page.evaluate(async () => {
   const { gatherForTesting } = await import(new URL('src/sim/sectors.js', document.baseURI).href);
   gatherForTesting(window.__critical.state);
+  // The ship as it was before the scanner and the nose turret were parts, with the shield on (R-1129, R-1146).
+  const ship = window.__critical.state.ship;
+  Object.assign(ship.mods, { scanner: 1, nose: 1 });
+  Object.assign(ship.owned, { scanner: 1, nose: 1 });
+  ship.shieldOn = true;
 });
 
 // Captain: throttle up and turn.
@@ -446,7 +451,7 @@ await page.evaluate(() => {
   s.ship.y = st.y + 140;
   s.ship.heading = 0;
   s.ship.docked = st.id;
-  s.ship.fuel = 30;
+  s.ship.fuel = 5;
   s.purses = { captain: 2000, gunner: 2000, engineer: 2000 };
   window.__critical.view.cam = { x: s.ship.x, y: s.ship.y };
 });
@@ -477,28 +482,45 @@ await page.waitForTimeout(200);
 check(await settles(async () => (await get("v.panel === 'shop'")) === true), 'F at a desk opens the station panel');
 await clickOn('service.refuel');
 await page.waitForTimeout(150);
-check(await settles(async () => (await get('s.ship.fuel')) === 100), 'refuelling is free at a friendly station');
-for (const item of ['twin', 'heavy']) {
-  await clickOn('buy.' + item);
+check(await settles(async () => (await get('s.ship.fuel')) >= 24.9), 'refuelling is free at a friendly station');
+// Buy with the filters (R-1123, R-1176): a part goes into the stores, a slot opens at once, gear works at once.
+const buyThis = async (role, cat, item) => {
+  await clickOn('filter.role.' + role);
+  await clickOn('filter.cat.' + cat);
+  await page.waitForTimeout(60);
+  await clickOn('item.' + item);
+  await page.waitForTimeout(60);
+  await clickOn('act.buy');
   await page.waitForTimeout(80);
-}
-check(
-  await settles(async () => await get('s.ship.mods.twin === 1 && s.ship.mods.heavy === 1')),
-  'clicking shipyard rows installs upgrades',
-);
-await clickOn('tab.system');
-await page.waitForTimeout(100);
-check(await settles(async () => (await get('v.shopTab')) === 'system'), 'the tabs switch what is for sale');
-await clickOn('buy.emit');
-await page.waitForTimeout(80);
-check(await settles(async () => (await get('s.ship.mods.emit')) === 1), 'systems can be bought from the second tab');
-await clickOn('tab.armory');
-await page.waitForTimeout(100);
-await clickOn('buy.pack');
-await page.waitForTimeout(80);
-check(await settles(async () => (await get('s.ship.mods.pack')) === 1), 'boarding gear is in the armory tab');
+};
+// The nose turret takes the Gunner's one hull slot, so two more are bought first.
+await buyThis('gunner', 'slot', 'slotH_gunner');
+await buyThis('gunner', 'slot', 'slotH_gunner');
+check(await settles(async () => (await get('s.ship.roleSlots.gunner.hull')) === 3), 'extra slots open at once');
+await buyThis('gunner', 'upgrade', 'twin');
+check(await settles(async () => (await get('s.ship.owned.twin')) === 1), 'a part is bought into the stores');
+await buyThis('gunner', 'upgrade', 'heavy');
+check(await settles(async () => (await get('s.ship.owned.heavy')) === 1), 'and another part fits now');
+await buyThis('gunner', 'boarding', 'pack');
+check(await settles(async () => (await get('s.ship.mods.pack')) === 1), 'boarding gear works at once');
 check(await settles(async () => (await get('Math.min(...Object.values(s.purses))')) < 2000), 'upgrades cost credits');
 await shot('12-station');
+// The shipyard: the ship with its slots, and a part from the stores installed in a free one.
+await page.evaluate(() =>
+  Object.assign(window.__critical.view.shop, { mode: 'yard', slot: { role: 'gunner', kind: 'hull', i: 1 } }),
+);
+await page.waitForTimeout(100);
+await clickOn('act.install.twin');
+await page.waitForTimeout(80);
+await clickOn('slot.gunner.hull.2');
+await page.waitForTimeout(60);
+await clickOn('act.install.heavy');
+await page.waitForTimeout(80);
+check(
+  await settles(async () => await get('s.ship.mods.twin === 1 && s.ship.mods.heavy === 1')),
+  'parts from the stores are installed at the shipyard',
+);
+await shot('12-shipyard');
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(100);
 check(await settles(async () => (await get("v.panel === 'shop'")) === false), 'F closes the station panel');

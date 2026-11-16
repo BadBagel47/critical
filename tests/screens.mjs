@@ -57,6 +57,40 @@ const SCENES = [
     },
   },
   {
+    name: 'shop',
+    query: '?still&test',
+    frames: 60,
+    setup: () => {
+      const c = window.__critical,
+        s = c.state;
+      const st = c.stations.find((x) => x.home);
+      s.ship.x = st.x;
+      s.ship.y = st.y + 140;
+      s.ship.docked = st.id;
+      c.board();
+      c.view.panel = 'shop';
+      Object.assign(c.view.shop, { mode: 'shop', role: 'all', cat: 'all', sel: 'tank', scroll: 0 });
+      s.ship.mods.tank = 2;
+      s.ship.owned.tank = 2;
+    },
+  },
+  {
+    name: 'shipyard',
+    query: '?still&test',
+    frames: 60,
+    setup: () => {
+      const c = window.__critical,
+        s = c.state;
+      const st = c.stations.find((x) => x.home);
+      s.ship.x = st.x;
+      s.ship.y = st.y + 140;
+      s.ship.docked = st.id;
+      c.board();
+      c.view.panel = 'shop';
+      Object.assign(c.view.shop, { mode: 'yard', slot: { role: 'gunner', kind: 'hull', i: 0 } });
+    },
+  },
+  {
     name: 'hostile-inside',
     query: '?still&test',
     frames: 60,

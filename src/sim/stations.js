@@ -7,7 +7,17 @@ import { thingsOf, findThing, findDock, mapInfo } from './things.js';
 import { makeVessel } from './vessels.js';
 import { currentSector } from './sectors.js';
 import { teleportAllHome } from './boarding.js';
-import { buyUpgrade, hullMax, fuelMax, priceOf, payerOf, CATALOG } from './upgrades.js';
+import {
+  buyUpgrade,
+  installPart,
+  removePart,
+  sellPart,
+  hullMax,
+  fuelMax,
+  priceOf,
+  payerOf,
+  CATALOG,
+} from './upgrades.js';
 import { payBounty } from './bounty.js';
 import { fuelUnit } from './fuel.js';
 import { readChart } from './intel.js';
@@ -183,13 +193,12 @@ export function fall(state, st, by = PIRATE) {
 
 // ---------- trade ----------
 export const yardOpen = (st) => st.shipyard;
-// Why an item is not sold at a station, or null when it is. Boarding gear is sold at any trading station, and
-// everything else at a shipyard. The base of the sanctuary has no shipyard, but sells the cheapest upgrades.
+// Why an item is not sold at a station, or null when it is. Every trading station sells everything: parts are
+// installed at a shipyard afterwards (R-1132). The base of the sanctuary sells only the cheapest upgrades (R-882).
 export function notSoldHere(state, st, id) {
   const item = CATALOG[id];
-  if (!item || item.tab === 'armory' || yardOpen(st)) return null;
-  if (st.sanctuary && priceOf(state.ship, id) <= B.SANCTUARY_SHOP_MAX) return null;
-  return st.sanctuary ? 'NOT SOLD IN THE SANCTUARY' : 'NO SHIPYARD HERE';
+  if (!item || item.tab === 'armory' || !st.sanctuary) return null;
+  return priceOf(state.ship, id) <= B.SANCTUARY_SHOP_MAX ? null : 'NOT SOLD IN THE SANCTUARY';
 }
 // What the crew pays compared with the listed price: less at a station that owes them a favour,
 // more at one that is wary of them.
@@ -212,6 +221,15 @@ export function servicePrices(state, st) {
     repair: { need: Math.ceil(wear), price: Math.ceil(wear * B.REPAIR_PRICE[a] * k) },
     rockets: { need: rockets, price: Math.ceil(rockets * B.ROCKET_PRICE[a] * k) },
     chart: { need: chart, price: Math.ceil(B.CHART_PRICE[a] * k) },
+    // Probes and buoys are bought as many as the ship holds (R-1147).
+    probes: {
+      need: B.PROBE_STOCK - ship.probeStock,
+      price: Math.ceil((B.PROBE_STOCK - ship.probeStock) * B.PROBE_PRICE * k),
+    },
+    buoys: {
+      need: B.BUOY_STOCK - ship.buoyStock,
+      price: Math.ceil((B.BUOY_STOCK - ship.buoyStock) * B.BUOY_PRICE * k),
+    },
     // Ore from the hold is sold here. `price` is what it brings in.
     ore: { need: state.ship.ore, price: state.ship.ore * B.ORE_PRICE },
     // A bounty is paid in full wherever it is paid, and a station of the crew's own takes it too.
@@ -219,10 +237,9 @@ export function servicePrices(state, st) {
   };
 }
 
-// Whose purse pays for each service (R-1105). A bounty is paid by whoever stands at the desk (R-1117).
-export const SERVICE_ROLE = { refuel: 'captain', chart: 'captain', repair: 'engineer', rockets: 'gunner' };
-// The purse a service is paid from, for the player who orders it.
-export const servicePayer = (state, action, playerId) => SERVICE_ROLE[action] || ownPurse(state, playerId);
+// Every service at the desk is paid by whoever orders it, from their own purse, so that the crew can take turns
+// (R-1121). The bounty too (R-1117).
+export const servicePayer = (state, action, playerId) => ownPurse(state, playerId);
 
 const refuse = (state, reason) => state.events.push({ type: 'cannotBuy', reason });
 function pay(state, role, price) {
@@ -267,6 +284,16 @@ const SERVICES = {
     state.ship.rockets = B.ROCKET_LOAD;
     state.events.push({ type: 'rearmed' });
   },
+  probes(state, st, info, role) {
+    if (!pay(state, role, info.price)) return;
+    state.ship.probeStock = B.PROBE_STOCK;
+    state.events.push({ type: 'restocked', what: 'PROBES' });
+  },
+  buoys(state, st, info, role) {
+    if (!pay(state, role, info.price)) return;
+    state.ship.buoyStock = B.BUOY_STOCK;
+    state.events.push({ type: 'restocked', what: 'BUOYS' });
+  },
   chart(state, st, info, role) {
     if (!pay(state, role, info.price)) return;
     state.charts.push(st.chart);
@@ -279,12 +306,22 @@ const SERVICES = {
 // One order at a desk. `order.player` is who gave it: a player buys only for the roles they have (R-1106).
 function shop(state, st, order) {
   const own = ownPurse(state, order.player);
-  if (order.action === 'buy') {
-    const why = notSoldHere(state, st, order.item);
-    if (why) return refuse(state, why);
+  if (['buy', 'sell', 'install', 'remove'].includes(order.action)) {
+    if (!CATALOG[order.item]) return;
     const role = payerOf(order.item, own);
-    if (!mayBuyFor(state, order.player, role)) return refuse(state, `ONLY THE ${ROLE_NAME[role]} BUYS THIS`);
-    buyUpgrade(state, order.item, priceFactor(state, st), own);
+    const verb = { buy: 'BUYS', sell: 'SELLS', install: 'INSTALLS', remove: 'REMOVES' }[order.action];
+    if (!mayBuyFor(state, order.player, role)) return refuse(state, `ONLY THE ${ROLE_NAME[role]} ${verb} THIS`);
+    if (order.action === 'buy') {
+      const why = notSoldHere(state, st, order.item);
+      if (why) return refuse(state, why);
+      buyUpgrade(state, order.item, priceFactor(state, st), own);
+      return;
+    }
+    if (order.action === 'sell') return sellPart(state, order.item, role, st.side === CREW);
+    // Parts are installed and taken out at a shipyard, for free, and only there (R-1132, R-1138).
+    if (!yardOpen(st)) return refuse(state, 'NO SHIPYARD HERE');
+    if (order.action === 'install') installPart(state, order.item);
+    else removePart(state, order.item);
     return;
   }
   const service = SERVICES[order.action];

@@ -8,7 +8,7 @@ import { addPlayer } from '../src/sim/players.js';
 import { thingsOf } from '../src/sim/things.js';
 import { gatherForTesting } from '../src/sim/sectors.js';
 import { makeVessel, hurtVessel } from '../src/sim/vessels.js';
-import { CATALOG, level } from '../src/sim/upgrades.js';
+import { CATALOG, level, owned } from '../src/sim/upgrades.js';
 import { ROLES, rolesOf, fillPurses } from '../src/sim/purses.js';
 import { SHIPS } from '../src/sim/kinds.js';
 import { B } from '../src/sim/balance.js';
@@ -55,22 +55,22 @@ test('R-1114: an upgrade is paid from the purse of the role it belongs to', () =
   }
 });
 
-test('R-1105 R-1119: the Captain pays fuel and charts, the Engineer repairs and the Gunner rockets, whoever orders', () => {
+test('R-1121 R-1122: every service is paid by whoever orders it, from their own purse', () => {
   const s = atYard(3);
-  // At a neutral station, where fuel costs something.
+  // At a neutral station, where everything costs something.
   s.ship.docked = thingsOf(s, 'station').find((st) => st.align === 'neutral').id;
   fillPurses(s, 1000);
-  s.ship.fuel = 50;
+  s.ship.fuel = 10;
   s.ship.hull = 100;
   s.ship.mods.rockets = 1;
   s.ship.rockets = 0;
-  const order = (action) => step(s, { shop: [{ action, player: 1 }] }, DT);
-  order('refuel');
-  assert.ok(s.purses.captain < 1000 && s.purses.gunner === 1000, 'the Gunner orders fuel, the Captain pays');
-  order('repair');
-  assert.ok(s.purses.engineer < 1000);
-  order('rockets');
-  assert.ok(s.purses.gunner < 1000);
+  const order = (action, player) => step(s, { shop: [{ action, player }] }, DT);
+  order('refuel', 1);
+  assert.ok(s.purses.gunner < 1000 && s.purses.captain === 1000, 'the Gunner orders fuel, and pays for it');
+  order('repair', 0);
+  assert.ok(s.purses.captain < 1000 && s.purses.engineer === 1000, 'the Captain orders a repair, and pays');
+  order('rockets', 2);
+  assert.ok(s.purses.engineer < 1000, 'the Engineer buys the rockets');
 });
 
 test('R-1106 R-1120: a player buys only for the roles they have, and alone they have them all', () => {
@@ -81,10 +81,14 @@ test('R-1106 R-1120: a player buys only for the roles they have, and alone they 
   const s = atYard(3);
   fillPurses(s, 1000);
   buy(s, 'twin', 0);
-  assert.equal(level(s.ship, 'twin'), 0, 'the Captain cannot buy the Gunner’s turrets');
+  assert.equal(owned(s.ship, 'twin'), 0, 'the Captain cannot buy the Gunner’s turrets');
   assert.ok(s.events.some((e) => e.type === 'cannotBuy' && /GUNNER/.test(e.reason)));
   buy(s, 'twin', 1);
-  assert.equal(level(s.ship, 'twin'), 1, 'the Gunner can');
+  assert.equal(owned(s.ship, 'twin'), 1, 'the Gunner can');
+  step(s, { shop: [{ action: 'install', item: 'twin', player: 0 }] }, DT);
+  assert.equal(level(s.ship, 'twin'), 0, 'R-1136: only the role that bought a part installs it');
+  step(s, { shop: [{ action: 'install', item: 'twin', player: 1 }] }, DT);
+  assert.equal(level(s.ship, 'twin'), 1);
 });
 
 test('R-1113 R-1117: boarding gear and the bounty are paid from the purse of the one who buys', () => {

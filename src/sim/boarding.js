@@ -13,7 +13,18 @@ import { playerById, leavePost, returnToPost } from './players.js';
 import { isTrading } from './stations.js';
 import { stepHack, stepMainframe, turnOnCrew, MAINFRAME_REACH } from './mainframe.js';
 import { usesOf, furnish, doorsOf, stepDoors } from './furnish.js';
-import { has, level, fuelMax, crewHpMax, carryMax, rifleDmg, teleCooldown, breakinBonus } from './upgrades.js';
+import {
+  has,
+  level,
+  fuelMax,
+  crewHpMax,
+  carryMax,
+  rifleDmg,
+  teleCooldown,
+  breakinBonus,
+  MAX_SLOTS,
+  SLOT_KINDS,
+} from './upgrades.js';
 import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
 import { hopsFrom } from './world.js';
@@ -245,7 +256,9 @@ export function createInterior(state, wreck) {
   if (missing.length && (wreck.kind === 'station' || rand(state) < 0.35)) {
     addLoot(vaultRoom, () => ({ type: 'chart', sector: missing[0].id }));
   }
-  if (rand(state) < 0.2) addLoot(vaultRoom, () => ({ type: 'part', slot: rand(state) < 0.5 ? 'hard' : 'system' }));
+  // Now and then an extra slot, made for one role (R-1179, R-1180).
+  const slot = rand(state) < 0.2 ? foundSlot(state) : null;
+  if (slot) addLoot(vaultRoom, () => ({ type: 'part', ...slot }));
   // A hostile station is taken over from its mainframe, and has two more guards, and more again for the
   // security that the crew bought for it while it was theirs.
   if (wreck.kind === 'station') {
@@ -541,8 +554,7 @@ function deposit(state, av) {
           state.events.push({ type: 'laneOpen', name: state.sectors[item.sector].name });
       }
     } else if (item.type === 'part') {
-      state.ship.slots[item.slot]++;
-      state.events.push({ type: 'slotFound', slot: item.slot });
+      openFoundSlot(state, item);
     } else credits += item.value;
   }
   state.ship.fuel = Math.min(fuelMax(state.ship), state.ship.fuel + fuel);
@@ -722,7 +734,9 @@ function workVaultDoor(state, it, av, cmd, dt) {
   if (cmd.charge && av.charges > 0 && away < 28) {
     // A breaching charge opens the door at once, and every guard comes running. It is used up.
     av.charges--;
+    // A charge is used up, so a new one can be bought (R-1133).
     state.ship.mods.charge = Math.max(0, level(state.ship, 'charge') - 1);
+    state.ship.owned.charge = state.ship.mods.charge;
     openVault(it);
     it.fx.push({ type: 'boom', x: door.x, y: door.y, t: 0, dur: 0.45, size: 24 });
     for (const g of it.guards) alertGuard(g, door);
@@ -1142,6 +1156,23 @@ function soundAlarm(state, pod) {
   state.events.push({ type: 'podAlarm' });
 }
 
+// An extra slot found as loot is made for one role and one kind, and only for a role that can still have more
+// (R-1175, R-1179, R-1180). Null when no role can.
+function foundSlot(state) {
+  const roleSlots = state.ship.roleSlots;
+  const open = [];
+  for (const role of Object.keys(roleSlots))
+    for (const slot of SLOT_KINDS) if (roleSlots[role][slot] < MAX_SLOTS) open.push({ role, slot });
+  return open.length ? open[Math.floor(rand(state) * open.length)] : null;
+}
+// It opens at once, for its role, whoever brought it home (R-1180).
+function openFoundSlot(state, { role, slot }) {
+  const ship = state.ship;
+  if (ship.roleSlots[role][slot] >= MAX_SLOTS) return;
+  ship.roleSlots[role][slot]++;
+  state.events.push({ type: 'slotFound', slot, role });
+}
+
 // A pod has no inside. Its cargo is taken straight on board.
 function lootPod(state, pod) {
   const ship = state.ship;
@@ -1149,8 +1180,8 @@ function lootPod(state, pod) {
   const fuel = rand(state) < 0.5 ? B.CELL_FUEL : 0;
   earn(state, credits);
   ship.fuel = Math.min(fuelMax(ship), ship.fuel + fuel);
-  const part = rand(state) < 0.15 ? (rand(state) < 0.5 ? 'hard' : 'system') : null;
-  if (part) ship.slots[part]++;
+  const slot = rand(state) < 0.15 ? foundSlot(state) : null;
+  if (slot) openFoundSlot(state, slot);
   // The empty shell stays where it is, so that the crew can see that they have been here.
   pod.looted = true;
   pod.breakin = null;
@@ -1158,7 +1189,7 @@ function lootPod(state, pod) {
   state.known = state.known.filter((k) => k.id !== pod.id);
   if (ship.docked === pod.id) ship.docked = null;
   state.fx.push({ type: 'hit', x: pod.x, y: pod.y, t: 0, dur: 0.4 });
-  state.events.push({ type: 'podLooted', credits, fuel, part });
+  state.events.push({ type: 'podLooted', credits, fuel, part: slot ? slot.slot : null });
 }
 
 // What happens to each kind of thing when its lock is failed, and when it is opened without an inside to board.

@@ -17,11 +17,13 @@ import { guardKind, GUARD_KINDS, newGuard } from '../src/sim/guards.js';
 import { B } from '../src/sim/balance.js';
 import { dist } from '../src/sim/util.js';
 import { fillPurses } from '../src/sim/purses.js';
+import { oldShip } from './helpers.js';
 
 const DT = 1 / 20;
 // A station of every side stands near the start, as in a test game, but the ship has nothing bought.
 const quiet = (seed = 1) => {
   const s = createState(seed);
+  oldShip(s);
   gatherForTesting(s);
   s.spawn.timer = 1e9;
   s.raidTimer = 1e9;

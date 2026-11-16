@@ -26,7 +26,6 @@ import { stepJump } from './sectors.js';
 import { stepBoarding } from './boarding.js';
 import { stepMap } from './map.js';
 import { level, shieldMax, dockShieldMax } from './upgrades.js';
-import { dist } from './util.js';
 
 function age(list, dt) {
   for (const f of list) f.t += dt;
@@ -35,8 +34,16 @@ function age(list, dt) {
 
 function rechargeShield(state, dt) {
   const ship = state.ship;
-  // A shield without power falls.
-  if (ship.power.shields <= 0) {
+  // The shield is switched on and off by the Gunner, and draws a little fuel while it is on (R-1129). Without
+  // fuel it goes off. A shield that is off, or has no power, falls.
+  if (ship.shieldOn) {
+    ship.fuel = Math.max(0, ship.fuel - B.SHIELD_FUEL * dt);
+    if (ship.fuel <= 0) {
+      ship.shieldOn = false;
+      state.events.push({ type: 'shieldOff', why: 'fuel' });
+    }
+  }
+  if (!ship.shieldOn || ship.power.shields <= 0) {
     ship.shield = Math.max(0, ship.shield - (shieldMax(ship) / B.SHIELD_DROP) * dt);
     return;
   }
@@ -96,9 +103,7 @@ export function step(state, cmds, dt) {
   stepSalvage(state, dt);
   stepRocks(state, dt);
   stepAlarm(state, B.ALARM_RANGE[level(ship, 'alarm')]);
-  const inSight = (v) => enemies(state, v.side, CREW) && dist(v.x, v.y, ship.x, ship.y) < B.VISION_SHIP;
-  const hostilesNear = state.alarm.count > 0 || state.vessels.some(inSight);
-  stepDarts(state, cmds.captain, dt, hostilesNear);
+  stepDarts(state, cmds.captain, dt);
   stepBoarding(state, cmds, dt);
   stepMap(state, dt);
   rechargeShield(state, dt);

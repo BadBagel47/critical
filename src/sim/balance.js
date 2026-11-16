@@ -130,8 +130,9 @@ export const B = {
   CLUSTER_ROCKS: [9, 14],
   // Seconds between new rocks while a field is poorer than it was.
   ROCK_REGROW: 14,
-  FUEL_MAX: 100,
-  FUEL_START: 60,
+  // The ship starts with fuel for one jump, and every level of the fuel tank adds one more (R-1125).
+  FUEL_MAX: 25,
+  FUEL_START: 25,
   FUEL_BURN: 0.2,
   ADRIFT_FACTOR: 0.2,
   CELL_FUEL: 25,
@@ -252,7 +253,11 @@ export const B = {
   PULSE_RADIUS: 1100,
   PULSE_TIME: 4,
   PULSE_COOLDOWN: 25,
+  // Probes and buoys are bought at a desk, as many as the ship holds, and no longer come back by themselves
+  // (R-1147, R-1148).
   PROBE_STOCK: 3,
+  PROBE_PRICE: 40,
+  BUOY_PRICE: 60,
   PROBE_REGEN: 50,
   PROBE_RADIUS: 380,
   PROBE_SPEED: 260,
@@ -371,6 +376,11 @@ export const B = {
   // pirates in later sectors
   TIER_HP: 0.15,
   MAX_WRECKS: 5,
+  // What a level brings back when it is sold: half, or three quarters at a base of the crew's own (R-1139).
+  SELL_BACK: 0.5,
+  SELL_OWN: 0.75,
+  // The shield is switched on by hand, and draws this much fuel a second while it is on (R-1129).
+  SHIELD_FUEL: 0.04,
   // Wrecks are a bonus (R-1097). A ship that leaves a wreck does so this often when it is shot down. A system the
   // crew comes back to after this many seconds may have a new wreck, more likely where the pirates are.
   KILL_WRECK_CHANCE: 0.4,
@@ -438,7 +448,7 @@ export const B = {
   // more ship upgrades
   BOOST_POWER: 2,
   BOOST_BURN: 4,
-  TANK_FUEL: 60,
+  TANK_FUEL: 25,
   COIL_CHARGE: 4,
   COIL_FUEL: 15,
   SALVAGE_TTL: 90,

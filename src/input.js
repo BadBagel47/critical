@@ -91,6 +91,8 @@ export function createInput(canvas) {
       rightClicked: false,
       shift: false,
       moved: false,
+      // Rows the wheel has turned this frame, down positive.
+      wheel: 0,
     },
     pad: { connected: false, used: false, lx: 0, ly: 0, rx: 0, ry: 0, lt: 0, rt: 0, held: new Set() },
     onGesture: null,
@@ -139,6 +141,14 @@ export function createInput(canvas) {
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+  canvas.addEventListener(
+    'wheel',
+    (e) => {
+      input.mouse.wheel += Math.sign(e.deltaY);
+      e.preventDefault();
+    },
+    { passive: false },
+  );
   input.down = (...codes) => codes.some((c) => input.keys.has(c) || input.padKeys.has(c) || input.virtual.has(c));
   input.hit = (...codes) => codes.some((c) => input.pressed.has(c));
   input.endFrame = () => {
@@ -146,6 +156,7 @@ export function createInput(canvas) {
     input.mouse.clicked = false;
     input.mouse.rightClicked = false;
     input.mouse.moved = false;
+    input.mouse.wheel = 0;
   };
 
   // Read the gamepad. `mode` says what the buttons should mean right now, and `cursor` whether the

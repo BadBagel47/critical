@@ -60,7 +60,8 @@ export function drawBars(ctx, font, state, x = 8, y = 314) {
   const ship = state.ship;
   const rows = [
     ['FUEL', ship.fuel / fuelMax(ship), ship.fuel < fuelMax(ship) * 0.2 ? COL.ember[1] : COL.ochre[2]],
-    ['SHIELD', ship.shield / shieldMax(ship), COL.ion[1]],
+    // A shield that is switched off is shown dark (R-1129).
+    [ship.shieldOn ? 'SHIELD' : 'SH OFF', ship.shield / shieldMax(ship), ship.shieldOn ? COL.ion[1] : COL.steel[1]],
     ['HULL', ship.hull / hullMax(ship), ship.hull < hullMax(ship) * 0.3 ? COL.ember[1] : COL.steel[2]],
   ];
   rect(ctx, x, y, 136, 40, COL.panel, COL.line);
@@ -305,7 +306,7 @@ export function drawOverlay(ctx, font, title, lines, color = COL.text) {
 const HELP = [
   [
     'ALL POSTS',
-    '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     J  STAR MAP     F  USE WHAT YOU ARE DOCKED AT',
+    '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     J  STAR MAP     I  STORES     F  USE WHAT YOU ARE DOCKED AT',
   ],
   [
     'CAPTAIN',
@@ -314,7 +315,8 @@ const HELP = [
   ['', 'C  SET A COURSE FOR THE NEXT PLACE ON THE MAP'],
   ['ALL POSTS', 'Z  CHARGE THE BOOST, CAPTAIN LETS IT GO     CAPTAIN AND GUNNER  T  MARK A SHIP FOR THE OTHER'],
   ['', 'ON THE STAR MAP  PICK A SYSTEM NEXT TO THIS ONE, AND WHERE TO ARRIVE'],
-  ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE     Q E  CHANGE WEAPON'],
+  ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE     Q E  CHANGE WEAPON     X  SHIELD ON AND OFF'],
+  ,
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW     SHIFT CLICK  QUEUE'],
   [
     '',

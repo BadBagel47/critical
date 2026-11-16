@@ -24,7 +24,7 @@ import { B, SHIP_GEOM, WING_MOUNTS } from '../src/sim/balance.js';
 import { headingTo, dist, toWorld, angleDiff } from '../src/sim/util.js';
 import { newRock, hurtRock } from '../src/sim/rocks.js';
 import { arrival } from '../src/sim/system.js';
-import { withWreck } from './helpers.js';
+import { withWreck, oldShip, fit } from './helpers.js';
 import { fillPurses } from '../src/sim/purses.js';
 const speed = (s) => Math.hypot(s.ship.vx, s.ship.vy);
 
@@ -45,7 +45,7 @@ const quiet = (s) => {
   s.spawn.timer = 1e9;
   s.sectors[s.sector].star = false;
   Object.assign(s.ship, { x: 0, y: 0, heading: 0, vx: 0, vy: 0, throttle: 0 });
-  return withWreck(s);
+  return oldShip(withWreck(s));
 };
 // A station of every side near the start, as in a test game, but the ship has nothing bought.
 const gathered = (seed = 1) => {
@@ -615,6 +615,7 @@ test('boarding needs a docked ship, and loot carried to the airlock becomes fuel
   const free = quiet(createState(1));
   assert.equal(tryBoard(free, 0), false, 'not docked');
   const { s, it, av } = boarded();
+  s.ship.shieldOn = false;
   assert.equal(s.players[0].inside, s.ship.docked);
   it.guards = [];
   it.turrets = [];
@@ -1075,7 +1076,7 @@ test('the scanner pulse sees far for a moment and then needs to recharge', () =>
   assert.ok(s.ship.pulse);
 });
 
-test('a probe flies to its target, reveals the way, burns out and is restocked', () => {
+test('R-1147 R-1148: a probe flies to its target, reveals the way and burns out, and new ones are bought', () => {
   const s = quiet(createState(1));
   addThing(s, createWreck(s, 0, 0, 1));
   const [near, far] = wrecks(s);
@@ -1092,8 +1093,14 @@ test('a probe flies to its target, reveals the way, burns out and is restocked',
   assert.equal(s.probes.length, 1);
   run(s, {}, B.PROBE_LINGER + 1);
   assert.equal(s.probes.length, 0);
-  run(s, {}, B.PROBE_REGEN);
-  assert.equal(s.ship.probeStock, B.PROBE_STOCK);
+  run(s, {}, 120);
+  assert.equal(s.ship.probeStock, B.PROBE_STOCK - 1, 'no new probe comes by itself');
+  const base = stations(s)[0];
+  atStation(s, base);
+  fillPurses(s, 200);
+  step(s, { shop: [{ action: 'probes' }] }, DT);
+  assert.equal(s.ship.probeStock, B.PROBE_STOCK, 'it is bought at a desk');
+  assert.equal(s.purses.captain, 200 - B.PROBE_PRICE);
 });
 
 test('a buoy keeps watching until pirates shoot it down', () => {
@@ -1134,7 +1141,6 @@ import {
   hullMax,
   shieldMax,
   powerTotal,
-  slotsUsed,
   fuelMax,
   jumpCharge,
   jumpFuel,
@@ -1143,6 +1149,9 @@ import {
   rifleDmg,
   teleCooldown,
   itemsOf,
+  owned,
+  level,
+  slotsOpen,
 } from '../src/sim/upgrades.js';
 import { servicePrices, takeOver } from '../src/sim/stations.js';
 
@@ -1175,47 +1184,50 @@ test('R-109 R-253 R-264: the game starts in the sanctuary, with one neutral base
 
 test('fuel is free at a friendly station and costs credits at a neutral one', () => {
   const s = gathered(1);
-  s.ship.fuel = 40;
+  s.ship.shieldOn = false;
+  s.ship.fuel = 10;
   atStation(s, station(s, 'friendly'));
   step(s, { shop: [{ action: 'refuel' }] }, DT);
-  assert.equal(s.ship.fuel, B.FUEL_MAX);
+  assert.equal(s.ship.fuel, fuelMax(s.ship));
   assert.equal(s.purses.captain, 0);
-  s.ship.fuel = 40;
-  fillPurses(s, 30);
+  s.ship.fuel = 10;
+  fillPurses(s, 10);
   atStation(s, station(s, 'neutral'));
-  assert.equal(servicePrices(s, station(s, 'neutral')).refuel.price, 60);
+  assert.equal(servicePrices(s, station(s, 'neutral')).refuel.price, fuelMax(s.ship) - 10);
   step(s, { shop: [{ action: 'refuel' }] }, DT);
-  assert.equal(s.ship.fuel, 70, 'the tank is filled as far as the money goes');
+  assert.equal(s.ship.fuel, 20, 'the tank is filled as far as the money goes');
   assert.equal(s.purses.captain, 0);
 });
 
-test('upgrades need a shipyard, credits and a free slot', () => {
+test('R-1132 R-1135 R-1138 R-1173 R-1180: a part is bought into the stores, installed free at a shipyard, and fits the slots', () => {
   const s = gathered(1);
+  s.ship.roleSlots.engineer.hull = 1;
   atStation(s, station(s, 'neutral'));
   fillPurses(s, 1000);
   step(s, { shop: [{ action: 'buy', item: 'armor' }] }, DT);
-  assert.equal(s.ship.mods.armor, undefined, 'no shipyard at this station');
-  atStation(s, station(s, 'friendly'));
-  step(s, { shop: [{ action: 'buy', item: 'armor' }] }, DT);
-  assert.equal(s.ship.mods.armor, 1);
-  assert.equal(hullMax(s.ship), B.HULL_MAX + 80);
+  assert.equal(owned(s.ship, 'armor'), 1, 'any shop sells it');
+  assert.equal(level(s.ship, 'armor'), 0, 'it lies in the stores');
   assert.equal(s.purses.engineer, 1000 - CATALOG.armor.price, 'paid by the Engineer');
   assert.equal(s.purses.captain, 1000, 'and nobody else');
-  assert.equal(blockedReason(s, 'bay'), 'NO FREE HARDPOINT', 'the bay needs two hardpoints and one is taken');
-  step(s, { shop: [{ action: 'buy', item: 'slotH' }] }, DT);
-  assert.equal(blockedReason(s, 'bay'), null);
-  step(s, { shop: [{ action: 'buy', item: 'bay' }] }, DT);
-  assert.equal(slotsUsed(s.ship, 'hard'), 3);
-  assert.equal(s.ship.dartStock, B.DART_COUNT);
+  step(s, { shop: [{ action: 'install', item: 'armor' }] }, DT);
+  assert.equal(level(s.ship, 'armor'), 0, 'no shipyard here');
+  atStation(s, station(s, 'friendly'));
+  step(s, { shop: [{ action: 'install', item: 'armor' }] }, DT);
+  assert.equal(level(s.ship, 'armor'), 1, 'installed at a shipyard');
+  assert.equal(hullMax(s.ship), B.HULL_MAX + 80);
+  assert.equal(s.purses.engineer, 1000 - CATALOG.armor.price, 'for free');
+  assert.equal(blockedReason(s, 'pd'), 'NO FREE SLOT', 'the Engineer has one hull slot, and it is taken');
+  step(s, { shop: [{ action: 'buy', item: 'slotH_engineer' }] }, DT);
+  assert.equal(slotsOpen(s.ship, 'engineer', 'hull'), 2, 'a slot opens at once');
+  assert.equal(blockedReason(s, 'pd'), null);
   fillPurses(s, 0);
   assert.equal(blockedReason(s, 'emit'), 'NOT ENOUGH CREDITS');
 });
 
 test('shield emitters and the power core raise the ship limits', () => {
   const s = quiet(createState(1));
-  fillPurses(s, 1000);
-  buyUpgrade(s, 'emit');
-  buyUpgrade(s, 'core');
+  fit(s, 'emit');
+  fit(s, 'core');
   assert.equal(shieldMax(s.ship), B.SHIELD_MAX + 50);
   assert.equal(powerTotal(s.ship), B.POWER_TOTAL + 2);
   assert.equal(setPower(s, 'weapons', 1), true, 'the extra power can be used');
@@ -1333,8 +1345,7 @@ test('rockets home in on a pirate and run out', () => {
   const s = quiet(createState(1));
   s.ship.x = 5000;
   s.ship.y = 5000;
-  fillPurses(s, 500);
-  buyUpgrade(s, 'rockets');
+  fit(s, 'rockets');
   assert.equal(s.ship.rockets, B.ROCKET_LOAD);
   const p = target(s, 5150, 4800, 'fighter', 24);
   step(s, { gunner: { weapon: 'rockets' } }, DT);
@@ -1422,11 +1433,11 @@ test("darts launch on the captain's order, fight pirates and come home again", (
   s.ship.y = 5000;
   step(s, { captain: { darts: true } }, DT);
   assert.equal(s.darts.length, 0, 'no fighter bay yet');
-  fillPurses(s, 1000);
-  buyUpgrade(s, 'bay');
+  fit(s, 'bay', 3);
+  assert.equal(s.ship.dartStock, 3, 'R-1126: one Dart for each level, three at most');
   step(s, { captain: { darts: true } }, DT);
   run(s, {}, 2);
-  assert.equal(s.darts.length, B.DART_COUNT);
+  assert.equal(s.darts.length, 3);
   assert.equal(s.ship.dartStock, 0);
   target(s, 5200, 4900, 'fighter', 30).mode = 'approach';
   run(s, {}, 12);
@@ -1434,39 +1445,20 @@ test("darts launch on the captain's order, fight pirates and come home again", (
   step(s, { captain: { darts: true } }, DT);
   run(s, {}, 8);
   assert.equal(s.darts.length, 0);
-  assert.equal(s.ship.dartStock, B.DART_COUNT);
+  assert.equal(s.ship.dartStock, 3);
 });
 
-test('with autolaunch the Captain can still send the darts out when all is calm, and they stay out', () => {
+test('R-1127: the darts go out by hand only, also when pirates show up', () => {
   const s = quiet(createState(1));
-  s.ship.x = s.ship.y = 9000;
-  s.ship.mods.bay = 1;
-  s.ship.mods.auto = 1;
-  s.ship.dartStock = B.DART_COUNT;
-  run(s, {}, 30);
-  assert.equal(s.ship.dartsOut, false, 'nothing to launch for');
-  step(s, { captain: { darts: true } }, DT);
-  run(s, {}, 12);
-  assert.equal(s.ship.dartsOut, true, 'the order stands, though it is quiet');
-  assert.equal(s.darts.length, B.DART_COUNT);
-  step(s, { captain: { darts: true } }, DT);
-  run(s, {}, 8);
-  assert.equal(s.ship.dartsOut, false);
-  assert.equal(s.darts.length, 0, 'and they come home when called');
-});
-
-test('with autolaunch the darts go out by themselves when pirates show up', () => {
-  const s = quiet(createState(1));
-  s.ship.x = 5000;
-  s.ship.y = 5000;
-  fillPurses(s, 1000);
-  buyUpgrade(s, 'bay');
-  buyUpgrade(s, 'auto');
-  run(s, {}, 1);
-  assert.equal(s.darts.length, 0);
+  s.ship.x = s.ship.y = 5000;
+  fit(s, 'bay', 3);
   target(s, 5300, 5000, 'fighter', 500);
-  run(s, {}, 2);
-  assert.ok(s.darts.length > 0);
+  run(s, {}, 3);
+  assert.equal(s.darts.length, 0, 'not by themselves');
+  step(s, { captain: { darts: true } }, DT);
+  run(s, {}, 3);
+  assert.ok(s.darts.length > 0, 'but when the Captain sends them');
+  assert.ok(!CATALOG.auto, 'there is no autolaunch to buy');
 });
 
 // ---------- sectors, charts and the boss ----------
@@ -1693,6 +1685,7 @@ test('a station under attack calls for help, and a neutral one repays it with a 
   atStation(s, st);
   fillPurses(s, 1000);
   step(s, { shop: [{ action: 'buy', item: 'emit' }] }, DT);
+  step(s, { shop: [{ action: 'install', item: 'emit' }] }, DT);
   assert.equal(s.ship.mods.emit, 1, 'a neutral shipyard is open to anyone who pays');
   assert.equal(s.purses.engineer, 1000 - CATALOG.emit.price, 'at the full price');
   s.ship.docked = null;
@@ -1717,7 +1710,7 @@ test('a station under attack calls for help, and a neutral one repays it with a 
   atStation(s, st);
   const before = s.purses.engineer;
   step(s, { shop: [{ action: 'buy', item: 'armor' }] }, DT);
-  assert.equal(s.ship.mods.armor, 1);
+  assert.equal(owned(s.ship, 'armor'), 1);
   assert.equal(before - s.purses.engineer, Math.round(CATALOG.armor.price * B.FAVOR_DISCOUNT), 'at a discount');
   run(s, {}, B.FAVOR_TIME + 1);
   assert.equal(st.favor, 0, 'the favour runs out');
@@ -1796,10 +1789,9 @@ test('every catalog item belongs to a tab, and boarding gear is sold without a s
 
 test('fuel tank, jump coils and the afterburner change how the ship travels', () => {
   const s = quiet(createState(1));
-  fillPurses(s, 2000);
-  buyUpgrade(s, 'tank');
-  buyUpgrade(s, 'jumpcoil');
-  buyUpgrade(s, 'boost');
+  fit(s, 'tank');
+  fit(s, 'jumpcoil');
+  fit(s, 'boost');
   assert.equal(fuelMax(s.ship), B.FUEL_MAX + B.TANK_FUEL);
   assert.equal(jumpCharge(s.ship), B.COIL_CHARGE);
   assert.equal(jumpFuel(s.ship), B.COIL_FUEL);
@@ -1989,11 +1981,12 @@ test('test mode starts with everything installed, room for it, credits and all c
   assert.equal(s.test, true);
   for (const id of Object.keys(CATALOG))
     assert.ok(['INSTALLED', 'MAXED', 'OWNED', 'CARRIED'].includes(blockedReason(s, id)), id + ' is in place');
-  assert.ok(slotsUsed(s.ship, 'hard') <= s.ship.slots.hard && slotsUsed(s.ship, 'system') <= s.ship.slots.system);
+  // A test game has every part installed, more than the slots would hold in a real game.
+  for (const id of Object.keys(CATALOG)) assert.equal(owned(s.ship, id), level(s.ship, id), id + ' is installed');
   assert.equal(s.ship.hull, hullMax(s.ship));
   assert.equal(s.ship.fuel, fuelMax(s.ship));
   assert.equal(s.ship.rockets, B.ROCKET_LOAD);
-  assert.equal(s.ship.dartStock, B.DART_COUNT);
+  assert.equal(s.ship.dartStock, 3);
   assert.equal(s.charts.length, s.sectors.length);
   assert.deepEqual(weaponsOf(s.ship), ['pulse', 'heavy', 'rockets']);
   assert.equal(createState(1).test, false, 'a normal game is unchanged');

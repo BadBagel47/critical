@@ -7,7 +7,7 @@ import { makeVessel } from '../src/sim/vessels.js';
 import { thingsOf } from '../src/sim/things.js';
 import { damageShip } from '../src/sim/damage.js';
 import { sceneOf } from '../src/scene.js';
-import { withWreck } from './helpers.js';
+import { withWreck, oldShip } from './helpers.js';
 
 const quiet = () => {
   const s = createState(1);
@@ -16,7 +16,7 @@ const quiet = () => {
   // The ship at rest in the middle of a system without a star.
   s.sectors[s.sector].star = false;
   Object.assign(s.ship, { x: 0, y: 0, heading: 0, vx: 0, vy: 0, throttle: 0 });
-  return withWreck(s);
+  return oldShip(withWreck(s));
 };
 
 test('the scene follows the title screen, calm space, a warning and a fight', () => {

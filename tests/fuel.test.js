@@ -10,10 +10,12 @@ import { servicePrices } from '../src/sim/stations.js';
 import { jumpFuel, fuelMax } from '../src/sim/upgrades.js';
 import { B } from '../src/sim/balance.js';
 import { fillPurses } from '../src/sim/purses.js';
+import { oldShip } from './helpers.js';
 
 const DT = 1 / 20;
 const quiet = (seed = 1) => {
   const s = createState(seed);
+  oldShip(s);
   s.spawn.timer = 1e9;
   s.raidTimer = 1e9;
   s.traffic.timer = 1e9;
@@ -55,6 +57,7 @@ test('more engine power charges the boost faster, and it burns fuel as much fast
   assert.ok(time(3) < time(1));
   const burn = (boost) => {
     const s = quiet();
+    s.ship.shieldOn = false;
     s.ship.throttle = 1;
     s.ship.fuel = 50;
     if (boost) s.ship.surge = { ...s.ship.surge, sys: 'engines', left: 5, charge: 0 };
@@ -109,6 +112,7 @@ test('the ship refines ore into fuel only when the tank is too low for a jump', 
 
 test('R-005: solar cells fill the tank slowly, about a jump in five minutes', () => {
   const s = quiet();
+  s.ship.shieldOn = false;
   s.ship.mods.solar = 1;
   s.ship.fuel = 0;
   run(s, {}, 60);

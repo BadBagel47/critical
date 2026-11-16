@@ -8,15 +8,15 @@
 
 | Sak | Flik | Betalas av | Plats | Pris | Nivåer |
 |---|---|---|---|---|---|
-| TWIN WING TURRETS | hull | GUNNER | hard | 150 | 1 |
-| HEAVY LASER | hull | GUNNER | hard | 220 | 1 |
-| ROCKET PODS | hull | GUNNER | hard | 200 | 1 |
-| FIGHTER BAY | hull | GUNNER | hard | 320 | 1 |
-| ARMOR PLATING | hull | ENGINEER | hard | 160 | 1 |
-| POINT DEFENSE | hull | ENGINEER | hard | 220 | 1 |
-| FUEL TANK | hull | CAPTAIN | – | 140 | 1 |
-| DART AUTOLAUNCH | hull | GUNNER | – | 150 | 1 |
-| EXTRA HARDPOINT | hull | GUNNER | – | 250 | 2 |
+| NOSE TURRET | hull | GUNNER | hull | 140 | 1 |
+| TWIN WING TURRETS | hull | GUNNER | hull | 150 | 1 |
+| HEAVY LASER | hull | GUNNER | hull | 220 | 1 |
+| ROCKET PODS | hull | GUNNER | hull | 200 | 1 |
+| FIGHTER BAY | hull | GUNNER | hull | 320 | 3 |
+| ARMOR PLATING | hull | ENGINEER | hull | 160 | 1 |
+| POINT DEFENSE | hull | ENGINEER | hull | 220 | 1 |
+| FUEL TANK | hull | CAPTAIN | – | 140 | 5 |
+| SCANNER PULSE | system | ENGINEER | system | 160 | 1 |
 | SHIELD EMITTERS | system | ENGINEER | system | 180 | 1 |
 | ENEMY ALARM | system | CAPTAIN | system | 120 | 3 |
 | TARGET SCANNER | system | CAPTAIN | system | 140 | 1 |
@@ -28,21 +28,26 @@
 | REPAIR DRONES | system | ENGINEER | system | 200 | 1 |
 | SOLAR CELLS | system | CAPTAIN | system | 200 | 1 |
 | DOCKING FIELD | system | ENGINEER | system | 150 | 1 |
-| EXTRA SYSTEM SLOT | system | ENGINEER | – | 200 | 2 |
 | SYSTEM RADAR | system | CAPTAIN | – | 200 | 2 |
 | RIFLE UPGRADE | armory | den som köper | – | 120 | 2 |
 | CARGO PACK | armory | den som köper | – | 140 | 1 |
 | SUIT ARMOR | armory | den som köper | – | 160 | 1 |
-| BREACHING CHARGE | armory | den som köper | – | 50 | 1 |
+| BREACHING CHARGE | armory | GUNNER | – | 50 | 1 |
 | TRANQ GUN | armory | den som köper | – | 120 | 1 |
 | FLARES | armory | den som köper | – | 60 | 1 |
 | DEPLOYABLE TURRET | armory | den som köper | – | 180 | 1 |
 | HACKING KIT | armory | den som köper | – | 150 | 1 |
 | TELEPORTER COILS | armory | den som köper | – | 150 | 1 |
+| EXTRA HULL SLOT | hull | CAPTAIN | – | 250 | 2 |
+| EXTRA SYSTEM SLOT | system | CAPTAIN | – | 200 | 2 |
+| EXTRA HULL SLOT | hull | GUNNER | – | 250 | 2 |
+| EXTRA SYSTEM SLOT | system | GUNNER | – | 200 | 2 |
+| EXTRA HULL SLOT | hull | ENGINEER | – | 250 | 2 |
+| EXTRA SYSTEM SLOT | system | ENGINEER | – | 200 | 2 |
 
 ### Tjänster på stationer
 
-Fristaden tar samma priser som en neutral bas (R-1091). Bränslet är gratis bara på ett eget varv. Varje roll har en egen kassa som får hela inkomsten (R-1103, R-1104). Bränsle och stjärnkartor betalas av Captain, lagning av Engineer och raketer av Gunner (R-1105), vem som än beställer.
+Fristaden tar samma priser som en neutral bas (R-1091). Bränslet är gratis bara på ett eget varv. Varje roll har en egen kassa som får hela inkomsten (R-1103, R-1104). Tjänsterna vid disken betalas av den som beställer, ur den egna kassan (R-1121). Delar hamnar i förrådet och installeras gratis på ett varv (R-1135, R-1138), och en sålt del ger hälften tillbaka, tre fjärdedelar på en egen bas (R-1139).
 
 | Tjänst | Eget varv | Vänlig | Neutral och fristaden |
 |---|---|---|---|
@@ -77,7 +82,7 @@ En avvaktande station tar 1.5 gånger priset. En station som står i skuld efter
 
 ## 3. Världen
 
-Räknat över 8 världar av varje storlek, som nya spel gör dem. Ett hopp kostar 25 bränsle, och en bränslecell ger 25, alltså ett hopp. Full tank räcker till 4 hopp.
+Räknat över 8 världar av varje storlek, som nya spel gör dem. Ett hopp kostar 25 bränsle, och en bränslecell ger 25, alltså ett hopp. Full tank räcker till 1 hopp.
 
 | Storlek | System | Bebodda | Tomma | Omstridda | Piraternas | Stationer | Vrak | Pods | Hopp till slutet |
 |---|---|---|---|---|---|---|---|---|---|
@@ -109,29 +114,32 @@ Världen är den första av storleken SHORT (frö 1). Timmen spelas i ett och sa
 
 ### Hur länge det dröjer till varje köp, ensam den första timmen
 
-Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: 4131 krediter. Varje roll har en egen kassa som får hela inkomsten (R-1104), och köper sitt i en enkel ordning. Captain betalar också bränslet, räknat som ett hopp var tionde minut (150 krediter i timmen). Tiden är minuter från start.
+Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: 4131 krediter. Varje roll har en egen kassa som får hela inkomsten (R-1104), och köper sitt i en enkel ordning. Bränslet, räknat som ett hopp var tionde minut (150 krediter i timmen), betalas av rollerna i tur och ordning, alltså en tredjedel var. Tiden är minuter från start.
 
 | Roll | Köp | Minuter |
 |---|---|---|
 | CAPTAIN | FUEL TANK | 2 |
 | CAPTAIN | ENEMY ALARM | 4 |
-| CAPTAIN | TARGET SCANNER | 6 |
-| CAPTAIN | AFTERBURNER | 8 |
-| CAPTAIN | JUMP COILS | 11 |
-| CAPTAIN | SOLAR CELLS | 14 |
-| CAPTAIN | SYSTEM RADAR | 17 |
-| GUNNER | TWIN WING TURRETS | 2 |
-| GUNNER | HEAVY LASER | 5 |
-| GUNNER | ROCKET PODS | 8 |
+| CAPTAIN | EXTRA SYSTEM SLOT | 7 |
+| CAPTAIN | JUMP COILS | 9 |
+| CAPTAIN | SYSTEM RADAR | 12 |
+| CAPTAIN | FUEL TANK  LV 2 | 15 |
+| CAPTAIN | EXTRA SYSTEM SLOT  LV 2 | 19 |
+| CAPTAIN | AFTERBURNER | 22 |
+| GUNNER | NOSE TURRET | 2 |
+| GUNNER | EXTRA HULL SLOT | 6 |
+| GUNNER | TWIN WING TURRETS | 8 |
 | GUNNER | TARGETING COMPUTER | 10 |
-| GUNNER | FIGHTER BAY | 15 |
-| GUNNER | CARGO PACK | 17 |
-| ENGINEER | ARMOR PLATING | 2 |
-| ENGINEER | SHIELD EMITTERS | 5 |
-| ENGINEER | POWER CORE | 8 |
+| GUNNER | EXTRA HULL SLOT  LV 2 | 15 |
+| GUNNER | ROCKET PODS | 18 |
+| GUNNER | CARGO PACK | 20 |
+| ENGINEER | SCANNER PULSE | 2 |
+| ENGINEER | ARMOR PLATING | 5 |
+| ENGINEER | EXTRA HULL SLOT | 8 |
 | ENGINEER | POINT DEFENSE | 12 |
-| ENGINEER | REPAIR DRONES | 15 |
-| ENGINEER | FLARES | 15 |
+| ENGINEER | EXTRA SYSTEM SLOT | 15 |
+| ENGINEER | SHIELD EMITTERS | 17 |
+| ENGINEER | FLARES | 18 |
 
 ### Antaganden
 

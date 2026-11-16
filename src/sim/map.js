@@ -5,6 +5,7 @@ import { B } from './balance.js';
 import { addThing, thingsOf, mapInfo } from './things.js';
 import { dist, forward, headingTo } from './util.js';
 import { learn } from './intel.js';
+import { has } from './upgrades.js';
 
 // `scanned` is set once the system has been scanned, and the map then shows its asteroid fields too.
 export function createMap() {
@@ -73,7 +74,9 @@ const notReady = (state, tool) => {
   return false;
 };
 const TOOLS = {
+  // The scanner pulse is a part that has to be installed (R-1146).
   pulse(state, ship) {
+    if (!has(ship, 'scanner')) return notReady(state, 'scanner');
     if (ship.pulseCool > 0) return notReady(state, 'pulse');
     // A scan costs a little fuel, as far as there is any (decided 2026-11-15).
     ship.fuel = Math.max(0, ship.fuel - B.SCAN_FUEL);
@@ -157,13 +160,6 @@ export function stepMap(state, dt) {
   if (ship.pulse) {
     ship.pulse.t += dt;
     if (ship.pulse.t >= B.PULSE_TIME) ship.pulse = null;
-  }
-  if (ship.probeStock < B.PROBE_STOCK) {
-    ship.probeRegen += dt;
-    if (ship.probeRegen >= B.PROBE_REGEN) {
-      ship.probeStock++;
-      ship.probeRegen = 0;
-    }
   }
   stepProbes(state, dt);
   stepBuoys(state, dt);

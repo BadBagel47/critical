@@ -20,7 +20,8 @@ export function damageShip(state, dmg, at, shot = false) {
   const extra = Math.min(ship.dockShield, dmg);
   ship.dockShield -= extra;
   dmg -= extra;
-  const absorbed = Math.min(ship.shield, dmg);
+  // A shield that is switched off takes nothing (R-1129).
+  const absorbed = ship.shieldOn ? Math.min(ship.shield, dmg) : 0;
   ship.shield -= absorbed;
   const rest = dmg - absorbed;
   if (rest > 0) {

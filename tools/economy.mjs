@@ -14,7 +14,7 @@ import { SIZES, SIZE_NAMES } from '../src/sim/world.js';
 import { generateSector } from '../src/sim/sectors.js';
 import { createInterior } from '../src/sim/boarding.js';
 import { thingsOf } from '../src/sim/things.js';
-import { CATALOG } from '../src/sim/upgrades.js';
+import { CATALOG, levelPrice } from '../src/sim/upgrades.js';
 import { ROLE_NAME } from '../src/sim/purses.js';
 import { SHIPS } from '../src/sim/kinds.js';
 import { B } from '../src/sim/balance.js';
@@ -55,7 +55,7 @@ function priceSheet() {
     '',
     '### Tjänster på stationer',
     '',
-    'Fristaden tar samma priser som en neutral bas (R-1091). Bränslet är gratis bara på ett eget varv. Varje roll har en egen kassa som får hela inkomsten (R-1103, R-1104). Bränsle och stjärnkartor betalas av Captain, lagning av Engineer och raketer av Gunner (R-1105), vem som än beställer.',
+    'Fristaden tar samma priser som en neutral bas (R-1091). Bränslet är gratis bara på ett eget varv. Varje roll har en egen kassa som får hela inkomsten (R-1103, R-1104). Tjänsterna vid disken betalas av den som beställer, ur den egna kassan (R-1121). Delar hamnar i förrådet och installeras gratis på ett varv (R-1135, R-1138), och en sålt del ger hälften tillbaka, tre fjärdedelar på en egen bas (R-1139).',
     '',
     '| Tjänst | Eget varv | Vänlig | Neutral och fristaden |',
     '|---|---|---|---|',
@@ -291,21 +291,28 @@ export function firstHourIncome() {
 
 // When each purchase in a plain order could be afforded, at the income of the first hour.
 // Every role has its own purse, and each gets all the income (R-1104), so each role buys its own things in its
-// own time. The Captain also pays for fuel, which is counted as one jump every ten minutes.
+// own time. Fuel, counted as one jump every ten minutes, is paid by the roles in turn.
+// Each role starts with one hull slot and one system slot (R-1178), so the plan buys a slot before a part that
+// would need one more.
 const BUYS = {
-  captain: ['tank', 'alarm', 'tscan', 'boost', 'jumpcoil', 'solar', 'sysradar'],
-  gunner: ['twin', 'heavy', 'rockets', 'tcomp', 'bay', 'pack'],
-  engineer: ['armor', 'emit', 'core', 'pd', 'drones', 'flare'],
+  captain: ['tank', 'alarm', 'slotS_captain', 'jumpcoil', 'sysradar', 'tank', 'slotS_captain', 'boost'],
+  gunner: ['nose', 'slotH_gunner', 'twin', 'tcomp', 'slotH_gunner', 'rockets', 'pack'],
+  engineer: ['scanner', 'armor', 'slotH_engineer', 'pd', 'slotS_engineer', 'emit', 'flare'],
 };
 const FUEL_PER_HOUR = 6 * B.JUMP_FUEL * B.FUEL_PRICE.neutral;
 function purchases(perHour) {
   const out = [];
   for (const [role, order] of Object.entries(BUYS)) {
-    const left = perHour - (role === 'captain' ? FUEL_PER_HOUR : 0);
+    // The crew takes turns at buying fuel (R-1121): each role pays a third of it.
+    const left = perHour - FUEL_PER_HOUR / 3;
     let spent = 0;
+    const times = {};
     for (const id of order) {
-      spent += CATALOG[id].price;
-      out.push({ role: ROLE_NAME[role], name: CATALOG[id].name, at: Math.round((spent / left) * 60) });
+      const k = times[id] || 0;
+      times[id] = k + 1;
+      spent += levelPrice(id, k);
+      const name = CATALOG[id].name + (k ? '  LV ' + (k + 1) : '');
+      out.push({ role: ROLE_NAME[role], name, at: Math.round((spent / left) * 60) });
     }
   }
   return out;
@@ -347,7 +354,7 @@ export function buildSheet() {
     '',
     '### Hur länge det dröjer till varje köp, ensam den första timmen',
     '',
-    `Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: ${Math.round(firstHour)} krediter. Varje roll har en egen kassa som får hela inkomsten (R-1104), och köper sitt i en enkel ordning. Captain betalar också bränslet, räknat som ett hopp var tionde minut (${FUEL_PER_HOUR} krediter i timmen). Tiden är minuter från start.`,
+    `Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: ${Math.round(firstHour)} krediter. Varje roll har en egen kassa som får hela inkomsten (R-1104), och köper sitt i en enkel ordning. Bränslet, räknat som ett hopp var tionde minut (${FUEL_PER_HOUR} krediter i timmen), betalas av rollerna i tur och ordning, alltså en tredjedel var. Tiden är minuter från start.`,
     '',
     '| Roll | Köp | Minuter |',
     '|---|---|---|',

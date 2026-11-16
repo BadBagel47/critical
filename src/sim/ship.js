@@ -46,11 +46,18 @@ export function createShip() {
     pulse: null,
     pulseCool: 0,
     probeStock: B.PROBE_STOCK,
-    probeRegen: 0,
     buoyStock: B.BUOY_STOCK,
     // Upgrades: id -> level. Slots say how many the hull and the systems can take.
     mods: {},
-    slots: { hard: 2, system: 2 },
+    // Levels bought or found, also those in the stores, and the open slots of every role (R-1135, R-1137).
+    owned: {},
+    roleSlots: {
+      captain: { hull: 1, system: 1 },
+      gunner: { hull: 1, system: 1 },
+      engineer: { hull: 1, system: 1 },
+    },
+    // The shield is off until the Gunner switches it on (R-1129).
+    shieldOn: false,
     weapon: 'pulse',
     charge: 0,
     heavyCool: 0,

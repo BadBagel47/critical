@@ -10,6 +10,7 @@ import { makeVessel, hurtVessel } from '../src/sim/vessels.js';
 import { WEAPONS, weaponsOf } from '../src/sim/weapons.js';
 import { CATALOG } from '../src/sim/upgrades.js';
 import { dockCandidate, shipNose } from '../src/sim/ship.js';
+import { oldShip } from './helpers.js';
 
 const DT = 1 / 60;
 const run = (s, cmds, seconds) => {
@@ -22,7 +23,7 @@ const quiet = (s) => {
   s.raidTimer = 1e9;
   s.sectors[s.sector].star = false;
   Object.assign(s.ship, { x: 0, y: 0, heading: 0, vx: 0, vy: 0, throttle: 0 });
-  return s;
+  return oldShip(s);
 };
 
 test('things are kept sorted by kind, whatever order they are added in', () => {
@@ -120,6 +121,8 @@ test('a new kind of thing is one entry of data: it stops shots, can be docked wi
     assert.equal(dockCandidate(s), beacon);
     // It is still there after a jump away and back.
     s.charts.push(1);
+    s.ship.shieldOn = false;
+    s.ship.fuel = 1e3;
     step(s, { captain: { jump: 1 } }, DT);
     run(s, {}, 9);
     assert.equal(s.sector, 1);

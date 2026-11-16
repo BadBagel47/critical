@@ -1,6 +1,8 @@
 // What the screen does about what just happened in the game: messages at the top, sound, and panels that open.
 import { COL } from './config.js';
 import { playEvents, setEngine } from './audio.js';
+import { openShop } from './render/shop.js';
+import { findDock } from './sim/things.js';
 
 const WARM = COL.ochre[2];
 const GOOD = COL.acid[2];
@@ -34,7 +36,12 @@ const HACKED = [
   'MAINFRAME TAKEN',
 ];
 const FIXED = (e) => (e.part === 'hull' ? 'HULL MENDED' : 'GUN MENDED  ·  SWITCH IT ON AT THE MAINFRAME');
-const NOT_READY = { pulse: 'SCANNER RECHARGING', probe: 'NO PROBES LEFT', buoy: 'NO BUOYS LEFT' };
+const NOT_READY = {
+  pulse: 'SCANNER RECHARGING',
+  scanner: 'NO SCANNER PULSE INSTALLED',
+  probe: 'NO PROBES LEFT',
+  buoy: 'NO BUOYS LEFT',
+};
 
 // Short messages for things that just happened: event type -> [text, colour], or null for no message.
 const TOAST = {
@@ -82,7 +89,7 @@ const TOAST = {
   starHeat: () => ['THE STAR BURNS THE SHIP  ·  TURN AWAY', BAD],
   haze: () => ['DUST AND ICE  ·  THE SYSTEM ENDS HERE', TECH],
   found: (e) => (FOUND[e.kind] ? [FOUND[e.kind](e), WARM] : null),
-  bought: (e) => [`INSTALLED  ·  ${e.name}`, GOOD],
+  bought: (e) => [e.stored ? `IN THE STORES  ·  ${e.name}  ·  INSTALL IT AT A SHIPYARD` : `BOUGHT  ·  ${e.name}`, GOOD],
   cannotBuy: (e) => [e.reason, WARM],
   refuelled: (e) => [`REFUELLED  ·  +${Math.round(e.amount)} FUEL`, LOOT],
   repairedAll: () => ['SHIP REPAIRED', GOOD],
@@ -90,7 +97,16 @@ const TOAST = {
   chart: (e, state) => [`STAR CHART  ·  ${state.sectors[e.sector].name}  ·  J FOR THE STAR MAP`, TECH],
   laneOpen: (e) => [`THE LANE TO ${e.name} IS OPEN`, GOOD],
   probedSystem: (e) => [`PROBE REPORT  ·  ${e.name}  ·  ON THE STAR MAP`, TECH],
-  slotFound: (e) => [e.slot === 'hard' ? 'FOUND A SPARE HARDPOINT' : 'FOUND A SPARE SYSTEM SLOT', GOOD],
+  slotFound: (e) => [
+    `FOUND AN EXTRA ${e.slot === 'hull' ? 'HULL' : 'SYSTEM'} SLOT  ·  ${(e.role || '').toUpperCase()}`,
+    GOOD,
+  ],
+  installed: (e) => [`INSTALLED  ·  ${e.name}${e.level > 1 ? '  LV ' + e.level : ''}`, GOOD],
+  removed: (e) => [`IN THE STORES  ·  ${e.name}`, TECH],
+  sold: (e) => [`SOLD  ·  ${e.name}  ·  +${e.credits} CREDITS`, LOOT],
+  restocked: (e) => [`${e.what} RESTOCKED`, LOOT],
+  shieldOn: () => ['SHIELD ON  ·  IT DRAWS A LITTLE FUEL', TECH],
+  shieldOff: (e) => [e.why === 'fuel' ? 'SHIELD OFF  ·  NO FUEL LEFT' : 'SHIELD OFF', WARM],
   holdFire: (e) => [`${e.name}:  HOLD YOUR FIRE`, WARM],
   fightBack: (e) => [`${e.name}  ·  FIGHTING BACK`, BAD],
   standDown: (e) => [`${e.name}  ·  STANDING DOWN`, GOOD],
@@ -185,7 +201,7 @@ export function readEvents(game) {
     if (e.type === 'mainframeUsed' && mine) view.panel = 'mainframe';
     if (e.type === 'deskUsed' && mine) {
       view.panel = 'shop';
-      view.shopTab = e.desk === 'armory' ? 'armory' : 'hull';
+      openShop(view.shop, state, view.playerId, e.desk, findDock(state, state.ship.docked));
     }
     // The game saves itself every time the ship docks.
     if (e.type === 'dock') game.actions.autosave();

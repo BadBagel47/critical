@@ -854,7 +854,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-730 | Juggernaut är en ny, ovanlig skeppsklass: ett långsamt och tungt bestyckat krigsskepp, mindre än Cruisern. | bestämd | HANDOFF beslut 2026-11-14 | – |
 | R-731 | Vapen riktade rakt fram kan inte skjuta medan skeppet ligger dockat. | bestämd | HANDOFF beslut 2026-11-16; proposal-bases.md §4 | – |
 | R-732 | Försvar medan skeppet ligger dockat kräver kanontorn, som köps. | bestämd | HANDOFF beslut 2026-11-16 | – |
-| R-733 | Skeppet börjar med en enkel fast kanon rakt fram som alltid sitter kvar och går att uppgradera billigt. | bestämd | HANDOFF beslut 2026-11-16; proposal-bases.md §6; BACKLOG F-214 | – |
+| R-733 | Skeppet börjar med en enkel fast kanon rakt fram som alltid sitter kvar och går att uppgradera billigt. | byggd | HANDOFF beslut 2026-11-16; proposal-bases.md §6; BACKLOG F-214 | tests/stores.test.js |
 | R-734 | Startkanonen används mest för att bryta malm. | bestämd | HANDOFF beslut 2026-11-16 | – |
 | R-735 | Spelarnas turrets får sättas ut hos fiender när som helst, hos neutrala först när larmet gått och aldrig på egna eller lugna stationer. | bestämd | station-boarding.md §6 (byggt i enklare form: bara under strid) | – |
 | R-736 | Förstärkningsskeppet anfaller inte ett dockat skepp som ingen sitter i, men kan anfalla om någon sitter i det. | bestämd | proposal-bases.md §4 | – |
@@ -983,46 +983,46 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1117 | Prissumman betalas av den som står vid disken, ur den egna kassan. | byggd | Användaren 2026-11-16 (D-189) | tests/purses.test.js |
 | R-1119 | En tjänst vid disken (bränsle, lagning, raketer, kartor) kan beställas av vem som helst, men betalas ur kassan för den roll den hör till, så att Captain inte måste gå in för att tanka. | ersatt av: R-1121; fortfarande byggt | Agentens tolkning 2026-11-16, väntar på användaren | – |
 | R-1120 | Med flera spelare har den första spelaren rollen Captain, den andra Gunner och den tredje Engineer. En roll som ingen spelare har är öppen för alla att köpa åt. | byggd | Agentens tolkning av R-1108 och R-1111 2026-11-16 | tests/purses.test.js |
-| R-1121 | Alla tjänster vid disken (bränsle, lagning, raketer och kartor) betalas av den som beställer, ur den egna kassan, så att man kan turas om. | bestämd | Användaren 2026-11-16 | – |
-| R-1122 | Butiken visar tydligt att tjänsterna kan köpas av alla. | bestämd | Användaren 2026-11-16 | – |
-| R-1123 | Butiken har filterknappar som visar vad varje roll kan köpa, med den egna rollen som förval. | bestämd | Användaren 2026-11-16 (F-080) | – |
+| R-1121 | Alla tjänster vid disken (bränsle, lagning, raketer och kartor) betalas av den som beställer, ur den egna kassan, så att man kan turas om. | byggd | Användaren 2026-11-16 | tests/purses.test.js |
+| R-1122 | Butiken visar tydligt att tjänsterna kan köpas av alla. | byggd | Användaren 2026-11-16 | tests/shop.test.js |
+| R-1123 | Butiken har filterknappar som visar vad varje roll kan köpa, med den egna rollen som förval. | byggd | Användaren 2026-11-16 (F-080) | tests/shop.test.js |
 | R-1124 | Fighter bay hör till Captain, som skjuter ut dartsen. | ersatt av: R-1126 | Användaren 2026-11-16 | – |
-| R-1125 | Skeppet börjar med bränsle för ett hopp. Bränsletanken ger ett hopp till när den köps, och den uppgraderas ett hopp i taget, högst fem gånger, så att skeppet kan ha högst sex hopp. | bestämd | Användaren 2026-11-16 (D-238) | – |
-| R-1126 | Fighter bay hör till Gunner. Den har plats för en dart och uppgraderas en dart i taget till högst tre. | bestämd | Användaren 2026-11-16 (D-238) | – |
-| R-1127 | Darts skjuts bara ut för hand. Uppgraderingen som skjuter ut dem av sig själv tas bort. | bestämd | Användaren 2026-11-16 (D-238) | – |
-| R-1128 | Butiken visar vad varje nivå av en uppgradering ger, både de man har och de man inte har än. | bestämd | Användaren 2026-11-16 (D-238) | – |
-| R-1129 | Skölden slås på och av för hand, och den drar lite bränsle medan den är på. Gunner sköter den, den är av när spelet startar, och den slås inte på av sig själv vid en träff. | bestämd | Användaren 2026-11-16 | – |
-| R-1130 | Informationen om en vald sak i butiken visas i en fast panel vid sidan av listan. | bestämd | Användaren 2026-11-16 (D-238) | – |
-| R-1131 | Saker kan både köpas och säljas i butiken, redan nu. | bestämd | Användaren 2026-11-16 (D-238) | – |
-| R-1132 | Delar som hör till skeppet installeras på ett varv. På varvet går det varken att köpa eller sälja. | bestämd | Användaren 2026-11-16 (D-238) | – |
-| R-1133 | Sprängladdningen hör till Gunner. | bestämd | Användaren 2026-11-16 (D-238, B2) | – |
-| R-1134 | Kanontornen och Engineers verktyg (scannerpuls, sonder och radarbojar) läggs in i butiken nu. | bestämd | Användaren 2026-11-16 (D-238, B3) | – |
-| R-1135 | Köpta delar till skeppet hamnar i ett förråd som ser ut som butiken: alla ser vad som finns och vilken roll som styr över vad. | bestämd | Användaren 2026-11-16 (D-238, V1) | – |
-| R-1136 | Bara den som köpt en del installerar den eller tar bort den. | bestämd | Användaren 2026-11-16 (D-238, V1) | – |
-| R-1137 | Platserna att installera i är inte gemensamma: varje roll köper sina egna. | bestämd | Användaren 2026-11-16 (D-238, V1) | – |
-| R-1138 | Installationen på varvet är gratis. | bestämd | Användaren 2026-11-16 (D-238, V2) | – |
-| R-1139 | En del som säljs ger hälften av priset tillbaka i en vanlig butik, och tre fjärdedelar i butiken på en egen bas. | bestämd | Användaren 2026-11-16 (D-238, V3) | – |
-| R-1140 | I fristaden kan man köpa delar men inte installera dem, eftersom det inte finns något varv där. | bestämd | Användaren 2026-11-16 (D-238, V4) | – |
-| R-1141 | Varje nivå av en uppgradering är en del som installeras på varvet, så att uppgraderingar också kan hittas som loot. | bestämd | Användaren 2026-11-16 (D-238, V5) | – |
-| R-1142 | Allt man bär, som bordarnas utrustning och varor, gäller direkt när man köper det, utan varv. | bestämd | Användaren 2026-11-16 (D-238, V6) | – |
+| R-1125 | Skeppet börjar med bränsle för ett hopp. Bränsletanken ger ett hopp till när den köps, och den uppgraderas ett hopp i taget, högst fem gånger, så att skeppet kan ha högst sex hopp. | byggd | Användaren 2026-11-16 (D-238) | tests/world.test.js |
+| R-1126 | Fighter bay hör till Gunner. Den har plats för en dart och uppgraderas en dart i taget till högst tre. | byggd | Användaren 2026-11-16 (D-238) | tests/sim.test.js |
+| R-1127 | Darts skjuts bara ut för hand. Uppgraderingen som skjuter ut dem av sig själv tas bort. | byggd | Användaren 2026-11-16 (D-238) | tests/sim.test.js |
+| R-1128 | Butiken visar vad varje nivå av en uppgradering ger, både de man har och de man inte har än. | byggd | Användaren 2026-11-16 (D-238) | tests/shop.test.js |
+| R-1129 | Skölden slås på och av för hand, och den drar lite bränsle medan den är på. Gunner sköter den, den är av när spelet startar, och den slås inte på av sig själv vid en träff. | byggd | Användaren 2026-11-16 | tests/stores.test.js |
+| R-1130 | Informationen om en vald sak i butiken visas i en fast panel vid sidan av listan. | byggd | Användaren 2026-11-16 (D-238) | tests/shop.test.js |
+| R-1131 | Saker kan både köpas och säljas i butiken, redan nu. | byggd | Användaren 2026-11-16 (D-238) | tests/stores.test.js |
+| R-1132 | Delar som hör till skeppet installeras på ett varv. På varvet går det varken att köpa eller sälja. | byggd | Användaren 2026-11-16 (D-238) | tests/sim.test.js |
+| R-1133 | Sprängladdningen hör till Gunner. | byggd | Användaren 2026-11-16 (D-238, B2) | tests/stores.test.js |
+| R-1134 | Kanontornen och Engineers verktyg (scannerpuls, sonder och radarbojar) läggs in i butiken nu. | byggd | Användaren 2026-11-16 (D-238, B3) | tests/stores.test.js |
+| R-1135 | Köpta delar till skeppet hamnar i ett förråd som ser ut som butiken: alla ser vad som finns och vilken roll som styr över vad. | byggd | Användaren 2026-11-16 (D-238, V1) | tests/sim.test.js |
+| R-1136 | Bara den som köpt en del installerar den eller tar bort den. | byggd | Användaren 2026-11-16 (D-238, V1) | tests/purses.test.js |
+| R-1137 | Platserna att installera i är inte gemensamma: varje roll köper sina egna. | byggd | Användaren 2026-11-16 (D-238, V1) | tests/stores.test.js |
+| R-1138 | Installationen på varvet är gratis. | byggd | Användaren 2026-11-16 (D-238, V2) | tests/sim.test.js |
+| R-1139 | En del som säljs ger hälften av priset tillbaka i en vanlig butik, och tre fjärdedelar i butiken på en egen bas. | byggd | Användaren 2026-11-16 (D-238, V3) | tests/stores.test.js |
+| R-1140 | I fristaden kan man köpa delar men inte installera dem, eftersom det inte finns något varv där. | byggd | Användaren 2026-11-16 (D-238, V4) | tests/shop.test.js |
+| R-1141 | Varje nivå av en uppgradering är en del som installeras på varvet, så att uppgraderingar också kan hittas som loot. | byggd | Användaren 2026-11-16 (D-238, V5) | tests/stores.test.js |
+| R-1142 | Allt man bär, som bordarnas utrustning och varor, gäller direkt när man köper det, utan varv. | byggd | Användaren 2026-11-16 (D-238, V6) | tests/stores.test.js |
 | R-1143 | Varor köps och säljs i butiken, så att det går att ha handelsrutter. I början är priserna fasta. | bestämd | Användaren 2026-11-16 (D-238, V6) | – |
 | R-1144 | Senare blir varupriserna rörliga, så att man inte blir rik på att köra samma rutt fram och tillbaka. | bestämd | Användaren 2026-11-16 (D-238, V6) | – |
 | R-1145 | En uppgradering som hittas som loot hamnar i förrådet hos den roll som saken hör till, oavsett vem som bar hem den. | bestämd | Användaren 2026-11-16 (L1) | – |
-| R-1146 | Kanontornen och scannerpulsen är delar som andra: de köps, installeras på varvet och kan hittas som loot. | bestämd | Användaren 2026-11-16 (L2) | – |
-| R-1147 | Sonder och radarbojar köps i antal vid disken, som raketer, och kan ibland hittas som loot. | bestämd | Användaren 2026-11-16 (L3) | – |
-| R-1148 | Sonder och radarbojar fylls inte längre på av sig själva när de går att köpa. | bestämd | Användaren 2026-11-16 (L4) | – |
-| R-1170 | Butiken, förrådet och varvet kan också filtreras på vad sakerna är, till exempel uppgraderingar och utrustning för bordning. | bestämd | Användaren 2026-11-16 (D-243, U1) | – |
-| R-1171 | Förrådet öppnas med en tangent var som helst ombord, och syns också i butiken och på varvet. | bestämd | Användaren 2026-11-16 (D-243, U3) | – |
-| R-1172 | En sak som går att köpa och uppgradera visar sin nivå som LV 0/5 innan den är köpt, och LV 2/5 och så vidare efter. | bestämd | Användaren 2026-11-16 (D-243) | – |
-| R-1173 | Man kan inte ha fler delar än man kan installera: när en roll har lika många delar som platser, installerade eller i förrådet, går det inte att köpa fler, och inga fler dyker upp som loot. | bestämd | Användaren 2026-11-16 (D-243) | – |
-| R-1174 | Platser är permanenta uppgraderingar: en plats som är köpt finns kvar, och det som sitter i den byts när man vill. | bestämd | Användaren 2026-11-16 (D-243) | – |
-| R-1175 | En sak man har max av, installerad och i förrådet tillsammans, finns inte i butiken och dyker inte upp som loot. | bestämd | Användaren 2026-11-16 (D-243) | – |
-| R-1176 | Filtret på vad sakerna är har UPGRADES (delar till skeppet), BOARDING (bordarnas utrustning) och SLOTS (extra platser). Tjänsterna syns alltid för sig. | bestämd | Användaren 2026-11-16 (D-243, K1) | – |
-| R-1177 | Varvet visar skeppet med varje rolls platser, och butiken och förrådet visar platserna som en rad rutor per roll. Det provas. | bestämd | Användaren 2026-11-16 (D-243, O1) | – |
-| R-1178 | Varje roll kan ha tre platser på skrovet och tre för system, och en av varje är öppen från start. Det provas. | bestämd | Användaren 2026-11-16 (D-243, O2) | – |
-| R-1179 | Platser kan hittas som loot, men sällan. | bestämd | Användaren 2026-11-16 (D-243, O3) | – |
-| R-1180 | En plats blir aktiv direkt, både när den köps och när den hittas och bärs hem. En hittad plats hör till en bestämd roll och sort, och hamnar hos den rollen. | bestämd | Användaren 2026-11-16 (D-243, O4) | – |
-| R-1181 | I spelet heter platserna HULL SLOT och SYSTEM SLOT. Ordet hardpoint används inte. | bestämd | Agenten 2026-11-16, efter användarens fråga om ordet | – |
+| R-1146 | Kanontornen och scannerpulsen är delar som andra: de köps, installeras på varvet och kan hittas som loot. | byggd | Användaren 2026-11-16 (L2) | tests/stores.test.js |
+| R-1147 | Sonder och radarbojar köps i antal vid disken, som raketer, och kan ibland hittas som loot. | byggd | Användaren 2026-11-16 (L3) | tests/sim.test.js |
+| R-1148 | Sonder och radarbojar fylls inte längre på av sig själva när de går att köpa. | byggd | Användaren 2026-11-16 (L4) | tests/sim.test.js |
+| R-1170 | Butiken, förrådet och varvet kan också filtreras på vad sakerna är, till exempel uppgraderingar och utrustning för bordning. | byggd | Användaren 2026-11-16 (D-243, U1) | tests/shop.test.js |
+| R-1171 | Förrådet öppnas med en tangent var som helst ombord, och syns också i butiken och på varvet. | byggd | Användaren 2026-11-16 (D-243, U3) | tests/shop.test.js |
+| R-1172 | En sak som går att köpa och uppgradera visar sin nivå som LV 0/5 innan den är köpt, och LV 2/5 och så vidare efter. | byggd | Användaren 2026-11-16 (D-243) | tests/shop.test.js |
+| R-1173 | Man kan inte ha fler delar än man kan installera: när en roll har lika många delar som platser, installerade eller i förrådet, går det inte att köpa fler, och inga fler dyker upp som loot. | byggd | Användaren 2026-11-16 (D-243) | tests/sim.test.js |
+| R-1174 | Platser är permanenta uppgraderingar: en plats som är köpt finns kvar, och det som sitter i den byts när man vill. | byggd | Användaren 2026-11-16 (D-243) | tests/stores.test.js |
+| R-1175 | En sak man har max av, installerad och i förrådet tillsammans, finns inte i butiken och dyker inte upp som loot. | byggd | Användaren 2026-11-16 (D-243) | tests/stores.test.js |
+| R-1176 | Filtret på vad sakerna är har UPGRADES (delar till skeppet), BOARDING (bordarnas utrustning) och SLOTS (extra platser). Tjänsterna syns alltid för sig. | byggd | Användaren 2026-11-16 (D-243, K1) | tests/stores.test.js |
+| R-1177 | Varvet visar skeppet med varje rolls platser, och butiken och förrådet visar platserna som en rad rutor per roll. Det provas. | byggd | Användaren 2026-11-16 (D-243, O1) | tests/shop.test.js |
+| R-1178 | Varje roll kan ha tre platser på skrovet och tre för system, och en av varje är öppen från start. Det provas. | byggd | Användaren 2026-11-16 (D-243, O2) | tests/stores.test.js |
+| R-1179 | Platser kan hittas som loot, men sällan. | byggd | Användaren 2026-11-16 (D-243, O3) | tests/shop.test.js |
+| R-1180 | En plats blir aktiv direkt, både när den köps och när den hittas och bärs hem. En hittad plats hör till en bestämd roll och sort, och hamnar hos den rollen. | byggd | Användaren 2026-11-16 (D-243, O4) | tests/sim.test.js |
+| R-1181 | I spelet heter platserna HULL SLOT och SYSTEM SLOT. Ordet hardpoint används inte. | byggd | Agenten 2026-11-16, efter användarens fråga om ordet | tests/shop.test.js |
 | R-834 | Neutrala shipyards är alltid öppna mot betalning. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-835 | Neutrala shipyards har samma priser som vänliga så länge spelet testas. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-836 | Stationer säljer kartan till nästa sektor. | byggd | HANDOFF beslut 2026-11-14 | saknas |
@@ -1061,8 +1061,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-869 | En pod ger 60 till 140 krediter och 50 procents chans på 25 bränsle. | byggd | proposal-economy.md 1.1 | saknas |
 | R-870 | Vakter och turrets inne lämnar inget. | byggd | proposal-economy.md 2.1 | saknas |
 | R-871 | Varor (goods) köps och säljs mellan stationer bara för att tjäna pengar, och spelaren kan inte använda dem själv. | bestämd | HANDOFF beslut 2026-11-14 | – |
-| R-872 | Scannerpuls, sonder och radarbojar ska enligt designen köpas. | bestämd | HANDOFF beslut 2026-11-14 | – |
-| R-873 | Kanontorn köps. | bestämd | HANDOFF beslut 2026-11-16 | – |
+| R-872 | Scannerpuls, sonder och radarbojar ska enligt designen köpas. | byggd | HANDOFF beslut 2026-11-14 | tests/stores.test.js |
+| R-873 | Kanontorn köps. | byggd | HANDOFF beslut 2026-11-16 | tests/stores.test.js |
 | R-874 | Varvet köps som en permanent uppgradering, och alla standardbaser kan köpa det. | bestämd | HANDOFF beslut 2026-11-16 | – |
 | R-875 | På eget varv får man tillbaka tre fjärdedelar när man byter bort en del, annars hälften. | bestämd | HANDOFF beslut 2026-11-16; proposal-bases.md §7 | – |
 | R-876 | Det finns inget förråd för delar. | bestämd | HANDOFF beslut 2026-11-16; proposal-bases.md §7 | – |

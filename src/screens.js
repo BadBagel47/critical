@@ -18,7 +18,7 @@ import { drawBoarding, insideOrigin } from './render/boarding.js';
 import { drawBreakin, breakinAction, breakinButtons } from './render/breakin.js';
 import { drawMap, mapPoint, chartClick, mapButtons } from './render/map.js';
 import { drawStarMap, starClick, starButtons } from './render/stars.js';
-import { drawShop, shopClick, shopButtons } from './render/shop.js';
+import { drawShop, shopClick, shopButtons, shopScroll, createShopView } from './render/shop.js';
 import { drawMainframe, mainframeClick, mainframeButtons } from './render/mainframe.js';
 import { atMainframe } from './sim/mainframe.js';
 import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS, hackTarget, hackBox } from './render/engineer.js';
@@ -26,8 +26,8 @@ import { drawActions, actionButtons } from './render/actions.js';
 import { pursesLine } from './sim/purses.js';
 
 // What is kept about the screen. None of it is part of the game: two players look at the same game differently.
-//   panel  what the player has opened on top of their place in the game: 'map', 'stars', 'lock', 'shop',
-//          'mainframe', 'menu' or null
+//   panel  what the player has opened on top of their place in the game: 'map', 'stars', 'stores', 'lock',
+//          'shop', 'mainframe', 'menu' or null
 //   starPick  the system the player has picked on the star map, or null for the one the ship is in
 //   mfArm  whether the player has clicked once to take a trading station from its mainframe, and must click again
 //   menu   which page of the menu is open and which row is picked, see menu.js
@@ -37,7 +37,8 @@ export function createView(input) {
     playerId: 0,
     panel: null,
     starPick: null,
-    shopTab: 'hull',
+    // What the shop, the stores and the shipyard show, see render/shop.js.
+    shop: createShopView(),
     mfArm: false,
     menu: createMenu(),
     help: false,
@@ -72,6 +73,7 @@ export function modeOf(game) {
   if (view.panel === 'lock' && docked && docked.breakin && docked.lock !== 'open') return 'lock';
   if (view.panel === 'map') return 'map';
   if (view.panel === 'stars') return 'stars';
+  if (view.panel === 'stores') return 'stores';
   if (view.panel === 'radar' && me.post === 'captain' && radarPlace(state)) return 'radar';
   // On board the ship: the post the player holds, or 'crew' when they hold none.
   return me.post || 'crew';
@@ -146,6 +148,8 @@ function gunnerInput(game, out) {
     weapon: keys.hit('KeyE') ? 1 : keys.hit('KeyQ') ? -1 : null,
     surge: keys.hit('KeyZ'),
     mark: keys.hit('KeyT') ? aim : null,
+    // X switches the shield on and off (R-1129).
+    shield: keys.hit('KeyX'),
   };
 }
 
@@ -254,17 +258,22 @@ function shopInput(game, out) {
     view.panel = null;
     return;
   }
+  workShop(game, findDock(state, state.ship.docked), out);
+}
+// The shop, the stores and the shipyard are worked with clicks, the wheel and the arrow keys.
+function workShop(game, st, out) {
+  const { keys, state, view } = game;
+  const by = keys.mouse.wheel + (keys.hit('ArrowDown') ? 1 : 0) - (keys.hit('ArrowUp') ? 1 : 0);
+  if (by) shopScroll(state, view.shop, view.playerId, by);
   if (!keys.mouse.clicked) return;
-  const hit = shopClick(
-    state,
-    findDock(state, state.ship.docked),
-    view.shopTab,
-    keys.mouse.x,
-    keys.mouse.y,
-    view.playerId,
-  );
-  if (hit && hit.tab) view.shopTab = hit.tab;
+  const hit = shopClick(state, st, view.shop, keys.mouse.x, keys.mouse.y, view.playerId);
+  if (hit && hit.set) Object.assign(view.shop, hit.set);
   if (hit && hit.order) out.shop = [hit.order];
+}
+// The stores, opened with I anywhere on board (R-1171). What is there is seen, but nothing is bought here.
+function storesInput(game, out) {
+  onBoard(game, out);
+  workShop(game, null, out);
 }
 
 // At a station's mainframe: clicks give orders. F steps away from it.
@@ -350,7 +359,7 @@ function drawShopScreen(game) {
   const { ctx, state, view, assets, keys } = game;
   drawAway(game);
   if (!state.over)
-    drawShop(ctx, assets.font, state, findDock(state, state.ship.docked), view.shopTab, keys.mouse, view.playerId);
+    drawShop(ctx, assets.font, state, findDock(state, state.ship.docked), view.shop, keys.mouse, view.playerId);
 }
 
 function drawMainframeScreen(game) {
@@ -405,6 +414,18 @@ export const SCREENS = {
     toasts: [296, 180],
     buttons: (game) => starButtons(game.state, game.view),
   },
+  stores: {
+    pad: 'panel',
+    cursor: true,
+    input: storesInput,
+    draw: (game) => {
+      drawOnBoard(game);
+      game.view.shop.mode = 'stores';
+      drawShop(game.ctx, game.assets.font, game.state, null, game.view.shop, game.keys.mouse, game.view.playerId);
+    },
+    toasts: [232, 217],
+    buttons: (game) => shopButtons(game.state, null, game.view.shop, game.view.playerId),
+  },
   lock: {
     pad: 'panel',
     cursor: true,
@@ -418,8 +439,8 @@ export const SCREENS = {
     cursor: true,
     input: shopInput,
     draw: drawShopScreen,
-    toasts: [312],
-    buttons: (game) => shopButtons(game.state, docked(game), game.view.shopTab, game.view.playerId),
+    toasts: [232, 217],
+    buttons: (game) => shopButtons(game.state, docked(game), game.view.shop, game.view.playerId),
   },
   mainframe: {
     pad: 'panel',
@@ -494,6 +515,11 @@ export function viewKeys(game, mode) {
   else if (mode === 'captain' && keys.hit('KeyB') && radarPlace(state)) view.panel = 'radar';
   const canOpenMap = mode === 'map' || mode === 'stars' || POSTS.includes(mode) || mode === 'crew';
   if (keys.hit('KeyM') && canOpenMap) view.panel = mode === 'map' ? null : 'map';
+  // I opens the stores, and closes them (R-1171).
+  if (keys.hit('KeyI') && (mode === 'stores' || canOpenMap)) {
+    view.panel = mode === 'stores' ? null : 'stores';
+    Object.assign(view.shop, { mode: 'stores', sel: null, scroll: 0 });
+  }
   // J opens the star map, and closes it. It opens on the system the ship is in.
   if (keys.hit('KeyJ') && canOpenMap) {
     view.panel = mode === 'stars' ? null : 'stars';

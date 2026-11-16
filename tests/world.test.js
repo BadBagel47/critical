@@ -13,7 +13,7 @@ import { createInterior } from '../src/sim/boarding.js';
 import { servicePrices } from '../src/sim/stations.js';
 import { makeVessel, hurtVessel } from '../src/sim/vessels.js';
 import { enemies, standingOf } from '../src/sim/sides.js';
-import { priceOf, level, jumpFuel, fuelMarks } from '../src/sim/upgrades.js';
+import { priceOf, level, owned, levelsOf, fuelMax, jumpFuel, fuelMarks } from '../src/sim/upgrades.js';
 import { B } from '../src/sim/balance.js';
 import { dist } from '../src/sim/util.js';
 import { fillPurses } from '../src/sim/purses.js';
@@ -272,7 +272,7 @@ test('R-1091 R-882: every price in the sanctuary is that of a neutral base, and 
   assert.ok(s.events.some((e) => e.type === 'cannotBuy' && e.reason === 'NOT SOLD IN THE SANCTUARY'));
   const price = priceOf(s.ship, 'twin');
   step(s, { shop: [{ action: 'buy', item: 'twin' }] }, DT);
-  assert.equal(level(s.ship, 'twin'), 1, 'a cheap one is sold');
+  assert.equal(owned(s.ship, 'twin'), 1, 'a cheap one is sold, into the stores');
   assert.equal(s.purses.gunner, 1000 - price, 'at the full price, from the Gunner');
 });
 
@@ -374,12 +374,14 @@ test('R-117 R-118 R-119: the system radar shows the systems one jump away, and t
   assert.equal(viewOf(s, one), null);
   assert.equal(priceOf(s.ship, 'sysradar'), 200);
   step(s, { shop: [{ action: 'buy', item: 'sysradar' }] }, DT);
+  step(s, { shop: [{ action: 'install', item: 'sysradar' }] }, DT);
   assert.equal(s.purses.captain, 800);
   assert.ok(viewOf(s, one).live, 'one jump away, as it is now');
   assert.equal(viewOf(s, one).owner, s.sectors[one].owner);
   assert.equal(viewOf(s, two), null, 'but not two');
   assert.equal(priceOf(s.ship, 'sysradar'), 350);
   step(s, { shop: [{ action: 'buy', item: 'sysradar' }] }, DT);
+  step(s, { shop: [{ action: 'install', item: 'sysradar' }] }, DT);
   assert.equal(s.purses.captain, 450);
   assert.ok(viewOf(s, two).live, 'the second level reaches two jumps');
 });
@@ -418,9 +420,14 @@ test('R-1086: a wreck holds one fuel cell or none, and one cell is a jump', () =
   assert.equal(B.CELL_FUEL, B.JUMP_FUEL);
 });
 
-test('R-1087: the fuel gauge is marked where each jump of fuel ends', () => {
+test('R-1087 R-1125: the ship starts with fuel for one jump, and the gauge is marked where each jump ends', () => {
   const s = createState(1);
-  assert.deepEqual(fuelMarks(s.ship), [0.25, 0.5, 0.75], 'a full tank holds four jumps');
-  s.ship.mods.tank = 1;
-  assert.equal(fuelMarks(s.ship).length, Math.ceil((B.FUEL_MAX + B.TANK_FUEL) / B.JUMP_FUEL) - 1);
+  assert.equal(fuelMax(s.ship), B.JUMP_FUEL, 'one jump');
+  assert.equal(s.ship.fuel, fuelMax(s.ship));
+  assert.deepEqual(fuelMarks(s.ship), [], 'one jump needs no marks');
+  for (let k = 1; k <= 5; k++) {
+    s.ship.mods.tank = k;
+    assert.equal(fuelMarks(s.ship).length, k, `${k + 1} jumps, ${k} marks`);
+  }
+  assert.equal(levelsOf('tank'), 5, 'five levels of the tank, six jumps at most');
 });
