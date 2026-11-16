@@ -24,16 +24,16 @@ Funna när boken sattes ihop. Varje punkt har en rekommendation. Tills ett beslu
 
 1. ~~**Bränsle i fristaden.**~~ Avgjort 2026-11-16: fristadens bas säljer billigt bränsle, och bränslet blir gratis först på ett eget köpt varv. Det ersätter gratis bränsle på den egna varvsstationen.
 2. **Neutrala varv.** "Neutrala shipyards är alltid öppna mot betalning" (2026-11-14) mot att varvet är en uppgradering som köps till en bas (2026-11-16). Rekommendation: faktionernas och de fria basernas varv finns kvar och säljer mot betalning. Det är bara den egna basen som behöver köpa sitt.
-3. **Ett anseende som aldrig går att höja.** "Fientlig för gott efter åtta träffar" mot "ett lågt anseende går alltid att höja". Rekommendation: inget är för gott. Ett anseende som har gått till fientligt kan höjas med uppdrag, och det dröjer tills uppdragen finns.
-4. **Gunnerns sprängladdning.** "Gunner har alltid en laddning vid bordning" mot att laddningen köps, skeppet bär en åt gången och den förbrukas (F-191, byggt). Rekommendation: det byggda gäller. Den gamla regeln märks som ersatt.
-5. **Engineers hackfart.** Förslaget om bordning säger dubbelt så snabbt. Det byggda är en och en halv gång så snabbt, samma som för lås. Rekommendation: en och en halv gång, som byggt.
-6. **Captains överblick vid bordning.** "Captain ser vakter och kameror åtta rutor bort genom väggar, och hela gruppen får se det" mot det byggda, där Captain har en bärbar radar med kort räckvidd. Rekommendation: radarn, som byggt.
-7. **Fiender mot ett dockat skepp.** Bounty hunters anfaller skeppet medan besättningen är inne (byggt) mot planen för baser: förstärkningsskeppet anfaller inte ett dockat skepp som ingen sitter i. Rekommendation: samma regel för alla. Ett dockat skepp utan någon ombord anfalls inte, med eller utan bounty, men det skyddar inte den som sitter kvar.
-8. **Hur fort larmet blinkar.** "Ljusen blinkar snabbt vid larm" mot förslaget att inget blinkar fortare än två gånger i sekunden, av hänsyn till ljuskänslig epilepsi. Rekommendation: högst två gånger i sekunden.
+3. ~~**Ett anseende som aldrig går att höja.**~~ Avgjort 2026-11-16: inget är för gott. Ett anseende som har gått till fientligt kan återtas, med uppdrag när de finns (R-1190).
+4. ~~**Gunnerns sprängladdning.**~~ Avgjort 2026-11-16: Gunner har inte alltid en laddning. Den köps och förbrukas, som byggt (R-529, R-847).
+5. ~~**Engineers hackfart.**~~ Avgjort 2026-11-16: en och en halv gång så snabbt, som byggt (R-526, R-788).
+6. ~~**Captains överblick vid bordning.**~~ Avgjort 2026-11-16: den bärbara radarn, som byggt (R-447, R-561).
+7. ~~**Fiender mot ett dockat skepp.**~~ Avgjort 2026-11-16: risken beror på hur många som spelar. En spelare: skeppet anfalls aldrig. Två: mycket låg risk. Tre: låg risk. Det gäller alla fiender (R-1191).
+8. ~~**Hur fort larmet blinkar.**~~ Avgjort 2026-11-16: larmet blinkar högst en gång i sekunden (R-1193).
 9. ~~**Återvändsgränder på kartan.**~~ Avgjort 2026-11-16: de flesta system har 2–3 hoppvägar, och några tomma system längst ut får vara återvändsgränder.
-10. **Datorn och ett dockat skepp.** Förslaget om datorn säger att den aldrig gör något stort själv och att den som Gunner försvarar skeppet under bordning. Planen för baser säger att datorn som Captain backar ut skeppet när skrovet nästan är slut, och att vapen rakt fram inte skjuter dockat. Rekommendation: planen för baser gäller, och förslaget om datorn skrivs om efter den när det besvaras.
+10. ~~**Datorn och ett dockat skepp.**~~ Avgjort 2026-11-16: planen för baser gäller (R-813, R-731). Förslaget om datorn skrivs om efter den när det besvaras.
 11. **Tangenten L.** Förslaget om meddelanden lägger loggen på L, som tänder lampan vid bordning. Rekommendation: loggen får en annan tangent.
-12. **Sprängladdningens pris.** 130 krediter i förslaget om ekonomi mot 50 i det byggda. Rekommendation: 50, som byggt, tills ekonomin ses över.
+12. ~~**Sprängladdningens pris.**~~ Avgjort 2026-11-16: 50 krediter, som byggt, tills ekonomin ses över (R-529).
 13. ~~**Bränslet i fristaden.**~~ Avgjort 2026-11-16: alla priser i fristaden är som hos en neutral bas, också bränslet (R-1091). Gratis bränsle på ett eget köpt varv gäller som förut (R-1092).
 14. ~~**Pengarna i fristaden.**~~ Avgjort 2026-11-16: vrak är en bonus, och fristaden har inga (R-1097, R-1100). Där ger malmen och poddarna nog för att komma igång.
 
@@ -45,6 +45,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 - Ingen flyttas tillbaka till skeppet av sig själv, och skeppet får inte hoppa medan någon är inne. I dag kallas alla hem när skeppet lägger ut.
 - En övertagen bas får inget varv, utan det köps. I dag får en övertagen station shipyard.
 - Faktioner kan vara i krig med varandra. I dag slåss de bara i omstridda system.
+- En station som har blivit fientlig av träffar är det inte för gott, utan anseendet kan återtas (R-1190). I dag är den fientlig för gott efter åtta träffar.
+- Medan besättningen är inne anfalls det dockade skeppet aldrig när en spelar, och sällan när två eller tre spelar (R-1191). I dag anfaller bounty hunters det dockade skeppet efter ungefär en minut.
 - Anseendet förbättras inte av sig självt med tiden. I dag gör det det, fram till avvaktande, tills uppdragen finns.
 - Kanontorn köps, och skeppet börjar med en fast kanon rakt fram. I dag har skeppet ett torn i nosen och torn på vingarna.
 - Standardbasens utsida är bestämd efter designtestet D-217: kupoler, en ring som vrids till bron, lampor som visar hållningen, ST8 på en egen bas och tio tornplatser. I dag har stationerna sin gamla utsida.
@@ -372,7 +374,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-288 | Standardbasens översta våning är en kall kommandodel med mainframen. | bestämd | BACKLOG F-208 | – |
 | R-289 | Baserna har öppna ytor och skydd, inga för små rum och flera vägar att välja mellan. | bestämd | BACKLOG F-208 | – |
 | R-290 | Under bordning fylls drönare på vid larm, och vakter kan komma med ett skepp som dockar. | bestämd | BACKLOG F-210 | – |
-| R-291 | Förstärkningsskeppet anfaller inte ett dockat skepp som ingen sitter i. | bestämd | BACKLOG F-210 | – |
+| R-291 | Förstärkningsskeppet anfaller inte ett dockat skepp som ingen sitter i. | ersatt av: R-1191 | BACKLOG F-210 (ersatt av krock 7) | – |
 | R-292 | Baserna anpassas efter antalet spelare: vakter, drönare, tid till förstärkning, hur fort läget skärps och bossens liv. | bestämd | BACKLOG F-212 | – |
 | R-293 | Piraternas slutbas är en urholkad asteroid i tre våningar, genererad varje gång, med lastutrymme, vakter, skattkammare och bränsletunnor. | bestämd | BACKLOG F-219 | – |
 | R-294 | Slutbasens boss är en pirat i en mech-dräkt, och bossrummet har en mekanik för att besegra den. | bestämd | BACKLOG F-219 | – |
@@ -429,7 +431,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-322 | Pirater är fristående och aggressiva mot alla. | byggd | HANDOFF beslut | saknas |
 | R-323 | Faktioner finns i spelet. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-324 | En station som besättningen skjuter på i lugn och ro varnar vid första träffen och slår tillbaka från nästa. | byggd | HANDOFF beslut 2026-11-14 | saknas |
-| R-325 | Av träffar på en station blir den avvaktande efter två, stängd efter fem och fientlig för gott efter åtta. | byggd | HANDOFF beslut 2026-11-14 | saknas |
+| R-325 | Av träffar på en station blir den avvaktande efter två, stängd efter fem och fientlig för gott efter åtta. | ersatt av: R-1190 | HANDOFF beslut 2026-11-14 (ersatt av krock 3) | saknas |
+| R-1190 | Av träffar blir en station avvaktande efter två, stängd efter fem och fientlig efter åtta. Det är inte för gott: anseendet kan återtas, med uppdrag när de finns. | bestämd | Användaren 2026-11-16 (krock 3) | – |
 | R-326 | Ett besvarat nödanrop ger 40 procent rabatt i tre minuter hos en neutral station. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-327 | En vänlig station betalar 100 krediter för ett besvarat nödanrop. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-328 | Man börjar som neutral hos alla faktioner. | byggd | HANDOFF beslut 2026-11-14 | saknas |
@@ -584,7 +587,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-472 | Besättningens egna turrets går bara att sätta ut i strid och försvinner efteråt. | byggd | HANDOFF beslut 2026-11-15 | saknas |
 | R-473 | En bordares roll är den post hen lämnade, och den avgör vad bara en viss post kan göra. | byggd | HANDOFF beslut 2026-11-15 | saknas |
 | R-474 | Gunner gör mer skada med geväret vid bordning. | byggd | HANDOFF beslut 2026-11-15; BACKLOG F-113 | saknas |
-| R-475 | Gunner har alltid en sprängladdning vid bordning. | byggd | HANDOFF beslut 2026-11-15 | saknas |
+| R-475 | Gunner har alltid en sprängladdning vid bordning. | ersatt av: R-529 och R-847 | HANDOFF beslut 2026-11-15 (ersatt av krock 4) | saknas |
 | R-476 | Engineer är tyst och snabbare med lås och övertagande vid bordning. | byggd | HANDOFF beslut 2026-11-15 | saknas |
 | R-477 | Engineer kan vända turrets och stänga av larmade dörrar. | byggd | HANDOFF beslut 2026-11-15; BACKLOG F-113 | saknas |
 | R-478 | Engineer kan stabilisera reaktorn i ett vrak en gång, vilket ger en minut till. | byggd | HANDOFF beslut 2026-11-15 | saknas |
@@ -607,7 +610,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-495 | Larm gäller när besättningen är upptäckt. | byggd | station-boarding.md §1 | saknas |
 | R-496 | I lugnt läge är ljuset normalt. | byggd | station-boarding.md §1 | saknas |
 | R-497 | I lockdown är det mörkare än normalt, med roterande röda ljus. | byggd | station-boarding.md §1 | saknas |
-| R-498 | Vid larm är det lika mörkt som i lockdown, men ljusen blinkar snabbt och en siren ljuder. | byggd | station-boarding.md §1 | saknas |
+| R-498 | Vid larm är det lika mörkt som i lockdown, men ljusen blinkar snabbt och en siren ljuder. | ersatt av: R-1188 och R-1193 | station-boarding.md §1 (ersatt av krock 8) | saknas |
+| R-1193 | Vid larm blinkar ljusen högst en gång i sekunden, av hänsyn till ljuskänslig epilepsi. En siren ljuder. | bestämd | Användaren 2026-11-16 (krock 8) | – |
 | R-499 | Larmet syns också på en röd ram runt bilden, så att det märks direkt även utan ljud. | byggd | station-boarding.md §1 | saknas |
 | R-500 | I lugnt läge är vakterna fredliga och går sina rundor. | byggd | station-boarding.md §1 | saknas |
 | R-501 | I lockdown patrullerar vakterna och letar. | byggd | station-boarding.md §1 | saknas |
@@ -682,7 +686,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-570 | Att bära fler än en sprängladdning väntar på ryggsäcken. | bestämd | HANDOFF beslut 2026-11-15 | – |
 | R-571 | Föremål har samma form inne som i rymden. | bestämd | HANDOFF beslut 2026-11-16 | – |
 | R-572 | Drönare kan fyllas på vid larm. | bestämd | HANDOFF beslut 2026-11-16 | – |
-| R-573 | Vakter kan komma med ett skepp som dockar, och det skeppet anfaller inte ett dockat skepp som ingen sitter i. | bestämd | HANDOFF beslut 2026-11-16 | – |
+| R-573 | Vakter kan komma med ett skepp som dockar, och det skeppet anfaller inte ett dockat skepp som ingen sitter i. | ersatt av: R-1191 och R-1192 | HANDOFF beslut 2026-11-16 (ersatt av krock 7) | – |
+| R-1192 | Vakter kan komma med ett skepp som dockar. | bestämd | HANDOFF beslut 2026-11-16 (från R-573) | – |
 | R-574 | Skeppet får lämna dockan men inte hoppa från systemet så länge någon är kvar i basen. | bestämd | HANDOFF beslut 2026-11-16; BACKLOG F-211 och D-043 | – |
 | R-575 | Ingen flyttas tillbaka till skeppet av sig själv. | bestämd | HANDOFF beslut 2026-11-16; proposal-bases.md §1, §4; BACKLOG F-211 och D-043, proposal-bases.md avsnitt 1 | – |
 | R-576 | Flykten ut ur basen ska inte gå att hoppa över. | bestämd | HANDOFF beslut 2026-11-16; proposal-bases.md §4 | – |
@@ -839,7 +844,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-707 | En turret som tappat målet en stund går tillbaka till sitt läge. | byggd | station-boarding.md §6 | saknas |
 | R-708 | Engineer kan vända en turret till besättningens sida en stund (F-183). | byggd | station-boarding.md §6 | saknas |
 | R-709 | Spelarnas egna turrets är engångssaker som försvinner när striden är över. | byggd | station-boarding.md §6, §13 | saknas |
-| R-710 | Efter ungefär en minut hoppar en grupp bounty hunters in och anfaller det dockade skeppet. | byggd | station-boarding.md §9 | saknas |
+| R-710 | Efter ungefär en minut hoppar en grupp bounty hunters in och anfaller det dockade skeppet. | ersatt av: R-1191 | station-boarding.md §9 (ersatt av krock 7) | saknas |
+| R-1191 | Medan besättningen är inne anfalls det dockade skeppet aldrig när en spelar, med mycket låg risk när två spelar och låg risk när tre spelar. Det gäller alla fiender: bounty hunters, förstärkningsskeppet och andra. Bounty hunters hoppar in efter ungefär en minut som förut. | bestämd | Användaren 2026-11-16 (krock 7) | – |
 | R-711 | En grupp bounty hunters är två Fighters och en Gunboat, och de slåss bara mot besättningen. | byggd | station-boarding.md §9 | saknas |
 | R-712 | Det kommer aldrig mer än en grupp bounty hunters åt gången, med tre till fyra minuter mellan grupperna. | byggd | station-boarding.md §9 | saknas |
 | R-713 | Pirater anfaller som en lös grupp på fyra till sex skepp med en Gunboat som bordningsskepp. | byggd | station-boarding.md §14 | saknas |
@@ -865,7 +871,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-733 | Skeppet börjar med en enkel fast kanon rakt fram som alltid sitter kvar och går att uppgradera billigt. | byggd | HANDOFF beslut 2026-11-16; proposal-bases.md §6; BACKLOG F-214 | tests/stores.test.js |
 | R-734 | Startkanonen används mest för att bryta malm. | bestämd | HANDOFF beslut 2026-11-16 | – |
 | R-735 | Spelarnas turrets får sättas ut hos fiender när som helst, hos neutrala först när larmet gått och aldrig på egna eller lugna stationer. | bestämd | station-boarding.md §6 (byggt i enklare form: bara under strid) | – |
-| R-736 | Förstärkningsskeppet anfaller inte ett dockat skepp som ingen sitter i, men kan anfalla om någon sitter i det. | bestämd | proposal-bases.md §4 | – |
+| R-736 | Förstärkningsskeppet anfaller inte ett dockat skepp som ingen sitter i, men kan anfalla om någon sitter i det. | ersatt av: R-1191 | proposal-bases.md §4 (ersatt av krock 7) | – |
 | R-737 | Den som vill försvara sig dockad behöver kanontorn, som köps. | bestämd | proposal-bases.md §4 | – |
 | R-738 | Kanontorn är inte standard utan köps som uppgraderingar. | bestämd | proposal-bases.md §6; BACKLOG F-214 | – |
 | R-739 | Homing missiles söker mål och är rörligare, medan raketer bara kan justera banan lite och släpper målet om de missar. | bestämd | BACKLOG F-064 | – |
@@ -932,7 +938,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-787 | Gunner gör 25 procent mer skada med gevär. | byggd | station-boarding.md §7 | saknas |
 | R-788 | Engineer hackar och arbetar med lås en och en halv gång så snabbt. | byggd | station-boarding.md §8 | saknas |
 | R-789 | Bara Engineer kan göra hack nivå 2. | byggd | station-boarding.md §7, §8 | saknas |
-| R-790 | Captain ser vakter och kameror åtta rutor bort genom väggar, och hela gruppen får se det. | byggd | station-boarding.md §7 | saknas |
+| R-790 | Captain ser vakter och kameror åtta rutor bort genom väggar, och hela gruppen får se det. | ersatt av: R-447 och R-561 | station-boarding.md §7 (ersatt av krock 6) | saknas |
 | R-791 | Man börjar med 0 krediter, 60 av 100 i bränsle, två hardpoints och två system slots. | byggd | proposal-economy.md 1.1 | saknas |
 | R-792 | En ensam spelare byter fritt mellan posterna, och det som ställts in på en post fortsätter när man lämnar den. | byggd | proposal-computer.md (Läget i dag) | saknas |
 | R-793 | Ingen post gör något av sig själv, så en Gunner-post som ingen sitter vid skjuter inte. | byggd | proposal-computer.md (Läget i dag) | saknas |
@@ -967,7 +973,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-822 | En post som datorn sköter visar AUTO på sin flik, och den som tar posten tar över direkt. | förslag | proposal-computer.md | – |
 | R-823 | Datorn tar en ikryssad post av sig själv när ingen sitter där. | förslag | proposal-computer.md fråga 1 | – |
 | R-824 | Valet av datorposter kan ändras från menyn under omgången, men bara när alla spelare är överens. | förslag | proposal-computer.md fråga 2 | – |
-| R-825 | Datorn följer det som är utpekat och gör aldrig något stort på egen hand, som att docka eller hoppa. | förslag | proposal-computer.md fråga 3 | – |
+| R-825 | Datorn följer det som är utpekat och gör aldrig något stort på egen hand, som att docka eller hoppa. | ersatt av: R-813 | proposal-computer.md fråga 3 (ersatt av krock 10) | – |
 | R-826 | Datorn reagerar en halv sekund senare och träffar ungefär hälften så ofta som en van spelare, lika för alla svårighetsgrader. | förslag | proposal-computer.md fråga 4 | – |
 | R-827 | Datorn som Captain håller satt kurs och låg fart nära stationer och vrak. | förslag | proposal-computer.md | – |
 | R-828 | Datorn som Gunner skjuter på den fiende Captain märkt, annars den närmaste som skjuter på skeppet, och aldrig på stationer, med raketer eller med Heavy Laser. | förslag | proposal-computer.md | – |
