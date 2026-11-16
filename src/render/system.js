@@ -112,13 +112,31 @@ for (let k = 0; k <= SHADES; k++) {
 }
 
 // The two latest pictures of the star, and the one that is being worked out. A new picture takes a while, most
-// of all on a phone, so the one before it is faded into the latest while the next is on its way. That keeps the
-// star moving smoothly however long a picture takes.
+// of all on a phone, so the one before it is faded into the latest while the next is on its way (F-205). Each
+// picture stands for a moment of its own, a set while apart, and the fade follows the clock between those
+// moments. So the star moves at an even pace however long each picture took. The while apart follows how long
+// the pictures take on this machine: a slow one gets fewer pictures, each faded in over longer.
+//   olderAt, newerAt   the moments the two pictures stand for
+//   shown              the moment that is on the screen, which never runs past the newer picture
+//   apart              how far apart in time the pictures are
 let older = null;
 let newer = null;
 let work = null;
 let pass = null;
 let passes = 0;
+let olderAt = 0;
+let newerAt = 0;
+let shown = 0;
+let apart = 0.25;
+let lastNow = 0;
+let begunReal = 0;
+// How many pictures of the star are finished each second, for the readout behind ?fps.
+const finished = [];
+export function starPicturesPerSecond() {
+  const now = performance.now();
+  while (finished.length && now - finished[0] > 1000) finished.shift();
+  return finished.length;
+}
 
 // Begin a new picture of the star as it is at time t.
 function begin(t, seed) {
@@ -263,11 +281,19 @@ function stepOn(kind) {
   else paintRow(pass.from + pass.step - FIELD_N, kind);
   return ++pass.step >= pass.steps;
 }
-// The picture is whole: it becomes the latest, and the next one is begun.
-function finish(time, seed) {
+// The picture is whole: it becomes the latest, and the next one is begun, for the moment after it.
+function finish(seed) {
   [older, newer] = [newer, older];
   newer.getContext('2d').putImageData(work, 0, 0);
-  begin(time, seed);
+  olderAt = newerAt;
+  newerAt = pass.t;
+  const now = performance.now();
+  finished.push(now);
+  // The next picture stands a little further on than this one took to make, so that it is ready in time.
+  const took = (now - begunReal) / 1000;
+  apart = Math.max(0.12, Math.min(1.5, apart * 0.7 + took * 1.15 * 0.3));
+  begunReal = now;
+  begin(newerAt + apart, seed);
 }
 
 // How long one frame may spend on the next picture of the star, in milliseconds, and how many steps it takes
@@ -275,6 +301,10 @@ function finish(time, seed) {
 const BUDGET = 3;
 const LEAST = 6;
 function workOn(time, seed, kind) {
+  // A new game, a jump to another system, or a star that has fallen too far behind starts it over.
+  const step = time - lastNow;
+  lastNow = time;
+  if (work && (step < 0 || step > 5 || pass.seed !== seed || time - shown > 3)) work = null;
   if (!work) {
     // The very first picture is worked out at once, so that there is something to show.
     older = canvasOf();
@@ -282,17 +312,25 @@ function workOn(time, seed, kind) {
     work = newer.getContext('2d').createImageData(SIDE, SIDE);
     begin(time, seed);
     while (!stepOn(kind));
-    finish(time, seed);
+    begunReal = performance.now();
+    finish(seed);
     older.getContext('2d').putImageData(work, 0, 0);
+    olderAt = newerAt - apart;
+    shown = newerAt;
     return;
   }
+  // The moment on the screen moves on with the clock, but waits for the next picture instead of passing the
+  // newer one. On a slow machine the star then runs a little behind, at an even pace, rather than jumping.
+  shown = Math.min(newerAt, shown + step);
   const until = performance.now() + BUDGET;
   for (let n = 0; n < LEAST || performance.now() < until; n++) {
     if (!stepOn(kind)) continue;
-    finish(time, seed);
+    finish(seed);
     return;
   }
 }
+// How far the newer picture is faded in over the older one.
+const fadeIn = () => (newerAt > olderAt ? Math.max(0, Math.min(1, (shown - olderAt) / (newerAt - olderAt))) : 1);
 
 // Sparks drift outward through the reach of the heat and fade as they go, which shows where it does harm.
 function drawSparks(ctx, time, seed, color) {
@@ -321,7 +359,7 @@ export function drawStar(ctx, cam, time, seed = 0) {
   ctx.imageSmoothingEnabled = false;
   // The picture before the latest, with the latest fading in over it as the next one is worked out.
   ctx.drawImage(older, -REACH / ZOOM, -REACH / ZOOM, SIDE / ZOOM, SIDE / ZOOM);
-  ctx.globalAlpha = pass.step / pass.steps;
+  ctx.globalAlpha = fadeIn();
   ctx.drawImage(newer, -REACH / ZOOM, -REACH / ZOOM, SIDE / ZOOM, SIDE / ZOOM);
   ctx.globalAlpha = 1;
   ctx.imageSmoothingEnabled = smooth;
@@ -398,6 +436,60 @@ export function starLight(ctx, state, img, x, y, angle = 0, px = img.width / 2, 
     lightOn(canvas, img, x, y, angle, px, py, side, k);
   }
   ctx.drawImage(canvas, 0, 0, side, side, x - side / 2, y - side / 2, side, side);
+}
+
+// ---------- light from explosions ----------
+// An explosion lights the side of a ship, a rock or a station that faces it, for as long as it burns, the same
+// way the star does but without darkening the far side (F-202). Only the strongest one near a thing counts.
+const GLARE = '255,214,150';
+function strongestNear(state, x, y) {
+  let best = null,
+    most = 0.04;
+  for (const f of state.fx) {
+    if (f.type !== 'boom') continue;
+    const reach = f.size * 6;
+    const d = Math.hypot(f.x - x, f.y - y);
+    if (d > reach || d < 1) continue;
+    const k = (1 - f.t / f.dur) * (1 - d / reach) * Math.min(1, f.size / 30 + 0.4);
+    if (k > most) {
+      most = k;
+      best = { x: f.x, y: f.y, k };
+    }
+  }
+  return best;
+}
+let glareCanvas = null;
+export function glareLight(ctx, state, img, x, y, angle = 0, px = img.width / 2, py = img.height / 2) {
+  const light = strongestNear(state, x, y);
+  if (!light) return;
+  const side = Math.ceil(Math.hypot(img.width, img.height)) + 2;
+  if (!glareCanvas) glareCanvas = document.createElement('canvas');
+  if (glareCanvas.width < side) {
+    glareCanvas.width = side;
+    glareCanvas.height = side;
+  }
+  const g = glareCanvas.getContext('2d');
+  const mid = side / 2;
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalCompositeOperation = 'source-over';
+  g.clearRect(0, 0, glareCanvas.width, glareCanvas.height);
+  g.translate(mid, mid);
+  g.rotate(angle);
+  g.drawImage(img, -px, -py);
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  // From the side that faces the light, fading out by the middle.
+  const d = Math.hypot(light.x - x, light.y - y);
+  const nx = (light.x - x) / d,
+    ny = (light.y - y) / d;
+  const reach = mid * 0.85;
+  const shade = g.createLinearGradient(mid + nx * reach, mid + ny * reach, mid - nx * reach, mid - ny * reach);
+  shade.addColorStop(0, `rgba(${GLARE},${Math.min(0.85, 0.9 * light.k)})`);
+  shade.addColorStop(0.5, `rgba(${GLARE},0)`);
+  shade.addColorStop(1, `rgba(${GLARE},0)`);
+  g.globalCompositeOperation = 'source-in';
+  g.fillStyle = shade;
+  g.fillRect(0, 0, side, side);
+  ctx.drawImage(glareCanvas, 0, 0, side, side, x - side / 2, y - side / 2, side, side);
 }
 
 const hash = (x, y, k) => {

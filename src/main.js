@@ -8,6 +8,7 @@ import { openPage, menuInput } from './menu.js';
 import { AUTO, listSaves, latestSlot, readSlot, writeSlot, packSave, parseSave, clearRun } from './saves.js';
 import { sceneOf, foundOutFor } from './scene.js';
 import { updateMusic } from './music.js';
+import { starPicturesPerSecond } from './render/system.js';
 import { createView, settle, playerInput, viewKeys, drawScreen, buttonsOf, drawsPointer, SCREENS } from './screens.js';
 import { createState } from './sim/state.js';
 import { step, stepPlayers } from './sim/step.js';
@@ -221,6 +222,8 @@ function drawMeter(now, dt) {
   const opts = { fg: slow ? COL.ember[2] : COL.ion[2], border: slow ? COL.ember[0] : COL.ion[0] };
   label(ctx, game.assets.font, 8, 150, `FPS  ${meter.fps}`, opts);
   label(ctx, game.assets.font, 8, 166, `SLOWEST FRAME  ${meter.worst} MS`, opts);
+  // How many new pictures of the star are made each second, when it is in sight (F-205).
+  label(ctx, game.assets.font, 8, 182, `STAR PICTURES  ${starPicturesPerSecond()} / S`, opts);
 }
 
 // ?test&at=star starts a test game right by the star, ?test&at=haze at the edge of the system and

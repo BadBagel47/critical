@@ -13,7 +13,7 @@ import { drawNebula, drawRipples } from './effects.js';
 import { THING_LOOK, lookOf, spriteOfVessel, hpBar, SIDE_COL, armLights, podLamp } from './looks.js';
 import { CREW, PIRATE, enemies } from '../sim/sides.js';
 import { drawFlame, steering, FLAME_ION, FLAME_FIRE } from './flames.js';
-import { drawStar, drawHaze, starLight } from './system.js';
+import { drawStar, drawHaze, starLight, glareLight } from './system.js';
 import { currentSector } from '../sim/sectors.js';
 
 // Three layers of stars that move at different speeds, always the same ones.
@@ -519,6 +519,7 @@ export function drawSpace(ctx, state, view, assets) {
     if (!look || !near(t, look.margin)) continue;
     look.draw(ctx, t, env);
     if (look.image) starLight(ctx, state, look.image(t, env), t.x, t.y, t.heading, undefined, undefined, t);
+    if (look.image && view.lights) glareLight(ctx, state, look.image(t, env), t.x, t.y, t.heading);
   }
   const dock = dockingInfo(state);
   if (dock && !dock.docked && post === 'captain') {
@@ -539,12 +540,14 @@ export function drawSpace(ctx, state, view, assets) {
     if (!near(v, 110)) continue;
     drawVessel(ctx, v, env);
     starLight(ctx, state, spriteOfVessel(v, img), v.x, v.y, v.heading);
+    if (view.lights) glareLight(ctx, state, spriteOfVessel(v, img), v.x, v.y, v.heading);
   }
   for (const d of state.darts) drawDart(ctx, d, img);
   if (fx) fx.space.draw(ctx);
   if (!state.over) {
     drawShip(ctx, state, img, fx);
     starLight(ctx, state, img.frigate, ship.x, ship.y, ship.heading, 36, 54);
+    if (view.lights) glareLight(ctx, state, img.frigate, ship.x, ship.y, ship.heading, 36, 54);
   }
   // Shots are drawn over the ships, so that they are seen to leave the turrets and not to come from under the hull.
   for (const b of state.beams) drawBeam(ctx, b);
