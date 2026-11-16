@@ -23,7 +23,7 @@ Varje regel är en rad: `| Nr | Regel | Status | Källa | Test |`
 Funna när boken sattes ihop. Varje punkt har en rekommendation. Tills ett beslut finns gäller det som är byggt.
 
 1. ~~**Bränsle i fristaden.**~~ Avgjort 2026-11-16: fristadens bas säljer billigt bränsle, och bränslet blir gratis först på ett eget köpt varv. Det ersätter gratis bränsle på den egna varvsstationen.
-2. **Neutrala varv.** "Neutrala shipyards är alltid öppna mot betalning" (2026-11-14) mot att varvet är en uppgradering som köps till en bas (2026-11-16). Rekommendation: faktionernas och de fria basernas varv finns kvar och säljer mot betalning. Det är bara den egna basen som behöver köpa sitt.
+2. ~~**Neutrala varv.**~~ Avgjort 2026-11-16: ungefär en fjärdedel av baserna har varv, räknat för varje sida för sig, och varv på neutrala baser är öppna mot betalning. En egen bas kan köpa ett varv (R-1194). Öppet: om piraternas baser räknas med, och om varje sida får minst ett varv på en liten karta.
 3. ~~**Ett anseende som aldrig går att höja.**~~ Avgjort 2026-11-16: inget är för gott. Ett anseende som har gått till fientligt kan återtas, med uppdrag när de finns (R-1190).
 4. ~~**Gunnerns sprängladdning.**~~ Avgjort 2026-11-16: Gunner har inte alltid en laddning. Den köps och förbrukas, som byggt (R-529, R-847).
 5. ~~**Engineers hackfart.**~~ Avgjort 2026-11-16: en och en halv gång så snabbt, som byggt (R-526, R-788).
@@ -43,6 +43,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 - Slutet är piraternas slutbas med en boss. I dag är det Cruisern i The Maw.
 - Standardbasen har tre våningar, och övertagandet kräver först ett steg i källaren och sedan mainframen överst. I dag har stationerna en våning, och mainframen står i rummet längst in.
 - Ingen flyttas tillbaka till skeppet av sig själv, och skeppet får inte hoppa medan någon är inne. I dag kallas alla hem när skeppet lägger ut.
+- Ungefär en fjärdedel av varje sidas baser har varv (R-1194). I dag har alla faktionsbaser varv och inga neutrala baser.
 - En övertagen bas får inget varv, utan det köps. I dag får en övertagen station shipyard.
 - Faktioner kan vara i krig med varandra. I dag slåss de bara i omstridda system.
 - En station som har blivit fientlig av träffar är det inte för gott, utan anseendet kan återtas (R-1190). I dag är den fientlig för gott efter åtta träffar.
@@ -361,6 +362,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-275 | Basen i fristaden kan inte tas över och är alltid en trygg plats att komma tillbaka till. | byggd | proposal-bases.md §5 | tests/world.test.js |
 | R-276 | En övertagen bas får inget varv, utan varvet är en permanent uppgradering som köps till basen. | bestämd | proposal-bases.md §1, §7 | – |
 | R-277 | Alla standardbaser kan köpa varv. | bestämd | proposal-bases.md §7 | – |
+| R-1194 | Ungefär en fjärdedel av baserna har varv, räknat för varje sida för sig: en fjärdedel av de neutrala baserna, en fjärdedel av THE DRIFTERS baser och så vidare. Varv på neutrala baser är öppna mot betalning. | bestämd | Användaren 2026-11-16 (krock 2, K1) | – |
 | R-278 | Försvaret köps i mainframen (sköld, kanontorn och inre säkerhet), och fullt utbyggt ska risken att basen tas över vara mycket låg. | bestämd | proposal-bases.md §7 | – |
 | R-279 | Basens utsida i rymden ska bli större än i dag, men inte i skala 1:1. | bestämd | proposal-bases.md §8 | – |
 | R-280 | Utsidan ska hänga ihop med hur basen är byggd med våningar. | bestämd | proposal-bases.md §8 | – |
