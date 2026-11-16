@@ -942,6 +942,11 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 
 | Nr | Regel | Status | Källa | Test |
 |---|---|---|---|---|
+| R-1103 | Varje roll har sin egen kassa: Captain, Gunner och Engineer. | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1104 | När besättningen tjänar pengar får varje rolls kassa hela beloppet, oavsett vilken roll som tjänade dem och hur många som spelar. | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1105 | Captain betalar bränsle och stjärnkartor, Engineer lagning och Gunner raketer. | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1106 | Butiken visar vad alla roller kan köpa, men man köper bara det som hör till de roller man har. Den som har alla roller kan köpa i alla avdelningar. | bestämd | Användaren 2026-11-16 (F-188, D-189) | – |
+| R-1107 | Butikens utseende får en design innan den ritas om. | bestämd | Användaren 2026-11-16 (F-080) | – |
 | R-834 | Neutrala shipyards är alltid öppna mot betalning. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-835 | Neutrala shipyards har samma priser som vänliga så länge spelet testas. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-836 | Stationer säljer kartan till nästa sektor. | byggd | HANDOFF beslut 2026-11-14 | saknas |
