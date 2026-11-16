@@ -963,7 +963,12 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1121 | Alla tjänster vid disken (bränsle, lagning, raketer och kartor) betalas av den som beställer, ur den egna kassan, så att man kan turas om. | bestämd | Användaren 2026-11-16 | – |
 | R-1122 | Butiken visar tydligt att tjänsterna kan köpas av alla. | bestämd | Användaren 2026-11-16 | – |
 | R-1123 | Butiken har filterknappar som visar vad varje roll kan köpa, med den egna rollen som förval. | bestämd | Användaren 2026-11-16 (F-080) | – |
-| R-1124 | Fighter bay hör till Captain, som skjuter ut dartsen. | bestämd | Användaren 2026-11-16 | – |
+| R-1124 | Fighter bay hör till Captain, som skjuter ut dartsen. | ersatt av: R-1126 | Användaren 2026-11-16 | – |
+| R-1125 | Bränsletanken ger ett extra hopp när den köps, och varje uppgradering ger ett hopp till, upp till fem extra. | bestämd | Användaren 2026-11-16 (D-238) | – |
+| R-1126 | Fighter bay hör till Gunner. Den har plats för en dart och uppgraderas en dart i taget till högst tre. | bestämd | Användaren 2026-11-16 (D-238) | – |
+| R-1127 | Darts skjuts bara ut för hand. Uppgraderingen som skjuter ut dem av sig själv tas bort. | bestämd | Användaren 2026-11-16 (D-238) | – |
+| R-1128 | Butiken visar vad varje nivå av en uppgradering ger, både de man har och de man inte har än. | bestämd | Användaren 2026-11-16 (D-238) | – |
+| R-1129 | Skölden slås på och av för hand, och den drar lite bränsle medan den är på. Vilken roll som sköter den är inte bestämt. | bestämd | Användaren 2026-11-16 | – |
 | R-834 | Neutrala shipyards är alltid öppna mot betalning. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-835 | Neutrala shipyards har samma priser som vänliga så länge spelet testas. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-836 | Stationer säljer kartan till nästa sektor. | byggd | HANDOFF beslut 2026-11-14 | saknas |

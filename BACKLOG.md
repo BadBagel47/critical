@@ -8,7 +8,7 @@ Prioritet: Hög, Medel, Låg.
 Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först (A, med design före bild), sedan uppdragen (B). Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
 
 **A** – strong model, medium level – Butik med bilder
-- F-237 – Tjänsterna betalas av den som beställer, och fighter bay hör till Captain
+- F-237 – Tjänsterna betalas av den som beställer
 - D-238 – Gå igenom alla saker i butiken, så att det syns vad som ska göras med var och en
 - F-080 – En första skiss av butiken med filterknappar per roll, där alla saker har samma färdiga platshållarikon, så att det blir roligare att handla
 
@@ -95,8 +95,9 @@ Väntar på användaren: elva krockar i regelboken (docs/rules.md, överst), fri
 
 | ID | Vad | Status |
 |---|---|---|
-| D-238 | Genomgång av allt i butiken. Användaren 2026-11-16: först gås alla saker i butiken igenom, så att det syns vad som ska göras med var och en, innan butiken ritas om. Listan med frågor lades fram i chatten samma dag | Pågår 2026-11-16 |
-| F-237 | Tjänsterna betalas av den som beställer, och fighter bay hör till Captain. Användaren 2026-11-16: bränsle, lagning, raketer och kartor betalas ur den egna kassan av den som beställer, så att man kan turas om (R-1121), och fighter bay flyttas från Gunner till Captain (R-1124). Ekonomibladet uppdateras samtidigt | Ej påbörjad |
+| F-239 | Skölden slås på och av för hand och drar lite bränsle när den är på (R-1129). Användaren 2026-11-16. Öppet: vilken roll som sköter den, och om den slås på av sig själv vid en träff | Ej påbörjad |
+| D-238 | Genomgång av allt i butiken. Användaren 2026-11-16: först gås alla saker i butiken igenom, så att det syns vad som ska göras med var och en, innan butiken ritas om. Listan med frågor lades fram i chatten samma dag. Besked 2026-11-16: bränsletanken ger ett hopp och uppgraderas ett hopp i taget till fem extra (R-1125), fighter bay hör till Gunner med en dart som uppgraderas till tre (R-1126), darts skjuts bara ut för hand (R-1127), och butiken visar vad alla nivåer ger (R-1128). Förslag om hur butiken fungerar: lista med filter, ruta med info, före och efter i siffror, nivåer, platser, krav, köp och stäng | Pågår 2026-11-16 |
+| F-237 | Tjänsterna betalas av den som beställer, och fighter bay hör till Captain (ändrat samma dag: den hör till Gunner, R-1126). Användaren 2026-11-16: bränsle, lagning, raketer och kartor betalas ur den egna kassan av den som beställer, så att man kan turas om (R-1121), och fighter bay flyttas från Gunner till Captain (R-1124). Ekonomibladet uppdateras samtidigt | Ej påbörjad |
 | F-222 | Provspelslista med testlägen. En lista över det som är byggt men inte provspelat, med en direktlänk per sak, och adresser som startar rätt situation direkt (till exempel anfall på egen station, bas med personaldel, tom tank vid asteroider). Synpunkterna förs in i regelboken. Användaren 2026-11-16: ja | Ej påbörjad |
 | D-223 | Innehållskatalog som skapas ur koden: skeppsklasser, vakttyper, stationer, faktioner, uppgraderingar, utrustning och låsspel med sina viktigaste siffror, så att det alltid finns en överblick som stämmer. Användaren 2026-11-16: ja | Ej påbörjad |
 | D-227 | Dela upp de stora filerna för bordning (src/sim/boarding.js och src/render/boarding.js, runt 1 000 rader var) efter ämne: vakter, lås, mainframe, inredning och ritning, så att två agenter krockar mer sällan. Körs när den andra agenten är klar med insidorna. Användaren 2026-11-16: ja | Ej påbörjad |
