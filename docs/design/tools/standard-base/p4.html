@@ -1,0 +1,570 @@
+// digits for painted names (the font has only letters)
+Object.assign(GLYPH, { 0: '111101101101111', 1: '010110010010111', 2: '111001111100111', 3: '111001011001111', 4: '101101111001001', 5: '111100111001111', 6: '111100111101111', 7: '111001010010010', 8: '010101010101010', 9: '111101111001111' });
+
+// ================================================================== the outside, at the scale of space
+// Space pixels per point inside: 3 times today's station across, or 3 times its area.
+const SCALE = { width: 465 / (2 * RING1 * T), area: 268 / (2 * RING1 * T) };
+const PADT = 18;
+let outsideImg = null;
+function buildOutside() {
+  const S = SCALE[OPT.size], N = Math.round((W + PADT * 2) * T * S), P2 = T * S;
+  const [c, g] = mk(N, N), [lc, lg] = mk(N, N);
+  const img = g.createImageData(N, N), d = img.data;
+  const lim = lg.createImageData(N, N), ld = lim.data;
+  const [wc, wg] = mk(N, N), wim = wg.createImageData(N, N), wd = wim.data;
+  // what turns with the ring (its joints, the lamps' sockets, the port collars) goes on a layer of its own
+  const [rdc, rdg] = mk(N, N), rdim = rdg.createImageData(N, N), rdd = rdim.data;
+  const [d0, d1, d2] = decks;
+  const G = (dk, X, Y) => (X < 0 || Y < 0 || X >= W || Y >= H ? OUT : dk.grid[Y * W + X]);
+  // how high the topmost thing is at a point given in tiles
+  // how high the topmost thing is at a point given in tiles: the floors are round domes one on top of the other
+  const lev = (tx, ty) => {
+    const X = Math.floor(tx), Y = Math.floor(ty), r = ringD(tx, ty);
+    if (r < RTOP) return 3;
+    const v1 = G(d1, X, Y);
+    if (v1 !== OUT && r >= RMID) { const k = d1.rooms[v1].kind; if (['gangway', 'gantry', 'collar', 'airlock'].includes(k)) return 2.4; }
+    if (r < RMID) return 2;
+    if (r >= RING0 && r < RING1) return 2.2;
+    if (r < RB) return 1;
+    if (G(d0, X, Y) !== OUT) return 1.1;
+    return 0;
+  };
+  const set = (i, col, k = 1) => { d[i] = Math.min(255, col[0] * k); d[i + 1] = Math.min(255, col[1] * k); d[i + 2] = Math.min(255, col[2] * k); d[i + 3] = 255; };
+  const glow = (i, col, k = 1) => { ld[i] = Math.min(255, ld[i] + col[0] * k); ld[i + 1] = Math.min(255, ld[i + 1] + col[1] * k); ld[i + 2] = Math.min(255, ld[i + 2] + col[2] * k); ld[i + 3] = 255; };
+  const roomOf = (dk, tx, ty) => { const v = G(dk, Math.floor(tx), Math.floor(ty)); return v >= 0 ? dk.rooms[v] : null; };
+  const portCol = attCol(), row = [];
+  // light from the upper left; each floor is a low dome, lit in a few steps so it stays pixel art
+  // the light comes from the system's star; far from it, only weak light and soft shadows
+  const STAR = { nw: [-0.45, -0.55, 0.7], ne: [0.55, -0.45, 0.7], se: [0.45, 0.55, 0.7], sw: [-0.55, 0.45, 0.7], far: [-0.25, -0.3, 1] }[OPT.star];
+  // the light comes from the star's side on the screen; the base stands turned by TURN, so turn it back
+  const Lx = STAR[0] * Math.cos(-TURN) - STAR[1] * Math.sin(-TURN), Ly = STAR[0] * Math.sin(-TURN) + STAR[1] * Math.cos(-TURN), Lz = STAR[2], Ln = Math.hypot(Lx, Ly, Lz), far = OPT.star === 'far';
+  const shx = (Lx / Math.hypot(Lx, Ly)) * 1.7, shy = (Ly / Math.hypot(Lx, Ly)) * 1.7;
+  const domeShade = (dx, dy, R, f) => { const nx = (dx / R) * f, ny = (dy / R) * f, nz = Math.sqrt(Math.max(0.05, 1 - nx * nx - ny * ny)); const v = (nx * Lx + ny * Ly + nz * Lz) / Ln; return Math.round(((far ? 0.55 : 0.45) + (far ? 0.4 : 0.7) * Math.max(0, v)) * 7) / 7; };
+  // a row of windows just inside a floor's rim: is this point a pane, and which room is behind it
+  // windows all round each floor: most lit, some dark, a new mix each time one arrives. The top has wide windows
+  // with a view. Their light goes on a layer of its own, so that it can pulse at an alarm.
+  const WIN = { 1: [1.15, 1.35, 0.7, 0.25], 2: [1.15, 1.35, 0.7, 0.25], 3: [2.0, 2.5, 0.6, 0.1] };
+  const LIT = { normal: [0.55, 0.7, 0.85], lockdown: [0.35, 0.45, 0.5], alarm: [0.55, 0.65, 0.7], power: [0.08, 0.12, 0.15] }[MODE];
+  const window_ = (i, r, a, R, tier) => {
+    const [span, inner, outer, gap] = WIN[tier];
+    if (r < R - inner || r > R - outer) return null;
+    const u = ((a + Math.PI) * R) / span, idx = Math.floor(u), f = u - idx;
+    if (f < gap / 2 || f > 1 - gap / 2) return 'frame';
+    if (hash(idx, tier * 13, ARRIVE) > LIT[tier - 1]) return 'dark';
+    const b = 0.45 + 0.55 * hash(idx, tier * 7 + 1, ARRIVE + 99);
+    const enemy = !OPT.own;
+    let c;
+    if (MODE === 'lockdown') { c = enemy ? [220, 60, 50] : [255, 170, 80]; }
+    else if (MODE === 'alarm') { c = enemy ? [255, 50, 40] : [255, 180, 60]; }
+    else if (MODE === 'power') { c = [255, 120, 50]; }
+    else c = tier === 1 ? [255, 150, 80] : tier === 3 ? [150, 200, 255] : hash(idx, 5, ARRIVE) > 0.85 ? [190, 215, 255] : [255, 205, 150];
+    const k = (MODE === 'lockdown' || MODE === 'power' ? 0.6 : 1) * b;
+    wd[i] = Math.min(255, c[0] * k); wd[i + 1] = Math.min(255, c[1] * k); wd[i + 2] = Math.min(255, c[2] * k); wd[i + 3] = 255;
+    return 'lit';
+  };
+  for (let py = 0; py < N; py++) for (let px = 0; px < N; px++) {
+    const tx = px / P2 - PADT, ty = py / P2 - PADT;
+    const L = lev(tx, ty); if (!L) continue;
+    const i = (py * N + px) * 4, dx = tx - C, dy = ty - C, r = Math.hypot(dx, dy), a = Math.atan2(dy, dx);
+    // shadow from what lies higher, towards the lower right
+    const shadow = L < 3 && (lev(tx + shx * 0.7, ty + shy * 0.7) > L + 0.05 || (L < 2 && lev(tx + shx * 1.3, ty + shy * 1.3) >= 2));
+    let col, k = 1;
+    // panel joints: spokes every 15 degrees, and a few rings
+    const seam = (rings) => Math.abs(((a / (Math.PI / 12)) % 1 + 1) % 1 - 0.5) > 0.5 - 0.09 / Math.max(1, r) * 3 || rings.some((q) => Math.abs(r - q) < 0.09);
+    if (L === 1) {
+      // the basement: a wide, dirty dome rim, plates, rust, orange work lights in its windows
+      const R = RB;
+      col = [92, 86, 78]; k = domeShade(dx, dy, R, 0.9);
+      if (seam([RMID + 2.5])) k *= 0.82;
+      const n = hash(px >> 1, py >> 1, 9); if (n < 0.08) k *= 0.85; else if (n > 0.96) col = [112, 76, 52];
+      const rm = roomOf(d0, tx, ty);
+      if (rm && rm.kind === 'hold' && r < R - 2) { const fx = tx - Math.floor(tx), fy = ty - Math.floor(ty); if (tx > rm.x0 + 1.2 && tx < rm.x1 - 0.2 && ty > rm.y0 + 1.2 && ty < rm.y1 - 0.2) { col = [74, 70, 64]; if ((fx < 0.07 || fy < 0.07)) k *= 0.85; } }
+      if (rm && rm.kind === 'power') { const dd = Math.hypot(tx - rm.cx - 0.5, ty - rm.cy - 0.5); if (dd < 2.2) { col = [44, 40, 38]; if ((tx * 3) % 1 < 0.35) { col = [90, 50, 30]; glow(i, [255, 120, 40], 0.5); } } else if (dd < 2.6) col = [120, 112, 100]; }
+      { const w = window_(i, r, a, R, 1); if (w) col = w === 'frame' ? [70, 64, 58] : [40, 36, 34]; }
+      if (R - r < 0.4) k *= 0.7;
+    } else if (L === 1.1) {
+      // the cargo arms: tubes across their width
+      const rm = roomOf(d0, tx, ty), along = rm && rm.x1 - rm.x0 > rm.y1 - rm.y0;
+      const w = along ? (ty - rm.y0) / (rm.y1 - rm.y0 + 1) : (tx - rm.x0) / (rm.x1 - rm.x0 + 1);
+      col = [96, 90, 84]; k = 0.6 + 0.6 * Math.sin(Math.PI * w) * (w < 0.5 ? 1.1 : 0.85);
+      if (((along ? tx : ty) * 1.5) % 1 < 0.1) k *= 0.75;
+      if (rm && rm.kind === 'airlock' && Math.floor((tx + ty) * 2) % 2) col = [168, 132, 46];
+    } else if (L === 2) {
+      // the middle: a light, clean dome with a row of windows
+      const R = RMID, rm = roomOf(d1, tx, ty);
+      col = [176, 180, 188]; k = domeShade(dx, dy, R, 0.75);
+      if (seam([RTOP + 4, RTOP + 8.5])) k *= 0.9;
+      if (rm && rm.kind === 'yard' && r > R - 2.4) { col = [92, 90, 86]; if (Math.floor((tx + ty) * 2) % 2) col = [219, 164, 69]; }
+      { const w = window_(i, r, a, R, 2); if (w) col = w === 'frame' ? [150, 154, 162] : [42, 56, 70]; }
+      if (OPT.own && r > R - 2.3 && r < R - 1.75) col = CREW;
+      if (R - r < 0.35) k *= 0.72;
+    } else if (L === 2.2) {
+      // the docking ring: a tube, lit across its width
+      const w = (r - RING0) / (RING1 - RING0), outer = (dx * Lx + dy * Ly) / (r || 1);
+      col = [112, 120, 134]; k = 0.62 + 0.55 * Math.sin(Math.PI * w) * (0.85 + 0.3 * Math.sign(outer) * (w > 0.5 ? 1 : -1) * 0.5);
+      k = Math.round(k * 7) / 7;
+      if (Math.abs(((a * 24) / Math.PI + 100) % 1) < 0.07) rdd[i + 3] = 52;
+      // half as many lamps as joints, between them
+      if (Math.abs(r - (RING0 + RING1) / 2) < 0.38 && Math.abs(((a * 24) / Math.PI + 100.5) % 1) < 0.1) { const lc2 = OPT.own ? [20, 160, 190] : { hostile: [225, 28, 18], neutral: [200, 208, 222], friendly: [70, 190, 20] }[OPT.side]; rdd[i] = lc2[0]; rdd[i + 1] = lc2[1]; rdd[i + 2] = lc2[2]; rdd[i + 3] = 255; row.push([px, py]); }
+    } else if (L === 2.4) {
+      // glass tubes: the collar, the gantry and the yard's lock
+      col = [140, 148, 158];
+      const rm = roomOf(d1, tx, ty), along = rm && rm.x1 - rm.x0 > rm.y1 - rm.y0;
+      const across = along ? ty - rm.y0 : tx - rm.x0, wdt = along ? rm.y1 - rm.y0 + 1 : rm.x1 - rm.x0 + 1;
+      if (across > wdt * 0.28 && across < wdt * 0.72) { col = [52, 70, 86]; if (((along ? tx : ty) * 2) % 1 < 0.15) col = [120, 126, 136]; else glow(i, [170, 210, 255], 0.45); }
+      if (rm && (rm.kind === 'airlock' || rm.kind === 'collar')) { col = (Math.floor((tx + ty) * 2) % 2) ? [168, 132, 46] : [60, 60, 64]; }
+    } else {
+      // the top: a dark, cold dome with blue windows and a glass cupola over command
+      const R = RTOP, rm = roomOf(d2, tx, ty);
+      col = [66, 74, 92]; k = domeShade(dx, dy, R, 0.85);
+      if (seam([RTOP - 5])) k *= 0.85;
+      { const w = window_(i, r, a, R, 3); if (w) col = w === 'frame' ? [96, 104, 120] : [26, 36, 52]; }
+      if (R - r < 0.35) k *= 0.7;
+    }
+    if (shadow) k *= far ? 0.8 : 0.55;
+    set(i, col, k);
+  }
+  // little lamps round each floor's rim: orange on the basement, white on the middle, blue on the top
+  const lamps = [];
+  for (const [R, lv, colL, gap] of [[RB - 0.25, 1, [255, 150, 60], 7], [RMID - 0.2, 2, [230, 235, 245], 6], [RTOP - 0.2, 3, [110, 170, 255], 3]]) {
+    const n = Math.max(8, Math.round((2 * Math.PI * R) / gap));
+    for (let q = 0; q < n; q++) { const a = ((q + 0.5) / n) * 2 * Math.PI, tx = C + Math.cos(a) * R, ty = C + Math.sin(a) * R; if (lev(tx, ty) !== lv) continue; lamps.push([(tx + PADT) * P2, (ty + PADT) * P2, colL, lv]); }
+  }
+  g.putImageData(img, 0, 0); lg.putImageData(lim, 0, 0); rdg.putImageData(rdim, 0, 0);
+  const P = (tx, ty) => [(tx + PADT) * P2, (ty + PADT) * P2];
+  for (const [x, y, colL, lv] of lamps) {
+    lg.fillStyle = rgb(colL); lg.fillRect(Math.round(x), Math.round(y), 1, 1);
+    const rad = lv === 1 ? 3.2 * P2 : 2 * P2, gr = lg.createRadialGradient(x, y, 0, x, y, rad);
+    gr.addColorStop(0, `rgba(${colL[0]},${colL[1]},${colL[2]},${lv === 1 ? 0.16 : 0.1})`); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    lg.fillStyle = gr; lg.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+  }
+  const z = (S / SCALE.width) * 1.5; // sizes of things drawn on top follow the scale
+  // the docking ports round the ring: a collar each, lights in the colour of how the base sees the crew
+  const ea = entryAngle(), gx = Math.cos(ea), gy = Math.sin(ea);
+  // the bridge to the entry port, and on a base with spokes the three closed spokes
+  for (const lk of outerLinks()) {
+    const [x0, y0] = P(...lk.from), [x1, y1] = P(...lk.to), len = Math.hypot(x1 - x0, y1 - y0), w = lk.w * P2;
+    g.save(); g.translate(x0, y0); g.rotate(Math.atan2(y1 - y0, x1 - x0));
+    g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(3, -w / 2 + 3, len, w);
+    g.fillStyle = lk.kind === 'bridge' ? '#8a929c' : '#a9adb5'; g.fillRect(0, -w / 2, len, w);
+    g.fillStyle = lk.kind === 'bridge' ? '#b8c0ca' : '#d0d4da'; g.fillRect(0, -w / 2, len, 1); g.fillStyle = '#5a606a'; g.fillRect(0, w / 2 - 1, len, 1);
+    if (lk.kind === 'bridge') { g.fillStyle = '#34485a'; g.fillRect(0, -w * 0.22, len, w * 0.44); }
+    else for (let u = 3; u < len; u += 2 * P2) { g.fillStyle = '#8e939b'; g.fillRect(u, -w / 2 + 1, 1, w - 2); }
+    g.restore();
+    lg.save(); lg.translate(x0, y0); lg.rotate(Math.atan2(y1 - y0, x1 - x0));
+    for (let u = 2; u < len; u += 0.8 * P2) { lg.fillStyle = lk.kind === 'bridge' ? 'rgba(170,210,255,0.55)' : 'rgba(255,205,150,0.6)'; lg.fillRect(u, lk.kind === 'bridge' ? -0.5 : -w / 2 + 1, 1, 1); if (lk.kind !== 'bridge') lg.fillRect(u, w / 2 - 2, 1, 1); }
+    lg.restore();
+  }
+  for (const a of PORT_ANGLES) {
+    const ca = Math.cos(a), sa = Math.sin(a);
+    const [x, y] = P(C + ca * (RING1 + 0.2), C + sa * (RING1 + 0.2)), q2 = rdg;
+    q2.save(); q2.translate(x, y); q2.rotate(a);
+    q2.fillStyle = 'rgba(0,0,0,0.4)'; q2.fillRect(-0.4 * P2 + 2, -1.4 * P2 + 2, 0.9 * P2, 2.8 * P2);
+    q2.fillStyle = '#5e6574'; q2.fillRect(-0.4 * P2, -1.4 * P2, 0.9 * P2, 2.8 * P2);
+    q2.fillStyle = '#8a92a2'; q2.fillRect(-0.4 * P2, -1.4 * P2, 0.9 * P2, 1); q2.fillStyle = '#3e434e'; q2.fillRect(0.4 * P2, -1.4 * P2, 1, 2.8 * P2);
+    q2.restore();
+  }
+  // guns on their rooms, bought or empty
+  for (const dk of [d0, d1, d2]) for (const gun of dk.guns) {
+    const [x, y] = P(gun.x, gun.y), armed = gunArmed(gun), big = gun.big || OPT.def >= 3;
+    if (!armed) { g.fillStyle = '#3a3a3c'; g.fillRect(x - 3.6 * z, y - 3.6 * z, 7.2 * z, 7.2 * z); g.fillStyle = '#a8842e'; g.fillRect(x - 3.6 * z, y - 3.6 * z, 7.2 * z, 1); continue; }
+    const rr2 = Math.max(2, Math.round((big ? 7.5 : 5.5) * z));
+    disc(g, x + 2, y + 2, rr2, 'rgba(0,0,0,0.45)'); disc(g, x, y, rr2, '#2a2d34'); disc(g, x, y, rr2 - 1, gun.big ? '#5a4a3a' : '#4a4458');
+    g.save(); g.translate(x, y); g.rotate(gun.a); g.fillStyle = '#1a1b20';
+    if (gun.big) { g.fillRect(rr2 - 2, -3.5 * z, 13 * z, 2.5 * z); g.fillRect(rr2 - 2, 1 * z, 13 * z, 2.5 * z); } else g.fillRect(rr2 - 2, -1.2 * z, 11 * z, 2.4 * z);
+    g.restore();
+    lg.fillStyle = attHex(); lg.fillRect(Math.round(x) - 1, Math.round(y) - 1, 2, 2);
+  }
+  // the dish and the masts: always in the same places on the top dome, turned with the base
+  const onBase = (ang, rr) => P(...rpf(C + Math.cos(ang) * rr, C + Math.sin(ang) * rr));
+  { const [x, y] = onBase(0, 10); disc(g, x + 3, y + 3, Math.round(7 * z), 'rgba(0,0,0,0.5)'); disc(g, x, y, Math.round(7 * z), '#8a909e'); disc(g, x, y, Math.round(5 * z), '#b8bec8'); disc(g, x, y, Math.max(1, Math.round(1.5 * z)), '#3a3d48'); g.fillStyle = '#5a606e'; g.fillRect(x, y - 1, 9 * z, 2); lg.fillStyle = '#ff3b30'; lg.fillRect(Math.round(x + 9 * z), y - 1, 2, 2); }
+  { const [x, y] = onBase(Math.PI, 10); for (const [ox, oy] of [[-4, -2], [3, 2]]) { const ax = x + ox * z, ay = y + oy * z; g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(ax + 3, ay - 8 * z + 3, 1, 10 * z); g.fillStyle = '#9aa0ae'; g.fillRect(ax, ay - 8 * z, 1, 10 * z); g.fillRect(ax - 2, ay - 8 * z, 5, 1); lg.fillStyle = '#6fb8ff'; lg.fillRect(Math.round(ax), Math.round(ay - 9 * z), 1, 1); } }
+  // the build dock: two girders, braces, cranes and floodlights, the ship lying in it
+  const ships = [];
+  if (OPT.yard) {
+    const [dx, dy] = rd(1, 0), ang = Math.atan2(dy, dx);
+    // the bridge stands higher than the ring: two legs on the basement's roof, its shadow across the ring
+    const Q = (u, v) => P(C + dx * u - dy * v, C + dy * u + dx * v);
+    for (const u of [24.5, 29.5]) for (const v of [-2.7, 2.7]) { const [lx, ly] = Q(u, v); g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(lx - 0.4 * P2 + 2, ly - 0.4 * P2 + 2, 0.8 * P2, 0.8 * P2); g.fillStyle = '#4a4e5a'; g.fillRect(lx - 0.4 * P2, ly - 0.4 * P2, 0.8 * P2, 0.8 * P2); g.fillStyle = '#6a7080'; g.fillRect(lx - 0.4 * P2, ly - 0.4 * P2, 0.8 * P2, 1); }
+    {
+      const sx = Math.sign(dx - dy) || 1, sy = Math.sign(dy + dx) || 1; void sx; void sy;
+      const pts = [Q(RING0 - 0.3, 2.0), Q(RING1 + 0.3, 2.0), Q(RING1 + 0.3, 3.1), Q(RING0 - 0.3, 3.1)].map(([x, y]) => [x + 3, y + 3]);
+      g.fillStyle = 'rgba(0,0,0,0.42)'; g.beginPath(); pts.forEach(([x, y], k) => (k ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.fill();
+    }
+    const s0 = RING1 + 1.2, [ox, oy] = P(C + dx * s0, C + dy * s0), len = 128, half = 46;
+    g.save(); g.translate(ox, oy); g.rotate(ang);
+    g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillRect(4, -half + 4, len, 6); g.fillRect(4, half - 2, len, 6);
+    for (const s of [-1, 1]) { g.fillStyle = '#5a5650'; g.fillRect(0, s * half - 3, len, 6); g.fillStyle = '#7a756c'; g.fillRect(0, s * half - 3, len, 1); for (let u = 2; u < len - 4; u += 7) { g.fillStyle = '#a8842e'; g.fillRect(u, s * half + 1, 3, 1); } }
+    g.fillStyle = '#4a4640'; g.fillRect(len - 4, -half, 4, half * 2);
+    for (let u = 10; u < len; u += 22) { g.fillStyle = 'rgba(90,86,80,0.7)'; g.fillRect(u, -half + 3, 2, 8); g.fillRect(u, half - 11, 2, 8); }
+    // two cranes at the far corners, booms over the ship
+    for (const s of [-1, 1]) { g.fillStyle = '#6a5a2a'; g.fillRect(len - 14, s * half - 5, 10, 10); g.save(); g.translate(len - 9, s * half); g.rotate(s * (Math.PI - 0.5)); g.fillStyle = '#c9a441'; g.fillRect(0, -1.5, 40, 3); g.fillStyle = '#2a2a2c'; g.fillRect(38, -2, 3, 4); g.restore(); }
+    if (OPT.own) { const [nc, ng] = mk(40, 7); paint(ng, 'CRITICAL', 20, 3, CREW_HEX); g.save(); g.translate(len / 2 - 20, -half - 10); g.drawImage(nc, 0, 0); g.restore(); }
+    g.restore();
+    // floodlights on the four corners, aimed at the ship
+    const W2 = (u, v) => [ox + dx * u - dy * v, oy + dy * u + dx * v];
+    for (const [u, v] of [[6, -half], [6, half], [len - 6, -half], [len - 6, half]]) {
+      const [x, y] = W2(u, v), [tx2, ty2] = W2(len / 2, 0);
+      lg.fillStyle = '#fff4d8'; lg.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3);
+      const gr = lg.createRadialGradient(x, y, 0, x, y, 80);
+      gr.addColorStop(0, 'rgba(255,240,210,0.35)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      lg.save(); lg.beginPath(); lg.moveTo(x, y); const a = Math.atan2(ty2 - y, tx2 - x); lg.arc(x, y, 80, a - 0.45, a + 0.45); lg.closePath(); lg.fillStyle = gr; lg.fill(); lg.restore();
+    }
+    ships.push({ img: IMG.frigate, x: ox + dx * (len / 2 + 6), y: oy + dy * (len / 2 + 6), dx: -dx, dy: -dy, name: 'frigate' });
+  } else {
+    const [x, y] = P(C + gx * (RING1 + 1.7), C + gy * (RING1 + 1.7));
+    ships.push({ img: IMG.frigate, x: x + gx * 54, y: y + gy * 54, dx: -gx, dy: -gy, name: 'frigate' });
+  }
+  // freighters at the first two cargo arms
+  for (const s of d0.docks.slice(0, 2)) {
+    const [x0, y0, x1, y1] = own(s.lr), [dx, dy] = rd(...{ n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] }[s.side]);
+    const [tx2, ty2] = P((x0 + x1 + 1) / 2 + dx * (x1 - x0 + 1) / 2, (y0 + y1 + 1) / 2 + dy * (y1 - y0 + 1) / 2);
+    ships.push({ img: IMG.freighter, x: tx2 + dx * 70, y: ty2 + dy * 70, dx: -dx, dy: -dy });
+  }
+  for (const sh of ships) { if (!sh.img || !sh.img.width || sh.name === 'frigate') continue; g.save(); g.translate(Math.round(sh.x), Math.round(sh.y)); g.rotate(Math.atan2(sh.dy, sh.dx) + Math.PI / 2); g.drawImage(sh.img, -sh.img.width / 2, -sh.img.height / 2); g.restore(); }
+  // the shield, as a shimmer round it all
+  let shield = null;
+  if (OPT.def >= 2) {
+    const [sc, sg] = mk(N, N), [x, y] = P(C, C), R0 = (RING1 + 3.5) * P2;
+    sg.save(); sg.beginPath(); sg.arc(x, y, R0 + 6 * z, 0, 2 * Math.PI); sg.closePath(); sg.moveTo(x + R0 - 10 * z, y); sg.arc(x, y, R0 - 10 * z, 0, 2 * Math.PI); sg.closePath(); sg.clip('evenodd');
+    sg.strokeStyle = 'rgba(120,200,255,0.5)'; sg.lineWidth = 1;
+    const hs = 7 * Math.max(0.6, z);
+    for (let yy = y - R0 - 20; yy < y + R0 + 20; yy += hs * 0.87) for (let xx = x - R0 - 20 + ((Math.round((yy - y) / (hs * 0.87)) & 1) * hs) / 2; xx < x + R0 + 20; xx += hs) { sg.beginPath(); for (let q = 0; q < 6; q++) { const aa = (q / 6) * 6.283; sg.lineTo(xx + Math.cos(aa) * hs * 0.5, yy + Math.sin(aa) * hs * 0.5); } sg.closePath(); sg.stroke(); }
+    sg.restore();
+    sg.strokeStyle = 'rgba(140,210,255,0.8)'; sg.lineWidth = 2; sg.beginPath(); sg.arc(x, y, R0, 0, 7); sg.stroke();
+    shield = { c: sc, k: OPT.def >= 3 ? 0.5 : 0.22 };
+  }
+  let crewRow = null;
+  {
+    // the row of lamps round the ring and a beacon on the top: turquoise on the crew's own base, otherwise
+    // red, white or green for how the base sees the crew
+    const [brc, brg] = mk(N, N), [bac, bag] = mk(N, N), mine = OPT.own ? OWN_LAMP : portCol;
+    // deeper colours for the lamps themselves, so their glow does not wash out to white; each with a halo
+    const lampHex = OPT.own ? OWN_LAMP_HEX : { hostile: '#ff2a1c', neutral: '#d8e0ec', friendly: '#5ce020', own: OWN_LAMP_HEX }[OPT.side];
+    const lampRGB = OPT.own ? OWN_LAMP : { hostile: [255, 42, 28], neutral: [216, 224, 236], friendly: [92, 224, 32] }[OPT.side];
+    // one sprite per colour: a bright core and a wide halo; the lamps are drawn live, one by one
+    const sprite = (cl, hex) => {
+      const hr = Math.ceil(2.1 * P2), [sc, sg] = mk(hr * 2, hr * 2), gr = sg.createRadialGradient(hr, hr, 0, hr, hr, hr);
+      gr.addColorStop(0, `rgba(${cl[0]},${cl[1]},${cl[2]},1)`); gr.addColorStop(0.2, `rgba(${cl[0]},${cl[1]},${cl[2]},0.9)`); gr.addColorStop(0.5, `rgba(${cl[0]},${cl[1]},${cl[2]},0.3)`); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      sg.fillStyle = gr; sg.fillRect(0, 0, hr * 2, hr * 2); sg.fillStyle = hex; sg.fillRect(hr - 2, hr - 2, 5, 5); sg.fillStyle = '#ffffff'; sg.globalAlpha = 0.55; sg.fillRect(hr - 1, hr - 1, 2, 2);
+      return sc;
+    };
+    const lampAt = [];
+    for (let q = 0; q < 48; q++) lampAt.push(((q + 0.5) / 48) * 2 * Math.PI);
+    var lampSet = { calm: sprite(lampRGB, lampHex), alarm: sprite([255, 192, 64], '#ffc040'), at: lampAt, r: ((RING0 + RING1) / 2) * P2 };
+    // a beacon on a mast on the top, towards the way in
+    const [bx, by] = P(C + gx * 10, C + gy * 10);
+    g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(bx + 2, by - 1, 2, 6); g.fillStyle = '#8a92a2'; g.fillRect(bx - 1, by - 2, 3, 6); disc(g, bx, by - 3, 2, '#2a2d34');
+    for (const [cc, cg, colB] of [[brc, brg, mine], [bac, bag, [255, 192, 64]]]) {
+      cg.fillStyle = rgb(colB.map((q) => Math.min(255, q * 1.3))); cg.fillRect(Math.round(bx) - 2, Math.round(by) - 5, 4, 4);
+      const gr = cg.createRadialGradient(bx, by - 3, 0, bx, by - 3, 9 * P2 / 6.6); gr.addColorStop(0, `rgba(${colB[0]},${colB[1]},${colB[2]},0.75)`); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      cg.fillStyle = gr; cg.fillRect(bx - 40, by - 43, 80, 80);
+    }
+    crewRow = { lamps: lampSet, beacon: brc, beaconAlarm: bac };
+  }
+  // the place for the big gun in the middle of the top dome: a closed hatch until it is bought
+  {
+    const [x, y] = P(C, C), R1 = 3.4 * P2, ang = entryAngle() + Math.PI;
+    disc(g, x + 2, y + 2, Math.round(R1), 'rgba(0,0,0,0.45)'); disc(g, x, y, Math.round(R1), '#2a2e38'); disc(g, x, y, Math.round(R1 - 1), '#3a3f4b');
+    for (let q = 0; q < 16; q++) if (q % 2) { const a1 = (q / 16) * 2 * Math.PI; g.fillStyle = '#a8842e'; g.fillRect(x + Math.cos(a1) * (R1 - 1.5) - 1, y + Math.sin(a1) * (R1 - 1.5) - 1, 2, 2); }
+    if (OPT.bigGun) {
+      disc(g, x, y, Math.round(R1 * 0.78), '#5a5048'); disc(g, x, y, Math.round(R1 * 0.5), '#4a4238');
+      g.save(); g.translate(x, y); g.rotate(ang);
+      g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(R1 * 0.4 + 2, -0.85 * P2 + 2, 7 * P2, 0.6 * P2); g.fillRect(R1 * 0.4 + 2, 0.25 * P2 + 2, 7 * P2, 0.6 * P2);
+      g.fillStyle = '#24262c'; g.fillRect(R1 * 0.4, -0.85 * P2, 7 * P2, 0.6 * P2); g.fillRect(R1 * 0.4, 0.25 * P2, 7 * P2, 0.6 * P2);
+      g.fillStyle = '#4a4e58'; g.fillRect(R1 * 0.4, -0.85 * P2, 7 * P2, 1); g.fillRect(R1 * 0.4, 0.25 * P2, 7 * P2, 1);
+      g.fillStyle = '#1a1b20'; g.fillRect(R1 * 0.4 + 6.4 * P2, -0.95 * P2, 0.6 * P2, 0.8 * P2); g.fillRect(R1 * 0.4 + 6.4 * P2, 0.15 * P2, 0.6 * P2, 0.8 * P2);
+      g.restore();
+      lg.fillStyle = attHex(); lg.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3);
+    } else { g.fillStyle = '#2a2e38'; g.fillRect(x - R1 * 0.6, y - 1, R1 * 1.2, 2); g.fillRect(x - 1, y - R1 * 0.6, 2, R1 * 1.2); }
+  }
+  // the crew's name for a base they have taken, painted on the middle dome like a logo: big letters following the
+  // curve, centred on the bottom between two ports, reading upright, in the crew's turquoise. Painted, so the
+  // dome's shading falls over it. Bases that are not the crew's own have no name painted.
+  if (OPT.own) {
+    const LOGO = { S: '01111100001000001110000010000111110', T: '11111001000010000100001000010000100', 8: '01110100011000101110100011000101110' };
+    const text = 'ST8', rr2 = (RTOP + RMID) / 2 + 1, h = 3.4 * P2, f = h / 7, Rpx = rr2 * P2, [cx, cy] = P(C, C);
+    // always in the same place on the dome, between two ports on the side away from the bridge, and turned with the base, as paint is
+    const [mx, my] = rpf(C, C + rr2), mid = Math.atan2(my - C, mx - C), dir = 1;
+    const adv = (6.5 * f) / Rpx, a0 = mid + (dir * ((text.length * 6.5 - 1.5) * f)) / Rpx / 2;
+    g.save(); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#3a9a8c';
+    [...text].forEach((ch, n) => {
+      const b = LOGO[ch], ac = a0 - dir * (n * adv + (2.5 * f) / Rpx);
+      g.save(); g.translate(cx + Math.cos(ac) * Rpx, cy + Math.sin(ac) * Rpx); g.rotate(ac - dir * Math.PI / 2);
+      for (let k = 0; k < 35; k++) if (b[k] === '1') g.fillRect((k % 5) * f - 2.5 * f, ((k / 5) | 0) * f - 3.5 * f, f + 0.6, f + 0.6);
+      g.restore();
+    });
+    g.restore();
+  }
+  wg.putImageData(wim, 0, 0);
+  outsideImg = { c, lc, wc, rdc, N, S, ships, shield, crewRow, centre: P(C, C) };
+}
+
+// The docking tube at a port on the ring: folded in, or out (ext 0..1) when a ship comes to it.
+// Lights at its end in the colour of how the base sees the crew.
+function drawPorts(t, ox, oy, extOf, rot = 0) {
+  const { S } = outsideImg, P2 = T * S, col = attHex();
+  for (const a0 of PORT_ANGLES) {
+    const a = a0 + rot, ext = extOf(a), ca = Math.cos(a), sa = Math.sin(a);
+    const r0 = RING1 + 0.65, len = 0.2 + ext * 1.1;
+    const x = (C + ca * r0 + PADT) * P2 + ox, y = (C + sa * r0 + PADT) * P2 + oy;
+    vg.save(); vg.translate(x, y); vg.rotate(a);
+    vg.fillStyle = 'rgba(0,0,0,0.4)'; vg.fillRect(2, -1.0 * P2 + 2, len * P2, 2.0 * P2);
+    vg.fillStyle = '#6e7686'; vg.fillRect(0, -1.0 * P2, len * P2, 2.0 * P2);
+    vg.fillStyle = '#9aa2b2'; vg.fillRect(0, -1.0 * P2, len * P2, 1); vg.fillStyle = '#3e434e'; vg.fillRect(len * P2 - 1, -1.0 * P2, 1, 2.0 * P2);
+    for (let u = 0.35; u < len; u += 0.35) { vg.fillStyle = '#4e5462'; vg.fillRect(u * P2, -1.0 * P2 + 1, 1, 2.0 * P2 - 2); }
+    vg.globalCompositeOperation = 'lighter'; vg.fillStyle = col;
+    for (const s2 of [-1, 1]) {
+      vg.fillRect(len * P2 - 3, s2 * 0.75 * P2 - 1.5, 3, 3);
+      const gr = vg.createRadialGradient(len * P2 - 1.5, s2 * 0.75 * P2, 0, len * P2 - 1.5, s2 * 0.75 * P2, 1.6 * P2);
+      gr.addColorStop(0, col.replace('rgb', 'rgba').replace(')', ',0.45)')); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      vg.fillStyle = gr; vg.fillRect(len * P2 - 1.5 - 1.6 * P2, s2 * 0.75 * P2 - 1.6 * P2, 3.2 * P2, 3.2 * P2); vg.fillStyle = col;
+    }
+    vg.restore();
+  }
+}
+// How far out a port's tube is: out where the frigate lies docked in the overview.
+const dockedPort = (a) => !OPT.yard && Math.abs(Math.atan2(Math.sin(a - entryAngle()), Math.cos(a - entryAngle()))) < 0.1 ? 1 : 0;
+// The windows' light, pulsing slowly at an alarm (once every two seconds).
+function drawWindows(t, x, y) {
+  const w = outsideImg.wc; if (!w) return;
+  const keep = vg.globalCompositeOperation; vg.globalCompositeOperation = 'lighter';
+  vg.globalAlpha = MODE === 'alarm' ? 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * Math.PI * 2 * 0.5)) : 1;
+  vg.drawImage(w, x, y); vg.filter = 'blur(2px)'; vg.drawImage(w, x, y); vg.filter = 'none';
+  vg.globalAlpha = 1; vg.globalCompositeOperation = keep;
+}
+// The ring's lamps (how the base sees the crew; the crew's turquoise on an own base) and the beacon on the top.
+// On an own base under attack they pulse yellow, at most twice a second. The lamps turn with the ring (rot).
+function drawCrewRow(t, x, y, rot = 0) {
+  const cr = outsideImg.crewRow; if (!cr) return;
+  const k = OPT.attack && OPT.own ? 0.5 + 0.5 * Math.sin(t * Math.PI * 2 * 1.5) : 0;
+  const keep = vg.globalCompositeOperation; vg.globalCompositeOperation = 'lighter';
+  // one lamp at a time is dimmed, the dim one running round the base (once every eight seconds)
+  const L = cr.lamps, off = Math.floor(t * 6) % L.at.length, [cx, cy] = outsideImg.centre;
+  for (const [img, b, a] of [[L.calm, cr.beacon, 1 - k], [L.alarm, cr.beaconAlarm, k]]) {
+    if (a < 0.02) continue; vg.globalAlpha = a;
+    const h = img.width / 2;
+    L.at.forEach((an, q) => { const ang = an + rot; vg.globalAlpha = a * (q === off ? 0.35 : 1); vg.drawImage(img, x + cx + Math.cos(ang) * L.r - h, y + cy + Math.sin(ang) * L.r - h); }); vg.globalAlpha = a;
+    vg.drawImage(b, x, y); vg.filter = 'blur(2px)'; vg.drawImage(b, x, y); vg.drawImage(b, x, y); vg.filter = 'none';
+  }
+  vg.globalAlpha = 1; vg.globalCompositeOperation = keep;
+}
+// Draw something turned about the base's centre.
+function turned(rot, x, y, fn) {
+  if (!rot) return fn();
+  const [cx, cy] = outsideImg.centre; vg.save(); vg.translate(x + cx, y + cy); vg.rotate(rot); vg.translate(-x - cx, -y - cy); fn(); vg.restore();
+}
+// The ring's joints and port collars, turned with the ring.
+function drawRingParts(x, y, rot = 0) { turned(rot, x, y, () => vg.drawImage(outsideImg.rdc, x, y)); }
+function drawOutside(t) {
+  if (!outsideImg) buildOutside();
+  const { c, lc, N, ships, shield, centre } = outsideImg;
+  vg.globalCompositeOperation = 'source-over';
+  vg.fillStyle = '#05060a'; vg.fillRect(0, 0, VW, VH);
+  for (let k = 0; k < 600; k++) { const b = hash(k, 3); vg.fillStyle = b > 0.9 ? '#9aa4c0' : b > 0.6 ? '#3a4058' : '#22263a'; vg.fillRect(hash(k, 1) * VW, hash(k, 2) * VH, 1, 1); }
+  const ox = Math.round(VW * 0.56 - centre[0]), oy = Math.round(VH / 2 - centre[1]);
+  vg.save(); vg.translate(ox + centre[0], oy + centre[1]); vg.rotate(TURN); vg.translate(-ox - centre[0], -oy - centre[1]);
+  vg.drawImage(c, ox, oy); drawRingParts(ox, oy);
+  vg.globalCompositeOperation = 'lighter';
+  vg.drawImage(lc, ox, oy);
+  vg.filter = 'blur(2px)'; vg.drawImage(lc, ox, oy); vg.filter = 'none';
+  if (shield) { vg.globalAlpha = shield.k * (0.75 + 0.25 * Math.sin(t * 1.2)); vg.drawImage(shield.c, ox, oy); }
+  vg.globalAlpha = 1; drawCrewRow(t, ox, oy); drawWindows(t, ox, oy);
+  vg.globalAlpha = 1; vg.globalCompositeOperation = 'source-over';
+  drawPorts(t, ox, oy, dockedPort);
+  const frig = ships.find((q) => q.name === 'frigate');
+  if (frig && frig.img.width) { vg.save(); vg.translate(Math.round(frig.x + ox), Math.round(frig.y + oy)); vg.rotate(Math.atan2(frig.dy, frig.dx) + Math.PI / 2); vg.drawImage(frig.img, -frig.img.width / 2, -frig.img.height / 2); vg.restore(); }
+  vg.restore();
+  // today's station beside it, at the same scale
+  const st = IMG.station;
+  if (st && st.width) { vg.drawImage(st, 18, VH - st.height - 34); }
+  vg.font = '600 13px system-ui, sans-serif'; vg.fillStyle = '#8a90a0'; vg.textAlign = 'left';
+  vg.fillText('Dagens station, samma skala', 24, VH - 16);
+  // the game's screen round the frigate, to see what fits
+  const fr0 = ships.find((s) => s.name === 'frigate');
+  const fr = fr0 && (() => { const dx = fr0.x - centre[0], dy = fr0.y - centre[1]; return { x: centre[0] + dx * Math.cos(TURN) - dy * Math.sin(TURN), y: centre[1] + dx * Math.sin(TURN) + dy * Math.cos(TURN) }; })();
+  if (fr) {
+    vg.save(); vg.setLineDash([6, 5]); vg.strokeStyle = 'rgba(217,164,65,0.75)'; vg.lineWidth = 1.5;
+    vg.strokeRect(Math.round(fr.x + ox - 320) + 0.5, Math.round(fr.y + oy - 180) + 0.5, 640, 360); vg.restore();
+    vg.fillStyle = 'rgba(217,164,65,0.9)'; vg.fillText('Spelets skärm, 640 × 360', Math.round(fr.x + ox - 316), Math.round(fr.y + oy - 186));
+  }
+  vg.fillStyle = '#c2c6d0'; vg.font = '600 15px system-ui, sans-serif';
+  vg.fillText(OPT.size === 'width' ? 'Tre gånger dagens bredd' : 'Tre gånger dagens yta', 18, 62);
+  vg.font = '13px system-ui, sans-serif'; vg.fillStyle = '#8a90a0';
+  vg.fillText(`${MODENAMES[MODE]} · ${OPT.yard ? 'med varv' : 'utan varv'} · ${{ hostile: 'fientlig', neutral: 'neutral', friendly: 'vänlig', own: 'egen' }[OPT.side]} bas${OPT.own && OPT.attack ? ' under anfall' : ''} · försvar: ${['inget', 'lätt', 'medel', 'fullt'][OPT.def]}`, 18, 82);
+}
+
+// ================================================================== flying in, on the game's own screen, with the camera zooming out
+let approachT0 = null;
+function drawApproach(t) {
+  if (!outsideImg) buildOutside();
+  const { c, lc, ships, shield, centre, S } = outsideImg;
+  const fr = ships.find((q) => q.name === 'frigate');
+  if (approachT0 === null) approachT0 = t;
+  // In to a free port, docked a moment, then the ring turns a quarter turn and brings the ship to the bridge,
+  // a while there, out again, a while far away. In the yard the ship goes straight in, and the ring stays.
+  const IN = 13, DOCK = 1.2, TURN = OPT.yard ? 0 : 4.5, HOLD = 2.5, FAR = 2.5, cyc = IN * 2 + DOCK + TURN + HOLD + FAR, u = (t - approachT0) % cyc;
+  const phi = OPT.yard ? 0 : Math.PI / 2; // where the free port is, from the one at the bridge
+  let p, leaving = false, ang = 0, ringRot = 0, docked = false;
+  if (u < IN) { p = u / IN; ang = phi; }
+  else if (u < IN + DOCK) { p = 1; ang = phi; docked = true; }
+  else if (u < IN + DOCK + TURN) { p = 1; const k0 = (u - IN - DOCK) / TURN, sm = k0 * k0 * (3 - 2 * k0); ang = phi * (1 - sm); ringRot = ang - phi; docked = true; }
+  else if (u < IN + DOCK + TURN + HOLD) { p = 1; docked = true; }
+  else if (u < 2 * IN + DOCK + TURN + HOLD) { p = 1 - (u - IN - DOCK - TURN - HOLD) / IN; leaving = true; }
+  else p = 0;
+  // fade out and in again while far away, where the free port changes
+  const fade = Math.min(1, Math.min(u, cyc - u) / 0.6);
+  const e = 1 - Math.pow(1 - p, 2.4);
+  const turn = (q, b) => { const [cx0, cy0] = centre, dx0 = q[0] - cx0, dy0 = q[1] - cy0; return [cx0 + dx0 * Math.cos(b) - dy0 * Math.sin(b), cy0 + dx0 * Math.sin(b) + dy0 * Math.cos(b)]; };
+  const back = [-fr.dx, -fr.dy], side = [-fr.dy, fr.dx];
+  const P0 = [fr.x + back[0] * 1500 + side[0] * 700, fr.y + back[1] * 1500 + side[1] * 700];
+  const P1 = [fr.x + back[0] * 420 + side[0] * 260, fr.y + back[1] * 420 + side[1] * 260];
+  const bez = (k) => [(1 - k) ** 2 * P0[0] + 2 * (1 - k) * k * P1[0] + k * k * fr.x, (1 - k) ** 2 * P0[1] + 2 * (1 - k) * k * P1[1] + k * k * fr.y];
+  const pos = turn(bez(e), ang), a1 = bez(Math.min(1, e + 0.004)), a0 = bez(Math.max(0, e - 0.004));
+  let head = Math.atan2(a1[1] - a0[1], a1[0] - a0[0]) + ang;
+  if (p >= 0.995) head = Math.atan2(fr.dy, fr.dx) + ang;
+  // how far out the camera zooms: the whole base, ring and ports, on the screen's height
+  const baseR = (RING1 + 2.6) * T * S;
+  const zFit = Math.min(1, (VH / 2 - 8) / baseR);
+  const dist = Math.hypot(pos[0] - centre[0], pos[1] - centre[1]);
+  const far = baseR + 650, near = baseR + 90;
+  const kk = Math.max(0, Math.min(1, (far - dist) / (far - near))), k = kk * kk * (3 - 2 * kk);
+  const z = 1 + (zFit - 1) * k;
+  const cam = [pos[0] + (centre[0] - pos[0]) * k, pos[1] + (centre[1] - pos[1]) * k];
+  // but the ship always stays on the screen
+  const mx = (VW / 2 - 60) / z, my = (VH / 2 - 50) / z;
+  { const m = Math.min(mx, my), ddx = cam[0] - pos[0], ddy = cam[1] - pos[1], dd = Math.hypot(ddx, ddy); if (dd > m) { cam[0] = pos[0] + (ddx * m) / dd; cam[1] = pos[1] + (ddy * m) / dd; } }
+  vg.globalCompositeOperation = 'source-over'; vg.globalAlpha = 1;
+  vg.fillStyle = '#05060a'; vg.fillRect(0, 0, VW, VH);
+  for (let q = 0; q < 220; q++) { const b = hash(q, 3); const sx = ((hash(q, 1) * 2000 - cam[0] * 0.15 * z) % VW + VW) % VW, sy = ((hash(q, 2) * 1400 - cam[1] * 0.15 * z) % VH + VH) % VH; vg.fillStyle = b > 0.9 ? '#9aa4c0' : b > 0.6 ? '#3a4058' : '#22263a'; vg.fillRect(sx, sy, 1, 1); }
+  vg.save(); vg.translate(VW / 2, VH / 2); vg.scale(z, z); vg.rotate(TURN); vg.translate(-cam[0], -cam[1]);
+  vg.imageSmoothingEnabled = z < 0.999;
+  vg.drawImage(c, 0, 0); drawRingParts(0, 0, ringRot);
+  vg.globalCompositeOperation = 'lighter';
+  vg.drawImage(lc, 0, 0);
+  if (shield) { vg.globalAlpha = shield.k * (0.75 + 0.25 * Math.sin(t * 1.2)); vg.drawImage(shield.c, 0, 0); }
+  vg.globalAlpha = 1; drawCrewRow(t, 0, 0, ringRot); drawWindows(t, 0, 0);
+  vg.globalAlpha = 1; vg.globalCompositeOperation = 'source-over';
+  // the port the frigate comes to folds out as it gets close, and folds in again after it has left
+  const target = turn([fr.x, fr.y], ang), toDock = Math.hypot(pos[0] - target[0], pos[1] - target[1]);
+  const ext = OPT.yard ? 0 : docked ? 1 : Math.max(0, Math.min(1, 1 - (toDock - 15) / 180)), shipPort = entryAngle() + ang;
+  vg.restore(); vg.save(); vg.translate(VW / 2, VH / 2); vg.scale(z, z); vg.rotate(TURN); vg.translate(-cam[0], -cam[1]);
+  drawPorts(t, 0, 0, (a) => (!OPT.yard && Math.abs(Math.atan2(Math.sin(a - shipPort), Math.cos(a - shipPort))) < 0.1 ? ext : 0), ringRot);
+  vg.globalCompositeOperation = 'source-over'; vg.globalAlpha = 1;
+  // the frigate, with its engine burning while it moves
+  vg.translate(pos[0], pos[1]); vg.rotate(head + Math.PI / 2 + (leaving && p < 0.995 ? Math.PI : 0));
+  if (p > 0.005 && p < 0.995) { vg.globalCompositeOperation = 'lighter'; const gr = vg.createRadialGradient(0, 58, 0, 0, 58, 26); gr.addColorStop(0, 'rgba(120,200,255,0.8)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); vg.fillStyle = gr; vg.fillRect(-26, 32, 52, 52); vg.globalCompositeOperation = 'source-over'; }
+  vg.drawImage(fr.img, -fr.img.width / 2, -fr.img.height / 2);
+  vg.restore(); vg.imageSmoothingEnabled = false;
+  vg.font = '600 11px system-ui, sans-serif'; vg.textAlign = 'right'; vg.fillStyle = 'rgba(217,164,65,0.9)';
+  vg.fillText(`ZOOM ${Math.round(z * 100)} %`, VW - 10, 18);
+  if (ringRot) { vg.fillStyle = 'rgba(217,164,65,0.9)'; vg.textAlign = 'center'; vg.fillText('Ringen vrids till bron', VW / 2, VH - 14); vg.textAlign = 'right'; }
+  if (fade < 1) { vg.fillStyle = `rgba(5,6,10,${1 - fade})`; vg.fillRect(0, 0, VW, VH); }
+  vg.fillStyle = '#8a90a0'; vg.fillText(OPT.size === 'width' ? '3 × bredden' : '3 × ytan', VW - 10, 32);
+  vg.textAlign = 'left';
+}
+
+// ================================================================== switching
+const upBtn = document.getElementById('up'), downBtn = document.getElementById('down');
+const tag = document.getElementById('tag');
+const NAMES = ['Källaren', 'Mitten', 'Toppen'];
+const MODENAMES = { normal: 'öppen', lockdown: 'lockdown', alarm: 'larm', power: 'strömmen ute' };
+function setDeck(i) {
+  document.getElementById('fire').hidden = i < 0;
+  if (i < 0) { outside = true; approach = i === -2; approachT0 = null; ARRIVE++; outsideImg = null; sizeView(); tag.textContent = approach ? 'Inflygning · spelets skärm' : 'Utsidan'; markDeck(i); return; }
+  outside = false; approach = false; sizeView();
+  me.deck = i; D = decks[i];
+  if (!D.built[MODE]) { buildDeck(); buildStaticLight(); D.built[MODE] = snapshot(); }
+  else Object.assign(D, D.built[MODE]);
+  for (const d of D.doors) if (d.kind !== 'arch') d.open = 0;
+  buildStaticLight();
+  npcs = castFor(i);
+  tag.textContent = `Våning ${i + 1} · ${NAMES[i]} · ${MODENAMES[MODE]}`;
+  markDeck(i);
+}
+const markDeck = (i) => document.querySelectorAll('#decks button').forEach((b) => b.classList.toggle('on', +b.dataset.deck === i));
+const setOn = (sel, on) => document.querySelector(sel).classList.toggle('on', on);
+const stopTour = () => { if (tour) { tour = false; setOn('#tour', false); } };
+function startTour() { tour = true; setOn('#tour', true); tourAt = 0; tourPath = null; tourWait = 0; setDeck(1); const s = startOf(1); me.x = s[0]; me.y = s[1]; const [dx, dy] = rd(0, 1); me.a = Math.atan2(dy, dx); }
+function newBase(seed) {
+  makeBase(seed);
+  TURN = OPT.spin === 'free' ? hash(SEED, 77) * Math.PI * 0.5 : 0;
+  outsideImg = null;
+  buildTour();
+  document.getElementById('seed').textContent = `(bas nr ${SEED})`;
+}
+// Rebuild with the same base number: the plan only changes where the yard is.
+function rebuild(plan) {
+  if (plan) { tryOnce(SEED); buildTour(); }
+  for (const d of decks) d.built = {};
+  outsideImg = null;
+  if (!outside) setDeck(me.deck);
+}
+const pickIn = (sel, attr, f) => document.getElementById(sel).addEventListener('click', (e) => {
+  const v = e.target.dataset[attr]; if (v === undefined) return;
+  document.querySelectorAll('#' + sel + ' button').forEach((b) => b.classList.toggle('on', b === e.target));
+  f(v);
+});
+upBtn.onclick = () => { stopTour(); changeDeck(1); };
+downBtn.onclick = () => { stopTour(); changeDeck(-1); };
+document.getElementById('fire').onclick = () => { stopTour(); fire(); };
+document.getElementById('decks').addEventListener('click', (e) => {
+  const i = e.target.dataset.deck; if (i === undefined) return;
+  stopTour();
+  if (+i < 0) { setDeck(+i); return; }
+  setDeck(+i);
+  const s = startOf(+i); me.x = s[0]; me.y = s[1];
+});
+pickIn('modes', 'mode', (m) => { MODE = m; me.lamp = m !== 'normal'; outsideImg = null; if (!outside) setDeck(me.deck); });
+pickIn('yard', 'yard', (v) => { OPT.yard = v === '1'; const keep = { x: me.x, y: me.y }; rebuild(true); if (!outside && me.deck === 1 && blocked(keep.x, keep.y, 5, true)) { const s = startOf(1); me.x = s[0]; me.y = s[1]; } });
+pickIn('own', 'own', (v) => { OPT.side = v; OPT.own = v === 'own'; rebuild(false); });
+pickIn('def', 'def', (v) => { OPT.def = +v; rebuild(false); });
+pickIn('shell', 'shell', (v) => { OPT.shell = v; makeBase(SEED); outsideImg = null; buildTour(); for (const d of decks) d.built = {}; if (!outside) { setDeck(me.deck); const st = startOf(me.deck); me.x = st[0]; me.y = st[1]; } document.getElementById('seed').textContent = `(bas nr ${SEED})`; });
+pickIn('biggun', 'biggun', (v) => { OPT.bigGun = v === '1'; outsideImg = null; });
+pickIn('spin', 'spin', (v) => { OPT.spin = v; TURN = v === 'free' ? hash(SEED, 77) * Math.PI * 0.5 : 0; outsideImg = null; });
+pickIn('star', 'star', (v) => { OPT.star = v; outsideImg = null; });
+pickIn('attack', 'attack', (v) => { OPT.attack = v === '1'; if (OPT.attack && !OPT.own) document.querySelector('[data-own="own"]').click(); });
+pickIn('size', 'size', (v) => { OPT.size = v; outsideImg = null; approachT0 = null; });
+document.getElementById('newbase').onclick = () => { newBase((Math.random() * 1e6) | 0); if (tour) startTour(); else setDeck(outside ? (approach ? -2 : -1) : 1); if (!outside && !tour) { const s = startOf(1); me.x = s[0]; me.y = s[1]; } };
+document.getElementById('tour').onclick = () => { if (tour) stopTour(); else startTour(); };
+document.getElementById('overview').onclick = () => { overview = !overview; setOn('#overview', overview); sizeView(); };
+document.getElementById('plan').onclick = () => { planView = !planView; setOn('#plan', planView); };
+addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (['w', 'a', 's', 'd', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) { keys.add(k); stopTour(); if (k.startsWith('arrow')) e.preventDefault(); }
+  if (k === 'u') { stopTour(); changeDeck(1); }
+  if (k === 'n') { stopTour(); changeDeck(-1); }
+  if (k === ' ') { stopTour(); fire(); e.preventDefault(); }
+  if (k === 'l') me.lamp = !me.lamp;
+});
+addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+const toWorld = (e) => { const r = view.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * VW + camX, y: ((e.clientY - r.top) / r.height) * VH + camY }; };
+view.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') pointer = toWorld(e); else if (touchGoal) touchGoal = toWorld(e); });
+view.addEventListener('pointerdown', (e) => { if (overview || outside) return; if (e.pointerType === 'mouse') { pointer = toWorld(e); stopTour(); fire(); return; } stopTour(); touchGoal = toWorld(e); view.setPointerCapture(e.pointerId); });
+view.addEventListener('pointerup', () => (touchGoal = null)); view.addEventListener('pointercancel', () => (touchGoal = null));
+view.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') pointer = null; });
+
+// ================================================================== go
+let last = performance.now(), outsideTime = 0;
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  // the tour starts outside for a moment, then goes in
+  if (tour && outside) { outsideTime += dt; if (outsideTime > 5) { outsideTime = 0; startTour(); } }
+  frame(now / 1000, dt);
+  requestAnimationFrame(loop);
+}
+function go() {
+  sizeView();
+  newBase(1 + ((Math.random() * 1e6) | 0));
+  setDeck(-1);
+  requestAnimationFrame(loop);
+}
+{
+  const SRC = { frigate: '//@@IMG:frigate', station: '//@@IMG:station_free', freighter: '//@@IMG:freighter_charter' };
+  let n = 0;
+  for (const k in SRC) { const im = new Image(); im.onload = im.onerror = () => { if (++n === 3) go(); }; im.src = SRC[k]; IMG[k] = im; }
+}
+window.__design = { blocked: (...a) => blocked(...a), tryOnce, flood: (...a) => flood(...a), nearestWalk: (...a) => nearestWalk(...a), get LINKS() { return LINKS; }, setD: (d) => { D = d; }, newBase, setDeck, me, get decks() { return decks; }, setTour: (v) => { tour = v; }, setOverview: (v) => { overview = v; sizeView(); }, setPlan: (v) => (planView = v), setMode: (m) => { MODE = m; me.lamp = m !== 'normal'; if (!outside) setDeck(me.deck); }, OPT, rebuild, fire, get D() { return D; }, check, get SEED() { return SEED; }, startOf: (i) => startOf(i), makeBase, get TOUR() { return TOUR; }, findPath: (...a) => findPathNear(...a), startTour, get tourAt() { return tourAt; } };
+</script>
+</body>
+</html>

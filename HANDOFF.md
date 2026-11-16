@@ -78,6 +78,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - `docs/proposal-computer.md`: genomgång (inte godkänd) av hur skeppets dator skulle sköta lediga poster (D-186, F-034), med sju frågor.
 - [docs/proposal-bases.md](docs/proposal-bases.md): plan (mest beslutad 2026-11-16, inte byggd) för standardbasen i tre våningar, tryck under bordning, skeppet medan man bordar, fristaden som startsystem, startkanonen, varvet som köps, en större utsida och dockningsringen. Säger vad som är bestämt och vad som är förslag, och slutar med öppna frågor.
 - [docs/design/prototypes/](docs/design/prototypes/): fristående designtester. `interior-ship.html`, `interior-station.html` och `interior-pirate-base.html` hör till docs/proposal-bases.md (tunna väggar, figurer, ljussättning, en genererad piratbas med boss). De används inte av spelet.
+  - `standard-base.html` är designtestet för standardbasens utsida och insida (D-217): Utsidan, Inflygning med ringen som vrids, de tre våningarna, lägena och försvaret. Den byggs av delarna i `docs/design/tools/standard-base/` med `python3 build.py`, som också tar rader ur `interior-pirate-base.html` (radnumren står i delarna) och skeppsbilderna i `assets/sprites/`.
 
 ## Kod
 
@@ -381,6 +382,7 @@ Baser, fristad och varv (användaren, 2026-11-16). Detaljer och vad som är för
 - Utsidan av baserna ska bli större (inte 1:1) och hänga ihop med våningarna. Den gamla designen behöver inte följas men ska passa in i världen. Design av varv och utsida görs före bygge.
 - Piraternas slutbas börjar i botten: man kommer in vid dockorna i industrivåningen och arbetar sig uppåt.
 - Dockningsringen vrids i fasta lägen och får en demo med full design före bygge. Vägen ut provas i ett designtest före bygge.
+- Designtestet för standardbasen (D-217, 2026-11-16, "Det låter bra! Vi kör på det. Skriv vårt jobb till repot"): utsidan som kupoler med sluten skiva, fyra portar på diagonalerna och lastarmar åt fyra håll, en ring som vrids till bron, lampor som visar hållningen (blåturkost på egen bas), ST8 målat på en övertagen bas, fri vinkel utanpå, tio tornplatser och en stor kanon som köps. Lockdown är ett stilla rött filter, larm har roterande ljus. Ytterväggarna inne är runda också när man krockar. Ställverket kan slås ut tyst eller högljutt, och läget skärps i fyra steg efter källaren. Regler R-1149 till R-1169, bygget i F-244 till F-247, F-209 och F-210.
 
 Grafik
 - En pixelstil för hela spelet, alltid uppifrån, med dämpade färger. Stark färg används bara för ljus, skott och loot.

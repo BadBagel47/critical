@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Critical – designtest: standardbasen med varv (D-217)</title>
+<style>
+  :root { --bg:#0b0c11; --panel:#14161e; --line:#262a36; --text:#d6d9e2; --dim:#8a90a0; --acc:#d9a441; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px 14px 60px; }
+  h1 { font-size: 20px; margin: 4px 0 2px; }
+  h2 { font-size: 17px; margin: 28px 0 8px; }
+  p.lead { color: var(--dim); margin: 0 0 12px; }
+  .stage { position: relative; background:#000; border:1px solid var(--line); border-radius:6px; overflow:hidden; touch-action:none; }
+  canvas.view { display:block; width:100%; height:auto; image-rendering: pixelated; }
+  .tag { position:absolute; left:8px; top:8px; background:rgba(10,11,16,.82); border:1px solid #333848; border-radius:4px; padding:2px 8px; font-size:13px; pointer-events:none; }
+  .float { position:absolute; right:8px; bottom:8px; display:flex; gap:6px; }
+  .float button { border:1px solid #6a5a2a; border-radius:6px; background:rgba(40,32,14,.9); color:var(--acc); padding:8px 14px; font-weight:600; }
+  .float button[hidden] { display:none; }
+  .bar { display:flex; flex-wrap:wrap; gap:6px; margin: 10px 0 4px; }
+  .grp { display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .grp .lbl { padding:8px 8px; font-size:12px; color:var(--dim); background:#0f1117; border-right:1px solid var(--line); }
+  button { background:var(--panel); color:var(--text); border:0; border-right:1px solid var(--line); padding:8px 11px; font:inherit; font-size:14px; cursor:pointer; }
+  .grp button:last-child { border-right:0; }
+  button.on { background:#2a2414; color:var(--acc); }
+  .hint { color: var(--dim); font-size: 13px; margin: 2px 0 0; }
+  .legend { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:13px; color:#c2c6d0; margin-top:6px; }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:2px; vertical-align:-2px; margin-right:5px; }
+  .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:10px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 12px; }
+  .card h3 { margin:0 0 4px; font-size:15px; color:var(--acc); }
+  .card p, .card li { margin:0; color:#c2c6d0; font-size:14px; }
+  .card ul { margin:0; padding-left:18px; }
+  details { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px 12px; margin-top:10px; }
+  summary { cursor:pointer; color:var(--acc); }
+  details li, details p { font-size:14px; color:#c2c6d0; }
+  #seed { color: var(--dim); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Designtest: standardbasen med varv (D-217)</h1>
+  <p class="lead">En standardbas i tre våningar enligt docs/proposal-bases.md. Utsidan ritas av samma plan som insidan, så våningarna syns som terrasser uppifrån, och dockor, fönster och kanontorn sitter där motsvarande rum finns inne. Varvet är en köpt uppgradering. Varje tryck på ”Ny bas” ger en ny bas. Inget av detta finns i spelet.</p>
+
+  <div class="stage" id="stage">
+    <canvas class="view" id="view" width="640" height="360"></canvas>
+    <div class="tag" id="tag">Utsidan</div>
+    <div class="float"><button id="fire" hidden>Skjut</button><button id="up" hidden>▲ Upp</button><button id="down" hidden>▼ Ner</button></div>
+  </div>
+  <div class="bar">
+    <div class="grp" id="decks">
+      <button data-deck="-1" class="on">Utsidan</button><button data-deck="-2">Inflygning</button><button data-deck="0">Källaren</button><button data-deck="1">Mitten</button><button data-deck="2">Toppen</button>
+    </div>
+    <div class="grp" id="modes"><span class="lbl">Läge</span><button data-mode="normal" class="on">Öppen</button><button data-mode="lockdown">Lockdown</button><button data-mode="alarm">Larm</button><button data-mode="power">Strömmen ute</button></div>
+  </div>
+  <div class="bar">
+    <div class="grp" id="yard"><span class="lbl">Varv</span><button data-yard="0" class="on">Utan</button><button data-yard="1">Med</button></div>
+    <div class="grp" id="own"><span class="lbl">Basen är</span><button data-own="hostile">Fientlig</button><button data-own="neutral" class="on">Neutral</button><button data-own="friendly">Vänlig</button><button data-own="own">Egen</button></div>
+    <div class="grp" id="attack"><span class="lbl">Egen bas anfalls</span><button data-attack="0" class="on">Nej</button><button data-attack="1">Ja</button></div>
+    <div class="grp" id="biggun"><span class="lbl">Stor kanon</span><button data-biggun="0" class="on">Nej</button><button data-biggun="1">Ja</button></div>
+    <div class="grp" id="def"><span class="lbl">Försvar</span><button data-def="0">Inget</button><button data-def="1" class="on">Lätt</button><button data-def="2">Medel</button><button data-def="3">Fullt</button></div>
+    <div class="grp" id="spin"><span class="lbl">Vridning utanpå</span><button data-spin="free" class="on">Fri</button><button data-spin="quarter">Kvarts varv</button></div>
+    <div class="grp" id="shell"><span class="lbl">Mellan bas och ring</span><button data-shell="disc" class="on">Sluten skiva (vald)</button><button data-shell="spokes">Ekrar (skiss)</button></div>
+    <div class="grp" id="star"><span class="lbl">Stjärnan</span><button data-star="nw" class="on">↖</button><button data-star="ne">↗</button><button data-star="se">↘</button><button data-star="sw">↙</button><button data-star="far">Långt bort</button></div>
+    <div class="grp" id="size"><span class="lbl">Storlek ute</span><button data-size="width" class="on">3 × bredden</button><button data-size="area">3 × ytan</button></div>
+  </div>
+  <div class="bar">
+    <div class="grp">
+      <button id="newbase">Ny bas</button><button id="tour" class="on">Rundtur</button><button id="overview">Hela våningen</button><button id="plan">Spelplan</button>
+    </div>
+  </div>
+  <p class="hint">Dator: WASD för att gå, musen siktar, klick eller mellanslag skjuter, U och N byter våning, L tänder lampan. Mobil: dra för att gå. Rundturen går in genom luftslussen och visar alla tre våningarna. <span id="seed"></span></p>
+  <div class="legend">
+    <span><i style="border:2px solid #e8c050"></i>Lågt skydd: stoppar skott, inte blickar</span>
+    <span><i style="border:2px solid #60d0ff"></i>Högt skydd: stoppar skott, blickar och ljus</span>
+    <span><i style="background:#c0402a"></i>Tunna som exploderar</span>
+    <span><i style="background:#e0b040"></i>Larmad dörr</span>
+    <span><i style="background:#c8b040"></i>Dörr märkt STAFF</span>
+    <span><i style="background:rgba(240,200,80,.55)"></i>Kamera</span>
+    <span><i style="background:rgba(255,70,50,.6)"></i>Turret</span>
+    <span><i style="background:#9ad0ff"></i>Vakternas rundor</span>
+  </div>
+
+  <h2>Utsidan</h2>
+  <div class="cards">
+    <div class="card"><h3>Kupoler i tre steg</h3><ul>
+      <li>Varje våning är en låg, rund kupol, och de ligger på varandra: källaren bredast, mitten ovanpå och toppen, minst, överst. Ljuset kommer uppifrån vänster, och varje kupol kastar skugga på den under.</li><li>Fönster runt om på varje våning. De flesta lyser lite olika starkt, några är släckta, och blandningen slumpas om varje gång man kommer till systemet. Fönstren är bara utsidan; de styr inte rummen inne.</li>
+      <li><b>Källaren:</b> smutsiga plåtar, rost och varselränder, orange arbetsljus, lastluckan över lastrummet, ventiler över reaktorn och lastarmar rakt ut åt fyra håll, med fraktskepp vid två.</li>
+      <li><b>Mitten:</b> ljusa, rena plåtar, varma fönster och När besättningen tagit basen målas namnet ST8 på kupolen i besättningens turkos.</li>
+      <li><b>Toppen:</b> mörk och kall, med breda blå utsiktsfönster runt kommandot, parabol där kommunikationsrummet ligger och antenner över sensorerna. Mitt på kupolen finns en plats för en stor kanon.</li>
+    </ul></div>
+    <div class="card"><h3>Dockningsringen</h3><ul>
+      <li>Ringen ligger i höjd med mittvåningen och är större än förut.</li>
+      <li>Fyra portar för skepp, på diagonalerna. Lastarmarna för fraktskepp sitter fast i källaren och går under ringen rakt upp, ner, höger och vänster. Har basen varv tar byggdockan en av de raka platserna.</li>
+      <li>En fast bro går från entrén, på en diagonal, ut till ringen. Ringen vrids ett kvarts varv i taget, så porten med skeppet kommer fram till bron och portarna står alltid på diagonalerna (D-218 visar hur).</li>
+      <li>Hur basen ser på besättningen syns runt hela ringen: ljusraden, portarnas lampor, fyren på toppen och kanontornen lyser rött för fientlig, vitt för neutral och grönt för vänlig. En egen bas lyser turkos.</li>
+    </ul></div>
+    <div class="card"><h3>Varvet</h3><ul>
+      <li>Köps till basen. Varvsrummet tar platsen där basen annars har en utsiktssalong, så planen ändras inte.</li>
+      <li>Utifrån: en byggdocka med två långa balkar, kranar och strålkastare, och en gångbro som går över ringen till varvsrummet.</li>
+      <li>Skeppet ligger i byggdockan när man dockar där. Gångbron slutar i en egen luftsluss.</li>
+      <li>På en egen bas står skeppets namn på balkarna (här CRITICAL, eftersom skeppet inte har något namn i spelet).</li>
+    </ul></div>
+    <div class="card"><h3>Försvaret</h3><ul>
+      <li><b>Inget:</b> tomma kanonfästen, inga kameror utöver en.</li>
+      <li>Tio platser för torn: fyra på källaren, fyra på mittens kant mellan portarna och två tunga på toppen.</li>
+      <li><b>Lätt:</b> två torn på källaren, fler kameror inne.</li>
+      <li><b>Medel:</b> sex torn (alla på källaren, två på mitten) och ett svagt skimmer av sköld. Inne: turrets vid säkerhetskontrollerna och larmade dörrar.</li>
+      <li><b>Fullt:</b> alla tio torn, större, och en tydlig sköld. Inne: fler vakter, drönare och turrets vid mainframen.</li>
+      <li><b>Stor kanon:</b> köps för sig, oavsett nivå. Står mitt på toppens kupol; utan den är platsen en stängd lucka.</li>
+      <li>Kanontornen sitter på rum som finns inne, så den som tar sig in kan se var de styrs ifrån.</li>
+    </ul></div>
+  </div>
+
+  <h2>Insidan</h2>
+  <div class="cards">
+    <div class="card"><h3>Mitten · in genom luftslussen</h3><ul>
+      <li>Man kommer från skeppet via porten och bron, rakt in genom luckan i luftslussens hörn. Bara en av slussens dörrar kan vara öppen åt gången. Knapparna vid dörrarna lyser grönt när dörren går att öppna och gult när man måste vänta.</li>
+      <li>Hallen innanför är ljus och öppen, med planteringar och bänkar. Runt den ligger det lagliga: services, armory, bar, marknad, sjukrum, hotell och varvet om basen har det.</li>
+      <li>Kärnan i mitten är personalens: säkerhetskontroll, omklädning och kontor, med hissar och trappor upp och ner. Dit kommer man bara genom dörrar märkta STAFF.</li>
+      <li>Tre vägar till varje annan våning: hissen genom säkerhetskontrollen (högljudd), trappan via servicegången (tyst) och en stege bakom en larmad dörr.</li>
+    </ul></div>
+    <div class="card"><h3>Källaren · industrin</h3><ul>
+      <li>Ett stort lastrum med containrar, lådor och vakter, och lastrum vid de andra lastarmarna. Stuvare bär gods från fraktskeppet när basen är öppen.</li>
+      <li>Korridorer i en ring med ett kors och en ryggrad, så att man kan välja väg.</li>
+      <li>Ställverket ligger långt från hissen. Det är det man måste slå ut innan basen kan tas över (förslaget i planen).</li>
+      <li>Reaktor, drönarhangar, bränsledepå, verkstad, pumpar, förråd och kaserner. Tunnor bara i last, depå och verkstad.</li>
+    </ul></div>
+    <div class="card"><h3>Toppen · kommandot</h3><ul>
+      <li>Kall och teknisk med blått ljus. Mainframen står i kommandorummet i mitten, med tre ingångar.</li>
+      <li>Runt om: säkerhet, servrar, kommunikation (stoppar anropet om förstärkning), vapenförråd, sensorer, kontor och kylning.</li>
+    </ul></div>
+    <div class="card"><h3>Lägena</h3><ul>
+      <li><b>Öppen:</b> basen handlar. Folk rör sig i mitten, vakterna är få.</li>
+      <li><b>Lockdown:</b> basen stänger. Allt ljus får ett rött filter och dörrlamporna lyser stilla rött. Inga roterande ljus, inget blinkande. Fönstren utanpå lyser dovt rött.</li>
+      <li><b>Larm:</b> någon har blivit upptäckt. Roterande röda ljus, ljuset blinkar 1,5 gånger i sekunden, dörrlamporna blinkar och vakterna har röda synfält. Fönstren utanpå pulserar långsamt rött, ett andetag på två sekunder.</li>
+      <li><b>Strömmen ute:</b> efter ställverket. Nödkraft med svagt ljus och orange nödlampor vid dörrarna. Lampan behövs.</li>
+      <li>Stilla rött = lockdown, rött som rör sig = larm. På en egen bas är samma sak gul/orange i stället för röd. En egen bas har ingen personal att smyga förbi, bara kameror och turrets om försvaret är köpt.</li>
+    </ul></div>
+  </div>
+
+  <h2>Måste fungera i spelet</h2>
+  <div class="cards">
+    <div class="card"><h3>Inte bara bilden</h3><ul>
+      <li>Kollisionen följer de runda ytterväggarna, inte bara bilden.</li>
+      <li>Kameror, vakter och torn upptäcker bara det de ser: siktlinjen stoppas av väggar, stängda dörrar och höga föremål. Kameror sitter bara på riktiga väggar.</li>
+      <li>Ringen vrids: skeppet dockar vid en ledig port, och ringen vrids ett kvarts varv till bron (inte vid byggdockan).</li>
+      <li>Lockdown är ett stilla rött filter utan roterande ljus, och larm har roterande ljus och blink. Regelboken (R-429, R-454) behöver ändras.</li>
+      <li>Utsidans ljus visar hållningen: rött, vitt, grönt, och blåturkost för en egen bas. Det ersätter R-300. 48 lampor på ringen, där en dämpad lampa går runt på 8 sekunder.</li>
+      <li>Utanpå står basen i en fri vinkel, inne i kvarts varv. Bron och slussen måste ändå passa ihop.</li>
+      <li>Sluten skiva mellan bas och ring.</li>
+      <li>ST8 målas på kupolen när basen tas över. Övriga baser har inget namn.</li>
+      <li>Fönstren slumpas vid varje ankomst. I lockdown lyser de stilla rött, vid larm pulserar de långsamt.</li>
+      <li>Tio tornplatser (4 på källaren, 4 på mittens kant, 2 på toppen): Lätt 2, Medel 6 + sköld, Fullt 10 + sköld. Den stora kanonen köps separat.</li>
+    </ul></div>
+  </div>
+
+  <h2>Nytt i den här versionen</h2>
+  <div class="cards">
+    <div class="card"><h3>Inflygning: ringen vrids till bron</h3><ul>
+      <li>Fregatten dockar vid en ledig port, ett kvarts varv från bron. Dockningstuben fälls ut. Sen vrids ringen ett kvarts varv och tar med sig skeppet tills porten står vid bron.</li>
+      <li>Ringens fogar, lampor och portar följer med när den vrids. Bron, armarna och kupolerna står still.</li>
+      <li>När skeppet åker lossnar det från porten vid bron. Med varv dockar skeppet i byggdockan, och då vrids ringen inte.</li>
+    </ul></div>
+    <div class="card"><h3>Runda ytterväggar inne</h3><ul>
+      <li>Ytterväggen på varje våning följer cirkeln mjukt, som ringen. Golvet i rummen vid väggen går ända ut till den, och innerväggarna fortsätter fram till den.</li>
+      <li>Luftslussen går också ut till den runda väggen, och luckan sitter i väggen där bron kommer in.</li>
+      <li>Det är bara bilden: man går och krockar fortfarande mot rutorna, så man kommer inte riktigt ända ut i hörnen vid väggen. Från toppen syns mittens tak runt på samma sätt.</li>
+    </ul></div>
+    <div class="card"><h3>Sluten skiva är vald</h3><ul>
+      <li>Källaren går ända ut till ringen, och ringen glider runt på dess kant när den vrids. Ekrarna finns kvar som skiss.</li>
+    </ul></div>
+    <div class="card"><h3>Statuslamporna</h3><ul>
+      <li>48 lampor på ringen, stora och starka, med ett brett sken, så att rött, vitt, grönt och turkos syns på avstånd. Inne på ringen är de också större.</li>
+      <li>En lampa åt gången är dämpad, och den dämpade går runt basen ett varv på åtta sekunder. När ringen vrids följer lamporna med.</li>
+      <li>Glasrutorna i mittens kupol (orange över hallen, grönt över trädgården) är borttagna.</li>
+    </ul></div>
+    <div class="card"><h3>Lockdown och larm skiljs åt</h3><ul>
+      <li>Lockdown är ett stilla rött filter över allt, utan roterande ljus. Larm är rörelse: roterande ljus och blink. Prova knapparna ”Lockdown” och ”Larm”.</li>
+      <li>Det går emot regelboken i dag (R-429 och R-454 säger roterande röda ljus i lockdown). Den behöver ändras om ni väljer det här.</li>
+    </ul></div>
+    <div class="card"><h3>Fönster, namn och stor kanon</h3><ul>
+      <li><b>Egen eller vänlig:</b> en egen bas har blåare turkosa lampor, en vänlig gulare grönt, så de inte går att blanda ihop.</li>
+      <li><b>Fri vridning:</b> utanpå står varje bas vriden i en slumpad vinkel, inte bara kvarts varv. Ljuset från stjärnan följer med rätt. Inne är det fortfarande kvarts varv, eftersom rummen ligger på rutor. Jämför med ”Vridning utanpå”.</li>
+      <li>Ringen är hel igen: ett fel ritade ett hål i den mellan höger och nedre högra porten. Taket under når nu ända fram till ringen utan svarta trappsteg.</li>
+      <li>Ljusraden runt ringen och fyren på toppen finns nu på alla baser och har hållningens färg, så knapparna under ”Basen är” syns tydligt utifrån.</li>
+      <li>Fönster runt om, slumpade per ankomst. Gå till ”Utsidan” igen så slumpas de om.</li>
+      <li>Toppen har breda utsiktsfönster. Glaskupolen över mainframen är borta; där sitter platsen för den stora kanonen. Prova ”Stor kanon”.</li>
+      <li>ST8 målas på när basen tagits: stora bokstäver som följer kupolens rundning, mitt mellan två portar och rättvänt, i turkos. Färgen är målad, så kupolens skugga faller över den. Välj ”Egen” så syns det.</li>
+      <li>Den stora kanonen och tornen är större än förut.</li>
+      <li>Fyra nya tornplatser på mittens kant. Inne är de små rum vid ytterväggen, mellan portarna.</li>
+    </ul></div>
+  </div>
+
+  <details>
+    <summary>För agenten: hur generatorn fungerar</summary>
+    <ul>
+      <li><b>Samma rutnät för alla våningar</b> (96 × 96 rutor, mitten i 48, 48). Våningarna är cirklar: källaren med radien 33 rutor (35,6 med sluten skiva), mitten 29 och toppen 16. Utsidan ritas som kupoler av samma cirklar. Ringen ligger 36 till 39 rutor från mitten. Hela basen vrids en kvarts varv åt slumpat håll, så portarna står alltid på diagonalerna.</li>
+      <li><b>Fast skelett först:</b> hissar, trappor och stegar (samma rutor på båda våningarna de förbinder), kanonrum i hörnen, luftsluss, gångbro, hall, korridorer och varvsplatsen. Resten delas med BSP i rum mellan 5 och 11 rutor, och rummens sorter väljs efter storlek, läge och om de har fönster.</li>
+      <li><b>Personal och besökare:</b> varje rum är antingen öppet för besökare eller personalens. En dörr mellan de två blir en STAFF-dörr av sig själv.</li>
+      <li><b>Varvet och försvaret</b> ändrar inte planen. Varvsplatsen är en utsiktssalong utan varv, och kanonrummen finns alltid men står tomma tills försvaret köps. Varje rum inreds med sin egen slump, så att ett byte inte flyttar möbler i andra rum.</li>
+      <li><b>Kontroll:</b> varje bas testas med och utan varv. Allt ska gå att nå från kragen vid entrén, och varje våning ska ha tre vägar upp. Annars görs en ny.</li>
+      <li><b>Utsidan</b> räknas fram punkt för punkt från samma rutnät: vilken våning som ligger överst, skugga från våningen ovanför, fönster där rummen har glas, och fästen, dockor och torn där rummen finns.</li>
+    </ul>
+  </details>
+</main>
+<script>
+'use strict';
+// ================================================================== basics
+const T = 16, W = 96, H = 96, WW = W * T, WH = H * T, OUT = -1, ROCK = -2, FREE = -3;
+const C = 48;
+//@@ 136-151
+//@@ 152-161
+// The three floors are round, one on top of the other, each smaller. The ring is a band round them, at the
+// height of the middle. How far the basement reaches depends on how the outside is closed in (OPT.shell).
+let RB = 35.6;
+const inR = (x, y, r) => Math.hypot(x + 0.5 - C, y + 0.5 - C) < r;
+const RMID = 29, RTOP = 16;
+const FOOT = [(x, y) => inR(x, y, RB), (x, y) => inR(x, y, RMID), (x, y) => inR(x, y, RTOP)];
+const RING0 = 36, RING1 = 39;
+const ringD = (x, y) => Math.hypot(x - C, y - C);
+// a point in tiles, turned with the base
+const rpf = (x, y) => { for (let k = 0; k < K; k++) [x, y] = [W - y, x]; return [x, y]; };
+// Ways between floors, in the frame before turning. The same tiles on both floors they join.
+const LINK_BASE = [
+  { key: 'L_MAIN', name: 'LIFT', kind: 'lift', r: [46, 53, 49, 55], decks: [0, 1], way: 'loud' },
+  { key: 'L_QUIET', name: 'STAIRS', kind: 'stairs', r: [36, 63, 38, 67], decks: [0, 1], way: 'quiet' },
+  { key: 'L_ALARM', name: 'LADDER', kind: 'ladder', r: [64, 35, 65, 36], decks: [0, 1], way: 'alarm' },
+  { key: 'T_MAIN', name: 'LIFT', kind: 'lift', r: [46, 41, 49, 43], decks: [1, 2], way: 'loud' },
+  { key: 'T_QUIET', name: 'STAIRS', kind: 'stairs', r: [40, 50, 42, 54], decks: [1, 2], way: 'quiet' },
+  { key: 'T_ALARM', name: 'LADDER', kind: 'ladder', r: [54, 44, 55, 45], decks: [1, 2], way: 'alarm' },
+];
+// The four ports on the ring for ships sit on the diagonals; the way in is the one up and to the left (before
+// turning). Cargo arms for freighters go out straight, under the ring; the shipyard takes the right-hand one.
+const PORT_ANGLES = [-3, -1, 1, 3].map((k) => (k * Math.PI) / 4);
+// The airlock sits on the diagonal with its outer corner on the rim; the bridge runs straight out from that corner.
+const ENTRY = { lock: [27, 27, 30, 30], corner: [27, 27] };
+let LINKS = [];
+// What can be bought or chosen without changing the plan.
+const OPT = { yard: false, own: false, side: 'neutral', attack: false, def: 1, size: 'width', shell: 'disc', star: 'nw', bigGun: false, spin: 'free' };
+// Outside, each base also stands turned at any angle (the inside keeps its quarter turns, on its grid of tiles).
+let TURN = 0;
+// A new look for the windows each time one arrives in the system.
+let ARRIVE = 1;
+// The lights outside show how the base sees the crew, as the docking arms do in the game (R-172): red for an enemy,
+// white neutral, green friendly. The crew's own bases are always friendly.
+const ATT = { hostile: [255, 70, 55], neutral: [215, 225, 240], friendly: [92, 224, 32], own: [32, 212, 240] };
+// The lamps of the crew's own base: a bluer turquoise than the paint, so they cannot be taken for friendly green.
+const OWN_LAMP = [32, 212, 240], OWN_LAMP_HEX = '#20d4f0';
+const attCol = () => ATT[OPT.side], attHex = () => rgb(ATT[OPT.side]);
+// The crew's colour, the same turquoise as the crew's own station in the game.
+// The crew's own turquoise, as on the crew's station in the game, for what is painted on an own base.
+const CREW = [88, 176, 160], CREW_HEX = '#58b0a0';
+
+// ================================================================== a floor
+let D, decks = [];
+function newDeck(i) {
+  return { i, grid: new Int16Array(W * H).fill(OUT), rooms: [], doors: [], mask: new Uint8Array(WW * WH), wallRects: [], wallSegs: [], built: {} };
+}
+const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? OUT : D.grid[y * W + x]);
+const setT = (x, y, v) => { if (x >= 0 && y >= 0 && x < W && y < H) D.grid[y * W + x] = v; };
+function addRoom(name, kind, o = {}) {
+  const id = D.rooms.length;
+  D.rooms.push({ id, name, kind, open: !!o.open, glass: !!o.glass, staff: !!o.staff, tint: o.tint || '#9aa0b0', label: o.label !== false, dark: !!o.dark, x0: 99, y0: 99, x1: -1, y1: -1, n: 0 });
+  return id;
+}
+//@@ 187-228
+//@@ 257-295
+function touches(d, a, b) {
+  const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]];
+  const ids = g.map(([x, y]) => at(x, y));
+  return ids.includes(a) && ids.includes(b);
+}
+//@@ 491-496
+// Tiles no room took join the room next to them, unless that room has a fixed shape.
+const FIXED = ['corridor', 'service', 'lift', 'stairs', 'ladder', 'gun', 'airlock', 'dock', 'gangway', 'gantry', 'ringport', 'collar', 'yard', 'view', 'command', 'hold'];
+function fillLeftovers() {
+  for (let pass = 0; pass < 8; pass++) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (at(x, y) !== FREE) continue;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const v = at(x + dx, y + dy); if (v >= 0 && !FIXED.includes(D.rooms[v].kind)) { setT(x, y, v); break; } }
+  }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (at(x, y) === FREE) setT(x, y, D.fillId);
+}
+
+// ================================================================== shared pieces of the plan
+const own = (r) => rr(...r);
+const carveR = (id, r, only) => carve(id, ...own(r), only);
+const centreOf = (r) => [(r[0] + r[2] + 1) / 2, (r[1] + r[3] + 1) / 2];
+// A door on the outer side of a rectangle given in the frame before turning, in the middle of that side.
+function edgeDoor(r, side, kind) {
+  const [x0, y0, x1, y1] = own(r);
+  const [dx, dy] = rd(...{ n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] }[side]);
+  if (dy) door('h', Math.floor((x0 + x1) / 2), dy > 0 ? y1 + 1 : y0, kind);
+  else door('v', dx > 0 ? x1 + 1 : x0, Math.floor((y0 + y1) / 2), kind);
+}
+// A square room for a gun, as far out towards a corner as it fits.
+function gunSlot(foot, dx, dy, size) {
+  let best = null;
+  for (let k = 0; k < 45; k++) {
+    const x0 = Math.round(C + dx * k - size / 2), y0 = Math.round(C + dy * k - size / 2);
+    let ok = true;
+    for (let y = y0; y < y0 + size && ok; y++) for (let x = x0; x < x0 + size && ok; x++) if (!foot(x, y) || at(x, y) !== FREE) ok = false;
+    if (ok) best = [x0, y0, x0 + size - 1, y0 + size - 1];
+  }
+  return best;
+}
+function placeGuns(foot, corners, size, big) {
+  for (const [dx, dy] of corners) {
+    const r = gunSlot(foot, dx, dy, size); if (!r) continue;
+    const id = addRoom('GUN', 'gun', { tint: '#d06a2a', staff: true });
+    carve(id, ...r, [FREE]);
+    D.guns.push({ id, x: (r[0] + r[2] + 1) / 2, y: (r[1] + r[3] + 1) / 2, a: Math.atan2(dy, dx), deck: D.i, big });
+  }
+}
+const MERGE_NO = ['corridor', 'service', 'lift', 'stairs', 'ladder', 'gun', 'airlock', 'dock', 'gangway', 'gantry', 'ringport', 'collar', 'command'];
+// After the rooms are made: each gun's square joins the room it touches most, and the gun stays as a mount there.
+function mergeGuns() {
+  for (const g of D.guns) {
+    const counts = new Map();
+    const r = D.rooms[g.id];
+    for (let y = r.y0 - 1; y <= r.y1 + 1; y++) for (let x = r.x0 - 1; x <= r.x1 + 1; x++) { const v = at(x, y); if (v >= 0 && v !== g.id && !MERGE_NO.includes(D.rooms[v].kind)) counts.set(v, (counts.get(v) || 0) + 1); }
+    const to = [...counts.entries()].sort((p, q) => q[1] - p[1])[0];
+    if (!to) continue;
+    for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (at(x, y) === g.id) setT(x, y, to[0]);
+    g.room = to[0];
+  }
+  bounds();
+}
+function linkRooms(i) {
+  for (const l of LINKS.filter((q) => q.decks.includes(i))) {
+    const id = addRoom(l.name, l.kind, { tint: '#d9a441', label: false, staff: true });
+    carve(id, ...l.r);
+    l['room' + i] = id;
+  }
+}
+// BSP leaves of a region, made into rooms of one zone.
+function leafRooms(regions, staff, min = 5, max = 11) {
+  const out = [];
+  for (const reg of regions) {
+    const leaves = [];
+    bsp(...own(reg), leaves, min, max);
+    for (const [x0, y0, x1, y1] of leaves) {
+      let n = 0; for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (at(x, y) === FREE) n++;
+      if (n < 12) continue;
+      const id = addRoom('ROOM', 'store', { staff });
+      carve(id, x0, y0, x1, y1, [FREE]);
+      out.push(id);
+    }
+  }
+  return out;
+}
+const glassy = (id) => { const r = D.rooms[id]; for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (at(x, y) === id && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(x + dx, y + dy) === OUT)) return true; return false; };
+const nameRoom = (id, name, kind, tint, o = {}) => Object.assign(D.rooms[id], { name, kind, tint, ...o });
+const linkKind = (k) => (k === 'ladder' ? 'alarm' : k === 'lift' ? 'lift' : 'slide');
+// Where a door can go between two rooms: both door tiles must have their room two tiles deep on both sides, so a
+// door never opens onto a sliver of a room. Grouped by the run of wall they are on, longest run first.
+function doorSpots(a, b) {
+  const deep = (o, at0, s, id, dir) => { for (const t of [s, s + 1]) for (let k = 0; k < 2; k++) { const [x, y] = o === 'v' ? [dir > 0 ? at0 + k : at0 - 1 - k, t] : [t, dir > 0 ? at0 + k : at0 - 1 - k]; if (at(x, y) !== id) return false; } return true; };
+  const out = [];
+  for (const run of contacts(a, b)) {
+    if (run.to - run.from < 1) continue;
+    const spots = [];
+    for (let s = run.from; s < run.to; s++) {
+      const [ax, ay] = run.o === 'v' ? [run.at - 1, s] : [s, run.at - 1];
+      const side = at(ax, ay) === a ? -1 : 1;
+      if (deep(run.o, run.at, s, a, side) && deep(run.o, run.at, s, b, -side)) spots.push(s);
+    }
+    if (spots.length) out.push({ run, spots });
+  }
+  return out.sort((p, q) => q.spots.length - p.spots.length);
+}
+// The way from a lift, stairs or ladder into a room, where the room is deep enough.
+function linkDoor(id, o, kind) { const l = doorSpots(id, o); if (!l.length) return false; const { run, spots } = l[0]; putDoor(run, spots[Math.floor(spots.length / 2)], kind); return true; }
+const putDoor = (run, s, kind) => (run.o === 'v' ? door('v', run.at, s, kind) : door('h', s, run.at, kind));
+// A door between two rooms, on their longest shared wall, as near the fraction `where` along it as it can go.
+function doorBetween(a, b, kind = 'slide', where = 0.5) {
+  const list = doorSpots(a, b);
+  if (!list.length) {
+    const runs = contacts(a, b).filter((r) => r.to - r.from >= 1);
+    if (!runs.length) return false;
+    const run = runs.reduce((p, q) => (q.to - q.from > p.to - p.from ? q : p));
+    const len = run.to - run.from + 1;
+    putDoor(run, run.from + Math.max(0, Math.min(len - 2, Math.floor((len - 2) * where))), kind);
+    return true;
+  }
+  const { run, spots } = list[0];
+  const want = spots[0] + (spots[spots.length - 1] - spots[0]) * where;
+  putDoor(run, spots.reduce((p, q) => (Math.abs(q - want) < Math.abs(p - want) ? q : p)), kind);
+  return true;
+}
+// Doors between rooms and the halls they touch: one, or two on a long wall.
+function hallDoors(room, hall, kind = 'slide') {
+  const list = doorSpots(room, hall);
+  if (!list.length) return false;
+  const { run, spots } = list[0];
+  const span = spots[spots.length - 1] - spots[0];
+  const at2 = span > 11 ? [0.15, 0.85] : [0.3 + R() * 0.4];
+  for (const f of at2) { const want = spots[0] + span * f; putDoor(run, spots.reduce((p, q) => (Math.abs(q - want) < Math.abs(p - want) ? q : p)), kind); }
+  return true;
+}
+// The way from a lift, stairs or ladder into the room that suits it best.
+function linkDoors(i, prefer) {
+  for (const l of LINKS.filter((q) => q.decks.includes(i))) {
+    const id = l['room' + i];
+    const around = neighbours().filter((p) => (p.a === id || p.b === id) && p.n >= 2).map((p) => (p.a === id ? p.b : p.a));
+    around.sort((a, b) => prefer(l, b) - prefer(l, a));
+    for (const o of around) if (linkDoor(id, o, linkKind(l.kind)) || doorBetween(id, o, linkKind(l.kind))) break;
+  }
+}
+
+// ================================================================== floor 1: the basement, dirty industry
+// A cargo arm out from the basement's edge on one side, under the ring, ending in a lock: rectangles before turning.
+function armRects(side) {
+  const inside = (t) => FOOT[0](side === 'w' || side === 'e' ? t : 47, side === 'n' || side === 's' ? t : 47);
+  if (side === 's' || side === 'e') { let t = 48; while (inside(t)) t++; return side === 's' ? [[46, t, 49, 88], [46, 89, 49, 91]] : [[t, 46, 88, 49], [89, 46, 91, 49]]; }
+  let t = 47; while (inside(t)) t--;
+  return side === 'n' ? [[46, 7, 49, t], [46, 4, 49, 6]] : [[7, 46, t, 49], [4, 46, 6, 49]];
+}
+function gen0() {
+  D = newDeck(0); D.guns = [];
+  RB = OPT.shell === 'disc' ? RING0 - 0.4 : 33;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (FOOT[0](x, y)) setT(x, y, FREE);
+  linkRooms(0);
+  placeGuns(FOOT[0], [[-1, -1], [1, -1], [1, 1], [-1, 1]], 4, false);
+  // the cargo hold at the bottom, and cargo bays at the other three sides, where the arms come in
+  const hold = addRoom('CARGO HOLD', 'hold', { tint: '#c9a24a', staff: true });
+  carveR(hold, [24, 63, 71, 88], [FREE]);
+  const bays = { s: hold };
+  for (const [side, r] of [['w', [8, 43, 31, 52]], ['n', [43, 8, 52, 29]], ['e', [64, 43, 88, 52]]]) { bays[side] = addRoom('CARGO BAY', 'hold', { tint: '#c9a24a', staff: true }); carveR(bays[side], r, [FREE]); }
+  // corridors: a ring, a cross and a spine, so there is always more than one way
+  const cor = addRoom('CORRIDOR', 'corridor', { tint: '#8a90a0', label: false, staff: true });
+  for (const r of [[32, 30, 34, 62], [61, 30, 63, 62], [32, 30, 63, 32], [35, 60, 60, 62], [35, 44, 60, 46], [46, 33, 49, 43]]) carveR(cor, r, [FREE]);
+  const rooms = leafRooms([[35, 33, 45, 43], [50, 33, 60, 43], [35, 47, 60, 59], [8, 8, 31, 42], [64, 8, 88, 42], [32, 8, 63, 29], [8, 53, 31, 62], [8, 63, 23, 88], [64, 53, 88, 62], [72, 63, 88, 88]], true);
+  D.fillId = cor;
+  fillLeftovers();
+  bounds();
+  mergeGuns();
+  // what each room is for
+  const lm = D.rooms[LINKS.find((l) => l.key === 'L_MAIN').room0];
+  const dist = (id, x, y) => Math.hypot(D.rooms[id].cx - x, D.rooms[id].cy - y);
+  const H0 = D.rooms[hold];
+  const free = rooms.slice();
+  const take = (f) => { if (!free.length) return null; free.sort(f); return free.shift(); };
+  const big = take((a, b) => D.rooms[b].n - D.rooms[a].n);
+  if (big !== null) nameRoom(big, 'REACTOR', 'power', '#d98a3a');
+  const sw = take((a, b) => (D.rooms[b].n >= 24) - (D.rooms[a].n >= 24) || dist(b, lm.cx, lm.cy) - dist(a, lm.cx, lm.cy));
+  if (sw !== null) nameRoom(sw, 'SWITCHGEAR', 'breaker', '#ffb347');
+  const post = take((a, b) => dist(a, lm.cx, lm.cy) - dist(b, lm.cx, lm.cy));
+  if (post !== null) nameRoom(post, 'GUARD POST', 'post', '#b0b8c8');
+  const fuel = take((a, b) => dist(a, H0.cx, H0.cy) - dist(b, H0.cx, H0.cy));
+  if (fuel !== null) nameRoom(fuel, 'FUEL DEPOT', 'fuel', '#d98a3a');
+  const hang = take((a, b) => D.rooms[b].n - D.rooms[a].n);
+  if (hang !== null) nameRoom(hang, 'DRONE BAY', 'drones', '#9ad04a');
+  const POOL = [['WORKSHOP', 'workshop', '#c98a3a'], ['BARRACKS', 'barracks', '#b0b8c8'], ['REFINERY', 'refinery', '#c98a3a'], ['PUMPS', 'tanks', '#5fae9a'], ['STORES', 'store', '#9a8a6a'], ['LOCKERS', 'lockers', '#b0b8c8'], ['AIR PLANT', 'tanks', '#5fae9a'], ['SPARES', 'store', '#9a8a6a'], ['MACHINE SHOP', 'workshop', '#c98a3a'], ['ORE BINS', 'refinery', '#c98a3a'], ['WATER', 'tanks', '#5fae9a'], ['COLD STORE', 'store', '#9a8a6a'], ['CREW BUNKS', 'barracks', '#b0b8c8'], ['SCRAP', 'store', '#9a8a6a']];
+  shuffle(free).forEach((id, k) => nameRoom(id, ...POOL[k % POOL.length]));
+  // doors
+  for (const id of rooms) hallDoors(id, cor);
+  for (const id of Object.values(bays)) { hallDoors(id, cor); hallDoors(id, cor); }
+  for (const p of shuffle(neighbours().filter((q) => !FIXED.includes(D.rooms[q.a].kind) && !FIXED.includes(D.rooms[q.b].kind)))) {
+    if (p.n < 3) continue;
+    if (R() < 0.35) doorBetween(p.a, p.b);
+  }
+  for (const id of rooms) for (const p of neighbours().filter((q) => (q.a === id || q.b === id) && Object.values(bays).some((h) => q.a === h || q.b === h) && q.n >= 3)) if (R() < 0.6) doorBetween(p.a, p.b);
+  linkDoors(0, (l, o) => (D.rooms[o].kind === 'corridor' ? 10 : 0) + (D.rooms[o].kind === 'post' && l.way === 'loud' ? 30 : 0));
+  // the arms last, so that the rooms keep their numbers whether the shipyard is bought or not
+  D.docks = [];
+  for (const side of OPT.yard ? ['s', 'w', 'n'] : ['s', 'w', 'n', 'e']) {
+    const [ar, lr] = armRects(side);
+    const arm = addRoom('CARGO DOCK', 'dock', { tint: '#8aa0c0', label: false, staff: true });
+    carveR(arm, ar);
+    const lock = addRoom('CARGO LOCK', 'airlock', { tint: '#d9a441', label: false, staff: true });
+    carveR(lock, lr);
+    D.docks.push({ arm, lock, side, r: [Math.min(ar[0], lr[0]), Math.min(ar[1], lr[1]), Math.max(ar[2], lr[2]), Math.max(ar[3], lr[3])], lr });
+  }
+  bounds();
+  for (const s of D.docks) { doorBetween(bays[s.side], s.arm, 'pressure'); doorBetween(s.arm, s.lock, 'pressure'); edgeDoor(s.lr, s.side, 'hatch'); }
+  repairDoors(cor);
+  return D;
+}
+
+// ================================================================== floor 2: the middle, light and open
+function gen1() {
+  D = newDeck(1); D.guns = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (FOOT[1](x, y)) setT(x, y, FREE);
+  linkRooms(1);
+  // the way in, on the diagonal: the bridge from the ring ends at the airlock's outer corner
+  const lock = addRoom('AIRLOCK', 'airlock', { tint: '#d9a441', label: false });
+  carveR(lock, ENTRY.lock);
+  D.entryLock = lock;
+  // four places for guns on the rim, between the ports
+  placeGuns(FOOT[1], [[0, -1], [1, 0], [0, 1], [-1, 0]], 4, false);
+  const hall = addRoom('CONCOURSE', 'concourse', { tint: '#c9a06a', glass: true });
+  carveR(hall, [31, 24, 50, 36], [FREE]); carveR(hall, [24, 31, 36, 50], [FREE]);
+  const prom = addRoom('PROMENADE', 'corridor', { tint: '#8aa0c0', label: false });
+  carveR(prom, [37, 37, 58, 39], [FREE]); carveR(prom, [37, 40, 39, 58], [FREE]); carveR(prom, [56, 40, 58, 58], [FREE]);
+  // the staff's core in the middle, and the service way behind it
+  const sec = addRoom('SECURITY', 'security', { tint: '#b0b8c8', staff: true });
+  carveR(sec, [42, 40, 53, 46], [FREE]);
+  const sc = addRoom('STAFF', 'service', { tint: '#8a90a0', label: false, staff: true });
+  carveR(sc, [40, 47, 55, 49], [FREE]);
+  const svc = addRoom('SERVICE', 'service', { tint: '#8a90a0', label: false, staff: true });
+  carveR(svc, [26, 59, 70, 60], [FREE]); carveR(svc, [40, 56, 55, 58], [FREE]);
+  // the place for a shipyard: an observation lounge until one is bought
+  const yard = addRoom('OBSERVATION', 'view', { tint: '#6fb8ff', glass: true });
+  carveR(yard, [59, 41, 76, 52], [FREE]);
+  D.yard = { room: yard };
+  if (OPT.yard) nameRoom(yard, 'SHIPYARD', 'yard', '#d9a441');
+  const pub = leafRooms([[51, 19, 77, 36], [59, 37, 77, 40], [59, 53, 77, 58], [19, 51, 36, 58], [19, 32, 23, 50], [19, 19, 31, 31], [32, 19, 50, 23]], false, 5, 10);
+  const core = leafRooms([[40, 50, 55, 55], [40, 40, 41, 46], [54, 40, 55, 46]], true, 4, 9);
+  const back = leafRooms([[19, 61, 77, 77]], true, 5, 11);
+  D.fillId = prom;
+  fillLeftovers();
+  bounds();
+  mergeGuns();
+  // what the public rooms are for: the ones with windows get the bar, the hotel and the garden
+  const byN = (l) => l.slice().sort((a, b) => D.rooms[b].n - D.rooms[a].n);
+  const left = byN(pub), used = new Set();
+  const pickRoom = (wantGlass) => { const r = left.find((q) => !used.has(q) && (wantGlass === undefined || glassy(q) === wantGlass)) ?? left.find((q) => !used.has(q)); if (r !== undefined) used.add(r); return r; };
+  const PUB = [['BAR', 'bar', '#c9a06a', true], ['SERVICES', 'services', '#6fb8ff', false], ['ARMORY', 'armory', '#d98a3a', false], ['MARKET', 'market', '#c9a06a'], ['MEDBAY', 'med', '#9ad0d8'], ['HOTEL', 'cabin', '#8a7ab0', true], ['GARDEN', 'garden', '#7ac060', true], ['WC', 'wc', '#9ad0d8'], ['LOUNGE', 'lounge', '#c9a06a', true], ['HOTEL', 'cabin', '#8a7ab0']];
+  for (const [nm, kind, tint, gl] of PUB) { const id = pickRoom(gl); if (id === undefined) break; nameRoom(id, nm, kind, tint); }
+  left.filter((q) => !used.has(q)).forEach((id, k) => nameRoom(id, ...[['HOTEL', 'cabin', '#8a7ab0'], ['LOUNGE', 'lounge', '#c9a06a'], ['WC', 'wc', '#9ad0d8']][k % 3]));
+  const CORE = [['LOCKERS', 'lockers', '#b0b8c8'], ['OFFICE', 'chief', '#c9a06a'], ['STAFF MESS', 'messd', '#c9a06a'], ['ARCHIVE', 'store', '#9a8a6a'], ['LOCKERS', 'lockers', '#b0b8c8']];
+  byN(core).forEach((id, k) => nameRoom(id, ...CORE[k % CORE.length]));
+  const BACK = [['KITCHEN', 'kitchen', '#c98a3a'], ['LAUNDRY', 'laundry', '#9ad0d8'], ['STORES', 'store', '#9a8a6a'], ['PANTRY', 'store', '#9a8a6a'], ['WORKROOM', 'workshop', '#c98a3a'], ['STORES', 'store', '#9a8a6a']];
+  byN(back).forEach((id, k) => nameRoom(id, ...BACK[k % BACK.length]));
+  for (const r of D.rooms) if (['bar', 'cabin', 'garden', 'lounge', 'view', 'yard', 'concourse'].includes(r.kind)) r.glass = true;
+  // the gantry out to the build dock comes last, so that the other rooms keep their numbers with or without it
+  if (OPT.yard) {
+    const g = addRoom('GANTRY', 'gantry', { tint: '#8aa0c0', label: false, glass: true });
+    carveR(g, [77, 45, 87, 48]);
+    const gl = addRoom('YARD LOCK', 'airlock', { tint: '#d9a441', label: false });
+    carveR(gl, [88, 45, 91, 48]);
+    Object.assign(D.yard, { gantry: g, lock: gl });
+    bounds();
+  }
+  // doors: the airlock's inner door. Its outer door is the hatch across the corner, drawn with the floor.
+  const pair = (name) => { D.doors[D.doors.length - 1].pair = name; };
+  if (doorBetween(lock, hall, 'lockB')) pair('main');
+  if (OPT.yard) { doorBetween(D.yard.gantry, D.yard.lock, 'lockA'); pair('yard'); edgeDoor([88, 45, 91, 48], 'e', 'hatch'); pair('yard'); doorBetween(yard, D.yard.gantry, 'pressure'); }
+  // the hall opens wide onto the promenade
+  for (const run of contacts(hall, prom)) { const len = run.to - run.from + 1; if (len < 4) continue; for (const f of [0.2, 0.75]) { const s2 = run.from + Math.floor((len - 2) * f); run.o === 'v' ? door('v', run.at, s2, 'arch') : door('h', s2, run.at, 'arch'); } }
+  // every shop to the promenade or the hall
+  for (const id of [...pub, yard]) { if (!hallDoors(id, prom)) hallDoors(id, hall); }
+  for (const p of shuffle(neighbours().filter((q) => !FIXED.includes(D.rooms[q.a].kind) && !FIXED.includes(D.rooms[q.b].kind)))) {
+    const A = D.rooms[p.a], B = D.rooms[p.b];
+    if (p.n < 3 || A.staff !== B.staff) continue;
+    if (R() < 0.3) doorBetween(p.a, p.b);
+  }
+  // the staff's ways: from the promenade through security, into the staff corridor, and in from the back
+  hallDoors(sec, prom); hallDoors(sec, sc);
+  for (const run of contacts(sc, prom)) { const len = run.to - run.from + 1; if (len >= 2) { const s2 = run.from + Math.floor((len - 2) / 2); run.o === 'v' ? door('v', run.at, s2) : door('h', s2, run.at); } }
+  for (const id of core) { if (!hallDoors(id, sc)) hallDoors(id, svc); }
+  for (const id of back) hallDoors(id, svc);
+  hallDoors(svc, prom);
+  for (const id of pub) if (['bar', 'kitchen', 'market', 'services'].includes(D.rooms[id].kind)) { const p = neighbours().find((q) => (q.a === id || q.b === id) && (q.a === svc || q.b === svc) && q.n >= 2); if (p) doorBetween(id, svc); }
+  for (const id of core) { const p = neighbours().find((q) => (q.a === id || q.b === id) && (q.a === svc || q.b === svc) && q.n >= 2); if (p && R() < 0.7) doorBetween(id, svc); }
+  linkDoors(1, (l, o) => { const k = D.rooms[o].kind; if (l.key === 'T_MAIN') return k === 'security' ? 50 : 0; if (l.key === 'L_MAIN') return k === 'service' ? 30 : D.rooms[o].staff ? 10 : 0; if (l.way === 'alarm') return k === 'corridor' ? 30 : 0; return D.rooms[o].staff ? 20 : 0; });
+  repairDoors(hall);
+  return D;
+}
+
+// ================================================================== floor 3: the top, cold command
+function gen2() {
+  D = newDeck(2); D.guns = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (FOOT[2](x, y)) setT(x, y, FREE);
+  linkRooms(2);
+  placeGuns(FOOT[2], [[-1, -1], [1, 1]], 4, true);
+  const cmd = addRoom('COMMAND', 'command', { tint: '#5fd1c0', staff: true });
+  carveR(cmd, [43, 46, 52, 55], [FREE]);
+  const sec = addRoom('SECURITY', 'security', { tint: '#b0b8c8', staff: true });
+  carveR(sec, [44, 32, 51, 44], [FREE]);
+  const ring = leafRooms([[31, 31, 42, 65], [53, 31, 65, 65], [43, 56, 52, 65]], true, 5, 10);
+  D.fillId = sec;
+  fillLeftovers();
+  bounds();
+  mergeGuns();
+  const left = ring.slice().sort((a, b) => D.rooms[b].n - D.rooms[a].n), used = new Set();
+  const pickRoom = (wantGlass) => { const r = left.find((q) => !used.has(q) && glassy(q) === wantGlass) ?? left.find((q) => !used.has(q)); if (r !== undefined) used.add(r); return r; };
+  const TOP = [['COMMS', 'comms', '#62e08a', true], ['SERVERS', 'server', '#5fd1c0', false], ['SENSORS', 'sensors', '#6fb8ff', true], ['ARMS', 'arms', '#d98a3a', false], ['BARRACKS', 'barracks', '#b0b8c8', false], ['OFFICE', 'chief', '#c9a06a', true], ['COOLING', 'tanks', '#5fae9a', false], ['ARCHIVE', 'store', '#9a8a6a', false]];
+  for (const [nm, kind, tint, gl] of TOP) { const id = pickRoom(gl); if (id === undefined) break; nameRoom(id, nm, kind, tint); }
+  left.filter((q) => !used.has(q)).forEach((id) => nameRoom(id, 'CONTROL', 'control', '#6fb8ff'));
+  for (const r of D.rooms) if (['sensors', 'chief', 'comms'].includes(r.kind)) r.glass = true;
+  // doors round the ring of rooms, three into command, security to all it touches
+  for (const p of neighbours()) {
+    const A = D.rooms[p.a], B = D.rooms[p.b];
+    if (p.n < 2 || A.kind === 'command' || B.kind === 'command' || ['lift', 'stairs', 'ladder'].includes(A.kind) || ['lift', 'stairs', 'ladder'].includes(B.kind)) continue;
+    if (A.kind === 'security' || B.kind === 'security' || R() < 0.75) doorBetween(p.a, p.b, 'slide', 0.3 + R() * 0.4);
+  }
+  const into = shuffle(neighbours().filter((p) => (p.a === cmd || p.b === cmd) && p.n >= 4)).slice(0, 3);
+  for (const p of into) doorBetween(p.a, p.b, 'pressure');
+  linkDoors(2, (l, o) => (l.key === 'T_MAIN' && D.rooms[o].kind === 'security' ? 50 : 0) + (D.rooms[o].kind === 'command' ? -100 : 0));
+  repairDoors(sec);
+  return D;
+}

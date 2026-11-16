@@ -47,6 +47,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 - Faktioner kan vara i krig med varandra. I dag slåss de bara i omstridda system.
 - Anseendet förbättras inte av sig självt med tiden. I dag gör det det, fram till avvaktande, tills uppdragen finns.
 - Kanontorn köps, och skeppet börjar med en fast kanon rakt fram. I dag har skeppet ett torn i nosen och torn på vingarna.
+- Standardbasens utsida är bestämd efter designtestet D-217: kupoler, en ring som vrids till bron, lampor som visar hållningen, ST8 på en egen bas och tio tornplatser. I dag har stationerna sin gamla utsida.
+- Lockdown är ett stilla rött filter utan roterande ljus. I dag är lockdown mörkt med roterande röda ljus.
 
 ## Bränsle och färd
 
@@ -375,28 +377,46 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-294 | Slutbasens boss är en pirat i en mech-dräkt, och bossrummet har en mekanik för att besegra den. | bestämd | BACKLOG F-219 | – |
 | R-295 | Efter bossen tar man över slutbasen. Det blir ingen sprängning och ingen flykt. | bestämd | BACKLOG F-219 | – |
 | R-296 | Tar en standardbas med källare och översta våning mer än cirka 40 minuter ska den kortas. | förslag | proposal-bases.md §2 | – |
-| R-297 | Källarsteget är att slå ut strömmen, varpå nödkraft ger svagare ljus och dörrarna uppe går att forcera. | förslag | proposal-bases.md §3 | – |
-| R-298 | Strömmen kan slås ut tyst vid ställverket eller högljutt genom att spränga det, med olika följder för larmet. | förslag | proposal-bases.md §3 | – |
+| R-297 | Källarsteget är att slå ut strömmen, varpå nödkraft ger svagare ljus och dörrarna uppe går att forcera. | bestämd | proposal-bases.md §3; Användaren 2026-11-16 (fråga 2 och 3 i proposal-bases.md §12) | – |
+| R-298 | Strömmen kan slås ut tyst vid ställverket eller högljutt genom att spränga det, med olika följder för larmet. | ersatt av: R-1167 | proposal-bases.md §3 | – |
 | R-299 | Personaldelen ligger i källaren och på översta våningen, och mitten är öppen för besökare. | förslag | proposal-bases.md §3 | – |
-| R-300 | Varvet syns utifrån som en byggdocka utanpå basen, och egna baser har ockra ljus. | förslag | proposal-bases.md §7 | – |
+| R-300 | Varvet syns utifrån som en byggdocka utanpå basen, och egna baser har ockra ljus. | ersatt av: R-1160 och R-1169 | proposal-bases.md §7 | – |
 | R-301 | Inne finns ett varvsrum som en hangar med mekaniker vid disken. | förslag | proposal-bases.md §7 | – |
 | R-302 | Det personliga på egna baser kommer av det man gjort, som karta över tagna baser, bosstroféer, skeppets namn och en brits per spelare. | förslag | proposal-bases.md §7 | – |
-| R-303 | Försvaret syns: fler och större kanontorn, skölden som ett skimmer och fler vakter, kameror och låsta dörrar inne. | förslag | proposal-bases.md §7 | – |
-| R-304 | Utsidan byggs av samma data som insidan. | förslag | proposal-bases.md §8 | – |
+| R-303 | Försvaret syns: fler och större kanontorn, skölden som ett skimmer och fler vakter, kameror och låsta dörrar inne. | bestämd | proposal-bases.md §7; Användaren 2026-11-16 (designtest D-217) | – |
+| R-304 | Utsidan byggs av samma data som insidan. | ersatt av: R-1157 | proposal-bases.md §8 | – |
 | R-305 | Utsidan blir ungefär tre gånger dagens storlek. | förslag | proposal-bases.md §8 | – |
-| R-306 | Våningarna syns som terrasser uppifrån, med källaren bredast och den översta minst. | förslag | proposal-bases.md §8 | – |
-| R-307 | Saker sitter på samma plats ute som inne: dockor vid luftslussarna, fönster vid rummen och byggdockan utanför varvsrummet. | förslag | proposal-bases.md §8 | – |
-| R-308 | Dockningsringen har åtta portar och lägen för drift, service och stängd. | förslag | proposal-bases.md §9 | – |
+| R-306 | Våningarna syns som terrasser uppifrån, med källaren bredast och den översta minst. | ersatt av: R-1156 | proposal-bases.md §8 | – |
+| R-307 | Saker sitter på samma plats ute som inne: dockor vid luftslussarna, fönster vid rummen och byggdockan utanför varvsrummet. | ersatt av: R-1157 | proposal-bases.md §8 | – |
+| R-308 | Dockningsringen har åtta portar och lägen för drift, service och stängd. | ersatt av: R-1153 | proposal-bases.md §9 | – |
 | R-309 | Eget varv ger gratis bränsle och lagning. | förslag | BACKLOG F-215 | – |
-| R-310 | Det man gör i källaren är att slå ut strömmen. | förslag | BACKLOG F-209 | – |
-| R-311 | Drönarhangar och kommunikationsrum går att slå ut, förstärkningen har en synlig nedräkning, och inget dyker upp från ingenstans. | förslag | BACKLOG F-210 | – |
+| R-310 | Det man gör i källaren är att slå ut strömmen. | bestämd | BACKLOG F-209; Användaren 2026-11-16 (fråga 2 och 3 i proposal-bases.md §12) | – |
+| R-311 | Drönarhangar och kommunikationsrum går att slå ut, förstärkningen har en synlig nedräkning, och inget dyker upp från ingenstans. | bestämd | BACKLOG F-210; Användaren 2026-11-16 (designtest D-217) | – |
 | R-312 | Bossstriden har tre pyloner, faser och svep som visas i förväg. | förslag | BACKLOG F-219 | – |
-| R-313 | Basernas utsida byggs av samma data som insidan, ungefär tre gånger dagens storlek, med våningarna som terrasser. | förslag | BACKLOG D-217 | – |
-| R-314 | Dockningsringen är en ytterring runt ett fast nav som vrids i fasta lägen, så att man når sitt skepp från en annan arm. | förslag | BACKLOG D-218 | – |
+| R-313 | Basernas utsida byggs av samma data som insidan, ungefär tre gånger dagens storlek, med våningarna som terrasser. | ersatt av: R-1156 och R-1157 | BACKLOG D-217 | – |
+| R-314 | Dockningsringen är en ytterring runt ett fast nav som vrids i fasta lägen, så att man når sitt skepp från en annan arm. | ersatt av: R-1154 | BACKLOG D-218 | – |
 | R-315 | En station som blir fientlig kastar ut alla, men det ersattes av att ingen längre kastas ut (beslutat i docs/station-boarding.md, inte byggt). | ersatt av: ett senare beslut, se källan | HANDOFF beslut 2026-11-14 | – |
 | R-316 | Besättningens egen varvsstation i första sektorn kan aldrig anfallas, tas över eller bli fientlig. | ersatt av: ett senare beslut, se källan | station-boarding.md §11, §14 (ersatt av fristaden, proposal-bases.md §1, §5) | – |
 | R-317 | Små stationer får en våning och större två (D-072), och stora baser är 1,5 gånger större (F-103). | ersatt av: ett senare beslut, se källan | proposal-bases.md §1 (ersatt av en vanlig bastyp, standardbasen med tre våningar, plus piraternas slutbas) | – |
 | R-318 | En övertagen station får shipyard. | ersatt av: ett senare beslut, se källan | proposal-bases.md §1 (ersatt av att varvet köps som permanent uppgradering, §7); proposal-economy.md 1.1 | – |
+| R-1152 | Mellan basen och ringen är en sluten skiva: källaren går ända ut till ringen, och ringen glider runt på dess kant. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1153 | Ringen har fyra portar för skepp, på diagonalerna. Fraktskepp dockar vid lastarmar som går rakt ut från källaren åt fyra håll, under ringen. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1154 | Ett skepp dockar vid en ledig port, och sedan vrids ringen ett kvarts varv åt gången tills porten står vid bron. Vid byggdockan vrids ringen inte. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1155 | En fast bro går från luftslussen på mittvåningen rakt ut till ringen, och porten har en dockningstub som fälls ut när ett skepp kommer och in när det har åkt. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1156 | Våningarna syns utifrån som låga, runda kupoler ovanpå varandra, källaren bredast och toppen minst, med ljus och skuggor från stjärnans håll. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1157 | Utsidan stämmer med insidan där det spelar roll: bron går från luftslussen, byggdockan ligger utanför varvsrummet och tornen sitter på sina rum. Fönster och andra detaljer är bara utseende. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1158 | Fönster finns runt om på alla våningar. De flesta lyser, några är släckta, och blandningen slumpas vid varje ankomst. Toppen har breda utsiktsfönster. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1159 | Utsidans lampor visar hållningen som dockningsarmarna (R-172): 48 lampor runt ringen, portarnas ljus, fyren på toppen och tornens ljus. En dämpad lampa går runt ringen ett varv på åtta sekunder. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1160 | En egen bas lyser blåturkos utanpå, så att den inte går att ta för en vänlig. Det som är målat på en egen bas har besättningens turkos. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1161 | När besättningen har tagit en bas målas ST8 på mittens kupol, mellan två portar på andra sidan från bron. Andra baser har inget namn målat. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1162 | Utanpå står varje bas vriden i en slumpad vinkel. Inne vrids planen bara i kvarts varv, och bron och luftslussen ska ändå passa ihop. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1163 | Basen har tio platser för kanontorn: fyra på källaren, fyra på mittens kant mellan portarna och två tunga på toppen. Lätt försvar ger två torn, medel sex och sköld, fullt alla tio och en starkare sköld. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1164 | En stor kanon kan köpas för sig, oberoende av försvarsnivån, och står mitt på toppens kupol. Utan den är platsen en stängd lucka. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1165 | Ytterväggarna inne följer basens runda form, både i bilden och när man går och krockar. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1166 | Höga föremål och stängda dörrar skymmer också synfälten, och kameror sitter bara på riktiga väggar, inte i dörröppningar eller bakom höga föremål. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1167 | Strömmen kan slås ut tyst vid ställverket eller högljutt genom att spränga det. Tyst ändrar inte läget, men efter en stund skickas en vakt för att se efter. Högljutt går fort, men larmet går direkt. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1168 | Efter källaren skärps läget i steg ju längre man dröjer: vakterna drar sig upp mot hissen och trapporna till toppen, drönare släpps från hangaren om den är hel, basen ropar på förstärkning med en synlig nedräkning som kommunikationsrummet kan stoppa, och förstärkningen dockar med fler vakter. Takten sätts vid provspel. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1169 | Varvet syns utifrån som en byggdocka med balkar, kranar och strålkastare, och en gångbro över ringen till varvsrummet. Utan varv är rummet en utsiktssalong. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
 
 ## Faktioner och anseende
 
@@ -517,7 +537,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-426 | När ett vrak sprängs dyker ett nytt vrak upp på annat håll. | ersatt av: R-1097 | HANDOFF beslut 2026-11-14 | – |
 | R-427 | En nedskjuten Gunboat blir ett vrak som går att borda. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-428 | Inne på ett ställe finns tre lägen: lugnt (handelsgolv), lockdown (stället räknar besättningen som fiende) och larm (upptäckt). | byggd | HANDOFF beslut 2026-11-14 | saknas |
-| R-429 | Lockdown är mörkt med roterande röda ljus och stängda dörrar, och man smyger. | byggd | HANDOFF beslut 2026-11-14 | saknas |
+| R-429 | Lockdown är mörkt med roterande röda ljus och stängda dörrar, och man smyger. | ersatt av: R-1149 | HANDOFF beslut 2026-11-14 | saknas |
 | R-430 | Ett larm ligger kvar tills man gått, och man kan inte gömma sig och vänta ut det. | byggd | HANDOFF beslut 2026-11-14; station-boarding.md §1 | saknas |
 | R-431 | Smygande med larm, kameror och lockdown gäller inte i vrak, där räknar reaktorn ner i stället. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-432 | Sövda vakter vaknar efter en stund. | byggd | HANDOFF beslut 2026-11-14 | saknas |
@@ -542,7 +562,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-451 | Vakter ser åt ett håll, ser spelare i ljus på långt håll och i mörker bara på nära håll. | byggd | HANDOFF beslut 2026-11-15; station-boarding.md §2; BACKLOG F-161 | saknas |
 | R-452 | Den som blir sedd i ett vrak får vakten på sig, men larmet går inte. | byggd | HANDOFF beslut 2026-11-15 | saknas |
 | R-453 | En vakt som ser ljus utan att se någon går dit och tittar, så en flare kan användas som lockbete. | byggd | HANDOFF beslut 2026-11-15; BACKLOG F-161 | saknas |
-| R-454 | Rött ljus betyder alltid att stället räknar besättningen som fiende: roterande i lockdown och blinkande vid larm. | byggd | HANDOFF beslut 2026-11-15; station-boarding.md §2 | saknas |
+| R-454 | Rött ljus betyder alltid att stället räknar besättningen som fiende: roterande i lockdown och blinkande vid larm. | ersatt av: R-1150 | HANDOFF beslut 2026-11-15; station-boarding.md §2 | saknas |
 | R-455 | Vrakens nödlampor är kallt vita. | byggd | HANDOFF beslut 2026-11-15 | saknas |
 | R-456 | Vakter och turrets har ett rött öga. | byggd | HANDOFF beslut 2026-11-15 | saknas |
 | R-457 | Vrak är mörka, och man letar sig fram med ficklampa och flares. | byggd | HANDOFF beslut 2026-11-15 | saknas |
@@ -690,6 +710,9 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-599 | Gevär, lampa och teleporter kostar aldrig något. | förslag | proposal-items.md sammanfattning och 3 | – |
 | R-600 | Captain ger överblick vid bordning genom att se vakter och kameror en bit genom väggar, och hela gruppen får se det. | ersatt av: ett senare beslut, se källan | HANDOFF beslut 2026-11-14 (ersatt samma dag av Captains bärbara radar, F-140) | – |
 | R-601 | Lägger skeppet ut medan någon är kvar inne teleporteras alla hem (D-043). | ersatt av: ett senare beslut, se källan | proposal-bases.md §1 (ersatt av att ingen flyttas tillbaka av sig själv, §4) | – |
+| R-1149 | Lockdown har ett stilla rött filter över ljuset och stilla röda dörrlampor, med stängda dörrar och utan roterande ljus. På en egen bas är det gult i stället för rött. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1150 | Rött ljus betyder alltid att stället räknar besättningen som fiende: stilla i lockdown, roterande och blinkande vid larm. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1151 | Fönstren utanpå lyser stilla rött i lockdown och pulserar långsamt rött vid larm. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
 
 ## Lås och inbrott
 

@@ -1,0 +1,697 @@
+
+// ================================================================== walls
+//@@ 660-665
+// 0 none, 1 inner wall, 2 hull, 4 glass
+function edgeType(a, b) {
+  if (a === b) return 0;
+  if (a < 0 && b < 0) return 0;
+  if (a < 0 || b < 0) { const r = D.rooms[a < 0 ? b : a]; return r.glass ? 4 : 2; }
+  const A2 = D.rooms[a], B2 = D.rooms[b];
+  if (A2.open || B2.open) return 0;
+  // halls of the same zone run into each other without a wall
+  const flow = (k) => k === 'corridor' || k === 'service';
+  if (flow(A2.kind) && flow(B2.kind) && A2.staff === B2.staff) return 0;
+  return 1;
+}
+//@@ 675-727
+// After a floor is planned: a plain door between visitors and staff becomes a STAFF door.
+function finalizeDeck() {
+  for (const d of D.doors) {
+    const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]];
+    const rs = g.map(([x, y]) => at(x, y)).filter((v) => v >= 0).map((v) => D.rooms[v]);
+    if (d.kind === 'slide' && rs.length === 2 && rs[0].staff !== rs[1].staff) d.kind = 'staff';
+    d.base = d.kind;
+  }
+}
+
+// ================================================================== light
+//@@ 1236-1296
+const LS = 0.5;
+const STYLE = [
+  { amb: { normal: [66, 60, 56], lockdown: [58, 24, 24], alarm: [40, 34, 36], power: [16, 14, 16] }, room: { corridor: [L.sodium, 0.55, 6], dock: [L.white, 0.6, 4], hold: [L.sodium, 0.45, 7], post: [L.amber, 0.7, 5], power: [L.warm, 0.3, 7], refinery: [L.sodium, 0.7, 6], breaker: [L.amber, 0.45, 5], fuel: [L.amber, 0.6, 5], drones: [L.white, 0.55, 5], barracks: [L.warm, 0.6, 5], workshop: [L.warm, 0.7, 5], store: [L.warm, 0.5, 5], tanks: [L.teal, 0.45, 6], lockers: [L.warm, 0.55, 5], gun: [L.amber, 0.5, 4], airlock: [L.white, 0.6, 4], lift: [L.white, 0.7, 4], stairs: [L.white, 0.5, 4], ladder: [L.amber, 0.5, 3] } },
+  { amb: { normal: [150, 148, 142], lockdown: [92, 36, 38], alarm: [70, 62, 64], power: [20, 19, 24] }, room: { concourse: [L.warm, 0.85, 6], corridor: [L.white, 0.85, 5], service: [L.white, 0.45, 6], security: [L.cold, 0.75, 5], bar: [L.warm, 0.7, 5], services: [L.white, 0.85, 5], armory: [L.white, 0.75, 5], market: [L.warm, 0.8, 5], med: [L.cold, 0.95, 5], cabin: [L.warm, 0.7, 5], garden: [L.plant, 0.55, 5], wc: [L.cold, 0.8, 4], lounge: [L.warm, 0.8, 5], view: [L.cyan, 0.45, 6], yard: [L.sodium, 0.65, 6], lockers: [L.white, 0.6, 5], chief: [L.warm, 0.7, 5], messd: [L.warm, 0.7, 5], store: [L.warm, 0.55, 5], kitchen: [L.white, 0.9, 5], laundry: [L.white, 0.7, 5], workshop: [L.white, 0.7, 5], gangway: [L.cold, 0.5, 4], gantry: [L.cold, 0.5, 4], ringport: [L.white, 0.6, 4], collar: [L.white, 0.6, 3], airlock: [L.white, 0.7, 4], lift: [L.white, 0.8, 4], stairs: [L.white, 0.6, 4], ladder: [L.amber, 0.5, 3] } },
+  { amb: { normal: [62, 68, 86], lockdown: [58, 24, 32], alarm: [46, 42, 52], power: [15, 16, 22] }, room: { command: [L.cyan, 0.4, 7], security: [L.cold, 0.7, 5], server: [L.teal, 0.55, 5], comms: [L.cyan, 0.55, 5], sensors: [L.cyan, 0.5, 5], arms: [L.cold, 0.6, 5], barracks: [L.cold, 0.55, 5], chief: [L.warm, 0.6, 5], tanks: [L.teal, 0.5, 5], store: [L.cold, 0.5, 5], control: [L.cyan, 0.6, 5], gun: [L.amber, 0.4, 4], lift: [L.white, 0.7, 4], stairs: [L.white, 0.6, 4], ladder: [L.amber, 0.5, 3] } },
+];
+function roomLights(r) {
+  if (MODE === 'power') return;
+  const spec = STYLE[D.i].room[r.kind]; if (!spec) return;
+  const [col, i, step] = spec;
+  const spots = [];
+  for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) {
+    if (at(x, y) !== r.id || x % step !== Math.floor(step / 2) || y % step !== Math.floor(step / 2)) continue;
+    const px = x * T + 8, py = y * T + 8;
+    if (D.solids.some((t) => t.high && px > t.x && px < t.x + t.w && py > t.y && py < t.y + t.h)) continue;
+    spots.push([px, py]);
+  }
+  if (!spots.length && r.n) spots.push([r.cx * T + 8, r.cy * T + 8]);
+  const k = MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? (D.i === 1 && !r.staff ? 0.5 : 0.7) : 1;
+  for (const [px, py] of spots) lights.push({ x: px, y: py, r: 30 + step * 14, col: MODE === 'lockdown' ? tintLock(col) : col, i: i * k, kind: 'static' });
+}
+function buildStaticLight(near) {
+  buildOccluders();
+  for (const l of D.lights) if (!near || Math.hypot(l.x - near.x, l.y - near.y) < l.r + 40) l.poly = null;
+  const [c, g] = mk(WW * LS, WH * LS);
+  g.imageSmoothingEnabled = true;
+  g.fillStyle = rgb(STYLE[D.i].amb[MODE]); g.fillRect(0, 0, c.width, c.height);
+  g.save(); g.scale(LS, LS); g.globalCompositeOperation = 'lighter';
+  for (const l of D.lights) if (l.kind === 'static') drawLight(g, l, l.i);
+  g.restore();
+  const [tmp, tg] = mk(c.width, c.height);
+  tg.filter = 'blur(1px)'; tg.drawImage(c, 0, 0); g.drawImage(tmp, 0, 0);
+  D.stat = c;
+}
+
+// ================================================================== what is seen below and beside a floor
+const IMG = {};
+// A tile of a roof seen from the floor above: the basement's is dirty, the middle's clean.
+function roofTile(deck, x, y, far) {
+  const X = x * T, Y = y * T, k = far ? 0.7 : 1;
+  if (deck === 0) {
+    box(A, X, Y, T, T, shade('#3a3632', k)); box(A, X, Y, T, 1, shade('#2c2925', k)); box(A, X, Y, 1, T, shade('#2c2925', k));
+    for (let q = 0; q < 6; q++) box(A, X + hash(x, y, q) * 15, Y + hash(y, x, q) * 15, 2, 1, shade(['#433d36', '#2a2622', '#4a3a2a'][q % 3], k));
+    if ((x * 7 + y * 3) % 23 === 0) { box(A, X + 4, Y + 4, 8, 8, shade('#2a2724', k)); box(E, X + 7, Y + 7, 2, 2, '#ff9a40'); }
+    if (x % 4 === 0) box(A, X + 6, Y, 3, T, shade('#4a3b33', k));
+  } else {
+    box(A, X, Y, T, T, shade('#8e9299', k)); box(A, X, Y, T, 1, shade('#7a7e86', k)); box(A, X, Y, 1, T, shade('#7a7e86', k)); box(A, X + 1, Y + 1, T - 2, 1, shade('#a2a6ad', k));
+    if ((x + y) % 5 === 0) box(A, X + 6, Y + 6, 3, 3, shade('#6a6e76', k));
+  }
+}
+// The docking ring, drawn smooth: a band with panel joints, a row of lamps along the middle.
+function drawRing() {
+  const cx = C * T, cy = C * T, r0 = RING0 * T, r1 = RING1 * T;
+  A.save();
+  // a band between two whole circles (each its own sub-path, so no wedge is left out)
+  const band = (ra, rb, col) => { A.beginPath(); A.arc(cx, cy, ra, 0, 2 * Math.PI); A.closePath(); A.moveTo(cx + rb, cy); A.arc(cx, cy, rb, 0, 2 * Math.PI); A.closePath(); A.fillStyle = col; A.fill('evenodd'); };
+  band(r1 + 3, r0 - 1, 'rgba(0,0,0,0.45)'); band(r1, r0, '#5e6574');
+  A.lineWidth = 3; A.strokeStyle = '#7a8292'; A.beginPath(); A.arc(cx, cy, r1 - 2, 0, 7); A.stroke();
+  A.strokeStyle = '#464c58'; A.beginPath(); A.arc(cx, cy, r0 + 2, 0, 7); A.stroke();
+  A.lineWidth = 1; A.strokeStyle = '#6a7282'; A.beginPath(); A.arc(cx, cy, (r0 + r1) / 2 - 6, 0, 7); A.stroke(); A.beginPath(); A.arc(cx, cy, (r0 + r1) / 2 + 6, 0, 7); A.stroke();
+  A.strokeStyle = '#3e434e'; A.lineWidth = 2;
+  for (let k = 0; k < 96; k++) { const a = (k / 96) * 6.2832; A.beginPath(); A.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); A.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); A.stroke(); }
+  // the four ports for ships, on the diagonals
+  for (const a of PORT_ANGLES) {
+    A.save(); A.translate(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); A.rotate(a);
+    A.fillStyle = 'rgba(0,0,0,0.45)'; A.fillRect(4, -22 + 4, 26, 44);
+    A.fillStyle = '#5e6574'; A.fillRect(-4, -22, 30, 44); A.fillStyle = '#8a92a2'; A.fillRect(-4, -22, 30, 3); A.fillStyle = '#3e434e'; A.fillRect(22, -22, 4, 44);
+    hazard(2, -18, 3, 36, 0.8);
+    A.restore();
+    for (const sgn of [-1, 1]) box(E, cx + Math.cos(a) * (r1 + 24) - Math.sin(a) * sgn * 18 - 1, cy + Math.sin(a) * (r1 + 24) + Math.cos(a) * sgn * 18 - 1, 3, 3, attHex());
+  }
+  A.restore();
+  for (let k = 0; k < 96; k++) { const a = ((k + 0.5) / 96) * 6.2832, rm = (r0 + r1) / 2, x = cx + Math.cos(a) * rm, y = cy + Math.sin(a) * rm; box(A, x - 3, y - 3, 6, 6, '#3a3e48'); box(E, x - 2, y - 2, 4, 4, OPT.own ? OWN_LAMP_HEX : attHex()); }
+}
+function ringTile(x, y) {
+  const X = x * T, Y = y * T, a = Math.atan2(y + 0.5 - C, x + 0.5 - C), d = ringD(x + 0.5, y + 0.5);
+  box(A, X, Y, T, T, d < RING0 + 0.8 ? '#4a505c' : d > RING1 - 0.8 ? '#7a8292' : '#5e6574');
+  if (Math.abs(((a * 24) / Math.PI) % 1) < 0.08) box(A, X, Y, T, T, '#3e434e');
+  if (Math.abs(d - (RING0 + RING1) / 2) < 0.5 && (x + y) % 3 === 0) box(E, X + 7, Y + 7, 2, 2, OPT.own ? CREW_HEX : attHex());
+}
+// The ships beside the base, drawn at twice their size in space, which is about the size of the inside.
+function shipInside(img, cx, cy, dx, dy) {
+  if (!img || !img.width) return;
+  A.save(); A.imageSmoothingEnabled = false; A.translate(cx, cy); A.rotate(Math.atan2(-dy, -dx) + Math.PI / 2); A.scale(2, 2);
+  A.fillStyle = 'rgba(0,0,0,0.35)'; A.fillRect(-img.width / 2 + 6, -img.height / 2 + 6, img.width - 4, img.height - 4);
+  A.drawImage(img, -img.width / 2, -img.height / 2); A.restore();
+}
+function drawBeside() {
+  const below = D.i > 0 ? decks[D.i - 1] : null, deep = D.i > 1 ? decks[0] : null;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (at(x, y) !== OUT) continue;
+    // under the ring's inner edge the roof goes on, so no gaps show between the roof's tiles and the round ring;
+    // with the closed disc the basement reaches all the way out to the ring
+    const dr = ringD(x + 0.5, y + 0.5), ring = dr >= RING0 + 0.75 && dr < RING1, rim = OPT.shell === 'disc' && dr >= RB - 1.5 && dr < RING0 + 0.75;
+    if (D.i === 1 && rim && below.grid[y * W + x] === OUT) roofTile(0, x, y, false);
+    else if (D.i === 2 && rim && deep.grid[y * W + x] === OUT && below.grid[y * W + x] === OUT) roofTile(0, x, y, true);
+    else if (D.i >= 1 && below.grid[y * W + x] !== OUT && !ring) roofTile(D.i - 1, x, y, false);
+    else if (deep && deep.grid[y * W + x] !== OUT && !ring) roofTile(0, x, y, true);
+  }
+  // seen from the top, the middle floor's roof is round too
+  if (D.i === 2) {
+    const Rw = RMID + 0.72;
+    A.save(); A.beginPath(); A.arc(C * T, C * T, Rw * T, 0, 2 * Math.PI); A.clip();
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (at(x, y) === OUT && below.grid[y * W + x] === OUT && ringD(x + 0.5, y + 0.5) < Rw + 0.71) roofTile(1, x, y, false);
+    A.restore();
+    A.strokeStyle = 'rgba(0,0,0,0.35)'; A.lineWidth = 3; A.beginPath(); A.arc(C * T + 2, C * T + 2, Rw * T, 0, 2 * Math.PI); A.stroke();
+  }
+  if (D.i >= 1) drawRing();
+  // the bridge from the airlock to the ring, the spokes, and the ships: at the entry port or in the yard, freighters at two arms
+  if (D.i === 1) {
+    for (const g of outerLinks()) tubeInside(g);
+    if (OPT.yard) {
+      const [dx, dy] = rd(1, 0), q = [-dy, dx];
+      const s0 = (RING1 + 1.2) * T, len = 12 * T;
+      const px = (u, v) => [C * T + dx * u + q[0] * v, C * T + dy * u + q[1] * v];
+      A.save(); A.translate(...px(s0, 0)); A.rotate(Math.atan2(dy, dx));
+      for (const side of [-1, 1]) { block(0, side * 88 - 6, len + 10, 12, '#5a5650'); hazard(2, side * 88 - 1, len + 6, 2, 0.8); }
+      for (let u = 8; u < len; u += 40) { box(A, u, -82, 3, 164, 'rgba(90,86,80,0.6)'); }
+      A.restore();
+      shipInside(IMG.frigate, ...px(s0 + 108, 0), -dx, -dy);
+    } else {
+      const a = entryAngle(), dx = Math.cos(a), dy = Math.sin(a);
+      shipInside(IMG.frigate, C * T + dx * ((RING1 + 1.6) * T + 108), C * T + dy * ((RING1 + 1.6) * T + 108), -dx, -dy);
+    }
+  }
+  if (D.i === 0 && D.docks) {
+    for (const s of D.docks.slice(0, 2)) {
+      const [x0, y0, x1, y1] = own(s.lr), [dx, dy] = rd(...{ n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] }[s.side]);
+      const tipX = ((x0 + x1 + 1) / 2) * T + dx * ((x1 - x0 + 1) / 2) * T, tipY = ((y0 + y1 + 1) / 2) * T + dy * ((y1 - y0 + 1) / 2) * T;
+      shipInside(IMG.freighter, tipX + dx * 140, tipY + dy * 140, -dx, -dy);
+    }
+  }
+}
+// The airlock's outer door: a hatch across its outer corner, where the bridge comes in, with its two buttons.
+function drawEntryHatch() {
+  const a = entryAngle(), ca = Math.cos(a), sa = Math.sin(a), rh = (RMID + 0.72) * T + 4;
+  const cx = C * T + ca * rh, cy = C * T + sa * rh;
+  A.save(); A.translate(cx, cy); A.rotate(a + Math.PI / 2);
+  A.fillStyle = '#2a2c32'; A.fillRect(-26, -5, 52, 10);
+  A.fillStyle = '#6a6e78'; A.fillRect(-24, -3, 48, 6);
+  A.fillStyle = '#8a7234'; for (let k = -22; k < 22; k += 6) A.fillRect(k, -3, 3, 6);
+  A.fillStyle = '#4a4e58'; A.fillRect(-32, -3, 5, 5); A.fillRect(27, -3, 5, 5);
+  A.restore();
+  E.save(); E.translate(cx, cy); E.rotate(a + Math.PI / 2); E.fillStyle = '#62e08a'; E.fillRect(-31, -2, 2, 2); E.fillRect(28, -2, 2, 2); E.restore();
+}
+// The angle of the port the bridge goes to, after turning.
+const entryAngle = () => { const [x, y] = rpf(C - 1, C - 1); return Math.atan2(y - C, x - C); };
+// What joins the middle floor to the ring outside the tiles: the bridge from the airlock (always), and on a base with
+// spokes, three closed spokes on the other diagonals. Points in tiles: from, to, width.
+function outerLinks() {
+  const out = [];
+  const from = rpf(...ENTRY.corner);
+  const a = entryAngle();
+  out.push({ from, to: [C + Math.cos(a) * (RING0 + 0.2), C + Math.sin(a) * (RING0 + 0.2)], w: 2.6, kind: 'bridge' });
+  if (OPT.shell === 'spokes') for (const k of [1, 2, 3]) { const b = a + (k * Math.PI) / 2; out.push({ from: [C + Math.cos(b) * (RMID - 1.5), C + Math.sin(b) * (RMID - 1.5)], to: [C + Math.cos(b) * (RING0 + 0.2), C + Math.sin(b) * (RING0 + 0.2)], w: 3.2, kind: 'spoke' }); }
+  return out;
+}
+// A tube drawn on the middle floor's picture, outside the walkable tiles: glass along the bridge, plates on a spoke.
+function tubeInside(g) {
+  const x0 = g.from[0] * T, y0 = g.from[1] * T, x1 = g.to[0] * T, y1 = g.to[1] * T, len = Math.hypot(x1 - x0, y1 - y0), w = g.w * T;
+  A.save(); A.translate(x0, y0); A.rotate(Math.atan2(y1 - y0, x1 - x0));
+  A.fillStyle = 'rgba(0,0,0,0.45)'; A.fillRect(6, -w / 2 + 6, len, w);
+  A.fillStyle = '#5a606e'; A.fillRect(0, -w / 2, len, w);
+  A.fillStyle = '#7a8292'; A.fillRect(0, -w / 2, len, 3); A.fillStyle = '#3e434e'; A.fillRect(0, w / 2 - 3, len, 3);
+  if (g.kind === 'bridge') { A.fillStyle = '#24323e'; A.fillRect(0, -w / 2 + 7, len, w - 14); for (let u = 6; u < len; u += 20) { A.fillStyle = '#6a7282'; A.fillRect(u, -w / 2 + 7, 2, w - 14); } }
+  else for (let u = 10; u < len; u += 18) { A.fillStyle = '#4a505c'; A.fillRect(u, -w / 2 + 4, 2, w - 8); }
+  A.restore();
+  E.save(); E.translate(x0, y0); E.rotate(Math.atan2(y1 - y0, x1 - x0));
+  for (let u = 10; u < len; u += 20) { E.fillStyle = g.kind === 'bridge' ? 'rgba(150,200,255,0.8)' : 'rgba(255,220,170,0.6)'; E.fillRect(u, -1, 2, 2); }
+  E.restore();
+}
+
+// ================================================================== smooth outer walls (only how they look)
+// The floors' outer walls follow the round footprint smoothly, like the ring. The tiles stay as they are for walking
+// and for collisions; only the picture changes: the tiles cut by the circle get the floor of the room beside them,
+// clipped to the circle, the inner walls run on to it, and the hull is a smooth band on the circle.
+const HULL_NO = ['dock', 'gangway', 'gantry', 'ringport', 'collar'];
+function smoothHull() {
+  const Rf = [RB, RMID, RTOP][D.i], Rw = Rf + 0.72, foot = FOOT[D.i];
+  const virt = D.grid.slice(), gap = new Uint8Array(W * H);
+  const dC = (x, y) => Math.hypot(x + 0.5 - C, y + 0.5 - C);
+  for (let pass = 0; pass < 2; pass++) {
+    const next = virt.slice();
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+      if (virt[y * W + x] !== OUT || foot(x, y) || dC(x, y) > Rw + 0.71) continue;
+      let best = -1, bd = 1e9;
+      for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+        const v = virt[ny * W + nx];
+        if (v < 0 || HULL_NO.includes(D.rooms[v].kind)) continue;
+        if (D.grid[ny * W + nx] >= 0 && !foot(nx, ny)) continue; // rooms outside the footprint (the arms) keep their own walls
+        const dd = dC(nx, ny); if (dd < bd) { bd = dd; best = v; }
+      }
+      if (best >= 0) { next[y * W + x] = best; gap[y * W + x] = 1; }
+    }
+    virt.set(next);
+  }
+  // walls as they would be with the cut tiles filled in
+  const keep = { grid: D.grid, mask: D.mask, wallRects: D.wallRects, wallSegs: D.wallSegs };
+  D.grid = virt; D.mask = new Uint8Array(WW * WH); D.wallRects = []; D.wallSegs = [];
+  buildWalls();
+  const M = D.mask, visSegs = D.wallSegs;
+  Object.assign(D, keep);
+  // where the circle is: no stepped hull beyond it, a smooth band on it
+  const zone = new Uint8Array(W * H);
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    if (D.grid[y * W + x] >= 0) continue;
+    if (gap[y * W + x]) { zone[y * W + x] = 1; continue; }
+    let near = false, other = false;
+    for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1], [x + 1, y + 1], [x - 1, y - 1], [x - 1, y + 1], [x + 1, y - 1]]) { if (gap[ny * W + nx] || (D.grid[ny * W + nx] >= 0 && foot(nx, ny))) near = true; if (D.grid[ny * W + nx] >= 0 && !foot(nx, ny)) other = true; }
+    if (near && !other) zone[y * W + x] = 1;
+  }
+  const r0 = Rw * T, cx = C * T, cy = C * T, band = 8;
+  const armNear = (x, y) => { for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) { const v = at(x + k, y + j); if (v >= 0 && !foot(x + k, y + j)) return true; } return false; };
+  for (let py = Math.max(0, Math.floor(cy - r0 - 40)); py < Math.min(WH, cy + r0 + 40); py++) for (let px = Math.max(0, Math.floor(cx - r0 - 40)); px < Math.min(WW, cx + r0 + 40); px++) {
+    const r = Math.hypot(px + 0.5 - cx, py + 0.5 - cy), tx = Math.floor(px / T), ty = Math.floor(py / T), i = py * WW + px;
+    if (r < r0 - 0.5) continue;
+    const z = zone[ty * W + tx];
+    if (r >= r0 && r < r0 + band) {
+      if (D.grid[ty * W + tx] >= 0) continue; // a room goes on outside: an opening in the hull
+      if (!z && !M[i]) continue;
+      const a = Math.atan2(py - cy, px - cx), ix = Math.floor(C + Math.cos(a) * (Rw - 0.5)), iy = Math.floor(C + Math.sin(a) * (Rw - 0.5)), v = virt[iy * W + ix];
+      M[i] = v >= 0 && D.rooms[v].glass ? 4 : 2;
+    } else if (z || (r >= r0 + band && r < r0 + 2.5 * T && !armNear(tx, ty))) M[i] = 0;
+  }
+  // light and sight stop at the walls as they are drawn
+  D.virt = virt; D.gap = gap; D.hullMask = M; D.hullR = Rw; D.visSegs = visSegs;
+}
+
+// ================================================================== building a floor's pictures
+let alb, emi;
+function buildDeck(cheap = false) {
+  solids = []; lights = []; emitters = []; cams = []; turrets = []; zones = []; barrels = []; pylons = [];
+  D.solids = solids;
+  // doors that the defence level alarms
+  for (const d of D.doors) {
+    d.kind = d.base;
+    if (d.base !== 'slide' && d.base !== 'staff') continue;
+    const ks = sidesOf(d).map((r) => r.kind);
+    if ((OPT.def >= 2 && ks.some((k) => ['breaker', 'command'].includes(k))) || (OPT.def >= 3 && ks.some((k) => ['server', 'arms', 'comms'].includes(k)))) d.kind = 'alarm';
+  }
+  for (const d of D.doors) { const g = doorGeom(d); zones.push(d.o === 'v' ? { x: g.x - 26, y: g.y - 4, w: 52, h: g.len + 8 } : { x: g.x - 4, y: g.y - 26, w: g.len + 8, h: 52 }); }
+  for (const l of LINKS) if (l.decks.includes(D.i)) { const [x0, y0, x1, y1] = l.r; zones.push({ x: x0 * T - 4, y: y0 * T - 4, w: (x1 - x0 + 1) * T + 8, h: (y1 - y0 + 1) * T + 8 }); }
+  let ag, eg;
+  [alb, ag] = mk(WW, WH); [emi, eg] = mk(WW, WH);
+  A = ag; E = eg;
+  box(A, 0, 0, WW, WH, '#06070b');
+  // stars only where there is nothing between this floor and space
+  const space = (x, y) => { const tx = Math.floor(x / T), ty = Math.floor(y / T); if (at(tx, ty) !== OUT) return false; const dr = ringD(tx + 0.5, ty + 0.5); if (D.i > 0 && dr >= RING0 - 0.5 && dr < RING1 + 0.5) return false; for (let k = 0; k < D.i; k++) if (decks[k].grid[ty * W + tx] !== OUT) return false; return true; };
+  for (let k = 0; k < 1600; k++) { const x = (hash(k, 7) * WW) | 0, y = (hash(k, 8) * WH) | 0; if (!space(x, y)) continue; const b = hash(k, 9); box(E, x, y, 1, 1, b > 0.9 ? '#9aa4c0' : b > 0.6 ? '#3a4058' : '#22263a'); }
+  if (!cheap) drawBeside();
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const v = at(x, y); if (v >= 0) floorTile(D.rooms[v], x, y); }
+  // the tiles cut by the round outer wall: the floor of the room beside them, up to the wall
+  if (!cheap) {
+    smoothHull();
+    A.save(); A.beginPath(); A.arc(C * T, C * T, D.hullR * T + 1, 0, 2 * Math.PI); A.clip();
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (D.gap[y * W + x]) floorTile(D.rooms[D.virt[y * W + x]], x, y);
+    A.restore();
+  }
+  // painted names at the doors, and STAFF on the visitors' side
+  const painted = [];
+  for (const d of D.doors) {
+    if (d.kind === 'hatch' || d.kind === 'arch') continue;
+    const g = doorGeom(d);
+    const sides = d.o === 'v' ? [[d.x - 1, d.y, -1], [d.x, d.y, 1]] : [[d.x, d.y - 1, -1], [d.x, d.y, 1]];
+    for (const [tx, ty, s] of sides) {
+      const here = at(tx, ty), otherT = d.o === 'v' ? [s < 0 ? d.x : d.x - 1, d.y] : [d.x, s < 0 ? d.y : d.y - 1];
+      const other = D.rooms[at(...otherT)];
+      if (here < 0 || !other) continue;
+      const hr = D.rooms[here];
+      const staffSign = d.base === 'staff' && !hr.staff;
+      const c = staffSign ? '#c8b040' : other.tint;
+      if (d.o === 'v') box(A, s < 0 ? g.x - 6 : g.x + 4, g.y + 3, 2, g.len - 6, shade(c, 0.6)); else box(A, g.x + 3, s < 0 ? g.y - 6 : g.y + 4, g.len - 6, 2, shade(c, 0.6));
+      if (staffSign) { if (d.o === 'v') hazard(s < 0 ? g.x - 10 : g.x + 7, g.y + 3, 3, g.len - 6, 0.9); else hazard(g.x + 3, s < 0 ? g.y - 10 : g.y + 7, g.len - 6, 3, 0.9); }
+      if (!['corridor', 'service', 'concourse', 'hold'].includes(hr.kind) || (!other.label && !staffSign)) continue;
+      const text = staffSign ? 'STAFF' : other.name, off = 16;
+      const px = d.o === 'v' ? g.x + (s < 0 ? -off - text.length * 2 : off + text.length * 2) : g.cx;
+      const py = d.o === 'v' ? g.cy : g.y + (s < 0 ? -off : off);
+      const rect = { x: px - text.length * 2 - 4, y: py - 5, w: text.length * 4 + 8, h: 10 };
+      if (painted.some((q) => overlaps(q, rect))) continue;
+      painted.push(rect);
+      paint(A, text, px, py, staffSign ? '#c8b040' : shade(c, D.i === 1 ? 0.55 : 0.85));
+    }
+    if (['pressure', 'lockA', 'lockB'].includes(d.kind)) { if (d.o === 'v') { hazard(g.x - 12, g.y + 2, 4, g.len - 4, 0.7); hazard(g.x + 8, g.y + 2, 4, g.len - 4, 0.7); } else { hazard(g.x + 2, g.y - 12, g.len - 4, 4, 0.7); hazard(g.x + 2, g.y + 8, g.len - 4, 4, 0.7); } }
+  }
+  // furnishing: each room with its own luck, so a change in one room moves nothing in the others
+  reservePaths();
+  R = seeded(SEED * 977 + D.i * 131); furnishGuns();
+  for (const r of D.rooms) if (r.n) { R = seeded(SEED * 977 + D.i * 131 + r.id * 7 + 1); furnish(r); }
+  for (const r of D.rooms) if (r.n) roomLights(r);
+  R = seeded(SEED * 31 + D.i);
+  SPECIAL();
+  // rotating lights only at an alarm: red where the base is an enemy, amber on the crew's own base
+  if (MODE === 'alarm') for (const r of D.rooms) {
+    if (!['corridor', 'concourse', 'hold', 'security', 'command', 'service'].includes(r.kind)) continue;
+    for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) {
+      if (at(x, y) !== r.id || (x * 7 + y * 13) % 157 !== 0) continue;
+      lights.push({ x: x * T + 8, y: y * T + 8, r: 160, col: OPT.own ? [255, 170, 60] : L.red, i: 0.7, kind: 'beacon', phase: hash(x, y) * 6 });
+    }
+  }
+  // the emergency lamps when the power is out: orange, low, at every door and along the halls
+  if (MODE === 'power') {
+    for (const d of D.doors) { if (d.kind === 'arch') continue; const g = doorGeom(d); lights.push({ x: g.cx, y: g.cy, r: 46, col: [255, 120, 50], i: 0.55, kind: 'static' }); }
+    for (const r of D.rooms) if (['corridor', 'service', 'concourse', 'hold'].includes(r.kind)) for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (at(x, y) === r.id && (x * 5 + y * 11) % 41 === 0) { lights.push({ x: x * T + 8, y: y * T + 8, r: 60, col: [255, 110, 50], i: 0.4, kind: 'static' }); box(E, x * T + 7, y * T + 7, 2, 2, '#ff7a30'); }
+  }
+  if (!cheap) { const keepMask = D.mask; D.mask = D.hullMask; drawWalls(); D.mask = keepMask; if (D.i === 1) drawEntryHatch(); }
+  Object.assign(D, { alb, emi, solids, lights, emitters, cams, turrets, barrels });
+  bucket();
+  computeWalk();
+}
+const sidesOf = (d) => { const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]]; return g.map(([x, y]) => at(x, y)).filter((v) => v >= 0).map((v) => D.rooms[v]); };
+// Cameras and turrets, by the defence bought.
+function SPECIAL() {
+  const def = OPT.def;
+  const camN = [1, 2, 3, 4][def];
+  const halls = D.rooms.filter((r) => ['corridor', 'concourse', 'hold', 'security', 'command', 'post', 'service'].includes(r.kind) && r.n > 12);
+  shuffle(halls);
+  for (const r of halls.slice(0, camN)) {
+    for (let k = 0; k < 60; k++) {
+      const tx = r.x0 + Math.floor(R() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R() * (r.y1 - r.y0 + 1));
+      if (at(tx, ty) !== r.id) continue;
+      // on a real wall: not in a doorway, not on an opening into the next hall, not behind a tall cabinet
+      const out = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dx, dy]) => at(tx + dx, ty + dy) !== r.id && edgeType(r.id, at(tx + dx, ty + dy)) > 0 && !doorAt(dx ? 'v' : 'h', dx > 0 ? tx + 1 : tx, dy > 0 ? ty + 1 : ty));
+      if (!out) continue;
+      const cxp = tx * T + 8 + out[0] * 6, cyp = ty * T + 8 + out[1] * 6;
+      if (D.solids.some((s2) => s2.high && cxp > s2.x - 4 && cxp < s2.x + s2.w + 4 && cyp > s2.y - 4 && cyp < s2.y + s2.h + 4)) continue;
+      cams.push({ x: tx * T + 8 + out[0] * 6, y: ty * T + 8 + out[1] * 6, a: Math.atan2(-out[1], -out[0]), sweep: 0.6, r: 150 });
+      break;
+    }
+  }
+  // a turret behind a checkpoint, aimed at the door one comes in by
+  const guard = (roomKind, doorTest) => {
+    const r = D.rooms.find((q) => q.kind === roomKind && q.n); if (!r) return;
+    const d = D.doors.find((q) => sidesOf(q).includes(r) && doorTest(q));
+    if (!d) return;
+    const g = doorGeom(d), fx = r.cx * T + 8, fy = r.cy * T + 8;
+    turrets.push({ x: fx + (fx - g.cx) * 0.25, y: fy + (fy - g.cy) * 0.25, a: Math.atan2(g.cy - fy, g.cx - fx), w: 0.3, r: 200 });
+  };
+  if (def >= 2) {
+    if (D.i === 1) guard('security', (d) => sidesOf(d).some((q) => q.kind === 'concourse'));
+    if (D.i === 2) guard('security', (d) => sidesOf(d).some((q) => q.kind === 'lift'));
+    if (D.i === 0) guard('post', (d) => sidesOf(d).some((q) => q.kind === 'lift' || q.kind === 'corridor'));
+  }
+  if (def >= 3 && D.i === 2) { const r = D.rooms.find((q) => q.kind === 'command'); for (const d of D.doors.filter((q) => sidesOf(q).includes(r)).slice(0, 2)) { const g = doorGeom(d), fx = r.cx * T + 8, fy = r.cy * T + 8; turrets.push({ x: g.cx + (fx - g.cx) * 0.35, y: g.cy + (fy - g.cy) * 0.35, a: Math.atan2(g.cy - fy, g.cx - fx), w: 0.3, r: 180 }); } }
+}
+//@@ 1438-1466
+
+// ================================================================== collision and finding the way
+//@@ 1468-1541
+
+// ================================================================== making a whole base, and checking it
+let SEED = 0;
+//@@ 1544-1589
+function startOf(i) {
+  if (i === 1) { const p = decks[1].rooms[decks[1].entryLock]; return [(p.cx + 0.5) * T, (p.cy + 0.5) * T]; }
+  const l = LINKS.find((q) => q.decks.includes(i) && q.way === 'loud');
+  return [((l.r[0] + l.r[2] + 1) / 2) * T, ((l.r[1] + l.r[3] + 1) / 2) * T];
+}
+function finalize() { for (const d of decks) { D = d; finalizeDeck(); } }
+function makeBase(seed) {
+  const keep = OPT.yard;
+  for (let attempt = 0; attempt < 40; attempt++) {
+    OPT.yard = !keep; let p = tryOnce(seed + attempt);
+    OPT.yard = keep; if (!p.length) p = tryOnce(seed + attempt);
+    window.__problems = p;
+    if (!p.length) return true;
+  }
+  return false;
+}
+// Everything must be reachable from where one comes onto the floor, and each floor must have its ways up.
+function check() {
+  const problems = [], keep = MODE;
+  decks.forEach((d, i) => {
+    D = d; MODE = 'lockdown';
+    buildDeck(true); d.built = {};
+    const seen = flood(nearestWalk(...startOf(i)));
+    for (const r of d.rooms) {
+      if (!r.n) continue;
+      let ok = false;
+      for (let y = r.y0; y <= r.y1 && !ok; y++) for (let x = r.x0; x <= r.x1 && !ok; x++) {
+        if (at(x, y) !== r.id) continue;
+        for (let jj = 0; jj < 2; jj++) for (let ii = 0; ii < 2; ii++) { const c = (y * 2 + jj) * CN + x * 2 + ii; if (D.walk[c] && seen[c]) ok = true; }
+      }
+      if (!ok) problems.push(`floor ${i + 1}: ${r.name} (${r.kind})`);
+    }
+    const ups = LINKS.filter((l) => l.decks[0] === i);
+    if (i < 2 && ups.length !== 3) problems.push(`floor ${i + 1}: ${ups.length} ways up`);
+  });
+  MODE = keep;
+  return problems;
+}
+const snapshot = () => ({ alb: D.alb, emi: D.emi, solids: D.solids, lights: D.lights, emitters: D.emitters, cams: D.cams, turrets: D.turrets, barrels: D.barrels, walk: D.walk, bk: D.bk, stat: D.stat });
+
+// ================================================================== figures
+//@@ 1631-1775
+Object.assign(KINDS, {
+  visitor: { name: 'Besökare', suit: '#6a5a7a', helm: '#4a3020', acc: '#9a8aaa', visor: '#d0a888', cap: true, gun: 'none', eyeless: true },
+  trader: { name: 'Handlare', suit: '#4a6a7a', helm: '#3a2a20', acc: '#7a9aaa', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  mechanic: { name: 'Mekaniker', suit: '#8a6a35', helm: '#2a2420', acc: '#5c4622', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  medic: { name: 'Läkare', suit: '#c8ccd0', helm: '#3a2a20', acc: '#c04a4a', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  barkeep: { name: 'Bartender', suit: '#7a3a3a', helm: '#2a1e1a', acc: '#c9a06a', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  officer: { name: 'Befäl', suit: '#3a4a6a', helm: '#2a2420', acc: '#6fb8ff', visor: '#c8a080', cap: true, gun: 'pistol', eyeless: true },
+});
+
+// ================================================================== the people
+const me = { kind: 'gunner', x: 0, y: 0, a: 0, walked: 0, moving: false, lamp: false, fire: 0, r: 5, deck: 1 };
+let npcs = [];
+function castFor(deck) {
+  const d = decks[deck], out = [], def = OPT.def, open = MODE === 'normal';
+  const R2 = seeded(SEED * 31 + deck * 7 + def);
+  const roomsOf = (kinds) => d.rooms.filter((r) => kinds.includes(r.kind) && r.n);
+  const spot = (r) => { if (!r) return null; for (let k = 0; k < 40; k++) { const tx = r.x0 + Math.floor(R2() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R2() * (r.y1 - r.y0 + 1)); if (d.grid[ty * W + tx] === r.id) { const px = tx * T + 8, py = ty * T + 8; const c = nearestWalk(px, py); if (c >= 0) return [(c % CN) * CW + 4, ((c / CN) | 0) * CW + 4]; } } return null; };
+  const civ = ['visitor', 'trader', 'mechanic', 'medic', 'barkeep', 'officer', 'crewman'];
+  const add = (kind, route, o = {}) => { route = route.filter(Boolean); if (!route.length) return;
+    // the crew's own base has no staff to sneak past (R-239)
+    if (OPT.own && ['watch', 'soldier', 'heavy', 'drone', 'officer'].includes(kind)) return; out.push({ kind, x: route[0][0], y: route[0][1], a: R2() * 6.28, route, at: 0, path: null, walked: 0, wait: R2() * 2, post: route.length === 1, guard: !civ.includes(kind), speed: kind === 'heavy' ? 18 : kind === 'drone' ? 30 : open ? 22 : 28, hover: kind === 'drone', r: 5, ...o }); };
+  D = d;
+  const one = (k) => roomsOf(k)[0];
+  if (deck === 1) {
+    const hall = one(['concourse']), prom = one(['corridor']), sec = one(['security']);
+    if (open) {
+      for (let k = 0; k < 6; k++) { const shops = roomsOf(['services', 'armory', 'market', 'bar', 'garden', 'lounge', 'med', 'view', 'yard']); add(k % 2 ? 'visitor' : 'trader', [spot(hall), spot(shops[k % Math.max(1, shops.length)]), spot(prom), spot(hall)]); }
+      for (const [kind, who] of [['services', 'mechanic'], ['armory', 'trader'], ['market', 'trader'], ['bar', 'barkeep'], ['med', 'medic'], ['yard', 'mechanic']]) for (const r of roomsOf([kind])) add(who, [spot(r)]);
+      for (const r of roomsOf(['bar'])) { add('visitor', [spot(r)]); add('crewman', [spot(r)]); }
+      for (let k = 0; k < def; k++) add('watch', [spot(hall), spot(prom), spot(prom)]);
+      if (sec) { add('watch', [spot(sec)]); if (def >= 2) add('soldier', [spot(sec)]); }
+      for (const r of roomsOf(['kitchen'])) add('barkeep', [spot(r), spot(r)]);
+    } else {
+      for (let k = 0; k < 1 + def; k++) add(k % 2 ? 'soldier' : 'watch', [spot(hall), spot(prom), spot(prom), spot(hall)]);
+      if (sec) { add('soldier', [spot(sec)]); if (def >= 2) add('heavy', [spot(sec)]); }
+      if (def >= 3) add('drone', [spot(hall), spot(prom), spot(hall)]);
+      for (const r of roomsOf(['service'])) if (def >= 1) add('watch', [spot(r), spot(r)]);
+    }
+  }
+  if (deck === 0) {
+    const hold = one(['hold']), post = one(['post']), cor = one(['corridor']);
+    for (let k = 0; k < (open ? 1 : 2) + def; k++) add(k % 3 === 2 ? 'watch' : 'soldier', [spot(hold), spot(hold), spot(hold)]);
+    if (def >= 2) add('heavy', [spot(hold)]);
+    if (post) { add('watch', [spot(post)]); if (def >= 1) add('soldier', [spot(post)]); }
+    for (const r of roomsOf(['workshop', 'refinery', 'power', 'tanks'])) add('tech', [spot(r), spot(r)]);
+    for (const r of roomsOf(['breaker'])) add(open ? 'tech' : 'soldier', [spot(r)]);
+    for (const r of roomsOf(['drones'])) for (let k = 0; k < Math.max(1, def); k++) add('drone', [spot(r), spot(cor), spot(r)]);
+    // stevedores carry goods from the freighter at the first cargo arm into the hold, then go back for more
+    if (open && d.docks) { const arm = d.rooms[d.docks[0].arm]; for (let k = 0; k < 3; k++) add('mechanic', [spot(arm), spot(hold)], { docker: true, speed: 20 + k * 3, wait: k * 2.2 }); }
+    if (cor) add('watch', [spot(cor), spot(cor), spot(cor)]);
+  }
+  if (deck === 2) {
+    const sec = one(['security']), cmd = one(['command']);
+    if (sec) { add('soldier', [spot(sec)]); if (def >= 1) add('heavy', [spot(sec)]); }
+    if (cmd) { add('officer', [spot(cmd)]); if (open) add('tech', [spot(cmd), spot(cmd)]); if (def >= 2) add('soldier', [spot(cmd), spot(cmd)]); }
+    for (const r of roomsOf(['barracks', 'arms'])) add('soldier', [spot(r), spot(r)]);
+    for (const r of roomsOf(['comms', 'server'])) add(open ? 'tech' : 'watch', [spot(r)]);
+    if (def >= 3) { const ring = roomsOf(['control', 'server', 'comms', 'sensors', 'store', 'tanks']); if (ring.length > 2) add('drone', [spot(ring[0]), spot(ring[1]), spot(ring[2])]); }
+  }
+  return out;
+}
+
+// ================================================================== view
+const view = document.getElementById('view');
+const vg = view.getContext('2d');
+let VW = 640, VH = 360, overview = false, planView = false, outside = true, approach = false;
+let cA, cAG, cE, cEG, cL, cLG, cB, cBG, cB2, cB2G;
+function sizeView() {
+  VW = approach ? 640 : outside ? 1200 : overview ? WW : 640; VH = approach ? 360 : outside ? 900 : overview ? WH : 360;
+  view.width = VW; view.height = VH; vg.imageSmoothingEnabled = false;
+  [cA, cAG] = mk(VW, VH); [cE, cEG] = mk(VW, VH); [cL, cLG] = mk(VW * LS, VH * LS);
+  [cB, cBG] = mk(VW / 4, VH / 4); [cB2, cB2G] = mk(VW / 4, VH / 4);
+  cLG.imageSmoothingEnabled = true; cBG.imageSmoothingEnabled = true; cB2G.imageSmoothingEnabled = true;
+}
+let camX = 0, camY = 0;
+const shots = [], blasts = [], decals = [];
+//@@ 1874-1881
+// Door lamps: the crew's turquoise on its own base, green where visitors may go, yellow at staff doors, red only when the
+// base is an enemy, orange blinking when the power is out.
+function doorLamp(d, t) {
+  if (MODE === 'power') return Math.sin(t * 3 + d.x) > 0.6 ? '#ff7a30' : '#3a1a08';
+  if (MODE === 'lockdown') return OPT.own ? '#e0b040' : '#c0302a';
+  if (MODE === 'alarm') return Math.sin(t * Math.PI * 3) > 0 ? (OPT.own ? '#ffc040' : '#ff3b30') : '#3a0a08';
+  if (OPT.own) return '#96d66e';
+  return d.base === 'staff' || d.kind === 'alarm' ? '#e0b040' : '#62e08a';
+}
+const partnerOf = (d) => D.doors.find((q) => q !== d && q.pair && q.pair === d.pair);
+function drawDoors(t) {
+  for (const d of D.doors) {
+    if (d.kind === 'arch') continue;
+    const gm = doorGeom(d), o = doorOpen(d);
+    const heavy = ['pressure', 'hatch', 'locked', 'lift', 'lockA', 'lockB', 'staff'].includes(d.kind);
+    const th = heavy ? 6 : 4, half = gm.len / 2, leaf = Math.max(0, half * (1 - o));
+    const col = D.i === 1 ? (heavy ? '#8a8c94' : '#a4a6ac') : D.i === 2 ? '#4a5262' : heavy ? '#5a5650' : '#4e4c48';
+    const draw = (x, y, w, h) => {
+      if (w <= 0 || h <= 0) return;
+      box(cAG, x, y, w, h, shade(col, 0.6)); box(cAG, x + (w > h ? 0 : 1), y + (w > h ? 1 : 0), w > h ? w : w - 2, w > h ? h - 2 : h, col);
+      const stripe = ['pressure', 'hatch', 'lockA', 'lockB'].includes(d.kind) ? '#8a7234' : d.kind === 'staff' ? '#a89030' : null;
+      if (stripe) { cAG.save(); cAG.beginPath(); cAG.rect(x, y, w, h); cAG.clip(); cAG.fillStyle = stripe; for (let k = -10; k < Math.max(w, h) + 10; k += 5) { if (w > h) cAG.fillRect(x + k, y + 1, 2, h - 2); else cAG.fillRect(x + 1, y + k, w - 2, 2); } cAG.restore(); }
+    };
+    if (d.o === 'v') { draw(gm.x - th / 2, gm.y, th, leaf); draw(gm.x - th / 2, gm.y + gm.len - leaf, th, leaf); }
+    else { draw(gm.x, gm.y - th / 2, leaf, th); draw(gm.x + gm.len - leaf, gm.y - th / 2, leaf, th); }
+    const lx = d.o === 'v' ? gm.x - 1 : gm.x - 6, ly = d.o === 'v' ? gm.y - 6 : gm.y - 1;
+    box(cAG, lx, ly, 2, 2, '#202228'); box(cEG, lx, ly, 2, 2, d.kind === 'hatch' ? '#3a3020' : doorLamp(d, t));
+    // the airlock's buttons: green when this door may open, yellow while the other one is still open
+    if (d.pair) {
+      const p = partnerOf(d), ok = !p || p.open === 0;
+      for (const s of [-1, 1]) {
+        const bx = d.o === 'v' ? gm.x + s * 9 - 2 : gm.x + gm.len + 3, by = d.o === 'v' ? gm.y + gm.len + 3 : gm.y + s * 9 - 2;
+        box(cAG, bx - 1, by - 1, 6, 6, '#2a2c32'); box(cAG, bx, by, 4, 4, '#4a4e58'); box(cEG, bx + 1, by + 1, 2, 2, ok ? '#62e08a' : Math.sin(t * 5) > 0 ? '#e0b040' : '#3a2a08');
+      }
+    }
+    if (d.kind === 'alarm' && Math.hypot(me.x - gm.cx, me.y - gm.cy) < 70) { const ex = d.o === 'v' ? gm.x - 1 : gm.x + gm.len + 4, ey = d.o === 'v' ? gm.y + gm.len + 4 : gm.y - 1; box(cEG, ex, ey, 2, 2, '#ffd040'); }
+  }
+}
+//@@ 1901-1908
+function fire() {
+  if (outside) return;
+  me.fire = 0.12;
+  const ax = Math.cos(me.a), ay = Math.sin(me.a);
+  let x = me.x + ax * 10, y = me.y + ay * 10, hit = null;
+  for (let s = 0; s < 360; s += 2) {
+    x += ax * 2; y += ay * 2;
+    if (at(Math.floor(x / T), Math.floor(y / T)) < 0) break;
+    const list = D.bk[Math.floor(y / BK) * BN + Math.floor(x / BK)] || [];
+    const b = list.find((q) => !q.dead && x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    if (b) { hit = b; break; }
+    if (D.doors.some((d) => { if (doorOpen(d) > 0.5) return false; const g = doorGeom(d); return d.o === 'v' ? Math.abs(x - g.x) < 3 && y > g.y && y < g.y + g.len : Math.abs(y - g.y) < 3 && x > g.x && x < g.x + g.len; })) break;
+  }
+  shots.push({ x0: me.x + ax * 10, y0: me.y + ay * 10, x1: x, y1: y, life: 0.08 });
+  if (hit && hit.barrel) explode(hit);
+}
+//@@ 1929-1942
+
+// ================================================================== the tour
+let tour = true, tourAt = 0, tourWait = 0, tourPath = null, TOUR = [];
+function buildTour() {
+  TOUR = [];
+  const centre = (d, kinds) => { const r = decks[d].rooms.find((q) => kinds.includes(q.kind) && q.n); return r ? [d, r.cx * T + 8, r.cy * T + 8] : null; };
+  const linkPt = (key) => { const l = LINKS.find((q) => q.key === key); return [((l.r[0] + l.r[2] + 1) / 2) * T, ((l.r[1] + l.r[3] + 1) / 2) * T]; };
+  const doorPt = (d, a, b, back) => { const dr = decks[d]; D = dr; const q = dr.doors.find((x) => { const s = sidesOf(x).map((r) => r.kind); return s.includes(a) && s.includes(b); }); if (!q) return null; const g = doorGeom(q); const [cx2, cy2] = [g.cx, g.cy]; const r = dr.rooms.find((x) => x.kind === a); const dx = r.cx * T + 8 - cx2, dy = r.cy * T + 8 - cy2, l = Math.hypot(dx, dy) || 1; return [d, cx2 + (dx / l) * back, cy2 + (dy / l) * back]; };
+  const s = startOf(1);
+  TOUR.push([1, s[0], s[1], 1.6]);
+  for (const k of [['concourse'], ['services'], ['bar'], ...(OPT.yard ? [['yard'], ['gantry']] : [['view']]), ['armory']]) { const p = centre(1, k); if (p) TOUR.push([...p, 1.2]); }
+  const sp = centre(1, ['security']); if (sp) TOUR.push([...sp, 1]);
+  TOUR.push([1, ...linkPt('L_MAIN'), 0.5], ['down']);
+  for (const k of [['post'], ['hold'], ['breaker'], ['power'], ['drones']]) { const p = centre(0, k); if (p) TOUR.push([...p, 1.2]); }
+  TOUR.push([0, ...linkPt('L_MAIN'), 0.5], ['up']);
+  TOUR.push([1, ...linkPt('T_QUIET'), 0.5], ['up']);
+  for (const k of [['command'], ['comms'], ['security']]) { const p = centre(2, k); if (p) TOUR.push([...p, 1.4]); }
+  TOUR.push(['restart']);
+}
+
+// A way to a point, or to somewhere near it when the point itself is shut in by furniture.
+function findPathNear(x0, y0, x1, y1) {
+  for (const [dx, dy] of [[0, 0], [32, 0], [-32, 0], [0, 32], [0, -32], [48, 48], [-48, 48], [48, -48], [-48, -48], [72, 0], [-72, 0], [0, 72], [0, -72]]) {
+    const p = findPath(x0, y0, x1 + dx, y1 + dy); if (p) return p;
+  }
+  return null;
+}
+
+// ================================================================== every frame
+const keys = new Set();
+let pointer = null, touchGoal = null;
+const turn = (a, b, k) => { const d = ((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI; return a + Math.max(-k, Math.min(k, d)); };
+function frame(t, dt) {
+  if (outside) { if (approach) drawApproach(t); else drawOutside(t); return; }
+  let mx = 0, my = 0;
+  if (keys.has('a') || keys.has('arrowleft')) mx -= 1;
+  if (keys.has('d') || keys.has('arrowright')) mx += 1;
+  if (keys.has('w') || keys.has('arrowup')) my -= 1;
+  if (keys.has('s') || keys.has('arrowdown')) my += 1;
+  if (touchGoal) { const dx = touchGoal.x - me.x, dy = touchGoal.y - me.y, d = Math.hypot(dx, dy); if (d > 4) { mx = dx / d; my = dy / d; } }
+  if (tour && !overview) {
+    const step = TOUR[tourAt];
+    me.moving = false;
+    if (tourWait > 0) tourWait -= dt;
+    else if (step[0] === 'up' || step[0] === 'down') { changeDeck(step[0] === 'up' ? 1 : -1); tourAt++; tourPath = null; tourWait = 0.6; }
+    else if (step[0] === 'restart') startTour();
+    else if (step[0] !== me.deck) tourAt++;
+    else {
+      if (!tourPath) tourPath = findPathNear(me.x, me.y, step[1], step[2]);
+      if (!tourPath) { tourAt++; return frame(t, 0); }
+      const p = tourPath[0], dx = p[0] - me.x, dy = p[1] - me.y, d = Math.hypot(dx, dy);
+      // wait at an airlock door that may not open yet
+      const held = D.doors.some((q) => q.pair && doorOpen(q) < 0.6 && Math.hypot(doorGeom(q).cx - (me.x + (dx / (d || 1)) * 10), doorGeom(q).cy - (me.y + (dy / (d || 1)) * 10)) < 14);
+      if (d < 2) { tourPath.shift(); if (!tourPath.length) { tourPath = null; tourWait = step[3] || 0; tourAt++; } }
+      else if (!held) { const sp = Math.min(d, 84 * dt); me.x += (dx / d) * sp; me.y += (dy / d) * sp; me.walked += sp; me.moving = true; me.a = turn(me.a, Math.atan2(dy, dx), 8 * dt); }
+    }
+  } else {
+    const len = Math.hypot(mx, my);
+    me.moving = len > 0.01;
+    if (me.moving) {
+      const sp = 64 * dt, bx = me.x, by = me.y;
+      if (!blocked(me.x + (mx / len) * sp, me.y, me.r)) me.x += (mx / len) * sp;
+      if (!blocked(me.x, me.y + (my / len) * sp, me.r)) me.y += (my / len) * sp;
+      me.walked += Math.hypot(me.x - bx, me.y - by);
+      if (!pointer || touchGoal) me.a = turn(me.a, Math.atan2(my, mx), 8 * dt);
+    }
+    if (pointer && !touchGoal) me.a = Math.atan2(pointer.y - me.y, pointer.x - me.x);
+  }
+  if (me.fire > 0) me.fire -= dt;
+  const l = linkHere(), k = l ? l.decks.indexOf(me.deck) : -1;
+  upBtn.hidden = !(l && k < l.decks.length - 1); downBtn.hidden = !(l && k > 0);
+  if (l) { upBtn.textContent = '▲ ' + NAMES[l.decks[k + 1]] ; downBtn.textContent = '▼ ' + (k > 0 ? NAMES[l.decks[k - 1]] : ''); }
+  for (const n of npcs) {
+    if (n.wait > 0) { n.wait -= dt; n.moving = false; if (n.post) n.a += Math.sin(t * 0.9 + n.x) * 0.5 * dt; continue; }
+    if (n.post) { n.moving = false; n.wait = 2; continue; }
+    if (!n.path) { const g = n.route[n.at]; n.path = findPath(n.x, n.y, g[0], g[1]) || [[g[0], g[1]]]; }
+    const p = n.path[0], dx = p[0] - n.x, dy = p[1] - n.y, d = Math.hypot(dx, dy);
+    if (d < 2) { n.path.shift(); if (!n.path.length) { n.path = null; n.at = (n.at + 1) % n.route.length; n.wait = n.guard ? 1.4 : 2 + hash(n.at, n.x | 0) * 3; } continue; }
+    const sp = Math.min(d, n.speed * dt);
+    n.x += (dx / d) * sp; n.y += (dy / d) * sp; n.walked += sp; n.moving = true; n.a = turn(n.a, Math.atan2(dy, dx), 6 * dt);
+  }
+  stepDoors(dt, [me, ...npcs]);
+  if (doorsChanged) { buildStaticLight(doorsChanged); doorsChanged = null; }
+  if (overview) { camX = 0; camY = 0; } else { camX = Math.round(Math.max(0, Math.min(WW - VW, me.x - VW / 2))); camY = Math.round(Math.max(0, Math.min(WH - VH, me.y - VH / 2))); }
+  cAG.clearRect(0, 0, VW, VH); cAG.drawImage(D.alb, camX, camY, VW, VH, 0, 0, VW, VH);
+  cEG.clearRect(0, 0, VW, VH); cEG.drawImage(D.emi, camX, camY, VW, VH, 0, 0, VW, VH);
+  cAG.save(); cAG.translate(-camX, -camY); cEG.save(); cEG.translate(-camX, -camY);
+  for (const [x, y] of decals) box(cAG, x, y, 2, 2, 'rgba(12,10,8,0.6)');
+  for (const s of D.solids) if (s.dead) { box(cAG, s.x, s.y, s.w, s.h, 'rgba(16,14,12,0.75)'); if (s.burnt) for (let q = 0; q < 4; q++) box(cAG, s.x + hash(q, s.x) * s.w, s.y + hash(s.y, q) * s.h, 2, 2, '#4a4038'); }
+  drawDoors(t);
+  const ed = EDIM();
+  for (const b of D.emitters) { const on = b.rate === 0 ? 0.55 + 0.45 * Math.sin(t * 1.6) : Math.sin(t * b.rate + b.p) > -0.2 ? 1 : 0.15; cEG.globalAlpha = on * ed; box(cEG, b.x, b.y, 1, 1, b.c); cEG.globalAlpha = 1; }
+  for (const c of D.cams) { const a = c.a + Math.sin(t * 0.5) * c.sweep; c.now = a; box(cAG, c.x - 2, c.y - 2, 5, 5, '#2a2d34'); box(cAG, c.x - 1 + Math.cos(a) * 2, c.y - 1 + Math.sin(a) * 2, 3, 3, '#4a4e58'); box(cEG, Math.round(c.x + Math.cos(a) * 3), Math.round(c.y + Math.sin(a) * 3), 1, 1, OPT.side === 'hostile' || (!OPT.own && MODE !== 'normal') ? '#ff3b30' : OPT.own ? '#96d66e' : '#e0b040'); }
+  for (const u of D.turrets) { disc(cAG, u.x, u.y, 6, '#2a2d34'); disc(cAG, u.x, u.y, 5, '#4a4e58'); box(cAG, u.x + Math.cos(u.a) * 7 - 1, u.y + Math.sin(u.a) * 7 - 1, 3, 3, '#24262c'); box(cEG, u.x - 1, u.y - 1, 2, 2, OPT.side === 'hostile' || (!OPT.own && MODE !== 'normal') ? '#ff3b30' : OPT.own ? '#96d66e' : '#e0b040'); }
+  for (const f of npcs) drawFigure(f, t);
+  drawFigure(me, t);
+  for (const s of shots) { cEG.strokeStyle = 'rgba(255,230,160,0.9)'; cEG.lineWidth = 1; cEG.beginPath(); cEG.moveTo(s.x0, s.y0); cEG.lineTo(s.x1, s.y1); cEG.stroke(); s.life -= dt; }
+  for (let q = shots.length - 1; q >= 0; q--) if (shots[q].life <= 0) shots.splice(q, 1);
+  for (const b of blasts) { const kk = b.life / 0.5; disc(cEG, b.x, b.y, Math.max(1, (1 - kk) * 18 + 4) | 0, `rgba(255,${160 + 80 * kk | 0},80,${kk})`); }
+  cAG.restore(); cEG.restore();
+  // light
+  cLG.drawImage(D.stat, camX * LS, camY * LS, VW * LS, VH * LS, 0, 0, VW * LS, VH * LS);
+  cLG.save(); cLG.scale(LS, LS); cLG.translate(-camX, -camY); cLG.globalCompositeOperation = 'lighter';
+  const inView = (q) => q.x + q.r > camX && q.x - q.r < camX + VW && q.y + q.r > camY && q.y - q.r < camY + VH;
+  for (const q of D.lights) {
+    if (q.kind === 'static' || !inView(q)) continue;
+    if (q.kind === 'pulse') drawLight(cLG, q, q.i * (0.8 + 0.2 * Math.sin(t * q.speed * 6.28)));
+    if (q.kind === 'beacon') drawLight(cLG, q, q.i, { a: t * 2.2 + q.phase * 2, w: 0.42 });
+  }
+  const lit = (x, y, r, col, i, cone) => { const q = { x, y, r, col }; if (inView(q)) drawLight(cLG, q, i, cone); };
+  if (me.lamp) { lit(me.x + Math.cos(me.a) * 8, me.y + Math.sin(me.a) * 8, 170, [235, 238, 225], MODE === 'power' ? 0.95 : 0.6, { a: me.a, w: 0.38 }); lit(me.x, me.y, 30, [160, 165, 175], 0.35); }
+  const hostile = !OPT.own && (MODE !== 'normal' || OPT.side === 'hostile');
+  for (const n of npcs) if (n.guard && MODE !== 'normal') lit(n.x + Math.cos(n.a) * 6, n.y + Math.sin(n.a) * 6, 90, hostile ? [180, 50, 40] : [200, 170, 110], 0.4, { a: n.a, w: 0.5 });
+  for (const b of blasts) { lit(b.x, b.y, b.r, [255, 170, 90], b.life * 2.4); b.life -= dt; }
+  for (let q = blasts.length - 1; q >= 0; q--) if (blasts[q].life <= 0) blasts.splice(q, 1);
+  if (me.fire > 0.05) lit(me.x + Math.cos(me.a) * 14, me.y + Math.sin(me.a) * 14, 70, [255, 210, 140], 0.8);
+  cLG.restore();
+  vg.globalCompositeOperation = 'source-over';
+  vg.drawImage(cA, 0, 0);
+  vg.globalCompositeOperation = 'multiply'; vg.imageSmoothingEnabled = true; vg.drawImage(cL, 0, 0, VW, VH); vg.imageSmoothingEnabled = false;
+  vg.globalCompositeOperation = 'lighter'; vg.drawImage(cE, 0, 0);
+  cBG.clearRect(0, 0, cB.width, cB.height); cBG.drawImage(cE, 0, 0, cB.width, cB.height);
+  cB2G.clearRect(0, 0, cB.width, cB.height); cB2G.filter = 'blur(2px)'; cB2G.drawImage(cB, 0, 0); cB2G.filter = 'none';
+  vg.globalAlpha = 0.9; vg.imageSmoothingEnabled = true; vg.drawImage(cB2, 0, 0, VW, VH); vg.drawImage(cB2, 0, 0, VW, VH); vg.imageSmoothingEnabled = false; vg.globalAlpha = 1;
+  vg.globalCompositeOperation = 'source-over';
+  if (MODE === 'alarm' && Math.sin(t * Math.PI * 3) > 0) { vg.fillStyle = OPT.own ? 'rgba(255,170,60,0.08)' : 'rgba(255,40,30,0.1)'; vg.fillRect(0, 0, VW, VH); }
+  if (planView) drawPlan();
+}
+let doorsChanged = null;
+function stepDoors(dt, people) {
+  for (const d of D.doors) {
+    if (d.kind === 'hatch' || d.kind === 'locked' || d.kind === 'arch') continue;
+    const g = doorGeom(d);
+    let near = people.some((f) => Math.abs(f.x - g.cx) < 30 && Math.abs(f.y - g.cy) < 30);
+    // an airlock door stays shut until the other one has closed
+    if (d.pair) { const p = partnerOf(d); if (p && p.open > 0) near = false; }
+    const before = doorOpen(d) > 0.5;
+    d.open = Math.max(0, Math.min(1, d.open + (near ? 4 : -2.5) * dt));
+    if ((doorOpen(d) > 0.5) !== before) doorsChanged = { x: g.cx, y: g.cy };
+  }
+}
+//@@ 2149-2169

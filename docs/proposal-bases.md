@@ -151,6 +151,8 @@ Sidorna är designtester. De används inte av spelet, och koden i dem är inte t
 
 ## 8. Utsidan i rymden
 
+**Avgjort 2026-11-16 efter designtestet D-217** (`docs/design/prototypes/standard-base.html`): kupoler, sluten skiva, en ring som vrids till bron, lampor som visar hållningen, ST8 på en egen bas, tio tornplatser och en stor kanon som köps. Det som gäller står i regelboken, R-1149 till R-1169. Texten nedan är underlaget.
+
 **Bestämt.**
 - Utsidan ska bli större än i dag, där den är liten och mer symbolisk. Den ska inte vara i skala 1:1, men den behöver växa.
 - Den ska kännas som att den hänger ihop med hur basen är byggd med våningar.
@@ -165,6 +167,8 @@ Sidorna är designtester. De används inte av spelet, och koden i dem är inte t
 - Saker sitter på samma plats ute som inne: dockor där luftslussarna är, fönster där rummen ligger, byggdockan utanför varvsrummet.
 
 ## 9. Dockningsringen
+
+**Avgjort 2026-11-16:** fyra portar på diagonalerna, och ringen vrids ett kvarts varv åt gången till bron (R-1153, R-1154). Texten nedan är underlaget.
 
 **Bestämt.**
 - Problemet: tar man en annan dockningsarm når man inte sitt skepp.
@@ -203,8 +207,8 @@ Spelet gör i dag ljussättning med en ljuskarta bara på mörka ställen (vrak 
 ## 12. Öppna frågor
 
 1. Hur tar sig den som spelar ensam tillbaka på fötter när hen faller i en bas? Förslag: en medkit eller en nödsändare som för en tillbaka till slussen. Behöver stämmas av mot reglerna för när någon faller.
-2. Ska det man gör i källaren kunna göras både tyst och högljutt, och vad skiljer i så fall?
-3. Exakt vilka steg skärper läget efter källaren, och hur fort?
+2. ~~Ska det man gör i källaren kunna göras både tyst och högljutt, och vad skiljer i så fall?~~ Avgjort 2026-11-16: ja, se R-1167 i regelboken.
+3. ~~Exakt vilka steg skärper läget efter källaren, och hur fort?~~ Avgjort 2026-11-16: stegen står i R-1168, och takten sätts vid provspel.
 4. Vad kostar ett varv, och vad kostar startkanonens uppgraderingar?
 5. Siffrorna för anpassningen efter antal spelare (sätts vid provspel).
 6. Datorns undantag i avsnitt 4 bygger på docs/proposal-computer.md, som inte är godkänt än. Det behöver hänga med när det förslaget besvaras.
