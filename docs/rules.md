@@ -984,6 +984,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1142 | Allt man bär, som bordarnas utrustning och varor, gäller direkt när man köper det, utan varv. | bestämd | Användaren 2026-11-16 (D-238, V6) | – |
 | R-1143 | Varor köps och säljs i butiken, så att det går att ha handelsrutter. I början är priserna fasta. | bestämd | Användaren 2026-11-16 (D-238, V6) | – |
 | R-1144 | Senare blir varupriserna rörliga, så att man inte blir rik på att köra samma rutt fram och tillbaka. | bestämd | Användaren 2026-11-16 (D-238, V6) | – |
+| R-1145 | En uppgradering som hittas som loot hamnar i förrådet hos den roll som saken hör till, oavsett vem som bar hem den. | bestämd | Användaren 2026-11-16 (L1) | – |
 | R-834 | Neutrala shipyards är alltid öppna mot betalning. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-835 | Neutrala shipyards har samma priser som vänliga så länge spelet testas. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-836 | Stationer säljer kartan till nästa sektor. | byggd | HANDOFF beslut 2026-11-14 | saknas |
