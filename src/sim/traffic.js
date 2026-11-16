@@ -1,12 +1,11 @@
 // Traffic: ships of the factions that jump into the sector, go about their business and jump out again.
 // Freighters dock at stations for a while. Patrols make a round and fight whoever is their enemy.
 import { B } from './balance.js';
-import { SHIPS, THINGS } from './kinds.js';
+import { SHIPS, BASE } from './kinds.js';
 import { FACTIONS, PIRATE, sectorHere } from './sides.js';
 import { thingsOf } from './things.js';
 import { makeVessel } from './vessels.js';
-import { shipNose } from './ship.js';
-import { headingTo, dist, rand, randRange, TAU } from './util.js';
+import { headingTo, toWorld, rand, randRange, TAU } from './util.js';
 
 const around = (state, centre, near, far) => {
   const a = rand(state) * TAU;
@@ -32,24 +31,18 @@ function pickFaction(state) {
   return sides[0];
 }
 
-// Where a ship of the given class stops to dock at a station: nose at one of the ports, facing the station.
-// It keeps clear of the port the frigate is using.
+// Where a ship of the given class stops to dock at a base: nose at the tip of one of its cargo arms, facing it
+// (R-1153). The arm to the right is the building dock's at a base with a shipyard.
+export function armBerth(st, k, length) {
+  const arm = toWorld({ x: 0, y: 0, heading: st.heading }, BASE.arms[k]);
+  const reach = Math.hypot(arm.x, arm.y);
+  const out = (reach + length / 2 + 4) / reach;
+  return { x: st.x + arm.x * out, y: st.y + arm.y * out, face: headingTo(-arm.x, -arm.y) };
+}
+export const armsOf = (st) => [0, 1, 2, 3].filter((k) => !(st.shipyard && k === 1));
 function dockLeg(state, st, c) {
-  const ports = THINGS.station.ports;
-  let port = pick(state, ports);
-  if (state.ship.docked === st.id) {
-    const nose = shipNose(state.ship);
-    const far = (p) => dist(st.x + p.x, st.y + p.y, nose.x, nose.y);
-    port = ports.reduce((best, p) => (far(p) > far(best) ? p : best), ports[0]);
-  }
-  const reach = Math.hypot(port.x, port.y);
-  const out = (reach + c.length / 2 + 4) / reach;
-  return {
-    x: st.x + port.x * out,
-    y: st.y + port.y * out,
-    hold: randRange(state, B.TRAFFIC_VISIT[0], B.TRAFFIC_VISIT[1]),
-    face: headingTo(-port.x, -port.y),
-  };
+  const at = armBerth(st, pick(state, armsOf(st)), c.length);
+  return { ...at, hold: randRange(state, B.TRAFFIC_VISIT[0], B.TRAFFIC_VISIT[1]) };
 }
 
 // A freighter jumps in, docks at one or two stations and leaves.

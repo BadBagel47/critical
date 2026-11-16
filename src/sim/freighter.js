@@ -152,10 +152,12 @@ export function freighterPlan(state) {
 
   // ---- the stern: the engines furthest aft, and a room on each side of the spine
   addRoom(fill(2, 2, 6, 30, '.'), 'ENGINES', doorAcross(7, CY - 1));
-  for (const [r0, r1, wall, use] of [
+  /** @type {[number, number, number, string][]} */
+  const AFT = [
     [2, 13, 14, 'FUEL'],
     [19, 30, 18, 'SPARES'],
-  ]) {
+  ];
+  for (const [r0, r1, wall, use] of AFT) {
     const room = addRoom(fill(8, r0, 12, r1, '.'), use, null);
     room.door = doorAlong(pickInt(state, 9, 10), wall);
     if (rand(state) < 0.5) doorAcross(13, pickInt(state, r0 + 3, r1 - 4));
@@ -176,7 +178,8 @@ export function freighterPlan(state) {
       const room = addRoom(fill(x0, r0, x0 + 3, r1, '.'), isVault ? 'VAULT' : bowUses.shift(), null);
       room.door = doorAlong(x0 + 1, wall, isVault ? 'L' : ',');
       if (isVault) vault = room;
-      else if (x0 === 78 && rand(state) < 0.4) doorAcross(77, wall === 14 ? pickInt(state, 5, 10) : pickInt(state, 21, 26));
+      else if (x0 === 78 && rand(state) < 0.4)
+        doorAcross(77, wall === 14 ? pickInt(state, 5, 10) : pickInt(state, 21, 26));
     }
   }
 

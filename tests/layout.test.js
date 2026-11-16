@@ -7,6 +7,9 @@ import { layOut, planHolds, TILE } from '../src/sim/layout.js';
 import { thingsOf, portsOf } from '../src/sim/things.js';
 import { blocked } from '../src/sim/boarding.js';
 import { SHIP_GEOM } from '../src/sim/balance.js';
+import { BASE } from '../src/sim/kinds.js';
+import { ringTurning } from '../src/sim/stations.js';
+import { toWorld, dist } from '../src/sim/util.js';
 
 const PLACES = [
   { kind: 'wreck', hull: 'gunboat' },
@@ -44,9 +47,13 @@ test('a plan follows the shape of what was boarded', () => {
   const station = layOut(s, PLACES[3]);
   assert.ok(freighter.w > gunboat.w * 2, 'a freighter is much longer than a gunboat');
   assert.ok(freighter.w > freighter.h * 2.5, 'and long and narrow');
-  assert.equal(station.w, station.h, 'a station is as wide as it is high');
+  assert.equal(station.decks.length, 3, 'a base has three floors');
+  assert.ok(
+    station.decks.every((d) => d.r * 2 <= station.h * TILE),
+    'each of them round, side by side',
+  );
   assert.equal(gunboat.airlocks.length, 1);
-  assert.equal(station.airlocks.length, 4, 'a station has an airlock in each docking arm');
+  assert.equal(station.airlocks.length, 1, 'a base without a shipyard has one airlock');
   assert.ok(freighter.w * TILE > 640 && station.h * TILE > 360, 'the larger places do not fit on one screen');
 });
 
@@ -56,7 +63,7 @@ test('the same game makes the same plan, and another game another one', () => {
   assert.notEqual(plan(5), plan(6));
 });
 
-test('at a station the crew comes in through the arm the frigate is docked at', () => {
+test('R-1154 R-1155: at a base the ring turns the ship to the bridge, and the crew comes in by the airlock there', () => {
   const entries = [];
   for (let port = 0; port < 4; port++) {
     const s = createState(1);
@@ -69,15 +76,27 @@ test('at a station the crew comes in through the arm the frigate is docked at', 
     s.ship.y = p.y - Math.cos(h) * SHIP_GEOM.nose.y;
     s.ship.vx = s.ship.vy = 0;
     step(s, { captain: { dock: true } }, 1 / 60);
+    // While the ring turns nobody goes aboard.
+    if (ringTurning(st)) {
+      step(s, { system: { board: [0] } }, 1 / 60);
+      assert.equal(s.players[0].inside, null, 'not while the ring turns');
+    }
+    for (let i = 0; i < 60 * 9 && ringTurning(st); i++) step(s, {}, 1 / 60);
+    for (let i = 0; i < 60; i++) step(s, {}, 1 / 60);
+    // The port the ship lies at is now the one at the bridge, up and to the left of the base.
+    const r = Math.hypot(BASE.ports[0].x, BASE.ports[0].y);
+    const at = toWorld(st, { x: Math.cos(BASE.bridge) * r, y: Math.sin(BASE.bridge) * r });
+    const nose = toWorld(s.ship, SHIP_GEOM.nose);
+    assert.ok(dist(nose.x, nose.y, at.x, at.y) < 3, 'port ' + port + ' has come round to the bridge');
     step(s, { system: { board: [0] } }, 1 / 60);
     const it = st.interior;
     assert.equal(s.players[0].inside, st.id);
-    assert.equal(it.entry, it.airlocks[port], 'port ' + port + ' leads to its own airlock');
+    assert.equal(it.entry, it.airlocks[0], 'every port on the ring leads to the same airlock');
     const av = it.avatars[0];
     assert.ok(!blocked(it, av.x, av.y, 5), 'the boarder stands on the floor just inside');
     entries.push(it.entry.x + ':' + it.entry.y);
   }
-  assert.equal(new Set(entries).size, 4);
+  assert.equal(new Set(entries).size, 1);
 });
 
 // ---------- the inside of a freighter (F-254) ----------
@@ -181,7 +200,10 @@ test('R-1185: a freighter wreck has lost one or two of its containers', () => {
     }).length;
     assert.ok(holes === 90 || holes === 180, 'one or two containers are gone, and ' + holes + ' tiles were');
     counts.add(holes);
-    assert.ok(plan.rooms.some((r) => r.use === 'HOLD'), 'the large hold is never the one that is lost');
+    assert.ok(
+      plan.rooms.some((r) => r.use === 'HOLD'),
+      'the large hold is never the one that is lost',
+    );
   }
   assert.equal(counts.size, 2, 'sometimes one and sometimes two');
 });

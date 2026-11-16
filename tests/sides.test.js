@@ -7,9 +7,9 @@ import { damageShip } from '../src/sim/damage.js';
 import { thingsOf } from '../src/sim/things.js';
 import { makeVessel, hurtVessel } from '../src/sim/vessels.js';
 import { moodOf, enemies, isAngry, changeStanding, stepStanding, FACTIONS } from '../src/sim/sides.js';
-import { servicePrices, damageStation, isTrading } from '../src/sim/stations.js';
+import { servicePrices, damageStation, isTrading, remountGuns } from '../src/sim/stations.js';
 import { dockShieldMax, CATALOG } from '../src/sim/upgrades.js';
-import { SHIPS, THINGS } from '../src/sim/kinds.js';
+import { SHIPS, BASE } from '../src/sim/kinds.js';
 import { B } from '../src/sim/balance.js';
 import { forward, toWorld, dist } from '../src/sim/util.js';
 import { sceneOf } from '../src/scene.js';
@@ -203,7 +203,9 @@ test('a station does not make peace while the crew is breaking into it, and one 
 test('a station has a shield that takes the hits first and comes back, and guns that can be shot off and are mended', () => {
   const s = farOut(quiet()),
     st = post(s);
-  assert.equal(st.guns.length, THINGS.station.guns.length);
+  // R-1163: a base that is not the crew's has at least the four guns on its basement.
+  assert.equal(st.guns.length, 4);
+  assert.ok(st.guns.every((g) => BASE.guns.slice(0, 4).some((p) => p.x === g.x && p.y === g.y)));
   damageStation(s, st, 50, { x: st.x, y: st.y }, 'pirate');
   assert.equal(st.shield, B.STATION_SHIELD - 50);
   assert.equal(st.hp, B.STATION_HP);
@@ -225,6 +227,10 @@ test('a station has a shield that takes the hits first and comes back, and guns 
 test("the crew's own yard shoots at pirates that come close, and never at visitors", () => {
   const s = quiet(),
     st = dockAt(s, yard(s));
+  // R-1163: a base of the crew's has the guns that were bought for it, here the first level, two of them.
+  st.defense = { ...st.defense, guns: 1 };
+  remountGuns(st);
+  assert.equal(st.guns.length, 2);
   s.ship.x = st.x;
   s.ship.y = st.y + 150;
   const visitor = makeVessel(s, 'freighter', st.x - 200, st.y, 'charter');
@@ -463,12 +469,14 @@ test('a freighter jumps in, docks nose first at a station for a while and jumps 
       y: freighter.y + (f.y * SHIPS.freighter.length) / 2,
     };
     for (const st of stations(s)) {
-      for (const port of THINGS.station.ports)
-        nearest = Math.min(nearest, dist(nose.x, nose.y, st.x + port.x, st.y + port.y));
+      for (const arm of BASE.arms) {
+        const p = toWorld(st, arm);
+        nearest = Math.min(nearest, dist(nose.x, nose.y, p.x, p.y));
+      }
     }
   }
   assert.ok(docked >= B.TRAFFIC_VISIT[0], 'it stays for a while');
-  assert.ok(nearest < 8, 'with its nose at a docking port');
+  assert.ok(nearest < 8, 'R-1153: with its nose at a cargo arm');
   assert.equal(s.vessels.includes(freighter), false, 'and then it is gone');
   assert.equal(s.kills, 0);
   assert.equal(salvage(s).length, 0, 'a ship that leaves is not a ship that is destroyed');

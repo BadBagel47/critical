@@ -51,8 +51,8 @@ const LIKE = {
   STAIRS: 'VAULT',
   LADDER: 'VAULT',
   GUN: 'VAULT',
-  BREAKER: 'VAULT',
-  DRONES: 'VAULT',
+  BREAKER: 'ENGINES',
+  DRONES: 'CARGO',
 };
 export const likeOf = (use) => LIKE[use] || use;
 export const USES = ['CARGO', 'CREW', 'MESS', 'BRIDGE', 'STORES', 'ENGINES', 'CONTROL', 'VAULT', ...Object.keys(LIKE)];
@@ -169,7 +169,13 @@ const byWayIn = (it, tx, ty) =>
 
 // A room much larger than the lists above are made for gets more of the same, in rows with ways between them:
 // stacks of crates in a hold, and so on. `n` is a number that is always the same for a spot, to leave gaps.
-const ROWS = { CARGO: [2, 2, 5, 4], STORES: [1, 2, 4, 4], ENGINES: [2, 1, 6, 4], MESS: [2, 1, 5, 4], CREW: [2, 1, 5, 4] };
+const ROWS = {
+  CARGO: [2, 2, 5, 4],
+  STORES: [1, 2, 4, 4],
+  ENGINES: [2, 1, 6, 4],
+  MESS: [2, 1, 5, 4],
+  CREW: [2, 1, 5, 4],
+};
 const LARGE = 90;
 const gap = (tx, ty) => (((tx * 73856093) ^ (ty * 19349663)) >>> 0) % 5 === 0;
 function rowsFor(use, r) {

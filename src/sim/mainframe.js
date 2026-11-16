@@ -13,7 +13,7 @@
 import { B } from './balance.js';
 import { CREW, isFaction, changeStanding } from './sides.js';
 import { newGuard, alertGuard, guardKind } from './guards.js';
-import { takeOver, stationShieldMax, gunHpMax, defenseOf } from './stations.js';
+import { takeOver, stationShieldMax, gunHpMax, defenseOf, remountGuns } from './stations.js';
 import { foundOut, gearUp, openVault, spotIn, setMood } from './boarding.js';
 import { callHelp, putBounty } from './bounty.js';
 import { currentSector } from './sectors.js';
@@ -25,8 +25,8 @@ import { dist } from './util.js';
 export const MAINFRAME_REACH = 18;
 export const LEVEL_NAMES = ['READ THE PLAN', 'CONTROL', 'TAKE OVER'];
 // The parts of its defence that the crew can buy for a station of theirs.
-export const DEFENSES = ['shield', 'guns', 'inner'];
-export const DEFENSE_NAMES = { shield: 'SHIELD', guns: 'GUNS', inner: 'SECURITY INSIDE' };
+export const DEFENSES = ['shield', 'guns', 'inner', 'cannon'];
+export const DEFENSE_NAMES = { shield: 'SHIELD', guns: 'GUNS', inner: 'SECURITY INSIDE', cannon: 'LARGE GUN' };
 
 // How the station stands to the crew, for the panel: 'own', 'trade' or 'enemy'.
 export function relationOf(st) {
@@ -66,8 +66,10 @@ export function fixNeed(st, part) {
 }
 
 // The price of the next level of a part of the defence, or null when it is at the top.
+// The large gun is bought once, on its own (R-1164).
 export function defensePrice(st, what) {
   const lv = defenseOf(st)[what];
+  if (what === 'cannon') return lv ? null : B.CANNON_PRICE;
   return lv >= B.DEFENSE_MAX ? null : B.DEFENSE_PRICE[lv];
 }
 
@@ -153,8 +155,9 @@ function upgrade(state, st, what) {
     return;
   }
   st.purse -= price;
-  st.defense[what]++;
+  st.defense = { ...defenseOf(st), [what]: defenseOf(st)[what] + 1 };
   if (what === 'shield') st.shield = stationShieldMax(st);
+  if (what === 'guns' || what === 'cannon') remountGuns(st);
   state.events.push({ type: 'defenseBought', what, level: st.defense[what] });
 }
 

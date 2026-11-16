@@ -1,7 +1,7 @@
 // Stations. Each belongs to a side: the crew, the pirates, a faction, or itself. How it treats the crew
 // follows from that: friendly and neutral ones trade, hostile ones shoot. All of them defend themselves.
 import { B } from './balance.js';
-import { THINGS } from './kinds.js';
+import { THINGS, BASE } from './kinds.js';
 import { CREW, PIRATE, ownSide, moodOf, enemies, changeStanding, provoke, isAngry, inSanctuary } from './sides.js';
 import { thingsOf, findThing, findDock, mapInfo } from './things.js';
 import { makeVessel } from './vessels.js';
@@ -26,14 +26,32 @@ import { earn, spend, mayBuyFor, ownPurse, ROLE_NAME } from './purses.js';
 import { turnOnCrew } from './mainframe.js';
 import { forward, headingTo, turnToward, angleDiff, toWorld, dist, rand, randRange, TAU } from './util.js';
 
-// `off` is a gun of the crew's own station that has been mended and waits to be switched on at the mainframe.
-const mountGuns = (st) => THINGS.station.guns.map((g) => ({ ...g, hp: gunHpMax(st), heading: 0, cool: 1, off: false }));
+// The guns a base has, of its ten places (R-1163): none with no defence bought, two, six and all ten. A base
+// that is not the crew's has the four on its basement at least, as it always has had, to defend itself with.
+// The large gun is bought on its own (R-1164). `off` is a gun of the crew's own station that has been mended and
+// waits to be switched on at the mainframe. Guns that are already there keep how they are.
+const GUNS_AT = [0, 2, 6, 10];
+export function gunSlots(st) {
+  const d = defenseOf(st);
+  const n = st.side === CREW ? GUNS_AT[d.guns] : Math.max(4, GUNS_AT[d.guns]);
+  const list = BASE.guns.slice(0, n);
+  return d.cannon ? [...list, BASE.cannon] : list;
+}
+export const remountGuns = (st) => (st.guns = mountGuns(st, st.guns));
+function mountGuns(st, keep = []) {
+  return gunSlots(st).map((g) => {
+    const was = keep.find((k) => k.x === g.x && k.y === g.y);
+    return was || { ...g, hp: gunHpMax(st), heading: 0, cool: 1, off: false };
+  });
+}
 // What has been bought for a station's defence, level by level. It stays with the station whoever holds it.
-export const defenseOf = (st) => st.defense || { shield: 0, guns: 0, inner: 0 };
+export const defenseOf = (st) => ({ shield: 0, guns: 0, inner: 0, cannon: 0, ...st.defense });
 export const stationShieldMax = (st) => B.STATION_SHIELD * (1 + B.DEFENSE_SHIELD * defenseOf(st).shield);
 export const gunHpMax = (st) => B.STATION_GUN_HP * (1 + B.DEFENSE_GUN * defenseOf(st).guns);
-export const gunDmg = (st) =>
-  (st.side === PIRATE ? B.PIRATE_STATION_GUN_DMG : B.STATION_GUN_DMG) * (1 + B.DEFENSE_GUN * defenseOf(st).guns);
+export const gunDmg = (st, gun = null) =>
+  (st.side === PIRATE ? B.PIRATE_STATION_GUN_DMG : B.STATION_GUN_DMG) *
+  (1 + B.DEFENSE_GUN * defenseOf(st).guns) *
+  (gun && gun.cannon ? B.CANNON_DMG : gun && gun.heavy ? B.HEAVY_GUN_DMG : 1);
 
 // Every station in the world, also those in sectors the crew has left, each with the sector it is in.
 export function allStations(state) {
@@ -57,7 +75,11 @@ export function createStation(s, x, y, side, shipyard, name, home = false) {
     kind: 'station',
     x,
     y,
-    heading: 0,
+    // Each base stands turned its own way (R-1162). It is read off its number, not drawn, so that a world made
+    // from the same seed is laid out as it was. Its ring turns by itself: `ring` is how far, and `ringTo` where to.
+    heading: (id * 2.39996) % TAU,
+    ring: 0,
+    ringTo: 0,
     side: side || ownSide(id),
     // How it treats the crew: 'friendly', 'neutral' or 'hostile'. `closed` is neutral but with no trade.
     align: 'neutral',
@@ -74,7 +96,7 @@ export function createStation(s, x, y, side, shipyard, name, home = false) {
     hp: B.STATION_HP,
     shield: B.STATION_SHIELD,
     lastHit: -99,
-    defense: { shield: 0, guns: 0, inner: 0 },
+    defense: { shield: 0, guns: 0, inner: 0, cannon: 0 },
     // On a station of the crew's: the part being mended from the mainframe, 'hull' or a gun by number.
     fix: null,
     // When the crew took it, and whose it was before.
@@ -181,7 +203,12 @@ export function fall(state, st, by = PIRATE) {
   st.shield = 0;
   st.fix = null;
   const d = defenseOf(st);
-  st.defense = { shield: Math.floor(d.shield / 2), guns: Math.floor(d.guns / 2), inner: Math.floor(d.inner / 2) };
+  st.defense = {
+    shield: Math.floor(d.shield / 2),
+    guns: Math.floor(d.guns / 2),
+    inner: Math.floor(d.inner / 2),
+    cannon: 0,
+  };
   st.guns = mountGuns(st);
   st.favor = 0;
   state.events.push({ type: 'stationFell', name: st.name, side: by });
@@ -412,6 +439,7 @@ function stepGuns(state, st, dt) {
     if (g.hp <= 0 || g.off) continue;
     const p = toWorld(st, g);
     g.cool -= dt;
+    // A gun of a base is never shot by the ring that turns past it: it fires at what is out of its way.
     const target = gunTarget(state, st, p);
     if (!target) continue;
     // Aim a little ahead of where the target is going.
@@ -427,7 +455,7 @@ function stepGuns(state, st, dt) {
       vy: f.y * B.PIRATE_BOLT_SPEED,
       ttl: 1.8,
       side: st.side,
-      dmg: gunDmg(st),
+      dmg: gunDmg(st, g),
     });
     g.cool = B.STATION_GUN_COOLDOWN;
   }
@@ -475,6 +503,58 @@ function stepOwned(state, dt) {
 function mended(state, st) {
   state.events.push({ type: 'fixDone', name: st.name, part: st.fix });
   st.fix = null;
+}
+
+// ---------- the ring ----------
+// A ship that docks at a port on the ring is turned with it to the bridge, a quarter turn at a time (R-1154).
+// At the building dock of a shipyard the ring does not turn.
+export const ringTurning = (st) => Math.abs((st.ring || 0) - (st.ringTo || 0)) > 1e-6;
+const QUARTER = Math.PI / 2;
+// Which of the ports on the ring a ship's nose is at, or -1.
+function portAt(st, p) {
+  const ports = THINGS.station.ports(st);
+  let best = -1;
+  let bestD = B.DOCK_RANGE * 3;
+  for (let k = 0; k < BASE.ports.length; k++) {
+    const w = toWorld(st, ports[k]);
+    const d = dist(w.x, w.y, p.x, p.y);
+    if (d < bestD) {
+      best = k;
+      bestD = d;
+    }
+  }
+  return best;
+}
+// The frigate has docked at a station: the ring is set turning, so that its port comes to the bridge.
+export function ringToBridge(st, nose) {
+  const k = portAt(st, nose);
+  if (k < 0) return;
+  const now = BASE.ports.length ? DIAGONALS_OF(k) + (st.ring || 0) : 0;
+  let turn = angleDiff(BASE.bridge, now);
+  turn = Math.round(turn / QUARTER) * QUARTER;
+  st.ringTo = (st.ring || 0) + turn;
+}
+const DIAGONALS_OF = (k) => Math.atan2(BASE.ports[k].y, BASE.ports[k].x);
+function turnRing(state, st, dt) {
+  if (!ringTurning(st)) return;
+  const was = st.ring;
+  const left = st.ringTo - st.ring;
+  st.ring += Math.sign(left) * Math.min(Math.abs(left), B.RING_TURN * dt);
+  if (!ringTurning(st)) {
+    st.ring = st.ringTo;
+    state.events.push({ type: 'ringDone', name: st.name });
+  }
+  // A ship docked at the ring goes round with it.
+  const ship = state.ship;
+  if (ship.docked !== st.id) return;
+  const turn = st.ring - was;
+  const c = Math.cos(turn),
+    s = Math.sin(turn);
+  const dx = ship.x - st.x,
+    dy = ship.y - st.y;
+  ship.x = st.x + dx * c - dy * s;
+  ship.y = st.y + dx * s + dy * c;
+  ship.heading = (ship.heading + turn + TAU) % TAU;
 }
 
 // ---------- distress calls ----------
@@ -570,5 +650,6 @@ export function stepStations(state, cmds, dt) {
   }
   stepOwned(state, dt);
   stepRaids(state, dt);
+  for (const st of stations) turnRing(state, st, dt);
   for (const st of stations) stepGuns(state, st, dt);
 }

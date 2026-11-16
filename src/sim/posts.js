@@ -10,9 +10,11 @@ import {
   dockPose,
   weaponPower,
   surging,
+  shipNose,
 } from './ship.js';
 import { startSurge, fireSurge, markByCaptain, markByGunner } from './teamwork.js';
 import { findDock } from './things.js';
+import { ringToBridge } from './stations.js';
 import { WEAPONS, weaponsOf, turretMount } from './weapons.js';
 import { teleportAllHome } from './boarding.js';
 import { useTool } from './map.js';
@@ -39,6 +41,8 @@ function dock(state) {
   const t = dockCandidate(state);
   if (!t) return;
   ship.docked = t.id;
+  // At a base the ring turns the port to the bridge (R-1154).
+  if (t.kind === 'station') ringToBridge(t, shipNose(ship));
   ship.vx = 0;
   ship.vy = 0;
   ship.throttle = 0;

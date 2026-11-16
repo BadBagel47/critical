@@ -114,7 +114,7 @@ export const B = {
   HAZE_SPEED: 240,
   // Arriving after a jump: how far from a base, how far outside the reach of a hostile one, how far from the
   // heat of the star at the least, and how much throttle the ship glides in on.
-  ARRIVE_GAP: 280,
+  ARRIVE_GAP: 520,
   ARRIVE_CLEAR: 220,
   ARRIVE_STAR: 350,
   ARRIVE_SHIPS: 750,
@@ -248,12 +248,11 @@ export const B = {
   DRONE_EVERY: 25,
   DRONE_MAX: 4,
   // The help: how long until it docks once it is called, how many guards it brings, how long it stays, how far
-  // out it jumps in, and how far from the middle of a base a ship lies at a cargo arm.
+  // out it jumps in.
   RELIEF_TIME: 90,
   RELIEF_GUARDS: 3,
   RELIEF_STAY: 40,
   RELIEF_FROM: 900,
-  BASE_BERTH: 300,
   ALARMED_DOORS: 3,
   // How long the Engineer takes to steady the reactor of a wreck, and how much time that buys, once.
   STEADY_TIME: 3,
@@ -353,6 +352,13 @@ export const B = {
   STATION_FIX_GUN: 1.5,
   // What the crew can buy for a station they own: a stronger shield, stronger guns, and security inside.
   // Price of each level, and how much stronger each level makes the shield and the guns.
+  // The large gun of a base (R-1164): what it costs, and how much harder it and the heavy guns on the top hit.
+  // A start, to be set by playing.
+  CANNON_PRICE: 600,
+  CANNON_DMG: 3,
+  HEAVY_GUN_DMG: 1.5,
+  // How fast the ring of a base turns, in radians a second: a quarter turn in four seconds.
+  RING_TURN: Math.PI / 8,
   DEFENSE_MAX: 3,
   DEFENSE_PRICE: [250, 450, 700],
   // What a station of the crew's brings in, every this many seconds: to its own purse, which pays for its

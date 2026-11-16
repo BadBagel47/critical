@@ -26,6 +26,7 @@ import { newRock, hurtRock } from '../src/sim/rocks.js';
 import { arrival } from '../src/sim/system.js';
 import { withWreck, oldShip, fit } from './helpers.js';
 import { fillPurses } from '../src/sim/purses.js';
+import { ringTurning, servicePrices, takeOver } from '../src/sim/stations.js';
 const speed = (s) => Math.hypot(s.ship.vx, s.ship.vy);
 
 const wrecks = (s) => thingsOf(s, 'wreck');
@@ -486,9 +487,12 @@ test('docking works from a little way off, and the ship is pulled in until its n
   assert.equal(dockCandidate(s), st);
   step(s, { captain: { dock: true } }, DT);
   assert.equal(s.ship.docked, st.id);
-  run(s, {}, 2.5);
-  assert.ok(Math.hypot(nose().x - port.x, nose().y - port.y) < 0.5, 'the nose is at the port');
-  const facing = headingTo(st.x - port.x, st.y - port.y);
+  // R-1154: the ring turns the port, and the ship with it, round to the bridge.
+  run(s, {}, 2.5 + Math.PI / B.RING_TURN);
+  assert.ok(!ringTurning(st));
+  const now = portsOf(st)[1];
+  assert.ok(Math.hypot(nose().x - now.x, nose().y - now.y) < 0.5, 'the nose is at the port');
+  const facing = headingTo(st.x - now.x, st.y - now.y);
   assert.ok(Math.abs(Math.atan2(Math.sin(s.ship.heading - facing), Math.cos(s.ship.heading - facing))) < 0.01);
   const rest = { x: s.ship.x, y: s.ship.y };
   run(s, {}, 1);
@@ -609,6 +613,12 @@ test('every interior lets the crew reach all loot and enemies', () => {
         if ('# X'.includes(tileAt(it, nx, ny)) || seen.has(key(nx, ny))) continue;
         seen.add(key(nx, ny));
         queue.push([nx, ny]);
+      }
+      // The ways between the floors of a base.
+      const to = it.jumps ? it.jumps[key(x, y)] : undefined;
+      if (to !== undefined && !seen.has(to)) {
+        seen.add(to);
+        queue.push([to % it.w, Math.floor(to / it.w)]);
       }
     }
     for (const e of [...it.loot, ...it.guards, ...it.turrets]) {
@@ -1161,7 +1171,7 @@ import {
   level,
   slotsOpen,
 } from '../src/sim/upgrades.js';
-import { servicePrices, takeOver } from '../src/sim/stations.js';
+import { cutPower } from '../src/sim/pressure.js';
 
 const station = (s, align) => stations(s).find((x) => x.align === align);
 // The side of a station falls out with the crew for good, and the station turns on them.
@@ -1277,6 +1287,7 @@ test('a hostile station is broken into, boarded and taken over from its mainfram
   it.doorOpen = true;
   av.x = it.mainframe.x;
   av.y = it.mainframe.y;
+  cutPower(s, st, false);
   step(s, { away: { 0: {} }, mainframe: [{ player: 0, action: 'hack', level: 2 }] }, DT);
   run(s, { away: { 0: {} } }, B.HACK_TIME[2] + 0.2);
   assert.equal(st.align, 'friendly');
@@ -2067,6 +2078,7 @@ test('a station that is taken over becomes a trading floor', () => {
   it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
   av.x = it.mainframe.x;
   av.y = it.mainframe.y;
+  cutPower(s, st, false);
   step(s, { away: { 0: {} }, mainframe: [{ player: 0, action: 'hack', level: 2 }] }, DT);
   run(s, { away: { 0: {} } }, B.HACK_TIME[2] + 0.2);
   assert.equal(st.align, 'friendly');
@@ -2203,8 +2215,15 @@ function sneaking() {
   const it = st.interior,
     av = it.avatars[0];
   it.turrets = [];
+  // The cameras on the walls of a base are left out, so that each test is about what it says.
+  it.cameras = [];
   it.guards = it.guards.slice(0, 1);
   const g = it.guards[0];
+  // Out of the airlock, in the largest stretch of the concourse.
+  const area = (h) => (h.c1 - h.c0) * (h.r1 - h.r0);
+  const hall = it.halls.filter((h) => h.use === 'CONCOURSE').sort((a, b) => area(b) - area(a))[0];
+  av.x = ((hall.c0 + hall.c1 + 1) / 2) * TILE;
+  av.y = ((hall.r0 + hall.r1 + 1) / 2) * TILE;
   // Somewhere with a clear line between two spots: where the boarder came in, and a little further in.
   const far = it.rooms
     .map((r) => r.mid)
@@ -2535,14 +2554,15 @@ test('a guard that sees a flare goes to look at it, once, and then back to its p
   s.ship.mods.flare = 1;
   av.flares = 2;
   av.lamp = false;
-  const { at, toward } = spotNear(it, av, 110);
-  // The guard looks toward where the flare will land, which is not where the boarder stands.
-  const land = { x: (av.x + at.x) / 2, y: (av.y + at.y) / 2 };
+  // The guard stands further off than it can see, and looks toward where the flare will land, which is near it
+  // and far from the boarder, so that the light never falls on the boarder.
+  const { at, toward } = spotNear(it, av, B.GUARD_SIGHT + 30);
+  const land = { x: at.x + (av.x - at.x) * 0.25, y: at.y + (av.y - at.y) * 0.25 };
   post(g, at, toward);
   // The boarder is out of its sight: in the dark and far enough off.
   assert.equal(inSight(it, g, av), false);
   step(s, { away: { 0: { flare: land } } }, DT);
-  run(s, { away: { 0: {} } }, 1.5);
+  run(s, { away: { 0: {} } }, 2.5);
   if (inSight(it, g, av)) return;
   assert.ok(g.curious, 'it has seen the light');
   assert.equal(it.mood, 'lockdown', 'a light gives nobody away by itself');
@@ -2563,8 +2583,9 @@ test('a station has alarmed doors, and there is always a way to the vault that g
       turnHostile(s, st);
       const it = createInterior(s, st);
       doors += it.alarmed.length;
-      assert.ok(it.alarmed.length <= B.ALARMED_DOORS);
-      const shut = new Set(it.alarmed.map((d) => d.ty * it.w + d.tx));
+      // The ladders of a base are behind alarmed doors of their own, besides those on rooms.
+      assert.ok(it.alarmed.filter((d) => !d.tiles).length <= B.ALARMED_DOORS);
+      const shut = new Set(it.alarmed.flatMap((d) => d.tiles || [d.ty * it.w + d.tx]));
       const vault = it.rooms[it.vault].door;
       const goal = { tx: Math.floor(vault.x / TILE), ty: Math.floor(vault.y / TILE) };
       for (const a of it.airlocks) {
@@ -2585,9 +2606,15 @@ test('a station has alarmed doors, and there is always a way to the vault that g
             const tx = at.tx + dx,
               ty = at.ty + dy,
               key = ty * it.w + tx;
-            if (seen.has(key) || shut.has(key) || !'.,AL'.includes(tileAt(it, tx, ty))) continue;
+            if (seen.has(key) || shut.has(key) || !'.,ALD'.includes(tileAt(it, tx, ty))) continue;
             seen.add(key);
             queue.push({ tx, ty });
+          }
+          // The lift and the stairs to another floor of a base.
+          const to = it.jumps ? it.jumps[at.ty * it.w + at.tx] : undefined;
+          if (to !== undefined && !seen.has(to) && !shut.has(to)) {
+            seen.add(to);
+            queue.push({ tx: to % it.w, ty: Math.floor(to / it.w) });
           }
         }
         assert.ok(found, `seed ${seed}: the vault can be reached without an alarmed door`);

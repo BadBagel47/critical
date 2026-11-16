@@ -10,12 +10,11 @@ import { newGuard, stepGuard, alertGuard, planRounds, awake, guardKind, kindOf, 
 import { makeVessel } from './vessels.js';
 import { PIRATE, CREW } from './sides.js';
 import { playerById, leavePost, returnToPost } from './players.js';
-import { isTrading } from './stations.js';
+import { isTrading, ringTurning, defenseOf } from './stations.js';
 import { stepHack, stepMainframe, turnOnCrew, MAINFRAME_REACH } from './mainframe.js';
 import { usesOf, furnish, doorsOf, stepDoors } from './furnish.js';
 import { makeLocks, lockNear, hatchOpen, cycleLock, stepLocks } from './airlock.js';
 import { cutPower, restorePower, openCommand, stepPressure, stopCall, wreckHangar } from './pressure.js';
-import { defenseOf } from './stations.js';
 import {
   has,
   level,
@@ -62,10 +61,10 @@ function reachable(it, from, to, shut) {
       queue.push({ tx, ty });
     }
     // A way between two floors.
-    const to = it.jumps ? it.jumps[at.ty * it.w + at.tx] : undefined;
-    if (to !== undefined && !seen.has(to) && !shut.has(to)) {
-      seen.add(to);
-      queue.push({ tx: to % it.w, ty: Math.floor(to / it.w) });
+    const up = it.jumps ? it.jumps[at.ty * it.w + at.tx] : undefined;
+    if (up !== undefined && !seen.has(up) && !shut.has(up)) {
+      seen.add(up);
+      queue.push({ tx: up % it.w, ty: Math.floor(up / it.w) });
     }
   }
   return false;
@@ -139,6 +138,7 @@ export function spotIn(state, it, box, taken, away = 0) {
 }
 
 export function createInterior(state, wreck) {
+  /** @type {any} */
   const plan = layOut(state, wreck);
   const { rooms, vault } = plan;
   const base = wreck.kind === 'station';
@@ -364,7 +364,11 @@ function beaconsFor(it) {
     const n = Math.max(1, Math.round(Math.max(w, tall) / every));
     for (let k = 0; k < n; k++) {
       const u = (k + 0.5) / n;
-      spots.push(w >= tall ? { x: (h.c0 + 1 + w * u) * TILE, y: (h.r0 + 1 + tall / 2) * TILE } : { x: (h.c0 + 1 + w / 2) * TILE, y: (h.r0 + 1 + tall * u) * TILE });
+      spots.push(
+        w >= tall
+          ? { x: (h.c0 + 1 + w * u) * TILE, y: (h.r0 + 1 + tall / 2) * TILE }
+          : { x: (h.c0 + 1 + w / 2) * TILE, y: (h.r0 + 1 + tall * u) * TILE },
+      );
     }
   }
   it.rooms.forEach((r) => {
@@ -375,7 +379,8 @@ function beaconsFor(it) {
   const free = spots.filter((p) => !blocked(it, p.x, p.y, 2));
   // Every so-and-so-many of them, so that those that are kept lie evenly.
   const out = [];
-  for (let k = 0; k < Math.min(want, free.length); k++) out.push(free[Math.floor((k * free.length) / Math.min(want, free.length))]);
+  for (let k = 0; k < Math.min(want, free.length); k++)
+    out.push(free[Math.floor((k * free.length) / Math.min(want, free.length))]);
   return out;
 }
 
@@ -403,7 +408,9 @@ function fillBase(state, it, st) {
     const r = rand(state);
     const deck = i < 2 ? 2 : r < 0.45 ? 0 : r < 0.8 ? 1 : 2;
     const box = rand(state) < 0.35 ? pick(hallsOn(deck)) : pick(onDeck(deck));
-    it.guards.push(newGuard(state, spot(box, deck === 1 ? 10 * TILE : 0), rand(state) * TAU, guardKind(state, where, danger)));
+    it.guards.push(
+      newGuard(state, spot(box, deck === 1 ? 10 * TILE : 0), rand(state) * TAU, guardKind(state, where, danger)),
+    );
   }
   // Turrets: at the security checkpoint in the middle and outside the command room, and more with security.
   const posts = [roomFor('SECURITY', 1), pick(hallsOn(2)), roomFor('HOLD'), roomFor('SECURITY', 2), pick(hallsOn(0))];
@@ -551,6 +558,11 @@ export function tryBoard(state, playerId) {
   // A station that will not deal with the crew lets nobody aboard.
   if (wreck.kind === 'station' && wreck.closed) {
     state.events.push({ type: 'stationClosed', player: playerId, name: wreck.name });
+    return false;
+  }
+  // The ring is still turning the ship to the bridge.
+  if (wreck.kind === 'station' && ringTurning(wreck)) {
+    state.events.push({ type: 'ringTurning', player: playerId });
     return false;
   }
   // Friendly and neutral stations are open to walk into. No lock, no teleporter needed.
@@ -803,7 +815,11 @@ export function linkAt(it, av) {
   const to = it.jumps[Math.floor(av.y / TILE) * it.w + Math.floor(av.x / TILE)];
   if (to === undefined) return null;
   const deck = deckOf(it, av.x);
-  const link = it.links.find((l) => l.decks.includes(deck) && dist(l.at[l.decks.indexOf(deck)].x, l.at[l.decks.indexOf(deck)].y, av.x, av.y) < TILE * 4);
+  const link = it.links.find(
+    (l) =>
+      l.decks.includes(deck) &&
+      dist(l.at[l.decks.indexOf(deck)].x, l.at[l.decks.indexOf(deck)].y, av.x, av.y) < TILE * 4,
+  );
   const other = link.decks[0] === deck ? link.decks[1] : link.decks[0];
   return { link, to: other, up: other > deck };
 }

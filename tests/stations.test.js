@@ -9,7 +9,7 @@ import { tryBoard, createInterior } from '../src/sim/boarding.js';
 import { createWreck, gatherForTesting } from '../src/sim/sectors.js';
 import { USES } from '../src/sim/furnish.js';
 import { waysFrom, solidAt, solidTile, TILE } from '../src/sim/floor.js';
-import { takeOver, stationShieldMax, gunHpMax, allStations, servicePrices } from '../src/sim/stations.js';
+import { takeOver, stationShieldMax, gunHpMax, allStations, servicePrices, remountGuns } from '../src/sim/stations.js';
 import { moodOf, enemies, HUNTER } from '../src/sim/sides.js';
 import { startSiege, attackChoices, riskOf } from '../src/sim/siege.js';
 import { hurtVessel } from '../src/sim/vessels.js';
@@ -18,6 +18,7 @@ import { B } from '../src/sim/balance.js';
 import { dist } from '../src/sim/util.js';
 import { fillPurses } from '../src/sim/purses.js';
 import { oldShip } from './helpers.js';
+import { cutPower } from '../src/sim/pressure.js';
 
 const DT = 1 / 20;
 // A station of every side stands near the start, as in a test game, but the ship has nothing bought.
@@ -62,6 +63,12 @@ function hostile(s) {
   for (const g of st.guns) g.hp = 0;
   return st;
 }
+// A station of the crew's with the first level of guns bought, so that it has guns (R-1163).
+function withGuns(st) {
+  st.defense = { ...st.defense, guns: 1 };
+  remountGuns(st);
+  return st;
+}
 // Off to the next sector, as a real jump does it.
 function jumpAway(s, to = s.sectors[s.sector].links[0]) {
   s.ship.docked = null;
@@ -104,6 +111,10 @@ test('a hack reads the plan, then only the Engineer takes control, and the trace
   assert.ok(it.blackout > 0, 'cameras and turrets are off');
   assert.equal(it.doorOpen, true, 'and the vault is open');
   order(s, { action: 'hack', level: 2 });
+  assert.equal(it.hack, null, 'R-1167: the base is not given up while it has power');
+  cutPower(s, st, false);
+  assert.equal(it.mood, 'lockdown', 'R-1167: put out quietly, nobody knows yet');
+  order(s, { action: 'hack', level: 2 });
   run(s, { away: { 0: {} } }, 2);
   // Walking away pauses the work.
   const had = it.work[2];
@@ -120,6 +131,7 @@ test('anyone can take a station from its mainframe, so that one player alone is 
   const st = hostile(s);
   const { it } = inside(s, st, 'captain');
   it.guards = [];
+  cutPower(s, st, false);
   order(s, { action: 'hack', level: 2 });
   run(s, { away: { 0: {} } }, B.HACK_TIME[2] + 0.2);
   assert.equal(st.side, 'crew');
@@ -131,6 +143,7 @@ test('the alarm sounds before a whole takeover is done, even without the first l
   const st = hostile(s);
   const { it } = inside(s, st, 'captain');
   it.guards = [];
+  cutPower(s, st, false);
   order(s, { action: 'hack', level: 2 });
   run(s, { away: { 0: {} } }, B.HACK_TIME[2] * 0.95);
   assert.equal(it.mood, 'alarm');
@@ -141,6 +154,7 @@ test('a station of the crew’s is not mended by itself, but from its mainframe,
   const s = quiet();
   const st = post(s);
   takeOver(s, st);
+  withGuns(st);
   st.hp = 500;
   st.guns[0].hp = 0;
   st.lastHit = -1e3;
@@ -159,6 +173,7 @@ test('R-1115: a mended gun waits to be switched on, and defence is bought from w
   const s = quiet();
   const st = post(s);
   takeOver(s, st);
+  withGuns(st);
   st.guns[1].hp = 0;
   inside(s, st);
   order(s, { action: 'fix', part: 1 });
@@ -186,6 +201,9 @@ test('taking a free station from the inside: red alert, help, and a bounty once 
   const st = post(s);
   const { it } = inside(s, st, 'engineer');
   const others = { ...s.standing };
+  order(s, { action: 'seize' });
+  assert.equal(it.trade, true, 'R-1167: not while the base has power');
+  cutPower(s, st, false);
   order(s, { action: 'seize' });
   assert.equal(it.trade, false);
   assert.equal(it.mood, 'alarm', 'the alarm sounds at once');
@@ -242,6 +260,7 @@ test('a faction station taken from the inside makes an enemy of the faction, whi
   s.siegeTimer = 1e9;
   const st = thingsOf(s, 'station').find((x) => x.side === 'charter');
   const { it } = inside(s, st, 'engineer');
+  cutPower(s, st, false);
   order(s, { action: 'seize' });
   assert.equal(s.hunt.side, 'charter', 'a faction comes itself, and sets no bounty');
   it.guards = [];
@@ -294,7 +313,7 @@ test('an attack where the crew is not is worked out in three steps, and a statio
   }
   assert.deepEqual([...stages], ['siege', 'boarding', 'hack']);
   assert.equal(st.side, 'pirate', 'the station has fallen');
-  assert.deepEqual(st.defense, { shield: 1, guns: 0, inner: 0 }, 'with half of what was bought');
+  assert.deepEqual(st.defense, { shield: 1, guns: 0, inner: 0, cannon: 0 }, 'with half of what was bought');
   assert.ok(s.siegeTimer >= B.SIEGE_GAP[0], 'and the next attack is a while away');
 });
 
@@ -329,7 +348,7 @@ test('where the crew is, the attackers come as ships, and their boarding ship do
   run(s, {}, 30);
   assert.equal(s.siege.stage, 'boarding');
   const boat = s.vessels.find((v) => v.boarding);
-  assert.ok(boat && dist(boat.x, boat.y, st.x, st.y) < 140, 'it is docked at the station');
+  assert.ok(boat && dist(boat.x, boat.y, st.x, st.y) < 300, 'it is docked at a cargo arm of the station');
   // Shooting it now changes nothing: the boarders are in.
   hurtVessel(s, boat, 1e5);
   run(s, {}, 1);
@@ -520,14 +539,17 @@ test('every room has a use, the things in it never close a way, and most rooms h
       assert.ok(it.uses.every((u) => USES.includes(u)));
       assert.equal(it.uses[it.vault], 'VAULT');
       // Every bit of floor can still be walked to from the way in, with the vault door counted as open.
-      const open = { ...it, tiles: it.tiles.map((c) => (c === 'L' ? '.' : c)), shut: [] };
+      const open = { ...it, tiles: it.tiles.map((c) => (c === 'L' || c === 'D' ? '.' : c)), shut: [] };
       const a = it.airlocks[0];
       const ways = waysFrom(open, Math.floor(a.x / TILE), Math.floor(a.y / TILE));
       open.tiles.forEach((c, i) => {
         if (c === '.' || c === ',') assert.notEqual(ways.steps[i], Infinity, `a cut-off tile in a ${p.kind}`);
       });
-      rooms += it.rooms.length;
-      furnished += it.rooms.filter((r) => {
+      // The ways in and out and between floors, and the small rooms of the guns, are no rooms to fight in.
+      const passages = ['AIRLOCK', 'LIFT', 'STAIRS', 'LADDER', 'GUN'];
+      const fighting = it.rooms.filter((r, i) => !passages.includes(it.uses[i]));
+      rooms += fighting.length;
+      furnished += fighting.filter((r) => {
         for (let ty = r.r0; ty <= r.r1; ty++)
           for (let tx = r.c0; tx <= r.c1; tx++) if (it.tiles[ty * it.w + tx] === 'K') return true;
         return false;
@@ -546,7 +568,8 @@ test('a door is shut when nobody is near it, and a shut door blocks a look but n
   av.y = it.entry.y;
   it.guards = [];
   // The door furthest from the boarder.
-  const d = [...it.doors].sort((a, b) => dist(b.x, b.y, av.x, av.y) - dist(a.x, a.y, av.x, av.y))[0];
+  const slides = it.doors.filter((x) => x.kind === 'slide');
+  const d = [...slides].sort((a, b) => dist(b.x, b.y, av.x, av.y) - dist(a.x, a.y, av.x, av.y))[0];
   assert.ok(dist(av.x, av.y, d.x, d.y) > 40);
   step(s, { away: { 0: {} } }, DT);
   assert.ok(

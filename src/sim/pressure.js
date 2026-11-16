@@ -21,7 +21,9 @@ import { setTiles } from './airlock.js';
 import { makeVessel } from './vessels.js';
 import { PIRATE, CREW } from './sides.js';
 import { currentSector } from './sectors.js';
-import { headingTo, dist, forward } from './util.js';
+import { dist, forward } from './util.js';
+import { armBerth, armsOf } from './traffic.js';
+import { SHIPS } from './kinds.js';
 
 const doorTiles = (it, kind) => it.doors.filter((d) => d.kind === kind).flatMap((d) => d.tiles);
 // The doors of the command room are shut while the base has power, except on a base of the crew's own.
@@ -93,11 +95,8 @@ const dronesOut = (it) => it.guards.filter((g) => g.launched && g.hp > 0 && !g.d
 function berth(state, st) {
   const ship = state.ship;
   let best = null;
-  for (let k = 0; k < 4; k++) {
-    const f = forward(st.heading + (k * Math.PI) / 2);
-    const at = { k, x: st.x + f.x * B.BASE_BERTH, y: st.y + f.y * B.BASE_BERTH, face: headingTo(-f.x, -f.y) };
-    // The building dock of a shipyard is in the way of the arm to the right.
-    if (st.shipyard && k === 1) continue;
+  for (const k of armsOf(st)) {
+    const at = { k, ...armBerth(st, k, SHIPS.gunboat.radius * 2) };
     if (!best || dist(at.x, at.y, ship.x, ship.y) > dist(best.x, best.y, ship.x, ship.y)) best = at;
   }
   return best;

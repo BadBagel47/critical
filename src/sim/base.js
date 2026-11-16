@@ -46,10 +46,22 @@ const SIDE = { n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] };
 const BASEMENT_ROOMS = ['WORKSHOP', 'BARRACKS', 'REFINERY', 'PUMPS', 'STORES', 'FUEL'];
 const PUBLIC_ROOMS = ['SERVICES', 'ARMORY', 'BAR', 'MARKET', 'CLINIC', 'HOTEL'];
 const BACK_ROOMS = ['KITCHEN', 'LAUNDRY', 'STORES', 'PANTRY', 'LOCKERS', 'ARCHIVE', 'QUARTERS'];
-const TOP_ROOMS = ['COMMS', 'SERVERS', 'SECURITY', 'ARMS', 'SENSORS', 'OFFICE', 'COOLING', 'ARCHIVE', 'QUARTERS', 'STORES'];
+const TOP_ROOMS = [
+  'COMMS',
+  'SERVERS',
+  'SECURITY',
+  'ARMS',
+  'SENSORS',
+  'OFFICE',
+  'COOLING',
+  'ARCHIVE',
+  'QUARTERS',
+  'STORES',
+];
 
 // Whether any part of a tile is inside a floor that reaches r tiles from the middle.
-const within = (x, y, r) => Math.hypot(Math.max(x, Math.min(MID, x + 1)) - MID, Math.max(y, Math.min(MID, y + 1)) - MID) < r;
+const within = (x, y, r) =>
+  Math.hypot(Math.max(x, Math.min(MID, x + 1)) - MID, Math.max(y, Math.min(MID, y + 1)) - MID) < r;
 
 // One floor while it is being made. `owner` says whose each tile is: 0 nobody's, otherwise the number of a
 // space in `spaces`, which is a corridor or a room.
@@ -186,7 +198,8 @@ function setLink(f, link, k) {
     tiles.push([x, dy > 0 ? y1 + 1 : y0 - 1], [x + 1, dy > 0 ? y1 + 1 : y0 - 1]);
   }
   // What lies outside the door has to be floor. A wall there is opened up.
-  for (const [x, y] of tiles) if (f.grid.get(x + dx, y + dy) === '#' && f.at(x + dx, y + dy) >= 0) f.grid.set(x + dx, y + dy, ',');
+  for (const [x, y] of tiles)
+    if (f.grid.get(x + dx, y + dy) === '#' && f.at(x + dx, y + dy) >= 0) f.grid.set(x + dx, y + dy, ',');
   f.doors.push(doorOf(f, tiles, link.kind === 'ladder' ? 'alarm' : 'slide', id));
   return id;
 }
@@ -225,7 +238,14 @@ function allDoorSpots(f) {
           const b = floor(x + nx, y + ny);
           if (a <= 0 || b <= 0 || a === b) continue;
           if (floor(x + sx - nx, y + sy - ny) !== a || floor(x + sx + nx, y + sy + ny) !== b) continue;
-          out.push({ tiles: [[x, y], [x + sx, y + sy]], a, other: b });
+          out.push({
+            tiles: [
+              [x, y],
+              [x + sx, y + sy],
+            ],
+            a,
+            other: b,
+          });
         }
       }
     }
@@ -239,7 +259,8 @@ function cutDoors(state, f, only) {
   const { spaces } = f;
   f.spots = allDoorSpots(f);
   const joined = new Set(spaces.filter((s) => s && (s.corridor || s.joined)).map((s) => s.id));
-  const kindFor = (a, b) => (a.use === 'VAULT' || b.use === 'VAULT' ? 'vault' : a.staff !== b.staff ? 'staff' : 'slide');
+  const kindFor = (a, b) =>
+    a.use === 'VAULT' || b.use === 'VAULT' ? 'vault' : a.staff !== b.staff ? 'staff' : 'slide';
   const rooms = spaces.filter((s) => s && !s.corridor && !s.fixed && !s.joined);
   const open = (room, to, count = 1) => {
     const spots = doorSpots(f, room.id, to);
@@ -340,8 +361,20 @@ function basement(state) {
   const vault = pickOf(state, made.slice(0, inner));
   f.spaces[vault].use = 'VAULT';
   let n = pickInt(state, 0, BASEMENT_ROOMS.length - 1);
-  for (const id of made) if (f.spaces[id].use === 'ROOM') f.spaces[id].use = BASEMENT_ROOMS[n++ % BASEMENT_ROOMS.length];
-  for (const [id, x, y] of guns) f.doors.push(doorOf(f, [[x, y], [x, y + 1]], 'slide', id));
+  for (const id of made)
+    if (f.spaces[id].use === 'ROOM') f.spaces[id].use = BASEMENT_ROOMS[n++ % BASEMENT_ROOMS.length];
+  for (const [id, x, y] of guns)
+    f.doors.push(
+      doorOf(
+        f,
+        [
+          [x, y],
+          [x, y + 1],
+        ],
+        'slide',
+        id,
+      ),
+    );
   cutDoors(state, f, ['VAULT', 'GUN']);
   return { f, links };
 }
@@ -400,19 +433,99 @@ function middle(state, yard) {
   });
   // The inner door of the airlock, on one of its two sides, and the doors of the core.
   const fixed = (tiles, kind, room) => f.doors.push(doorOf(f, tiles, kind, room));
-  if (rand(state) < 0.5) fixed([[23, 20], [23, 21]], 'lock', lock);
-  else fixed([[20, 23], [21, 23]], 'lock', lock);
-  if (yardLock) fixed([[64, 39], [64, 40]], 'lock', yardLock);
+  if (rand(state) < 0.5)
+    fixed(
+      [
+        [23, 20],
+        [23, 21],
+      ],
+      'lock',
+      lock,
+    );
+  else
+    fixed(
+      [
+        [20, 23],
+        [21, 23],
+      ],
+      'lock',
+      lock,
+    );
+  if (yardLock)
+    fixed(
+      [
+        [64, 39],
+        [64, 40],
+      ],
+      'lock',
+      yardLock,
+    );
   const security = f.spaces.find((s) => s && s.use === 'SECURITY').id;
   const office = f.spaces.find((s) => s && s.use === 'OFFICE').id;
-  fixed([[33, 28], [34, 28]], 'staff', 0);
-  fixed([[33, 51], [34, 51]], 'staff', 0);
-  fixed([[43, 28], [44, 28]], 'staff', security);
-  fixed([[43, 51], [44, 51]], 'staff', security);
-  fixed([[35, 39], [35, 40]], 'slide', security);
-  fixed([[45, 40], [45, 41]], 'slide', office);
-  fixed([[51, 40], [51, 41]], 'staff', office);
-  fixed([[56, 39], [56, 40]], 'slide', lounge);
+  fixed(
+    [
+      [33, 28],
+      [34, 28],
+    ],
+    'staff',
+    0,
+  );
+  fixed(
+    [
+      [33, 51],
+      [34, 51],
+    ],
+    'staff',
+    0,
+  );
+  fixed(
+    [
+      [43, 28],
+      [44, 28],
+    ],
+    'staff',
+    security,
+  );
+  fixed(
+    [
+      [43, 51],
+      [44, 51],
+    ],
+    'staff',
+    security,
+  );
+  fixed(
+    [
+      [35, 39],
+      [35, 40],
+    ],
+    'slide',
+    security,
+  );
+  fixed(
+    [
+      [45, 40],
+      [45, 41],
+    ],
+    'slide',
+    office,
+  );
+  fixed(
+    [
+      [51, 40],
+      [51, 41],
+    ],
+    'staff',
+    office,
+  );
+  fixed(
+    [
+      [56, 39],
+      [56, 40],
+    ],
+    'slide',
+    lounge,
+  );
   for (const id of [security, office, lock, lounge]) f.spaces[id].joined = true;
   cutDoors(state, f, ['GUN']);
   gunDoors(state, f);
@@ -458,16 +571,37 @@ function top(state) {
     f.split(box, 6, 10, any);
   raiseWalls(f);
   const links = [LINKS[3], LINKS[4], LINKS[5]].map((l) => setLink(f, l, 1));
-  for (const [id, x, y] of guns) f.doors.push(doorOf(f, [[x, y], [x, y + 1]], 'slide', id));
+  for (const [id, x, y] of guns)
+    f.doors.push(
+      doorOf(
+        f,
+        [
+          [x, y],
+          [x, y + 1],
+        ],
+        'slide',
+        id,
+      ),
+    );
   for (const tiles of [
-    [[39, 36], [40, 36]],
-    [[39, 46], [40, 46]],
-    [[35, 41], [35, 42]],
+    [
+      [39, 36],
+      [40, 36],
+    ],
+    [
+      [39, 46],
+      [40, 46],
+    ],
+    [
+      [35, 41],
+      [35, 42],
+    ],
   ])
     f.doors.push(doorOf(f, tiles, 'command', command));
   cutDoors(state, f, ['GUN']);
   // The rooms that the corridor reaches get their names, the ones the floor must have first.
-  made.filter((id) => f.spaces[id].joined).forEach((id, k) => (f.spaces[id].use = TOP_ROOMS[k % TOP_ROOMS.length]));
+  const order = [...made.filter((id) => f.spaces[id].joined), ...made.filter((id) => !f.spaces[id].joined)];
+  order.forEach((id, k) => (f.spaces[id].use = TOP_ROOMS[k % TOP_ROOMS.length]));
   return { f, links };
 }
 
@@ -595,7 +729,12 @@ function tryBase(state, place) {
       if (tiles.length < (s.corridor ? 1 : 4)) continue;
       const xs = tiles.map((t) => t[0]),
         ys = tiles.map((t) => t[1]);
-      const box = { c0: Math.min(...xs) - 1, c1: Math.max(...xs) + 1, r0: Math.min(...ys) - 1, r1: Math.max(...ys) + 1 };
+      const box = {
+        c0: Math.min(...xs) - 1,
+        c1: Math.max(...xs) + 1,
+        r0: Math.min(...ys) - 1,
+        r1: Math.max(...ys) + 1,
+      };
       if (s.corridor) {
         // A corridor is cut into its straight runs, for whatever is to stand or walk in one.
         for (const run of runsOf(tiles)) halls.push({ ...run, deck: f.deck, staff: s.staff, use: s.use });
@@ -606,7 +745,14 @@ function tryBase(state, place) {
         cy = (box.r0 + box.r1) / 2;
       const m = tiles.reduce((a, b) => (dist(b[0], b[1], cx, cy) < dist(a[0], a[1], cx, cy) ? b : a));
       number.set(f.deck + ':' + s.id, rooms.length);
-      rooms.push({ ...box, door: null, mid: { x: px(m[0]) + TILE / 2, y: px(m[1]) + TILE / 2 }, use: s.use, deck: f.deck, staff: s.staff });
+      rooms.push({
+        ...box,
+        door: null,
+        mid: { x: px(m[0]) + TILE / 2, y: px(m[1]) + TILE / 2 },
+        use: s.use,
+        deck: f.deck,
+        staff: s.staff,
+      });
     }
   }
   const doors = [];
@@ -624,7 +770,11 @@ function tryBase(state, place) {
   // A visitor has to be able to walk from the airlock to every desk without going through a door for the staff.
   const open = new Set();
   for (const d of doors) if (d.kind === 'staff' || d.kind === 'alarm') for (const i of d.tiles) open.add(i);
-  const visitor = stepsFrom({ w, h: DECK, get: (x, y) => (open.has(y * w + x) ? '#' : grid.get(x, y)) }, x0(1) + hx, hy);
+  const visitor = stepsFrom(
+    { w, h: DECK, get: (x, y) => (open.has(y * w + x) ? '#' : grid.get(x, y)) },
+    x0(1) + hx,
+    hy,
+  );
   const walkedTo = (r) => visitor.has(Math.floor(r.mid.y / TILE) * w + Math.floor(r.mid.x / TILE));
   // Everything the game needs has to be there, and within reach.
   const find = (use) => rooms.findIndex((r) => r.use === use);
@@ -654,7 +804,6 @@ function tryBase(state, place) {
     [MID, 75],
     [5, MID],
   ].map(([x, y]) => spot(0, x, y));
-  const command = rooms[find('COMMAND')];
   return {
     w,
     h: DECK,
@@ -663,7 +812,11 @@ function tryBase(state, place) {
     vault: find('VAULT'),
     halls,
     airlocks,
-    far: { ...command.door },
+    // A spot in the corridor round the command room.
+    far: (() => {
+      const h = halls.find((x) => x.deck === 2);
+      return { x: px((h.c0 + h.c1 + 1) / 2), y: px((h.r0 + h.r1 + 1) / 2) };
+    })(),
     decks,
     links,
     jumps,
@@ -678,7 +831,9 @@ function runsOf(tiles) {
   const key = (x, y) => x + ':' + y;
   const left = new Set(tiles.map(([x, y]) => key(x, y)));
   const runs = [];
-  for (const [x, y] of tiles) {
+  // From the top left, so that each run grows to the right and down from its first tile.
+  const sorted = [...tiles].sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+  for (const [x, y] of sorted) {
     if (!left.has(key(x, y))) continue;
     // The largest box of this corridor's floor that begins here.
     let x1 = x;

@@ -26,22 +26,11 @@ export const THINGS = {
     label: 'WRECK',
     persist: true,
   },
-  // Sprite is 192 x 192: a ring around a hub, with a docking arm on each side.
+  // The standard base (D-217): three round floors under domes, with a ring round them at the height of the middle.
+  // See BASE below for its shape.
   station: {
-    hit: [{ x: 0, y: 0, r: 80 }],
-    ports: [
-      { x: 0, y: -96 },
-      { x: 0, y: 96 },
-      { x: -96, y: 0 },
-      { x: 96, y: 0 },
-    ],
-    // Where a station has its guns: on the four pads on the ring.
-    guns: [
-      { x: -54, y: -54 },
-      { x: 54, y: -54 },
-      { x: 54, y: 54 },
-      { x: -54, y: 54 },
-    ],
+    hit: [{ x: 0, y: 0, r: 212 }],
+    ports: (st) => basePorts(st),
     lock: 'code',
     inside: true,
     onMap: (st) => ({ align: st.align, side: st.side, shipyard: st.shipyard, name: st.name }),
@@ -63,6 +52,56 @@ export const THINGS = {
   salvage: {},
   buoy: { persist: true },
 };
+
+// The shape of a standard base in space, in its own pixels, up being its heading (R-1152 to R-1164). A tile
+// inside is SCALE pixels outside, so that the outside and the inside agree (R-1157).
+//   ring      the ring that turns, at the height of the middle floor: from `ring[0]` to `ring[1]` out
+//   ports     the four ports on the ring for ships, on the diagonals. Each leads by the bridge to the airlock
+//   bridge    which way the bridge runs from the airlock to the ring: up and to the left
+//   arms      the four cargo arms that freighters dock at, straight out from the basement under the ring
+//   yard      the port in the building dock of a shipyard, to the right, with an airlock of its own
+//   guns      the ten places for guns: four on the basement, four on the edge of the middle between the ports,
+//             and two heavy ones on the top. The large gun stands on its own in the middle of the top
+//   domes     how far each floor reaches, the basement, the middle and the top
+const SCALE = 5.95;
+const ring = (r, a) => ({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+const DIAGONALS = [-3, -1, 1, 3].map((k) => (k * Math.PI) / 4);
+export const BASE = {
+  scale: SCALE,
+  ring: [36 * SCALE, 39 * SCALE],
+  ports: DIAGONALS.map((a) => ({ ...ring(39.6 * SCALE, a), toward: { x: 0, y: 0 } })),
+  bridge: DIAGONALS[0],
+  arms: [
+    { x: 0, y: -240 },
+    { x: 240, y: 0 },
+    { x: 0, y: 240 },
+    { x: -240, y: 0 },
+  ],
+  yard: { x: 44 * SCALE, y: 0, toward: { x: 0, y: 0 }, airlock: 1 },
+  guns: [
+    [-25, -17.5],
+    [24, 16.5],
+    [24, -17.5],
+    [-25, 16.5],
+    [10.5, -26.5],
+    [-11.5, 25.5],
+    [25.5, 10.5],
+    [-26.5, -11.5],
+    [-10, -10.5, true],
+    [9.5, 9.5, true],
+  ].map(([x, y, heavy]) => ({ x: Number(x) * SCALE, y: Number(y) * SCALE, heavy: !!heavy })),
+  cannon: { x: 0, y: 0, heavy: true, cannon: true },
+  domes: [35.6 * SCALE, 29 * SCALE, 16 * SCALE],
+};
+// The ports of a base right now: those on the ring, turned with it, and the building dock of a shipyard.
+export function basePorts(st) {
+  const turn = st.ring || 0;
+  const c = Math.cos(turn),
+    s = Math.sin(turn);
+  const out = BASE.ports.map((p) => ({ ...p, x: p.x * c - p.y * s, y: p.x * s + p.y * c }));
+  if (st.shipyard) out.push(BASE.yard);
+  return out;
+}
 
 // The hulls that wrecks come in, nose up. `ship` is the class of ship that leaves that wreck when it is
 // destroyed, and `risk` how dangerous such a wreck can be to board: a small hull holds less, and fewer guards.

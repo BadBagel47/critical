@@ -19,7 +19,8 @@ import { SHIPS } from './kinds.js';
 import { CREW, PIRATE, FACTIONS, isFaction, moodOf, standingOf, nameOfSide } from './sides.js';
 import { allStations, fall, gunDmg, defenseOf } from './stations.js';
 import { makeVessel, fleeFrom } from './vessels.js';
-import { portsOf, mapInfo } from './things.js';
+import { mapInfo } from './things.js';
+import { armBerth, armsOf } from './traffic.js';
 import { newGuard, alertGuard, guardKind } from './guards.js';
 import { gearUp, spotIn, TILE, setMood } from './boarding.js';
 import { clamp, dist, rand, randRange, TAU } from './util.js';
@@ -126,14 +127,15 @@ function comeIn(state, st) {
   }
 }
 
-// Where the boarding ship docks: at the arm furthest from the frigate.
+// Where the boarding ship docks: at the cargo arm furthest from the frigate.
 function dockSpot(state, st) {
   const ship = state.ship;
-  const ports = portsOf(st);
-  let best = ports[0];
-  for (const p of ports) if (dist(p.x, p.y, ship.x, ship.y) > dist(best.x, best.y, ship.x, ship.y)) best = p;
-  const away = Math.hypot(best.x - st.x, best.y - st.y) || 1;
-  return { x: best.x + ((best.x - st.x) / away) * 22, y: best.y + ((best.y - st.y) / away) * 22 };
+  let best = null;
+  for (const k of armsOf(st)) {
+    const at = armBerth(st, k, SHIPS.gunboat.radius * 2);
+    if (!best || dist(at.x, at.y, ship.x, ship.y) > dist(best.x, best.y, ship.x, ship.y)) best = at;
+  }
+  return best;
 }
 function sendIn(v, at) {
   v.boarding = true;
