@@ -59,6 +59,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1094 | I system där det finns pirater är chansen större att hitta vrak. | bestämd | Användaren 2026-11-16 | – |
 | R-1095 | Slutet ska vara svårare att nå än andra system. | bestämd | Användaren 2026-11-16 (F-234) | – |
 | R-1096 | Vägen till slutet öppnas också genom uppdrag som öppnar nya vägar. | bestämd | Användaren 2026-11-16 (F-234) | – |
+| R-1097 | Vrak är en bonus för den som hittar dem, inte en stor inkomst som man kan räkna med. | bestämd | Användaren 2026-11-16 | – |
 | R-1086 | Ett vrak har 0 eller 1 bränslecell, och en cell räcker till ett hopp. En station har en cell i valvet. | byggd | Användaren 2026-11-16 | tests/world.test.js |
 | R-1087 | Bränslemätaren visar med markeringar hur många hopp skeppet kan göra, utan siffror. | byggd | Användaren 2026-11-16 | tests/world.test.js |
 | R-1088 | Krediterna från alla belöningar räknas om efter antalet spelare, gånger 1, 0,75 och 0,6 för en, två och tre, så att en besättning på tre tjänar ungefär en femtedel mer än en ensam spelare totalt. | förslag | Agenten 2026-11-16, utifrån docs/economy.md | – |
