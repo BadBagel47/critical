@@ -35,7 +35,7 @@ Funna när boken sattes ihop. Varje punkt har en rekommendation. Tills ett beslu
 11. **Tangenten L.** Förslaget om meddelanden lägger loggen på L, som tänder lampan vid bordning. Rekommendation: loggen får en annan tangent.
 12. **Sprängladdningens pris.** 130 krediter i förslaget om ekonomi mot 50 i det byggda. Rekommendation: 50, som byggt, tills ekonomin ses över.
 13. ~~**Bränslet i fristaden.**~~ Avgjort 2026-11-16: alla priser i fristaden är som hos en neutral bas, också bränslet (R-1091). Gratis bränsle på ett eget köpt varv gäller som förut (R-1092).
-14. **Pengarna i fristaden.** "De större pengarna finns längre ut" (R-884) mot det byggda: i fristaden kommer inga pirater som avbryter, och nya vrak driver in hela tiden, så en timme där ger mer än en timme i ett grannsystem (ekonomibladet, avsnitt 4). Rekommendation: inga nya vrak driver in i fristaden, så att vraken där tar slut och man måste ge sig ut.
+14. **Pengarna i fristaden.** "De större pengarna finns längre ut" (R-884) och "vrak ska inte finnas i överflöd" (R-1093) mot det byggda: i fristaden driver nya vrak in hela tiden, så en timme där ger mest. Användaren frågar 2026-11-16 om fristaden ska vara helt utan vrak; förslag med frågor ligger i F-233.
 
 ## Beslut som inte är byggda än
 
@@ -55,6 +55,10 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1090 | Fristadens bas säljer billigt bränsle. Bränslet är gratis först på ett eget köpt varv. | ersatt av: R-1091 och R-1092 | Användaren 2026-11-16 (krock 1) | tests/world.test.js |
 | R-1091 | Alla priser i fristadens butik är som hos en neutral bas, också bränslet, så att man inte vinner på att åka dit och handla. | byggd | Användaren 2026-11-16 (krock 13) | tests/world.test.js |
 | R-1092 | Bränslet är gratis först på ett eget köpt varv. | bestämd | Användaren 2026-11-16 (krock 1) | – |
+| R-1093 | Vrak ska inte finnas i överflöd. | bestämd | Användaren 2026-11-16 | – |
+| R-1094 | I system där det finns pirater är chansen större att hitta vrak. | bestämd | Användaren 2026-11-16 | – |
+| R-1095 | Slutet ska vara svårare att nå än andra system. | bestämd | Användaren 2026-11-16 (F-234) | – |
+| R-1096 | Vägen till slutet öppnas också genom uppdrag som öppnar nya vägar. | bestämd | Användaren 2026-11-16 (F-234) | – |
 | R-1086 | Ett vrak har 0 eller 1 bränslecell, och en cell räcker till ett hopp. En station har en cell i valvet. | byggd | Användaren 2026-11-16 | tests/world.test.js |
 | R-1087 | Bränslemätaren visar med markeringar hur många hopp skeppet kan göra, utan siffror. | byggd | Användaren 2026-11-16 | tests/world.test.js |
 | R-1088 | Krediterna från alla belöningar räknas om efter antalet spelare, gånger 1, 0,75 och 0,6 för en, två och tre, så att en besättning på tre tjänar ungefär en femtedel mer än en ensam spelare totalt. | förslag | Agenten 2026-11-16, utifrån docs/economy.md | – |
