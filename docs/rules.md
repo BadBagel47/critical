@@ -1018,6 +1018,9 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1174 | Platser är permanenta uppgraderingar: en plats som är köpt finns kvar, och det som sitter i den byts när man vill. | bestämd | Användaren 2026-11-16 (D-243) | – |
 | R-1175 | En sak man har max av, installerad och i förrådet tillsammans, finns inte i butiken och dyker inte upp som loot. | bestämd | Användaren 2026-11-16 (D-243) | – |
 | R-1176 | Filtret på vad sakerna är har UPGRADES (delar till skeppet), BOARDING (bordarnas utrustning) och SLOTS (extra platser). Tjänsterna syns alltid för sig. | bestämd | Användaren 2026-11-16 (D-243, K1) | – |
+| R-1177 | Varvet visar skeppet med varje rolls platser, och butiken och förrådet visar platserna som en rad rutor per roll. Det provas. | bestämd | Användaren 2026-11-16 (D-243, O1) | – |
+| R-1178 | Varje roll kan ha tre platser på skrovet och tre för system, och en av varje är öppen från start. Det provas. | bestämd | Användaren 2026-11-16 (D-243, O2) | – |
+| R-1179 | Platser kan hittas som loot, men sällan. | bestämd | Användaren 2026-11-16 (D-243, O3) | – |
 | R-834 | Neutrala shipyards är alltid öppna mot betalning. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-835 | Neutrala shipyards har samma priser som vänliga så länge spelet testas. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-836 | Stationer säljer kartan till nästa sektor. | byggd | HANDOFF beslut 2026-11-14 | saknas |
