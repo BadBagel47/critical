@@ -952,14 +952,18 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 |---|---|---|---|---|
 | R-1103 | Varje roll har sin egen kassa: Captain, Gunner och Engineer. | byggd | Användaren 2026-11-16 (D-189) | tests/purses.test.js |
 | R-1104 | När besättningen tjänar pengar får varje rolls kassa hela beloppet, oavsett vilken roll som tjänade dem och hur många som spelar. | byggd | Användaren 2026-11-16 (D-189) | tests/purses.test.js |
-| R-1105 | Captain betalar bränsle och stjärnkartor, Engineer lagning och Gunner raketer. | byggd | Användaren 2026-11-16 (D-189) | tests/purses.test.js |
+| R-1105 | Captain betalar bränsle och stjärnkartor, Engineer lagning och Gunner raketer. | ersatt av: R-1121; fortfarande byggt | Användaren 2026-11-16 (D-189) | – |
 | R-1106 | Butiken visar vad alla roller kan köpa, men man köper bara det som hör till de roller man har. Den som har alla roller kan köpa i alla avdelningar. | byggd | Användaren 2026-11-16 (F-188, D-189) | tests/purses.test.js |
 | R-1107 | Butikens utseende får en design innan den ritas om. | bestämd | Användaren 2026-11-16 (F-080) | – |
 | R-1115 | En övertagen station har en egen kassa som fylls av stationens inkomst över tid, och dess försvar köps ur den kassan. | byggd | Användaren 2026-11-16 (D-189, F-088) | tests/stations.test.js |
 | R-1116 | Stationens inkomst ger också spelarna pengar: varje rolls kassa får lika mycket. | byggd | Användaren 2026-11-16 (D-189, F-088) | tests/stations.test.js |
 | R-1117 | Prissumman betalas av den som står vid disken, ur den egna kassan. | byggd | Användaren 2026-11-16 (D-189) | tests/purses.test.js |
-| R-1119 | En tjänst vid disken (bränsle, lagning, raketer, kartor) kan beställas av vem som helst, men betalas ur kassan för den roll den hör till, så att Captain inte måste gå in för att tanka. | byggd | Agentens tolkning 2026-11-16, väntar på användaren | tests/purses.test.js |
+| R-1119 | En tjänst vid disken (bränsle, lagning, raketer, kartor) kan beställas av vem som helst, men betalas ur kassan för den roll den hör till, så att Captain inte måste gå in för att tanka. | ersatt av: R-1121; fortfarande byggt | Agentens tolkning 2026-11-16, väntar på användaren | – |
 | R-1120 | Med flera spelare har den första spelaren rollen Captain, den andra Gunner och den tredje Engineer. En roll som ingen spelare har är öppen för alla att köpa åt. | byggd | Agentens tolkning av R-1108 och R-1111 2026-11-16 | tests/purses.test.js |
+| R-1121 | Alla tjänster vid disken (bränsle, lagning, raketer och kartor) betalas av den som beställer, ur den egna kassan, så att man kan turas om. | bestämd | Användaren 2026-11-16 | – |
+| R-1122 | Butiken visar tydligt att tjänsterna kan köpas av alla. | bestämd | Användaren 2026-11-16 | – |
+| R-1123 | Butiken har filterknappar som visar vad varje roll kan köpa, med den egna rollen som förval. | bestämd | Användaren 2026-11-16 (F-080) | – |
+| R-1124 | Fighter bay hör till Captain, som skjuter ut dartsen. | bestämd | Användaren 2026-11-16 | – |
 | R-834 | Neutrala shipyards är alltid öppna mot betalning. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-835 | Neutrala shipyards har samma priser som vänliga så länge spelet testas. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-836 | Stationer säljer kartan till nästa sektor. | byggd | HANDOFF beslut 2026-11-14 | saknas |
