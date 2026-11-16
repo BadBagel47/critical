@@ -8,6 +8,7 @@
     "serve": "python3 -m http.server 8080",
     "smoke": "node tests/smoke.mjs",
     "screens": "node tests/screens.mjs",
+    "economy": "node tools/economy.mjs",
     "assets": "python3 tools/export_assets.py",
     "format": "npx --yes prettier@3.3.3 --write \"src/**/*.js\" \"tests/*.{js,mjs}\"",
     "lint": "npx --yes eslint@9 src tests eslint.config.js",

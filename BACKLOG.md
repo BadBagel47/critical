@@ -5,91 +5,88 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – strong model, high level – Ekonomiblad och simulerad spelare
-- D-221 – Ett blad med alla priser och belöningar ur koden, och en simulerad spelare som mäter pengar och bränsle per timme, så att balansen kan bestämmas med siffror
-
-**B** – strong model, medium level – Provspelslista med testlägen
+**A** – strong model, medium level – Provspelslista med testlägen
 - F-222 – En lista över det som väntar på provspel, med länkar som startar rätt situation direkt, så att varje sak går att prova på några minuter
 
-**C** – strong model, medium level – Innehållskatalog
+**B** – strong model, medium level – Innehållskatalog
 - D-223 – En lista ur koden över allt som finns i spelet med sina siffror, så att överblicken alltid stämmer
 
-**D** – strong model, medium level – Verktyg för backloggen
+**C** – strong model, medium level – Verktyg för backloggen
 - F-228 – Markera, flytta till klart och ge nya bokstäver med ett verktyg, så att agenterna gör färre misstag
 
-**E** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
+**D** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
 - D-227 – Dela upp de två stora filerna efter ämne, så att två agenter krockar mer sällan
 
-**F** – strong model, high level – Pekskärm
+**E** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**G** – strong model, high level – Viewer på en extra skärm
+**F** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 
-**H** – strong model, high level – Världen steg 3: många system
+**G** – strong model, high level – Världen steg 3: många system
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - F-195 – En systemradar som man köper och som visar om närliggande system är vänliga och vems de är
 
-**I** – strong model, high level – Världen steg 4: uppdrag och story (efter steg 3)
+**H** – strong model, high level – Världen steg 4: uppdrag och story (efter steg 3)
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 
-**J** – strong model, high level – Förslag: ekonomi och belöningar
+**I** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**K** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
+**J** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
 - D-217 – Designskiss av varvet utifrån och inifrån, och en större utsida som hänger ihop med basens tre våningar (ersätter designen i F-103)
 - D-216 – Designtest av markeringar som visar snabbaste vägen ut genom de dörrar man har öppnat
 - D-218 – Demo med full design av dockningsringen som vrids i fasta lägen
 
-**L** – strong model, high level – Sällsynta skepp
+**K** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**M** – strong model, high level – Handel
+**L** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**N** – strong model, medium level – Butik med bilder
+**M** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**O** – strong model, high level – Värme
+**N** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**P** – strong model, high level – Slå ut och borda
+**O** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**Q** – strong model, high level – Missiler och raketer
+**P** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**R** – strong model, high level – Kontakt med andra skepp
+**Q** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**S** – strong model, high level – Anomalier
+**R** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**T** – strong model, high level – En värld som förändras
+**S** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**U** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**T** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**V** – strong model, high level – Ljudeffekter
+**U** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**W** – strong model, high level – Visuella effekter och feedback
+**V** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 
-**X** – strong model, high level – Uppgraderingar och ekonomi per roll
+**W** – strong model, high level – Uppgraderingar och ekonomi per roll
 - F-188 – Uppgraderingarna sorteras efter kategori och roll
 - D-189 – Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar
 
-**Y** – strong model, medium level – Förfina rollerna
+**X** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
@@ -100,7 +97,6 @@ Väntar på användaren: tolv krockar i regelboken (docs/rules.md, överst), fö
 
 | ID | Vad | Status |
 |---|---|---|
-| D-221 | Ekonomiblad och simulerad spelare. Ett blad som skapas ur koden med alla priser, belöningar och vad vrak och skepp lämnar efter sig, så att siffrorna alltid stämmer med spelet. En simulerad spelare som spelar automatiskt en till två timmar och mäter pengar och bränsle per timme, tid till varje köp och om man fastnar. Ger siffror till D-104, D-097 och F-050, och en kontroll som säger till när en ändring gör spelet för lätt eller för svårt. Användaren 2026-11-16: ja | Pågår 2026-11-16 |
 | F-222 | Provspelslista med testlägen. En lista över det som är byggt men inte provspelat, med en direktlänk per sak, och adresser som startar rätt situation direkt (till exempel anfall på egen station, bas med personaldel, tom tank vid asteroider). Synpunkterna förs in i regelboken. Användaren 2026-11-16: ja | Ej påbörjad |
 | D-223 | Innehållskatalog som skapas ur koden: skeppsklasser, vakttyper, stationer, faktioner, uppgraderingar, utrustning och låsspel med sina viktigaste siffror, så att det alltid finns en överblick som stämmer. Användaren 2026-11-16: ja | Ej påbörjad |
 | D-227 | Dela upp de stora filerna för bordning (src/sim/boarding.js och src/render/boarding.js, runt 1 000 rader var) efter ämne: vakter, lås, mainframe, inredning och ritning, så att två agenter krockar mer sällan. Körs när den andra agenten är klar med insidorna. Användaren 2026-11-16: ja | Ej påbörjad |
@@ -137,7 +133,7 @@ Väntar på användaren: tolv krockar i regelboken (docs/rules.md, överst), fö
 | F-118 | Man borde inte bli förlåten med tiden. På något sätt borde man få jobba för det, till exempel genom uppdrag för faktionen (D-073). I dag stiger ett dåligt anseende av sig självt upp till avvaktande. Agentens anmärkning: ta bort det först när uppdragen finns, och se till att det alltid finns ett sätt att höja anseendet även när faktionens baser är stängda, till exempel uppdrag för den som erbjuds på andra baser Förslaget är framtaget 2026-11-15 i docs/proposal-world.md och väntar på användarens svar på frågorna där. | Väntar på användaren |
 | F-119 | Faktioner som är i krig med varandra. Då får sidouppdragen man tar större tyngd. Agentens förslag: ett krig mellan två av faktionerna per omgång, där deras patruller slåss med varandra och uppdrag för den ena sänker anseendet hos den andra. Krig kan börja och ta slut som händelser i världen (F-087) | Ej påbörjad |
 | F-103 | Stora baser med två våningar: 1,5 gånger större än dagens stationer, med annan design, mer vapen och starkare sköld till försvar. Dagens storlek är bra för små stationer. Design visas först Besked 2026-11-16: ersatt av standardbasen i tre våningar och en större utsida som byggs av samma data som insidan, se docs/proposal-bases.md, F-208 och D-217 | Ersatt |
-| D-104 | Utredning om hur rewards, priser, ekonomi, händelser, reputation etc hänger ihop och påverkar världen och skeppet Förslaget är framtaget 2026-11-15 i docs/proposal-economy.md och väntar på användarens svar på frågorna där. | Väntar på användaren |
+| D-104 | Utredning om hur rewards, priser, ekonomi, händelser, reputation etc hänger ihop och påverkar världen och skeppet Förslaget är framtaget 2026-11-15 i docs/proposal-economy.md och väntar på användarens svar på frågorna där. Mätt 2026-11-16 med den simulerade spelaren (docs/economy.md): ensam i första sektorn ger en timme ungefär 8 700 krediter, mest från vrak, och de tolv vanligaste uppgraderingarna går att köpa inom 16 minuter. Vraken ger ungefär 45 gånger mer bränsle än flygningen drar, så bränslet betyder i praktiken ingenting så länge det finns vrak | Väntar på användaren |
 | F-208 | Standardbasen (docs/proposal-bases.md avsnitt 3): genereras varje gång, tre våningar med var sin stil, ljus och ren mitt med entré och det lagliga (services, shipyard om basen har det, armory, bar), smutsig industri med dockor och ett stort lastutrymme med vakter i källaren, kall kommandodel med mainframen överst. Föremål har samma form som i rymden. Öppna ytor med skydd, inga för små rum, flera vägar att välja, rum som fyller ut. Bränsletunnor bara där de passar. Ersätter D-072:s två våningar och F-103 | Ej påbörjad |
 | F-209 | Entré och övertagande i standardbasen: luftsluss i mitten där båda dörrarna aldrig är öppna samtidigt, styrd med knappar. Övertagandet kräver något i källaren först (förslag: slå ut strömmen) och sedan mainframen överst. Efter källaren går det inte på tid, läget skärps steg för steg | Ej påbörjad |
 | F-210 | Tryck under bordning: drönare fylls på vid larm och vakter kommer med ett skepp som dockar, så att det finns ett hot även när vakterna är nedskjutna. Förstärkningsskeppet anfaller inte ett dockat skepp som ingen sitter i. Förslag: drönarhangar och kommunikationsrum som går att slå ut, synlig nedräkning, inget dyker upp från ingenstans | Ej påbörjad |
@@ -348,3 +344,4 @@ Väntar på användaren: tolv krockar i regelboken (docs/rules.md, överst), fö
 | D-220 | Regelboken: docs/rules.md med 1 085 regler från besluten, beskeden och förslagen, sorterade efter ämne, med nummer, status och källa. tests/rules.test.js kontrollerar boken, och antalet byggda regler som saknar test (678) får bara gå ner. Sex regler om bränsle har fått tester med sina nummer. Tolv krockar väntar på användarens beslut, listade överst i boken | 2026-11-16 |
 | F-225 | Stabilare provkörning: varje kontroll i tests/smoke.mjs väntar på att det den letar efter händer, i högst fyra sekunder, i stället för att titta en gång efter en fast väntetid. Importen av sparfiler väntar på rätt rad i menyn. Gick igenom flera gånger i rad | 2026-11-16 |
 | F-226 | Bildjämförelse: npm run screens tar skärmbilder av åtta fasta scener och jämför dem med de sparade i tests/screens/. Ett stillbildsläge (?still) låser klockan och slumpen så att samma scen blir exakt likadan varje gång. Ändrade scener visas med en bild av vad som skiljer, och nya bilder läggs i samma commit som ändringen, så att den visar före och efter | 2026-11-16 |
+| D-221 | Ekonomibladet docs/economy.md, skapat ur koden med npm run economy: alla priser, inkomster och en timme med en simulerad spelare som använder spelets riktiga sektorer, vrak, vågor och priser. Det som spelet inte kan svara på (tid för lås och bordning med mera) är antaganden som står i bladet. tests/economy.test.js säger till när bladet inte stämmer och när inkomsten för en ensam spelare flyttar sig mer än 40 procent ner eller 60 procent upp | 2026-11-16 |
