@@ -22,7 +22,7 @@ Varje regel är en rad: `| Nr | Regel | Status | Källa | Test |`
 
 Funna när boken sattes ihop. Varje punkt har en rekommendation. Tills ett beslut finns gäller det som är byggt.
 
-1. **Bränsle i fristaden.** Steg 2 (byggt) ger gratis bränsle på den egna varvsstationen. Planen för baser (2026-11-16) tar bort det egna varvet i början och låter spelet börja i en fristad. Rekommendation: fristadens bas säljer billigt bränsle, och bränslet blir gratis först på ett eget köpt varv. Det som skyddar mot att fastna är malmen och solcellerna, som redan finns.
+1. ~~**Bränsle i fristaden.**~~ Avgjort 2026-11-16: fristadens bas säljer billigt bränsle, och bränslet blir gratis först på ett eget köpt varv. Det ersätter gratis bränsle på den egna varvsstationen.
 2. **Neutrala varv.** "Neutrala shipyards är alltid öppna mot betalning" (2026-11-14) mot att varvet är en uppgradering som köps till en bas (2026-11-16). Rekommendation: faktionernas och de fria basernas varv finns kvar och säljer mot betalning. Det är bara den egna basen som behöver köpa sitt.
 3. **Ett anseende som aldrig går att höja.** "Fientlig för gott efter åtta träffar" mot "ett lågt anseende går alltid att höja". Rekommendation: inget är för gott. Ett anseende som har gått till fientligt kan höjas med uppdrag, och det dröjer tills uppdragen finns.
 4. **Gunnerns sprängladdning.** "Gunner har alltid en laddning vid bordning" mot att laddningen köps, skeppet bär en åt gången och den förbrukas (F-191, byggt). Rekommendation: det byggda gäller. Den gamla regeln märks som ersatt.
@@ -30,7 +30,7 @@ Funna när boken sattes ihop. Varje punkt har en rekommendation. Tills ett beslu
 6. **Captains överblick vid bordning.** "Captain ser vakter och kameror åtta rutor bort genom väggar, och hela gruppen får se det" mot det byggda, där Captain har en bärbar radar med kort räckvidd. Rekommendation: radarn, som byggt.
 7. **Fiender mot ett dockat skepp.** Bounty hunters anfaller skeppet medan besättningen är inne (byggt) mot planen för baser: förstärkningsskeppet anfaller inte ett dockat skepp som ingen sitter i. Rekommendation: samma regel för alla. Ett dockat skepp utan någon ombord anfalls inte, med eller utan bounty, men det skyddar inte den som sitter kvar.
 8. **Hur fort larmet blinkar.** "Ljusen blinkar snabbt vid larm" mot förslaget att inget blinkar fortare än två gånger i sekunden, av hänsyn till ljuskänslig epilepsi. Rekommendation: högst två gånger i sekunden.
-9. **Återvändsgränder på kartan.** Steg 3: varje system har 2–3 hoppvägar. Planen för baser föreslår några återvändsgränder, som bara har en väg. Rekommendation: 2–3 vägar för de flesta, och några tomma system längst ut får vara återvändsgränder.
+9. ~~**Återvändsgränder på kartan.**~~ Avgjort 2026-11-16: de flesta system har 2–3 hoppvägar, och några tomma system längst ut får vara återvändsgränder.
 10. **Datorn och ett dockat skepp.** Förslaget om datorn säger att den aldrig gör något stort själv och att den som Gunner försvarar skeppet under bordning. Planen för baser säger att datorn som Captain backar ut skeppet när skrovet nästan är slut, och att vapen rakt fram inte skjuter dockat. Rekommendation: planen för baser gäller, och förslaget om datorn skrivs om efter den när det besvaras.
 11. **Tangenten L.** Förslaget om meddelanden lägger loggen på L, som tänder lampan vid bordning. Rekommendation: loggen får en annan tangent.
 12. **Sprängladdningens pris.** 130 krediter i förslaget om ekonomi mot 50 i det byggda. Rekommendation: 50, som byggt, tills ekonomin ses över.
@@ -54,6 +54,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 
 | Nr | Regel | Status | Källa | Test |
 |---|---|---|---|---|
+| R-1090 | Fristadens bas säljer billigt bränsle. Bränslet är gratis först på ett eget köpt varv. | bestämd | Användaren 2026-11-16 (krock 1) | – |
 | R-1086 | Ett vrak har 0 eller 1 bränslecell, och en cell räcker till ett hopp. Det ersätter antalet celler i R-866, R-867 och R-897 när det byggs. | bestämd | Användaren 2026-11-16 | – |
 | R-1087 | Bränslemätaren visar med markeringar hur många hopp skeppet kan göra, utan siffror. | bestämd | Användaren 2026-11-16 | – |
 | R-1088 | Krediterna från alla belöningar räknas om efter antalet spelare, gånger 1, 0,75 och 0,6 för en, två och tre, så att en besättning på tre tjänar ungefär en femtedel mer än en ensam spelare totalt. | förslag | Agenten 2026-11-16, utifrån docs/economy.md | – |
@@ -119,6 +120,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 
 | Nr | Regel | Status | Källa | Test |
 |---|---|---|---|---|
+| R-1089 | De flesta system har 2–3 hoppvägar, och några tomma system längst ut är återvändsgränder med en enda väg. | bestämd | Användaren 2026-11-16 (krock 9) | – |
 | R-058 | Sektorer nås med stjärnkartor som hittas eller köps. | byggd | HANDOFF beslut | saknas |
 | R-059 | Det går att hoppa tillbaka till sektorer man varit i, och de är som de lämnades (tills vidare). | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-060 | Det är fri sikt i rymden. | byggd | HANDOFF beslut | saknas |
