@@ -106,7 +106,8 @@ Alla är besvarade. Bilderna på stjärnan, bältet och diset visas innan de lä
 - Farligheten ökar ett steg för varje två hopp från startsystemet, upp till steg 3.
 - Slutet ligger slumpat i ett av de tre bebodda system som ligger längst bort. Enligt docs/proposal-bases.md (2026-11-16) är slutet piraternas slutbas, och startsystemet är en fristad nära mitten av kartan.
 - Tomma system kan ibland ha något eget: ett tätt asteroidfält eller ett vrakfält, och senare anomalier (F-053).
-- Kvar att svara på: systemradarns räckvidd och pris.
+- System kan ägas av en faktion, men också vara omstridda, där faktioner bråkar med varandra (användaren 2026-11-16). Hör ihop med F-119 (faktioner i krig) och F-087 (en värld som förändras).
+- Kvar att svara på: systemradarns räckvidd och pris, och detaljerna om omstridda system.
 
 ## Steg 4 – Uppdrag och story
 
