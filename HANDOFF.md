@@ -132,6 +132,9 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 
 ## Decisions
 
+Arbetssätt
+- Regelboken (2026-11-16): alla spelregler ska samlas i docs/rules.md med nummer, status och källa, och kontrolleras mot varje nytt beslut. Projektregeln står i AGENTS.md. Regelboken byggs i D-220.
+
 Spelet
 - Bränsle och färd (2026-11-16, användaren sa ja till rekommendationerna i docs/proposal-world.md steg 2): överladdningen av vapen och sköld är borttagen, en träff på skölden nollställer boosten och ett hopp som laddas, bränslet är gratis bara på den egna varvsstationen, och solcellerna tar en slot och fyller ett hopp på ungefär fem minuter.
 - Namn: Critical ST8.
