@@ -16,6 +16,7 @@ import { hurtVessel } from '../src/sim/vessels.js';
 import { guardKind, GUARD_KINDS, newGuard } from '../src/sim/guards.js';
 import { B } from '../src/sim/balance.js';
 import { dist } from '../src/sim/util.js';
+import { fillPurses } from '../src/sim/purses.js';
 
 const DT = 1 / 20;
 // A station of every side stands near the start, as in a test game, but the ship has nothing bought.
@@ -152,7 +153,7 @@ test('a station of the crew’s is not mended by itself, but from its mainframe,
   assert.equal(st.fix, null);
 });
 
-test('a mended gun waits to be switched on, and defence is bought with credits', () => {
+test('R-1115: a mended gun waits to be switched on, and defence is bought from what the station has saved', () => {
   const s = quiet();
   const st = post(s);
   takeOver(s, st);
@@ -164,13 +165,15 @@ test('a mended gun waits to be switched on, and defence is bought with credits',
   assert.equal(st.guns[1].off, true, 'it is mended but off');
   order(s, { action: 'switchOn', gun: 1 });
   assert.equal(st.guns[1].off, false);
-  s.credits = 100;
+  fillPurses(s, 5000);
+  st.purse = 100;
   order(s, { action: 'upgrade', what: 'shield' });
-  assert.equal(st.defense.shield, 0, 'not without the credits');
-  s.credits = 1000;
+  assert.equal(st.defense.shield, 0, 'not before the station has saved enough, whatever the crew has');
+  st.purse = 1000;
   order(s, { action: 'upgrade', what: 'shield' });
   assert.equal(st.defense.shield, 1);
-  assert.equal(s.credits, 1000 - B.DEFENSE_PRICE[0]);
+  assert.equal(st.purse, 1000 - B.DEFENSE_PRICE[0], 'paid by the station');
+  assert.equal(s.purses.captain, 5000, 'not by the crew');
   assert.equal(st.shield, stationShieldMax(st), 'the stronger shield is there at once');
   assert.ok(stationShieldMax(st) > B.STATION_SHIELD);
 });
@@ -209,7 +212,7 @@ test('a bounty is paid at a station that trades, or dropped when three groups of
   // Paying at the yard: the hunters give up and leave.
   const st = yard(s);
   s.ship.docked = st.id;
-  s.credits = 1000;
+  fillPurses(s, 1000);
   assert.equal(servicePrices(s, st).bounty.price, B.BOUNTY);
   step(s, { shop: [{ action: 'bounty' }] }, DT);
   assert.equal(s.bounty, null);
@@ -555,4 +558,16 @@ test('a door is shut when nobody is near it, and a shut door blocks a look but n
   av.y = d.y + 1;
   step(s, { away: { 0: {} } }, DT);
   assert.ok(!d.tiles.some((i) => it.shut.includes(i)), 'it opens for whoever comes up to it');
+});
+
+test('R-1116 F-088: a station of the crew’s brings in an income every minute, to its own purse and to every role', () => {
+  const s = quiet();
+  const st = post(s);
+  takeOver(s, st);
+  // Every station of the crew's brings in, the yard of a test game too.
+  const own = allStations(s).filter((x) => x.st.side === 'crew').length;
+  jumpAway(s);
+  run(s, {}, B.STATION_INCOME_EVERY * 3 + 0.5);
+  assert.equal(st.purse, 3 * B.STATION_INCOME.station, 'also while the crew is elsewhere');
+  for (const role of ['captain', 'gunner', 'engineer']) assert.equal(s.purses[role], 3 * own * B.STATION_INCOME.crew);
 });

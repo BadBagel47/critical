@@ -15,6 +15,7 @@ import { generateSector } from '../src/sim/sectors.js';
 import { createInterior } from '../src/sim/boarding.js';
 import { thingsOf } from '../src/sim/things.js';
 import { CATALOG } from '../src/sim/upgrades.js';
+import { ROLE_NAME } from '../src/sim/purses.js';
 import { SHIPS } from '../src/sim/kinds.js';
 import { B } from '../src/sim/balance.js';
 import { dist } from '../src/sim/util.js';
@@ -43,17 +44,18 @@ function priceSheet() {
     '',
     '### Uppgraderingar och utrustning',
     '',
-    '| Sak | Flik | Plats | Pris | Nivåer |',
-    '|---|---|---|---|---|',
+    '| Sak | Flik | Betalas av | Plats | Pris | Nivåer |',
+    '|---|---|---|---|---|---|',
   );
   for (const [id, c] of Object.entries(CATALOG)) {
-    L.push(`| ${c.name} | ${c.tab} | ${c.slot || '–'} | ${c.price} | ${c.levels || 1} |`);
+    const payer = c.role ? ROLE_NAME[c.role] : 'den som köper';
+    L.push(`| ${c.name} | ${c.tab} | ${payer} | ${c.slot || '–'} | ${c.price} | ${c.levels || 1} |`);
   }
   L.push(
     '',
     '### Tjänster på stationer',
     '',
-    'Fristaden tar samma priser som en neutral bas (R-1091). Bränslet är gratis bara på ett eget varv.',
+    'Fristaden tar samma priser som en neutral bas (R-1091). Bränslet är gratis bara på ett eget varv. Varje roll har en egen kassa som får hela inkomsten (R-1103, R-1104). Bränsle och stjärnkartor betalas av Captain, lagning av Engineer och raketer av Gunner (R-1105), vem som än beställer.',
     '',
     '| Tjänst | Eget varv | Vänlig | Neutral och fristaden |',
     '|---|---|---|---|',
@@ -66,8 +68,9 @@ function priceSheet() {
     '',
     '### Egna stationer och prissumma',
     '',
-    `- Försvar (sköld, kanoner, säkerhet inuti), per nivå: ${B.DEFENSE_PRICE.join(', ')} krediter.`,
-    `- Prissumma från en fri station: ${B.BOUNTY} krediter, eller försvinner efter ${B.BOUNTY_GROUPS} besegrade grupper bounty hunters.`,
+    `- Försvar (sköld, kanoner, säkerhet inuti), per nivå: ${B.DEFENSE_PRICE.join(', ')} krediter, betalt ur stationens egen kassa (R-1115).`,
+    `- En egen station ger var ${B.STATION_INCOME_EVERY}:e sekund ${B.STATION_INCOME.station} krediter till sin egen kassa och ${B.STATION_INCOME.crew} till varje rolls kassa (R-1116), alltså ${(3600 / B.STATION_INCOME_EVERY) * B.STATION_INCOME.crew} i timmen per roll. Första försvarsnivån går att köpa efter ${Math.ceil(B.DEFENSE_PRICE[0] / B.STATION_INCOME.station)} minuter.`,
+    `- Prissumma från en fri station: ${B.BOUNTY} krediter, eller försvinner efter ${B.BOUNTY_GROUPS} besegrade grupper bounty hunters. Den som står vid disken betalar ur sin egen kassa (R-1117).`,
   );
   L.push('', '## 2. Inkomster', '', '| Källa | Krediter | Annat |', '|---|---|---|');
   for (const [kind, c] of Object.entries(SHIPS)) {
@@ -287,13 +290,25 @@ export function firstHourIncome() {
 }
 
 // When each purchase in a plain order could be afforded, at the income of the first hour.
+// Every role has its own purse, and each gets all the income (R-1104), so each role buys its own things in its
+// own time. The Captain also pays for fuel, which is counted as one jump every ten minutes.
+const BUYS = {
+  captain: ['tank', 'alarm', 'tscan', 'boost', 'jumpcoil', 'solar', 'sysradar'],
+  gunner: ['twin', 'heavy', 'rockets', 'tcomp', 'bay', 'pack'],
+  engineer: ['armor', 'emit', 'core', 'pd', 'drones', 'flare'],
+};
+const FUEL_PER_HOUR = 6 * B.JUMP_FUEL * B.FUEL_PRICE.neutral;
 function purchases(perHour) {
-  const order = ['twin', 'pack', 'armor', 'emit', 'heavy', 'core', 'tranq', 'alarm', 'rockets', 'solar', 'pd', 'bay'];
-  let spent = 0;
-  return order.map((id) => {
-    spent += CATALOG[id].price;
-    return { name: CATALOG[id].name, at: Math.round((spent / perHour) * 60) };
-  });
+  const out = [];
+  for (const [role, order] of Object.entries(BUYS)) {
+    const left = perHour - (role === 'captain' ? FUEL_PER_HOUR : 0);
+    let spent = 0;
+    for (const id of order) {
+      spent += CATALOG[id].price;
+      out.push({ role: ROLE_NAME[role], name: CATALOG[id].name, at: Math.round((spent / left) * 60) });
+    }
+  }
+  return out;
 }
 
 export function buildSheet() {
@@ -332,11 +347,11 @@ export function buildSheet() {
     '',
     '### Hur länge det dröjer till varje köp, ensam den första timmen',
     '',
-    `Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: ${Math.round(firstHour)} krediter. Köpen görs i en enkel ordning, och tiden är minuter från start.`,
+    `Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: ${Math.round(firstHour)} krediter. Varje roll har en egen kassa som får hela inkomsten (R-1104), och köper sitt i en enkel ordning. Captain betalar också bränslet, räknat som ett hopp var tionde minut (${FUEL_PER_HOUR} krediter i timmen). Tiden är minuter från start.`,
     '',
-    '| Köp | Minuter |',
-    '|---|---|',
-    ...purchases(firstHour).map((p) => `| ${p.name} | ${p.at} |`),
+    '| Roll | Köp | Minuter |',
+    '|---|---|---|',
+    ...purchases(firstHour).map((p) => `| ${p.role} | ${p.name} | ${p.at} |`),
     '',
     '### Antaganden',
     '',

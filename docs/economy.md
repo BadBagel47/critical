@@ -6,43 +6,43 @@
 
 ### Uppgraderingar och utrustning
 
-| Sak | Flik | Plats | Pris | Nivåer |
-|---|---|---|---|---|
-| TWIN WING TURRETS | hull | hard | 150 | 1 |
-| HEAVY LASER | hull | hard | 220 | 1 |
-| ROCKET PODS | hull | hard | 200 | 1 |
-| FIGHTER BAY | hull | hard | 320 | 1 |
-| ARMOR PLATING | hull | hard | 160 | 1 |
-| POINT DEFENSE | hull | hard | 220 | 1 |
-| FUEL TANK | hull | – | 140 | 1 |
-| DART AUTOLAUNCH | hull | – | 150 | 1 |
-| EXTRA HARDPOINT | hull | – | 250 | 2 |
-| SHIELD EMITTERS | system | system | 180 | 1 |
-| ENEMY ALARM | system | system | 120 | 3 |
-| TARGET SCANNER | system | system | 140 | 1 |
-| TARGETING COMPUTER | system | system | 130 | 1 |
-| POWER CORE | system | system | 240 | 1 |
-| AFTERBURNER | system | system | 160 | 1 |
-| JUMP COILS | system | system | 180 | 1 |
-| TRACTOR BEAM | system | system | 150 | 1 |
-| REPAIR DRONES | system | system | 200 | 1 |
-| SOLAR CELLS | system | system | 200 | 1 |
-| DOCKING FIELD | system | system | 150 | 1 |
-| EXTRA SYSTEM SLOT | system | – | 200 | 2 |
-| SYSTEM RADAR | system | – | 200 | 2 |
-| RIFLE UPGRADE | armory | – | 120 | 2 |
-| CARGO PACK | armory | – | 140 | 1 |
-| SUIT ARMOR | armory | – | 160 | 1 |
-| BREACHING CHARGE | armory | – | 50 | 1 |
-| TRANQ GUN | armory | – | 120 | 1 |
-| FLARES | armory | – | 60 | 1 |
-| DEPLOYABLE TURRET | armory | – | 180 | 1 |
-| HACKING KIT | armory | – | 150 | 1 |
-| TELEPORTER COILS | armory | – | 150 | 1 |
+| Sak | Flik | Betalas av | Plats | Pris | Nivåer |
+|---|---|---|---|---|---|
+| TWIN WING TURRETS | hull | GUNNER | hard | 150 | 1 |
+| HEAVY LASER | hull | GUNNER | hard | 220 | 1 |
+| ROCKET PODS | hull | GUNNER | hard | 200 | 1 |
+| FIGHTER BAY | hull | GUNNER | hard | 320 | 1 |
+| ARMOR PLATING | hull | ENGINEER | hard | 160 | 1 |
+| POINT DEFENSE | hull | ENGINEER | hard | 220 | 1 |
+| FUEL TANK | hull | CAPTAIN | – | 140 | 1 |
+| DART AUTOLAUNCH | hull | GUNNER | – | 150 | 1 |
+| EXTRA HARDPOINT | hull | GUNNER | – | 250 | 2 |
+| SHIELD EMITTERS | system | ENGINEER | system | 180 | 1 |
+| ENEMY ALARM | system | CAPTAIN | system | 120 | 3 |
+| TARGET SCANNER | system | CAPTAIN | system | 140 | 1 |
+| TARGETING COMPUTER | system | GUNNER | system | 130 | 1 |
+| POWER CORE | system | ENGINEER | system | 240 | 1 |
+| AFTERBURNER | system | CAPTAIN | system | 160 | 1 |
+| JUMP COILS | system | CAPTAIN | system | 180 | 1 |
+| TRACTOR BEAM | system | CAPTAIN | system | 150 | 1 |
+| REPAIR DRONES | system | ENGINEER | system | 200 | 1 |
+| SOLAR CELLS | system | CAPTAIN | system | 200 | 1 |
+| DOCKING FIELD | system | ENGINEER | system | 150 | 1 |
+| EXTRA SYSTEM SLOT | system | ENGINEER | – | 200 | 2 |
+| SYSTEM RADAR | system | CAPTAIN | – | 200 | 2 |
+| RIFLE UPGRADE | armory | den som köper | – | 120 | 2 |
+| CARGO PACK | armory | den som köper | – | 140 | 1 |
+| SUIT ARMOR | armory | den som köper | – | 160 | 1 |
+| BREACHING CHARGE | armory | den som köper | – | 50 | 1 |
+| TRANQ GUN | armory | den som köper | – | 120 | 1 |
+| FLARES | armory | den som köper | – | 60 | 1 |
+| DEPLOYABLE TURRET | armory | den som köper | – | 180 | 1 |
+| HACKING KIT | armory | den som köper | – | 150 | 1 |
+| TELEPORTER COILS | armory | den som köper | – | 150 | 1 |
 
 ### Tjänster på stationer
 
-Fristaden tar samma priser som en neutral bas (R-1091). Bränslet är gratis bara på ett eget varv.
+Fristaden tar samma priser som en neutral bas (R-1091). Bränslet är gratis bara på ett eget varv. Varje roll har en egen kassa som får hela inkomsten (R-1103, R-1104). Bränsle och stjärnkartor betalas av Captain, lagning av Engineer och raketer av Gunner (R-1105), vem som än beställer.
 
 | Tjänst | Eget varv | Vänlig | Neutral och fristaden |
 |---|---|---|---|
@@ -55,8 +55,9 @@ En avvaktande station tar 1.5 gånger priset. En station som står i skuld efter
 
 ### Egna stationer och prissumma
 
-- Försvar (sköld, kanoner, säkerhet inuti), per nivå: 250, 450, 700 krediter.
-- Prissumma från en fri station: 300 krediter, eller försvinner efter 3 besegrade grupper bounty hunters.
+- Försvar (sköld, kanoner, säkerhet inuti), per nivå: 250, 450, 700 krediter, betalt ur stationens egen kassa (R-1115).
+- En egen station ger var 60:e sekund 50 krediter till sin egen kassa och 25 till varje rolls kassa (R-1116), alltså 1500 i timmen per roll. Första försvarsnivån går att köpa efter 5 minuter.
+- Prissumma från en fri station: 300 krediter, eller försvinner efter 3 besegrade grupper bounty hunters. Den som står vid disken betalar ur sin egen kassa (R-1117).
 
 ## 2. Inkomster
 
@@ -108,22 +109,29 @@ Världen är den första av storleken SHORT (frö 1). Timmen spelas i ett och sa
 
 ### Hur länge det dröjer till varje köp, ensam den första timmen
 
-Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: 4131 krediter. Köpen görs i en enkel ordning, och tiden är minuter från start.
+Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: 4131 krediter. Varje roll har en egen kassa som får hela inkomsten (R-1104), och köper sitt i en enkel ordning. Captain betalar också bränslet, räknat som ett hopp var tionde minut (150 krediter i timmen). Tiden är minuter från start.
 
-| Köp | Minuter |
-|---|---|
-| TWIN WING TURRETS | 2 |
-| CARGO PACK | 4 |
-| ARMOR PLATING | 7 |
-| SHIELD EMITTERS | 9 |
-| HEAVY LASER | 12 |
-| POWER CORE | 16 |
-| TRANQ GUN | 18 |
-| ENEMY ALARM | 19 |
-| ROCKET PODS | 22 |
-| SOLAR CELLS | 25 |
-| POINT DEFENSE | 28 |
-| FIGHTER BAY | 33 |
+| Roll | Köp | Minuter |
+|---|---|---|
+| CAPTAIN | FUEL TANK | 2 |
+| CAPTAIN | ENEMY ALARM | 4 |
+| CAPTAIN | TARGET SCANNER | 6 |
+| CAPTAIN | AFTERBURNER | 8 |
+| CAPTAIN | JUMP COILS | 11 |
+| CAPTAIN | SOLAR CELLS | 14 |
+| CAPTAIN | SYSTEM RADAR | 17 |
+| GUNNER | TWIN WING TURRETS | 2 |
+| GUNNER | HEAVY LASER | 5 |
+| GUNNER | ROCKET PODS | 8 |
+| GUNNER | TARGETING COMPUTER | 10 |
+| GUNNER | FIGHTER BAY | 15 |
+| GUNNER | CARGO PACK | 17 |
+| ENGINEER | ARMOR PLATING | 2 |
+| ENGINEER | SHIELD EMITTERS | 5 |
+| ENGINEER | POWER CORE | 8 |
+| ENGINEER | POINT DEFENSE | 12 |
+| ENGINEER | REPAIR DRONES | 15 |
+| ENGINEER | FLARES | 15 |
 
 ### Antaganden
 

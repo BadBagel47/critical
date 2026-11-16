@@ -63,9 +63,9 @@ test('every ship class has the numbers its brain needs and can be flown and dest
     s.vessels.push(v);
     run(s, {}, 4);
     assert.ok(Number.isFinite(v.x) && Number.isFinite(v.heading), `${kind} flies`);
-    const credits = s.credits;
+    const credits = s.purses.captain;
     hurtVessel(s, v, 1e6);
-    assert.equal(s.credits, credits + c.bounty, `${kind} pays its bounty`);
+    assert.equal(s.purses.captain, credits + c.bounty, `${kind} pays its bounty`);
     run(s, {}, DT);
     assert.ok(!s.vessels.includes(v), `${kind} is gone`);
   }
@@ -87,7 +87,7 @@ test('a new ship class is one entry of data', () => {
     run(s, {}, 6);
     assert.ok(s.ship.shield < 100 || s.ship.hull < 200, 'it attacks like the fighter it borrows its brain from');
     hurtVessel(s, v, 1e6);
-    assert.equal(s.credits, 40);
+    assert.equal(s.purses.captain, 40);
     assert.equal(thingsOf(s, 'salvage').length, 3);
   } finally {
     delete SHIPS.raider;

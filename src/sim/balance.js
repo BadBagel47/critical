@@ -318,6 +318,10 @@ export const B = {
   // Price of each level, and how much stronger each level makes the shield and the guns.
   DEFENSE_MAX: 3,
   DEFENSE_PRICE: [250, 450, 700],
+  // What a station of the crew's brings in, every this many seconds: to its own purse, which pays for its
+  // defence, and to the purse of every role (F-088, R-1115, R-1116).
+  STATION_INCOME_EVERY: 60,
+  STATION_INCOME: { station: 50, crew: 25 },
   DEFENSE_SHIELD: 0.5,
   DEFENSE_GUN: 0.35,
   // Breaking into a station that trades (section 9). What the alarm costs with the station's own side, and

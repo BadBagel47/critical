@@ -447,7 +447,7 @@ await page.evaluate(() => {
   s.ship.heading = 0;
   s.ship.docked = st.id;
   s.ship.fuel = 30;
-  s.credits = 2000;
+  s.purses = { captain: 2000, gunner: 2000, engineer: 2000 };
   window.__critical.view.cam = { x: s.ship.x, y: s.ship.y };
 });
 await page.keyboard.press('Digit1');
@@ -497,7 +497,7 @@ await page.waitForTimeout(100);
 await clickOn('buy.pack');
 await page.waitForTimeout(80);
 check(await settles(async () => (await get('s.ship.mods.pack')) === 1), 'boarding gear is in the armory tab');
-check(await settles(async () => (await get('s.credits')) < 2000), 'upgrades cost credits');
+check(await settles(async () => (await get('Math.min(...Object.values(s.purses))')) < 2000), 'upgrades cost credits');
 await shot('12-station');
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(100);
@@ -513,14 +513,17 @@ await page.waitForTimeout(100);
 await page.keyboard.press('KeyF');
 await page.waitForTimeout(200);
 check(await settles(async () => (await get("v.panel === 'mainframe'")) === true), 'F at the mainframe opens its panel');
-const credits = await get('s.credits');
+// The station pays for its own defence, from what it has saved.
+const ownStation = "window.__critical.stations.find((x) => x.align === 'friendly')";
+await page.evaluate(() => (window.__critical.stations.find((x) => x.align === 'friendly').purse = 1000));
+const credits = await get(ownStation + '.purse');
 await clickOn('mf.up.shield');
 await page.waitForTimeout(150);
 check(
   await settles(
     async () =>
       (await get("window.__critical.stations.find((x) => x.align === 'friendly').defense.shield")) === 1 &&
-      (await get('s.credits')) < credits,
+      (await get(ownStation + '.purse')) < credits,
   ),
   'defence for the station is bought at its mainframe',
 );
@@ -671,7 +674,7 @@ check(
 );
 await shot('12f-pod-dial');
 const podsBefore = await get('window.__critical.pods.length'),
-  creditsBefore = await get('s.credits');
+  creditsBefore = await get('s.purses.captain');
 for (let i = 0; i < 3; i++) {
   await page.evaluate(() => {
     const b = window.__critical.pods[0].breakin;
@@ -687,7 +690,8 @@ await shot('12g-pod-opening');
 await page.waitForTimeout(900);
 check(
   await settles(
-    async () => (await get('window.__critical.pods[0].looted')) === true && (await get('s.credits')) > creditsBefore,
+    async () =>
+      (await get('window.__critical.pods[0].looted')) === true && (await get('s.purses.captain')) > creditsBefore,
   ),
   'three good stops open the pod and give its cargo',
 );
@@ -897,7 +901,9 @@ check(
   'T starts test mode',
 );
 check(
-  await settles(async () => (await tget('Object.keys(s.ship.mods).length')) > 20 && (await tget('s.credits')) === 5000),
+  await settles(
+    async () => (await tget('Object.keys(s.ship.mods).length')) > 20 && (await tget('s.purses.captain')) === 5000,
+  ),
   'test mode has everything installed and credits to spend',
 );
 if (shots) await testPage.screenshot({ path: `${shots}/19-test-mode.png` });
@@ -948,7 +954,7 @@ await page.evaluate(() => window.localStorage.clear());
     const s = window.__critical.state;
     s.spawn.timer = 1e9;
     s.raidTimer = 1e9;
-    s.credits = 777;
+    s.purses.captain = 777;
   });
   await press('KeyO');
   check(await settles(async () => (await at('c.mode')) === 'menu'), 'O opens the menu');
@@ -972,7 +978,7 @@ await page.evaluate(() => window.localStorage.clear());
   await snap('23-sound');
   await press('KeyF', 'KeyF');
   check(await settles(async () => (await at('c.mode')) !== 'menu'), 'F leaves the menu');
-  await p.evaluate(() => (window.__critical.state.credits = 5));
+  await p.evaluate(() => (window.__critical.state.purses.captain = 5));
   await press('KeyO', 'ArrowDown', 'ArrowDown', 'Enter');
   check(
     await settles(async () => (await at('v.menu.page')) === 'load' && (await at('v.menu.row')) === 1),
@@ -980,16 +986,16 @@ await page.evaluate(() => window.localStorage.clear());
   );
   await snap('24-load');
   await press('Enter');
-  check(await settles(async () => (await at('s.credits')) === 5), 'loading over a game in progress asks first');
+  check(await settles(async () => (await at('s.purses.captain')) === 5), 'loading over a game in progress asks first');
   await press('Enter');
   check(
-    await settles(async () => (await at('s.credits')) === 777 && (await at('c.mode')) !== 'menu'),
+    await settles(async () => (await at('s.purses.captain')) === 777 && (await at('c.mode')) !== 'menu'),
     'the saved game is back',
   );
   // The game saves itself when the ship docks.
   await p.evaluate(() => {
     const s = window.__critical.state;
-    s.credits = 888;
+    s.purses.captain = 888;
     s.events.push({ type: 'dock', target: 0, kind: 'wreck' });
   });
   await p.waitForTimeout(200);
@@ -999,14 +1005,14 @@ await page.evaluate(() => window.localStorage.clear());
   );
   await p.evaluate(() => {
     const s = window.__critical.state;
-    s.credits = 1;
+    s.purses.captain = 1;
     s.over = true;
   });
   await p.waitForTimeout(200);
   await snap('25-lost-with-save');
   await press('KeyR');
   check(
-    await settles(async () => (await at('s.over')) === false && (await at('s.credits')) === 888),
+    await settles(async () => (await at('s.over')) === false && (await at('s.purses.captain')) === 888),
     'R after losing the ship loads the last save',
   );
   // A save file can be written and read back.
@@ -1014,11 +1020,11 @@ await page.evaluate(() => window.localStorage.clear());
   const [download] = await Promise.all([p.waitForEvent('download'), p.keyboard.press('Enter')]);
   const file = await download.path();
   const saved = JSON.parse((await import('node:fs')).readFileSync(file, 'utf8'));
-  check(saved.game === 'critical-st8' && saved.state.credits === 888, 'the game can be exported to a file');
+  check(saved.game === 'critical-st8' && saved.state.purses.captain === 888, 'the game can be exported to a file');
   // The ship starts close to the yard. It is moved well away first, so that F does not begin to dock.
   await p.evaluate(() => {
     const s = window.__critical.state;
-    s.credits = 2;
+    s.purses.captain = 2;
     Object.assign(s.ship, { x: 0, y: -5000, vx: 0, vy: 0, throttle: 0 });
   });
   await press('KeyF', 'KeyO', 'ArrowDown', 'ArrowDown', 'Enter');
@@ -1029,7 +1035,7 @@ await page.evaluate(() => window.localStorage.clear());
   await chooser.setFiles(file);
   await p.waitForTimeout(300);
   check(
-    await settles(async () => (await at('s.credits')) === 888 && (await at('c.mode')) !== 'menu'),
+    await settles(async () => (await at('s.purses.captain')) === 888 && (await at('c.mode')) !== 'menu'),
     'and a save file can be imported',
   );
   // Hardcore: one life, and the run takes its saves with it.

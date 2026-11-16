@@ -136,7 +136,7 @@ export function mainframeRows(state, st, av, armed) {
     const lv = defenseOf(st)[what];
     const label = DEFENSE_NAMES[what] + (lv ? '  ' + 'I'.repeat(lv) : '');
     const right = price === null ? 'MAXED' : price + ' CR';
-    const ok = price !== null && state.credits >= price;
+    const ok = price !== null && (st.purse || 0) >= price;
     row(
       'up.' + what,
       PX + PW - 12 - COL_W,
@@ -193,7 +193,9 @@ export function drawMainframe(ctx, font, state, st, av, armed, mouse) {
   rect(ctx, PX + 3, PY + 3, PW - 6, PH - 6, null, COL.line);
   font.draw(ctx, st.name + '  ·  MAINFRAME', PX + 12, PY + 12, COL.text, { scale: 2 });
   font.draw(ctx, whose(st), PX + 12, PY + 32, rel === 'own' ? COL.acid[2] : COL.dim);
-  font.draw(ctx, 'CREDITS  ' + state.credits, PX + PW - 12, PY + 12, COL.ochre[2], { align: 'r' });
+  // The station's own purse pays for its defence (R-1115).
+  if (rel === 'own')
+    font.draw(ctx, `SAVED  ${Math.floor(st.purse || 0)} CR`, PX + PW - 12, PY + 12, COL.ochre[2], { align: 'r' });
   if (rel === 'enemy') {
     font.draw(ctx, 'HACK', PX + 12, PY + 50, COL.dim);
     const y = PY + 168;

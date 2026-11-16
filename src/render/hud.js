@@ -16,6 +16,7 @@ import { drawMiniMap } from './map.js';
 import { drawEngineerStrip } from './engineer.js';
 import { RISK } from './looks.js';
 import { drawTargets, drawCourse, drawMarks, surgeLine } from './instruments.js';
+import { shownPurse, ROLE_NAME } from '../sim/purses.js';
 
 const fmtTime = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 // Colours for the status lines at the top: calm, a warning, an alarm, good news.
@@ -263,7 +264,8 @@ export function drawHud(ctx, state, view, assets, dock) {
   const me = playerById(state, view.playerId);
   drawTabs(ctx, font, state, view);
   const bounty = state.bounty ? `BOUNTY ON YOU  ${state.bounty.amount}   ` : '';
-  const credits = (state.test ? 'TEST MODE   ' : '') + bounty + 'CREDITS  ' + state.credits;
+  const purse = shownPurse(state, me);
+  const credits = (state.test ? 'TEST MODE   ' : '') + bounty + `${ROLE_NAME[purse.role]}  ${purse.credits} CR`;
   label(ctx, font, VIEW_W - 8, 8, credits, { anchor: 'r', fg: COL.ochre[2] });
   const where = `${currentSector(state).name}   KILLS  ${state.kills}   ${fmtTime(state.time)}`;
   label(ctx, font, VIEW_W - 8, 24, where, { anchor: 'r', fg: COL.dim });

@@ -4,6 +4,7 @@
 // Which side a ship is on decides whom it fights: pirates fight everyone, and the ships of a faction
 // fight pirates, and the crew only when the crew has made an enemy of that faction.
 import { B } from './balance.js';
+import { earn } from './purses.js';
 import { SHIPS } from './kinds.js';
 import {
   CREW,
@@ -113,7 +114,7 @@ export function hurtVessel(state, v, dmg, by = CREW) {
   if (crew && v.side === PIRATE) {
     // Only the crew's own kills count, and pay.
     state.kills++;
-    state.credits += c.bounty;
+    earn(state, c.bounty);
     thankForPirate(state);
   } else if (crew) {
     changeStanding(state, v.side, -B.STANDING_LOSS.shipKill);

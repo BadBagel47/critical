@@ -7,10 +7,11 @@ import { thingsOf, findThing, findDock, mapInfo } from './things.js';
 import { makeVessel } from './vessels.js';
 import { currentSector } from './sectors.js';
 import { teleportAllHome } from './boarding.js';
-import { buyUpgrade, hullMax, fuelMax, priceOf, CATALOG } from './upgrades.js';
+import { buyUpgrade, hullMax, fuelMax, priceOf, payerOf, CATALOG } from './upgrades.js';
 import { payBounty } from './bounty.js';
 import { fuelUnit } from './fuel.js';
 import { readChart } from './intel.js';
+import { earn, spend, mayBuyFor, ownPurse, ROLE_NAME } from './purses.js';
 import { turnOnCrew } from './mainframe.js';
 import { forward, headingTo, turnToward, angleDiff, toWorld, dist, rand, randRange, TAU } from './util.js';
 
@@ -69,6 +70,9 @@ export function createStation(s, x, y, side, shipyard, name, home = false) {
     takenAt: null,
     from: null,
     guns: [],
+    // A station of the crew's: its own purse for its defence, and the seconds towards its next income (F-088).
+    purse: 0,
+    incomeT: 0,
   };
   st.guns = mountGuns(st);
   if (st.side !== CREW && st.side !== PIRATE) s.standing[st.side] = s.standing[st.side] || 0;
@@ -127,6 +131,8 @@ export function takeOver(state, st) {
   st.from = st.side;
   st.side = CREW;
   st.takenAt = state.time;
+  st.purse = 0;
+  st.incomeT = 0;
   // The first attack on a station of theirs does not come at once.
   state.siegeTimer = Math.max(state.siegeTimer, B.SIEGE_FIRST);
   st.align = 'friendly';
@@ -213,52 +219,56 @@ export function servicePrices(state, st) {
   };
 }
 
+// Whose purse pays for each service (R-1105). A bounty is paid by whoever stands at the desk (R-1117).
+export const SERVICE_ROLE = { refuel: 'captain', chart: 'captain', repair: 'engineer', rockets: 'gunner' };
+// The purse a service is paid from, for the player who orders it.
+export const servicePayer = (state, action, playerId) => SERVICE_ROLE[action] || ownPurse(state, playerId);
+
 const refuse = (state, reason) => state.events.push({ type: 'cannotBuy', reason });
-function pay(state, price) {
-  if (state.credits < price) {
+function pay(state, role, price) {
+  if (!spend(state, role, price)) {
     refuse(state, 'NOT ENOUGH CREDITS');
     return false;
   }
-  state.credits -= price;
   return true;
 }
 
 // Each service, once it is known that the ship needs it.
 const SERVICES = {
   ore(state, st, info) {
-    state.credits += info.price;
+    earn(state, info.price);
     state.ship.ore = 0;
     state.ship.refined = 0;
     state.events.push({ type: 'oreSold', credits: info.price });
   },
-  bounty(state, st, info) {
-    if (!pay(state, info.price)) return;
+  bounty(state, st, info, role) {
+    if (!pay(state, role, info.price)) return;
     payBounty(state);
   },
   // With too few credits the tank is filled as far as the money goes.
-  refuel(state, st, info) {
+  refuel(state, st, info, role) {
     const ship = state.ship;
     const unit = fuelUnit(st) * priceFactor(state, st);
-    const amount = unit ? Math.min(info.need, Math.floor(state.credits / unit)) : info.need;
+    const amount = unit ? Math.min(info.need, Math.floor(state.purses[role] / unit)) : info.need;
     if (amount <= 0) return refuse(state, 'NOT ENOUGH CREDITS');
-    state.credits -= Math.ceil(amount * unit);
+    state.purses[role] -= Math.ceil(amount * unit);
     ship.fuel = Math.min(fuelMax(ship), ship.fuel + amount);
     state.events.push({ type: 'refuelled', amount });
   },
-  repair(state, st, info) {
+  repair(state, st, info, role) {
     const ship = state.ship;
-    if (!pay(state, info.price)) return;
+    if (!pay(state, role, info.price)) return;
     ship.hull = hullMax(ship);
     for (const n of ship.nodes) n.hp = 100;
     state.events.push({ type: 'repairedAll' });
   },
-  rockets(state, st, info) {
-    if (!pay(state, info.price)) return;
+  rockets(state, st, info, role) {
+    if (!pay(state, role, info.price)) return;
     state.ship.rockets = B.ROCKET_LOAD;
     state.events.push({ type: 'rearmed' });
   },
-  chart(state, st, info) {
-    if (!pay(state, info.price)) return;
+  chart(state, st, info, role) {
+    if (!pay(state, role, info.price)) return;
     state.charts.push(st.chart);
     // It shows the systems around the one it is of, as they are now (D-089).
     readChart(state, st.chart);
@@ -266,16 +276,24 @@ const SERVICES = {
   },
 };
 
+// One order at a desk. `order.player` is who gave it: a player buys only for the roles they have (R-1106).
 function shop(state, st, order) {
+  const own = ownPurse(state, order.player);
   if (order.action === 'buy') {
     const why = notSoldHere(state, st, order.item);
     if (why) return refuse(state, why);
-    buyUpgrade(state, order.item, priceFactor(state, st));
+    const role = payerOf(order.item, own);
+    if (!mayBuyFor(state, order.player, role)) return refuse(state, `ONLY THE ${ROLE_NAME[role]} BUYS THIS`);
+    buyUpgrade(state, order.item, priceFactor(state, st), own);
     return;
   }
   const service = SERVICES[order.action];
   const info = service && servicePrices(state, st)[order.action];
-  if (info && info.need > 0) service(state, st, info);
+  if (!info || info.need <= 0) return;
+  // A service is ordered by whoever stands at the desk, and paid from the purse of the role it belongs to, so
+  // that the Captain need not go aboard to refuel.
+  if (order.action === 'ore') return service(state, st, info);
+  service(state, st, info, servicePayer(state, order.action, order.player));
 }
 
 // ---------- defence ----------
@@ -387,10 +405,19 @@ function stepRepairs(st, time, dt) {
 }
 
 // The part of a station of the crew's that is being mended comes along, also while the crew is far away. A gun
-// that is whole again waits to be switched on. Where the crew is not, the shield comes back too.
+// that is whole again waits to be switched on. Where the crew is not, the shield comes back too. Its income
+// comes in.
 function stepOwned(state, dt) {
   for (const { st, sector } of allStations(state)) {
     if (st.side !== CREW) continue;
+    // Its income comes in once a minute, wherever the crew is (F-088): to its own purse, which pays for its
+    // defence (R-1115), and to every role's purse (R-1116).
+    st.incomeT = (st.incomeT || 0) + dt;
+    while (st.incomeT >= B.STATION_INCOME_EVERY) {
+      st.incomeT -= B.STATION_INCOME_EVERY;
+      st.purse = (st.purse || 0) + B.STATION_INCOME.station;
+      earn(state, B.STATION_INCOME.crew);
+    }
     if (sector !== state.sector) st.shield = Math.min(stationShieldMax(st), st.shield + B.STATION_SHIELD_RECHARGE * dt);
     if (st.fix === null) continue;
     if (st.fix === 'hull') {
@@ -457,7 +484,7 @@ function thankCrew(state, st) {
     st.favor = B.FAVOR_TIME;
     state.events.push({ type: 'distressSaved', name: st.name, favor: true });
   } else {
-    state.credits += B.RAID_REWARD;
+    earn(state, B.RAID_REWARD);
     state.events.push({ type: 'distressSaved', name: st.name, reward: B.RAID_REWARD });
   }
 }

@@ -14,6 +14,7 @@ import { forward, dist } from '../sim/util.js';
 import { hunters, roomName } from './radar.js';
 import { awake } from '../sim/guards.js';
 import { drawFigure } from './figures.js';
+import { shownPurse, ROLE_NAME } from '../sim/purses.js';
 
 // Where on the screen the inside of a place is drawn. The camera follows the player's own figure. A place
 // that is smaller than the screen is kept still in the middle of it, and at the edges of a larger one the
@@ -1064,7 +1065,8 @@ export function drawBoarding(ctx, state, view, assets) {
     label(ctx, font, VIEW_W - 8, 8, carried, { anchor: 'r', fg: COL.ochre[2] });
   }
   const credits = { anchor: 'r', fg: it.trade ? COL.ochre[2] : COL.dim };
-  label(ctx, font, VIEW_W - 8, it.trade ? 8 : 22, `CREDITS  ${state.credits}`, credits);
+  const purse = shownPurse(state, playerById(state, view.playerId));
+  label(ctx, font, VIEW_W - 8, it.trade ? 8 : 22, `${ROLE_NAME[purse.role]}  ${purse.credits} CR`, credits);
   // The plan of the place sits under the lines in the corner.
   const carries = me && player.backTo === 'captain' && !it.trade;
   const near = carries ? hunters(it).filter((e) => dist(e.x, e.y, me.x, me.y) < B.RADAR_REACH * TILE) : [];

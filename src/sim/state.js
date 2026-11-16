@@ -6,6 +6,7 @@ import { thingsOf, mapInfo } from './things.js';
 import { arrival, placeShip } from './system.js';
 import { createSectors, generateSector, gatherForTesting } from './sectors.js';
 import { applyTestLoadout } from './upgrades.js';
+import { createPurses } from './purses.js';
 
 // `options.test` starts the game with everything unlocked, for trying things out.
 // `options.hardcore` gives the crew a single life: a lost ship ends the run for good.
@@ -23,7 +24,8 @@ export function createState(seed = 1, options = {}) {
     test: false,
     hardcore: !!options.hardcore,
     nextId: 1,
-    credits: 0,
+    // What each role has to spend, see purses.js.
+    purses: createPurses(),
     kills: 0,
     // What happened in this step. The screen reads it for messages and sound, and then empties it.
     events: [],

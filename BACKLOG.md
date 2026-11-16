@@ -5,87 +5,84 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först (A och B), sedan uppdragen (C). Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
+Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först (A, med design före bild), sedan uppdragen (B). Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
 
-**A** – strong model, high level – Uppgraderingar och ekonomi per roll
-- F-188 – Uppgraderingarna sorteras efter kategori och roll
-- D-189 – Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar
-- F-088 – Övertagna stationer betalar inkomst över tid till en egen kassa och till spelarna, så att det lönar sig att ta över dem
-
-**B** – strong model, medium level – Butik med bilder
+**A** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**C** – strong model, high level – Världen steg 4: uppdrag och story
+**B** – strong model, high level – Världen steg 4: uppdrag och story
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 
-**D** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
+**C** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
 - D-217 – Designskiss av varvet utifrån och inifrån, och en större utsida som hänger ihop med basens tre våningar (ersätter designen i F-103)
 - D-216 – Designtest av markeringar som visar snabbaste vägen ut genom de dörrar man har öppnat
 - D-218 – Demo med full design av dockningsringen som vrids i fasta lägen
 
-**E** – strong model, medium level – Provspelslista med testlägen
+**D** – strong model, medium level – Provspelslista med testlägen
 - F-222 – En lista över det som väntar på provspel, med länkar som startar rätt situation direkt, så att varje sak går att prova på några minuter
 
-**F** – strong model, medium level – Förfina rollerna
+**E** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
+- F-236 – Primära roller och tillfälligt övertagande: den som lämnar skeppet lämnar sina roller lediga, de kvar kan ta en av dem, och ägaren får tillbaka den direkt
+- F-235 – Bordarnas utrustning per roll, så att varje roll köper och har sin egen
 
-**G** – strong model, medium level – Innehållskatalog
+**F** – strong model, medium level – Innehållskatalog
 - D-223 – En lista ur koden över allt som finns i spelet med sina siffror, så att överblicken alltid stämmer
 
-**H** – strong model, medium level – Verktyg för backloggen
+**G** – strong model, medium level – Verktyg för backloggen
 - F-228 – Markera, flytta till klart och ge nya bokstäver med ett verktyg, så att agenterna gör färre misstag
 
-**I** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
+**H** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
 - D-227 – Dela upp de två stora filerna efter ämne, så att två agenter krockar mer sällan
 
-**J** – strong model, high level – Pekskärm
+**I** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**K** – strong model, high level – Viewer på en extra skärm
+**J** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 
-**L** – strong model, high level – Sällsynta skepp
+**K** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**M** – strong model, high level – Värme
+**L** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**N** – strong model, high level – Slå ut och borda
+**M** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**O** – strong model, high level – Missiler och raketer
+**N** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**P** – strong model, high level – Kontakt med andra skepp
+**O** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**Q** – strong model, high level – Anomalier
+**P** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**R** – strong model, high level – En värld som förändras
+**Q** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**S** – strong model, high level – Ljudeffekter
+**R** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**T** – strong model, high level – Visuella effekter och feedback
+**S** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 
-**U** – strong model, high level – Förslag: ekonomi och belöningar
+**T** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**V** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**U** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**W** – strong model, high level – Handel
+**V** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
@@ -106,6 +103,8 @@ Väntar på användaren: elva krockar i regelboken (docs/rules.md, överst), fri
 
 | ID | Vad | Status |
 |---|---|---|
+| F-235 | Bordarnas utrustning per roll (R-1113). I dag betalar den som köper ur sin kassa, men utrustningen gäller alla bordare. Varje roll ska köpa och ha sin egen. Rör bordningsfilerna, så den görs när insidorna är klara (D-227) | Ej påbörjad |
+| F-236 | Primära roller och tillfälligt övertagande (R-1108–R-1110, R-1118). I dag byter man post fritt. Den som lämnar skeppet ska lämna sina roller lediga, de som är kvar kan ta en av dem tills ägaren kommer tillbaka och då får tillbaka den direkt, och den som tar en annans roll håller kvar sin egen. Datorn som roll bestäms när omgången startar (R-1112, D-186) | Ej påbörjad |
 | F-230 | Olika stjärnor i olika system, i färg och storlek, enligt förslag D på designsidan (R-127). Skulle byggas med den genererade kartan i D-089, men blev inte med i världssteg 3 | Ej påbörjad |
 | F-030 | Automatisk paus när någon varit frånkopplad en stund | Ej påbörjad |
 | D-060 | Nätverksförberedelse: dela upp spelets tillstånd i tre lager. Det som aldrig ändras skickas en gång, det som ändras sällan skickas vid ändring, och det som rör sig skickas ofta. Mätt 2026-11-14: hela tillståndet är omkring 25 kB, varav 3 kB ändras hela tiden. Agentens rekommendation 2026-11-14: en av spelarna räknar ut spelet och motorn förmedlar meddelanden. Motorns gränser är inte kända än | Väntar på användaren |
@@ -127,8 +126,6 @@ Väntar på användaren: elva krockar i regelboken (docs/rules.md, överst), fri
 | F-192 | Ryggsäck för utrustning. Användaren 2026-11-15: för att bära mer saker kan man köpa en backpack och sedan uppgradera den så att den håller mer. Den avgör även hur många turrets man kan ta med. Utan ryggsäck får man med sig lite, till exempel en laddning. I dag finns CARGO PACK i butiken, som låter en bordare bära två byten till per tur, och antalet granater, flares, pilar och turrets är fasta tal. Öppet: om ryggsäcken gäller både utrustning och byte eller bara utrustning, om den ersätter CARGO PACK, vilka saker som tar plats i den (laddningar, turrets, granater, flares, pilar), hur många nivåer den har, och om den är en per skepp eller en per bordare. Hör ihop med F-191 och F-188 (uppgraderingar per kategori och roll) | Ej påbörjad |
 | D-193 | Analys: permanenta prylar och sådant som förbrukas. Användaren 2026-11-15: gå igenom vilka prylar som är permanenta och eventuellt kan uppgraderas och hur, samt vilka objekt som förbrukas. En framtida analys, inget byggs. I dag är nästan allt i butiken permanent: ett köp ger granater, flares, pilar, laddningar och en turret på nytt vid varje bordning. Bara bränsle, reparation och krediter går åt. Analysen ska ge en lista över varje sak med förslag på om den är permanent, uppgraderbar eller förbrukas, vad den kostar att fylla på, var man ser vad man har, och hur det hänger ihop med ryggsäcken (F-192), laddningarna (F-191), uppgraderingar per roll (F-188) och ekonomin (D-189, D-104) | Analys klar 2026-11-16 i docs/proposal-items.md, väntar på användarens svar |
 | D-187 | Se över hur spelet och skeppet visar meddelanden. Användaren 2026-11-15: just nu läggs allt möjligt på skärmen i en struktur som kan vara svår att prioritera. Allt som visas i dag kanske inte heller ska visas, eller bara visas med uppgraderingar. Kanske ska sensordata få en egen del av gränssnittet. Läget i dag: upp till två statusrader överst i mitten, tillfälliga meddelanden under dem, pilar i skärmkanten mot allt som är känt, en minikarta, och varje posts egna mätare nere i hörnen | Förslag klart 2026-11-16 i docs/proposal-messages.md, väntar på användarens svar |
-| F-188 | Uppgraderingar sorterade efter kategori och roll. Användaren 2026-11-15. Läget i dag: butiken har tre flikar (hull, systems, armory) utan att säga vilken roll en uppgradering hör till | Pågår 2026-11-16 |
-| D-189 | Ekonomin delad mellan rollerna. Användaren 2026-11-15: så att alla roller kan ta egna beslut om vad som behöver förbättras. Då undviker man diskussion om att en person vill ha alla förbättringar själv. Läget i dag: en gemensam kassa. Att besvara: hur pengarna delas, vad som köps ur vilken kassa, vad som fortfarande är gemensamt (bränsle, lagning, stjärnkartor), och hur det fungerar för den som spelar ensam. Hör ihop med F-188 och docs/proposal-economy.md Besked 2026-11-16: varje roll har en egen kassa, och varje kassa får hela beloppet av allt besättningen tjänar, så att priser kan sättas en gång per roll och ingen behöver räkna ut sin del (R-1103, R-1104). Captain betalar bränsle och kartor, Engineer lagning och Gunner raketer (R-1105). Butiken visar allt för alla roller, men man köper bara för de roller man har, och den som har alla roller kan köpa i alla avdelningar (R-1106). Besked 2026-11-15: en roll som datorn sköter (D-186) är öppen för alla spelare att handla åt. Besked 2026-11-16: varje spelare har sina primära roller från start. En spelare som lämnar skeppet lämnar sina roller tillfälligt lediga, och de som är kvar kan ta en av dem tills ägaren kommer tillbaka, en spelare per roll, och den som tar en annans roll håller kvar sin egen (R-1108–R-1110). Med två spelare tas den tredje rollen över så, eller sköts av datorn om det tillåtits när omgången startade (R-1111, R-1112). Varje roll köper sin egen bordares utrustning (R-1113). Engineer äger skydd och energi, Gunner vapen, Captain motorer, bränsle och sensorer (R-1114). Besked 2026-11-16: en övertagen station har en egen kassa som fylls av dess inkomst, och försvaret köps ur den. Inkomsten ger också varje rolls kassa lika mycket (R-1115, R-1116, F-088). Besked 2026-11-16: prissumman betalas av den som står vid disken, ur den egna kassan (R-1117), och den som kommer tillbaka får sin roll direkt (R-1118) Då behöver man inte gå tillbaka till skeppet och byta roll för att köpa den rollens saker | Pågår 2026-11-16 |
 | F-118 | Man borde inte bli förlåten med tiden. På något sätt borde man få jobba för det, till exempel genom uppdrag för faktionen (D-073). I dag stiger ett dåligt anseende av sig självt upp till avvaktande. Agentens anmärkning: ta bort det först när uppdragen finns, och se till att det alltid finns ett sätt att höja anseendet även när faktionens baser är stängda, till exempel uppdrag för den som erbjuds på andra baser Förslaget är framtaget 2026-11-15 i docs/proposal-world.md och väntar på användarens svar på frågorna där. | Väntar på användaren |
 | F-119 | Faktioner som är i krig med varandra. Då får sidouppdragen man tar större tyngd. Agentens förslag: ett krig mellan två av faktionerna per omgång, där deras patruller slåss med varandra och uppdrag för den ena sänker anseendet hos den andra. Krig kan börja och ta slut som händelser i världen (F-087) | Ej påbörjad |
 | F-103 | Stora baser med två våningar: 1,5 gånger större än dagens stationer, med annan design, mer vapen och starkare sköld till försvar. Dagens storlek är bra för små stationer. Design visas först Besked 2026-11-16: ersatt av standardbasen i tre våningar och en större utsida som byggs av samma data som insidan, se docs/proposal-bases.md, F-208 och D-217 | Ersatt |
@@ -175,7 +172,6 @@ Väntar på användaren: elva krockar i regelboken (docs/rules.md, överst), fri
 | F-185 | Sparad idé ur D-180: Gunner siktar dragstrålen och fångar bärgningsgods och pods. Ensam: byt post, som med vapnen | Ej påbörjad |
 | F-086 | Från D-075: namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma | Ej påbörjad |
 | F-087 | Från D-075: händelser som ändrar världen. En station byter ägare, priser rör sig, en sektor blir farligare | Ej påbörjad |
-| F-088 | Från D-075: tribut från övertagna stationer som ger inkomst över tid. Användaren 2026-11-16: stationen får en egen kassa som fylls av inkomsten, och dess försvar köps ur den, så att man får vänta lite innan försvaret kan uppgraderas. Inkomsten ger också varje rolls kassa lika mycket, så att det lönar sig att ta över en bas (R-1115, R-1116). Byggs med butiken i grupp A, eftersom försvaret annars inte går att köpa | Pågår 2026-11-16 |
 | D-046 | Gå igenom GDPR och lagring i webbläsaren igen när onlineläget byggs: spelarnamn, anslutningar och Cloudflare som ny tjänst | Ej påbörjad |
 
 ## Parkerat
@@ -350,3 +346,6 @@ Väntar på användaren: elva krockar i regelboken (docs/rules.md, överst), fri
 | F-231 | Ekonomibladet (tools/economy.mjs, docs/economy.md) räknar fortfarande som om första systemet har pirater och fasta sektorer. I fristaden kommer inga pirater, och världen är nu en karta av system. Modellen behöver räkna med det, se D-104. Användaren 2026-11-16: bladet ska alltid hållas i takt med spelet (AGENTS.md) Byggt 2026-11-16: bladet har ett nytt avsnitt om världen (system, stationer, vrak och hopp till slutet för varje storlek), och timmen spelas i fristaden, ett grannsystem, ett bebott system längre ut och ett tomt system. Den första timmen räknas som en kvart i fristaden och resten i grannsystemet. Fynd: fristaden ger mest (F-233), och i en kort värld ligger slutet bara två hopp bort (F-234) | 2026-11-16 |
 | F-233 | Fristaden ger mer pengar än systemen utanför. Ekonomibladet 2026-11-16: där kommer inga pirater som avbryter, och nya vrak driver in hela tiden, så en timme i fristaden ger ungefär 9 600 krediter mot 9 000 i ett grannsystem. Det krockar med att de större pengarna ska finnas längre ut (krock 14 i docs/rules.md). Rekommendation: inga nya vrak driver in i fristaden Användaren 2026-11-16: vrak ska inte finnas i överflöd, och i system med pirater ska chansen vara större (R-1093, R-1094). Användaren 2026-11-16: vrak är en bonus för den som hittar dem, inte en stor inkomst som man kan räkna med (R-1097). Användaren 2026-11-16 sa ja till förslagen: inga vrak i fristaden, oftast ett och ibland två där piraterna håller systemet, vartannat omstritt system har ett, sällan i faktionssystem och tomma system, inga nya vrak som driver in när ett sprängts men ibland ett nytt när man kommer tillbaka efter en stund, och strider lämnar vrak ibland Byggt 2026-11-16: fristaden har inga vrak, piraternas system oftast ett och ibland två, vartannat omstritt system ett och andra sällan något. Inga nya vrak driver in när ett sprängts. Kommer man tillbaka efter fem minuter kan ett nytt ligga där, oftast där piraterna finns. En nedskjuten gunboat eller ett fraktskepp lämnar vrak ungefär varannan gång (0,4). Ekonomibladet: den första timmen ger nu ungefär 4 100 krediter mot 9 100 förut, mest från pirater och malm | 2026-11-16 |
 | F-234 | Slutet ligger nära i en kort värld. Ekonomibladet 2026-11-16: i den minsta världen ligger slutet i snitt två hopp från fristaden, och det längsta avståndet är ungefär fyra hopp, så farlighetsnivå 3 nås sällan. Frågan är om vägen till slutet ska vara längre, till exempel genom att slutet läggs längst bort och systemen får färre genvägar Användaren 2026-11-16: ja, slutet ska vara svårare att nå än andra system, och det måste också nås genom uppdrag som öppnar nya vägar (R-1095, R-1096). Hör ihop med steg 4 (D-052, D-073) Användaren 2026-11-16 sa ja till förslagen: slutet i det system som ligger längst bort, minst 4, 5 eller 6 hopp efter storlek, en enda väg in som är stängd tills ett uppdrag öppnar den, och tills uppdragen finns öppnas den av en stjärnkarta i valvet på en piratbas Byggt 2026-11-16: slutet ligger i det system som ligger längst bort, minst 4, 5 eller 6 hopp efter storlek (i snitt ungefär 5, 6 och 7), med en enda hoppväg in. Vägen är stängd tills man har slutets stjärnkarta, som ligger i valvet på en piratbas. När uppdragen finns ska de också kunna öppna den (R-1096) | 2026-11-16 |
+| F-188 | Uppgraderingar sorterade efter kategori och roll. Användaren 2026-11-15. Läget i dag: butiken har tre flikar (hull, systems, armory) utan att säga vilken roll en uppgradering hör till Byggt 2026-11-16: varje uppgradering hör till en roll (Engineer skydd och energi, Gunner vapen, Captain motorer, bränsle och sensorer), och butiken visar vilken roll som betalar. Butikens bild görs om i grupp B, efter en design | 2026-11-16 |
+| D-189 | Ekonomin delad mellan rollerna. Användaren 2026-11-15: så att alla roller kan ta egna beslut om vad som behöver förbättras. Då undviker man diskussion om att en person vill ha alla förbättringar själv. Läget i dag: en gemensam kassa. Att besvara: hur pengarna delas, vad som köps ur vilken kassa, vad som fortfarande är gemensamt (bränsle, lagning, stjärnkartor), och hur det fungerar för den som spelar ensam. Hör ihop med F-188 och docs/proposal-economy.md Besked 2026-11-16: varje roll har en egen kassa, och varje kassa får hela beloppet av allt besättningen tjänar, så att priser kan sättas en gång per roll och ingen behöver räkna ut sin del (R-1103, R-1104). Captain betalar bränsle och kartor, Engineer lagning och Gunner raketer (R-1105). Butiken visar allt för alla roller, men man köper bara för de roller man har, och den som har alla roller kan köpa i alla avdelningar (R-1106). Besked 2026-11-15: en roll som datorn sköter (D-186) är öppen för alla spelare att handla åt. Besked 2026-11-16: varje spelare har sina primära roller från start. En spelare som lämnar skeppet lämnar sina roller tillfälligt lediga, och de som är kvar kan ta en av dem tills ägaren kommer tillbaka, en spelare per roll, och den som tar en annans roll håller kvar sin egen (R-1108–R-1110). Med två spelare tas den tredje rollen över så, eller sköts av datorn om det tillåtits när omgången startade (R-1111, R-1112). Varje roll köper sin egen bordares utrustning (R-1113). Engineer äger skydd och energi, Gunner vapen, Captain motorer, bränsle och sensorer (R-1114). Besked 2026-11-16: en övertagen station har en egen kassa som fylls av dess inkomst, och försvaret köps ur den. Inkomsten ger också varje rolls kassa lika mycket (R-1115, R-1116, F-088). Besked 2026-11-16: prissumman betalas av den som står vid disken, ur den egna kassan (R-1117), och den som kommer tillbaka får sin roll direkt (R-1118) Då behöver man inte gå tillbaka till skeppet och byta roll för att köpa den rollens saker Byggt 2026-11-16: en kassa per roll som får hela beloppet av allt besättningen tjänar. Uppgraderingar betalas av sin roll, tjänster av Captain (bränsle, kartor), Engineer (lagning) och Gunner (raketer), och utrustning och prissumma av den som köper. En spelare köper bara för sina roller: ensam alla tre, annars rollen efter sin plats i besättningen och de roller som ingen har. Tjänster vid disken kan beställas av vem som helst (R-1119, agentens tolkning). Rollbyten enligt R-1108–R-1110 och R-1118 är inte byggda, se F-236 | 2026-11-16 |
+| F-088 | Från D-075: tribut från övertagna stationer som ger inkomst över tid. Användaren 2026-11-16: stationen får en egen kassa som fylls av inkomsten, och dess försvar köps ur den, så att man får vänta lite innan försvaret kan uppgraderas. Inkomsten ger också varje rolls kassa lika mycket, så att det lönar sig att ta över en bas (R-1115, R-1116). Byggs med butiken i grupp A, eftersom försvaret annars inte går att köpa Byggt 2026-11-16: en egen station ger varje minut 50 krediter till sin egen kassa och 25 till varje rolls kassa, också när besättningen är någon annanstans. Försvaret köps ur stationens kassa | 2026-11-16 |

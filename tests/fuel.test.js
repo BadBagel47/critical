@@ -9,6 +9,7 @@ import { hurtRock, newRock } from '../src/sim/rocks.js';
 import { servicePrices } from '../src/sim/stations.js';
 import { jumpFuel, fuelMax } from '../src/sim/upgrades.js';
 import { B } from '../src/sim/balance.js';
+import { fillPurses } from '../src/sim/purses.js';
 
 const DT = 1 / 20;
 const quiet = (seed = 1) => {
@@ -89,10 +90,10 @@ test('R-027: a broken rock leaves ore, which goes into the hold and sells at a s
   s.ship.ore = 10;
   s.ship.fuel = fuelMax(s.ship);
   assert.equal(servicePrices(s, st).ore.price, 10 * B.ORE_PRICE);
-  const credits = s.credits;
+  const credits = s.purses.captain;
   step(s, { shop: [{ action: 'ore' }] }, DT);
   assert.equal(s.ship.ore, 0);
-  assert.equal(s.credits, credits + 10 * B.ORE_PRICE);
+  assert.equal(s.purses.captain, credits + 10 * B.ORE_PRICE);
 });
 
 test('the ship refines ore into fuel only when the tank is too low for a jump', () => {
@@ -133,7 +134,7 @@ test('fuel is free at the crew’s own yard only, and a scan costs fuel', () => 
 test('R-010: a crew with no fuel and no money gets on: ore from rocks becomes enough fuel for a jump', () => {
   const s = quiet();
   s.ship.fuel = 0;
-  s.credits = 0;
+  fillPurses(s, 0);
   s.charts.push(1);
   // The weapons need nothing, and the rocks break into ore.
   for (let i = 0; i < 4; i++) {

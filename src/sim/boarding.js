@@ -1,5 +1,6 @@
 // Boarding: the top-down interior of a wreck, with guards, turrets, loot and the teleporter.
 import { B } from './balance.js';
+import { earn } from './purses.js';
 import { currentSector } from './sectors.js';
 import { removeThing, thingsOf, dockTargets, findDock, portsOf } from './things.js';
 import { shipNose } from './ship.js';
@@ -545,7 +546,7 @@ function deposit(state, av) {
     } else credits += item.value;
   }
   state.ship.fuel = Math.min(fuelMax(state.ship), state.ship.fuel + fuel);
-  state.credits += credits;
+  earn(state, credits);
   state.events.push({ type: 'deposit', player: av.player, fuel, credits, count: av.carry.length });
   av.carry = [];
 }
@@ -1146,7 +1147,7 @@ function lootPod(state, pod) {
   const ship = state.ship;
   const credits = Math.round(randRange(state, B.POD_CREDITS[0], B.POD_CREDITS[1]) / 5) * 5;
   const fuel = rand(state) < 0.5 ? B.CELL_FUEL : 0;
-  state.credits += credits;
+  earn(state, credits);
   ship.fuel = Math.min(fuelMax(ship), ship.fuel + fuel);
   const part = rand(state) < 0.15 ? (rand(state) < 0.5 ? 'hard' : 'system') : null;
   if (part) ship.slots[part]++;

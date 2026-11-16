@@ -1,33 +1,62 @@
 // What stations sell, and what the bought upgrades do to the ship's numbers.
 import { B } from './balance.js';
 import { learn } from './intel.js';
+import { fillPurses } from './purses.js';
 
 // slot: 'hard' sits on the hull and shows, 'system' sits inside, null takes no slot.
 // tab: where it is sold. 'hull' and 'system' need a shipyard, 'armory' is boarding gear sold at any trading station.
+// role: whose purse pays for it (R-1114). Boarding gear has none: whoever buys it pays (R-1113).
 export const CATALOG = {
-  twin: { tab: 'hull', name: 'TWIN WING TURRETS', slot: 'hard', size: 1, price: 150, desc: 'TWO MORE PULSE TURRETS' },
+  twin: {
+    tab: 'hull',
+    role: 'gunner',
+    name: 'TWIN WING TURRETS',
+    slot: 'hard',
+    size: 1,
+    price: 150,
+    desc: 'TWO MORE PULSE TURRETS',
+  },
   heavy: {
     tab: 'hull',
+    role: 'gunner',
     name: 'HEAVY LASER',
     slot: 'hard',
     size: 1,
     price: 220,
     desc: 'CHARGED BEAM, FIRES STRAIGHT AHEAD',
   },
-  rockets: { tab: 'hull', name: 'ROCKET PODS', slot: 'hard', size: 1, price: 200, desc: 'HOMING ROCKETS, 8 PER LOAD' },
+  rockets: {
+    tab: 'hull',
+    role: 'gunner',
+    name: 'ROCKET PODS',
+    slot: 'hard',
+    size: 1,
+    price: 200,
+    desc: 'HOMING ROCKETS, 8 PER LOAD',
+  },
   bay: {
     tab: 'hull',
+    role: 'gunner',
     name: 'FIGHTER BAY',
     slot: 'hard',
     size: 2,
     price: 320,
     desc: 'THREE DARTS, LAUNCHED BY THE CAPTAIN',
   },
-  armor: { tab: 'hull', name: 'ARMOR PLATING', slot: 'hard', size: 1, price: 160, desc: 'HULL +80' },
-  pd: { tab: 'hull', name: 'POINT DEFENSE', slot: 'hard', size: 1, price: 220, desc: 'SHOOTS DOWN SOME INCOMING FIRE' },
-  tank: { tab: 'hull', name: 'FUEL TANK', slot: null, price: 140, desc: 'FUEL +60' },
+  armor: { tab: 'hull', role: 'engineer', name: 'ARMOR PLATING', slot: 'hard', size: 1, price: 160, desc: 'HULL +80' },
+  pd: {
+    tab: 'hull',
+    role: 'engineer',
+    name: 'POINT DEFENSE',
+    slot: 'hard',
+    size: 1,
+    price: 220,
+    desc: 'SHOOTS DOWN SOME INCOMING FIRE',
+  },
+  tank: { tab: 'hull', role: 'captain', name: 'FUEL TANK', slot: null, price: 140, desc: 'FUEL +60' },
   auto: {
     tab: 'hull',
+    role: 'gunner',
     name: 'DART AUTOLAUNCH',
     slot: null,
     needs: 'bay',
@@ -36,15 +65,25 @@ export const CATALOG = {
   },
   slotH: {
     tab: 'hull',
+    role: 'gunner',
     name: 'EXTRA HARDPOINT',
     slot: null,
     price: 250,
     levels: 2,
     desc: 'ROOM FOR ONE MORE HULL UPGRADE',
   },
-  emit: { tab: 'system', name: 'SHIELD EMITTERS', slot: 'system', size: 1, price: 180, desc: 'SHIELD +50' },
+  emit: {
+    tab: 'system',
+    role: 'engineer',
+    name: 'SHIELD EMITTERS',
+    slot: 'system',
+    size: 1,
+    price: 180,
+    desc: 'SHIELD +50',
+  },
   alarm: {
     tab: 'system',
+    role: 'captain',
     name: 'ENEMY ALARM',
     slot: 'system',
     size: 1,
@@ -54,6 +93,7 @@ export const CATALOG = {
   },
   tscan: {
     tab: 'system',
+    role: 'captain',
     name: 'TARGET SCANNER',
     slot: 'system',
     size: 1,
@@ -62,15 +102,17 @@ export const CATALOG = {
   },
   tcomp: {
     tab: 'system',
+    role: 'gunner',
     name: 'TARGETING COMPUTER',
     slot: 'system',
     size: 1,
     price: 130,
     desc: 'SHOWS THE GUNNER WHERE TO AIM',
   },
-  core: { tab: 'system', name: 'POWER CORE', slot: 'system', size: 1, price: 240, desc: 'POWER +2' },
+  core: { tab: 'system', role: 'engineer', name: 'POWER CORE', slot: 'system', size: 1, price: 240, desc: 'POWER +2' },
   boost: {
     tab: 'system',
+    role: 'captain',
     name: 'AFTERBURNER',
     slot: 'system',
     size: 1,
@@ -79,6 +121,7 @@ export const CATALOG = {
   },
   jumpcoil: {
     tab: 'system',
+    role: 'captain',
     name: 'JUMP COILS',
     slot: 'system',
     size: 1,
@@ -87,6 +130,7 @@ export const CATALOG = {
   },
   tractor: {
     tab: 'system',
+    role: 'captain',
     name: 'TRACTOR BEAM',
     slot: 'system',
     size: 1,
@@ -95,6 +139,7 @@ export const CATALOG = {
   },
   drones: {
     tab: 'system',
+    role: 'engineer',
     name: 'REPAIR DRONES',
     slot: 'system',
     size: 1,
@@ -103,6 +148,7 @@ export const CATALOG = {
   },
   solar: {
     tab: 'system',
+    role: 'captain',
     name: 'SOLAR CELLS',
     slot: 'system',
     size: 1,
@@ -111,6 +157,7 @@ export const CATALOG = {
   },
   dockfield: {
     tab: 'system',
+    role: 'engineer',
     name: 'DOCKING FIELD',
     slot: 'system',
     size: 1,
@@ -119,6 +166,7 @@ export const CATALOG = {
   },
   slotS: {
     tab: 'system',
+    role: 'engineer',
     name: 'EXTRA SYSTEM SLOT',
     slot: null,
     price: 200,
@@ -129,6 +177,7 @@ export const CATALOG = {
   // (F-195). The second level costs what `prices` says.
   sysradar: {
     tab: 'system',
+    role: 'captain',
     name: 'SYSTEM RADAR',
     slot: null,
     price: 200,
@@ -196,8 +245,11 @@ export const priceOf = (ship, id, discount = 1) => {
   return Math.round(base * discount);
 };
 
-// Why an item cannot be bought right now, or null when it can.
-export function blockedReason(state, id, discount = 1) {
+// The purse an item is paid from: the role it belongs to, or for boarding gear the one given (R-1113, R-1114).
+export const payerOf = (id, own = 'captain') => (CATALOG[id] && CATALOG[id].role) || own;
+
+// Why an item cannot be bought right now, or null when it can. `own` is the purse boarding gear is paid from.
+export function blockedReason(state, id, discount = 1, own = 'captain') {
   const item = CATALOG[id],
     ship = state.ship,
     lv = level(ship, id);
@@ -209,7 +261,7 @@ export function blockedReason(state, id, discount = 1) {
   if (item.needs && !has(ship, item.needs)) return 'NEEDS ' + CATALOG[item.needs].name;
   if (item.slot && lv === 0 && slotsUsed(ship, item.slot) + item.size > ship.slots[item.slot])
     return item.slot === 'hard' ? 'NO FREE HARDPOINT' : 'NO FREE SYSTEM SLOT';
-  if (state.credits < priceOf(ship, id, discount)) return 'NOT ENOUGH CREDITS';
+  if (state.purses[payerOf(id, own)] < priceOf(ship, id, discount)) return 'NOT ENOUGH CREDITS';
   return null;
 }
 
@@ -224,7 +276,7 @@ export function applyTestLoadout(state) {
   ship.fuel = fuelMax(ship);
   ship.rockets = B.ROCKET_LOAD;
   ship.dartStock = B.DART_COUNT;
-  state.credits = 5000;
+  fillPurses(state, 5000);
   // Every system is known, as it is at the start.
   state.charts = state.sectors.map((s) => s.id);
   for (const sec of state.sectors) learn(state, sec.id);
@@ -232,14 +284,14 @@ export function applyTestLoadout(state) {
   state.test = true;
 }
 
-export function buyUpgrade(state, id, discount = 1) {
-  const reason = blockedReason(state, id, discount);
+export function buyUpgrade(state, id, discount = 1, own = 'captain') {
+  const reason = blockedReason(state, id, discount, own);
   if (reason) {
     state.events.push({ type: 'cannotBuy', reason });
     return false;
   }
   const ship = state.ship;
-  state.credits -= priceOf(ship, id, discount);
+  state.purses[payerOf(id, own)] -= priceOf(ship, id, discount);
   ship.mods[id] = level(ship, id) + 1;
   if (id === 'slotH') ship.slots.hard++;
   if (id === 'slotS') ship.slots.system++;

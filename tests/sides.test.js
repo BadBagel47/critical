@@ -14,6 +14,7 @@ import { B } from '../src/sim/balance.js';
 import { forward, toWorld, dist } from '../src/sim/util.js';
 import { sceneOf } from '../src/scene.js';
 import { gatherForTesting } from '../src/sim/sectors.js';
+import { fillPurses } from '../src/sim/purses.js';
 
 const DT = 1 / 60;
 const stations = (s) => thingsOf(s, 'station');
@@ -91,7 +92,7 @@ test('a wary station charges more, and a closed one neither trades nor lets anyo
   assert.equal(isTrading(st), false);
   assert.equal(s.players[0].inside, null, 'whoever was inside is shown out');
   assert.ok(s.events.some((e) => e.type === 'standing' && e.mood === 'closed' && !e.better));
-  s.credits = 500;
+  fillPurses(s, 500);
   step(s, { shop: [{ action: 'refuel' }], system: { board: [0] } }, DT);
   assert.equal(s.ship.fuel, 40, 'no trade');
   assert.equal(s.players[0].inside, null, 'and no way in');
@@ -136,14 +137,14 @@ test('shooting at those who are not enemies costs standing, and killing pirates 
   hurtVessel(s, freighter, 999);
   assert.ok(s.standing.charter <= Math.max(-100, afterHits - B.STANDING_LOSS.shipKill));
   assert.equal(s.kills, 0, 'no kill is counted for it');
-  assert.equal(s.credits, 0, 'and no bounty paid');
+  assert.equal(s.purses.captain, 0, 'and no bounty paid');
   assert.equal(salvage(s).length, SHIPS.freighter.salvage.count, 'its cargo is left drifting');
   const wardens = s.standing.wardens;
   const pirate = makeVessel(s, 'fighter', s.ship.x + 300, s.ship.y);
   s.vessels.push(pirate);
   hurtVessel(s, pirate, 999);
   assert.equal(s.kills, 1);
-  assert.equal(s.credits, SHIPS.fighter.bounty);
+  assert.equal(s.purses.captain, SHIPS.fighter.bounty);
   assert.equal(s.standing.wardens, wardens + B.STANDING_GAIN.pirate, 'everyone is glad to see a pirate gone');
 });
 
@@ -411,7 +412,7 @@ test('a docked ship gets an extra shield that takes the first hits, and loses it
 test('the docking field upgrade makes the extra shield stronger', () => {
   const s = quiet();
   dockAt(s, yard(s));
-  s.credits = CATALOG.dockfield.price;
+  fillPurses(s, CATALOG.dockfield.price);
   step(s, { shop: [{ action: 'buy', item: 'dockfield' }] }, DT);
   assert.equal(s.ship.mods.dockfield, 1);
   assert.equal(dockShieldMax(s.ship), B.DOCK_SHIELD + B.DOCK_SHIELD_MORE);
@@ -481,7 +482,7 @@ test('a patrol comes in a pair, makes its round and fights the pirates it meets'
   for (let i = 0; i < 90 * 60 && pirate.hp > 0 && ships.every((v) => v.hp > 0); i++) step(s, {}, DT);
   assert.ok(pirate.hp < pirate.hpMax || ships.some((v) => v.hp < v.hpMax), 'they fight each other');
   assert.equal(s.kills, 0, 'what others shoot down is not the crew doing');
-  assert.equal(s.credits, 0);
+  assert.equal(s.purses.captain, 0);
   assert.equal(s.standing[lead.side], 0);
 });
 

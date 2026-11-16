@@ -142,11 +142,12 @@ function switchOn(state, st, gun) {
 function upgrade(state, st, what) {
   const price = defensePrice(st, what);
   if (price === null) return;
-  if (state.credits < price) {
-    state.events.push({ type: 'cannotBuy', reason: 'NOT ENOUGH CREDITS' });
+  // The station pays for its own defence, from the income it has saved up (R-1115).
+  if ((st.purse || 0) < price) {
+    state.events.push({ type: 'cannotBuy', reason: 'THE STATION HAS TOO LITTLE SAVED' });
     return;
   }
-  state.credits -= price;
+  st.purse -= price;
   st.defense[what]++;
   if (what === 'shield') st.shield = stationShieldMax(st);
   state.events.push({ type: 'defenseBought', what, level: st.defense[what] });

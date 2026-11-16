@@ -23,6 +23,7 @@ import { drawMainframe, mainframeClick, mainframeButtons } from './render/mainfr
 import { atMainframe } from './sim/mainframe.js';
 import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS, hackTarget, hackBox } from './render/engineer.js';
 import { drawActions, actionButtons } from './render/actions.js';
+import { pursesLine } from './sim/purses.js';
 
 // What is kept about the screen. None of it is part of the game: two players look at the same game differently.
 //   panel  what the player has opened on top of their place in the game: 'map', 'stars', 'lock', 'shop',
@@ -254,7 +255,14 @@ function shopInput(game, out) {
     return;
   }
   if (!keys.mouse.clicked) return;
-  const hit = shopClick(state, findDock(state, state.ship.docked), view.shopTab, keys.mouse.x, keys.mouse.y);
+  const hit = shopClick(
+    state,
+    findDock(state, state.ship.docked),
+    view.shopTab,
+    keys.mouse.x,
+    keys.mouse.y,
+    view.playerId,
+  );
   if (hit && hit.tab) view.shopTab = hit.tab;
   if (hit && hit.order) out.shop = [hit.order];
 }
@@ -341,7 +349,8 @@ function drawLock(game) {
 function drawShopScreen(game) {
   const { ctx, state, view, assets, keys } = game;
   drawAway(game);
-  if (!state.over) drawShop(ctx, assets.font, state, findDock(state, state.ship.docked), view.shopTab, keys.mouse);
+  if (!state.over)
+    drawShop(ctx, assets.font, state, findDock(state, state.ship.docked), view.shopTab, keys.mouse, view.playerId);
 }
 
 function drawMainframeScreen(game) {
@@ -410,7 +419,7 @@ export const SCREENS = {
     input: shopInput,
     draw: drawShopScreen,
     toasts: [312],
-    buttons: (game) => shopButtons(game.state, docked(game), game.view.shopTab),
+    buttons: (game) => shopButtons(game.state, docked(game), game.view.shopTab, game.view.playerId),
   },
   mainframe: {
     pad: 'panel',
@@ -525,7 +534,7 @@ export function drawScreen(game, mode, t) {
     const lines = [`KILLS  ${state.kills}`, `TIME  ${fmtTime(state.time)}`, '', what];
     drawOverlay(ctx, font, 'SHIP LOST', lines, COL.ember[2]);
   } else if (state.won && !view.wonSeen) {
-    const score = `KILLS  ${state.kills}     CREDITS  ${state.credits}`;
+    const score = `KILLS  ${state.kills}     ${pursesLine(state)}`;
     const lines = ['THE PIRATE CRUISER IS DESTROYED', score, '', 'PRESS ENTER TO KEEP FLYING'];
     drawOverlay(ctx, font, 'THE MAW IS CLEAR', lines, COL.acid[2]);
   }

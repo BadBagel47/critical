@@ -1,11 +1,22 @@
 // The shop panel at a station desk: services on the left, and three tabs of things to buy on the right.
 // The world keeps running behind it.
 import { VIEW_W, VIEW_H, COL } from '../config.js';
-import { servicePrices, yardOpen, priceFactor, notSoldHere } from '../sim/stations.js';
+import { servicePrices, yardOpen, priceFactor, notSoldHere, servicePayer } from '../sim/stations.js';
 import { CREW, FACTIONS, moodOf } from '../sim/sides.js';
-import { CATALOG, TABS, TAB_NAME, itemsOf, blockedReason, priceOf, level, slotsUsed } from '../sim/upgrades.js';
+import {
+  CATALOG,
+  TABS,
+  TAB_NAME,
+  itemsOf,
+  blockedReason,
+  priceOf,
+  level,
+  slotsUsed,
+  payerOf,
+} from '../sim/upgrades.js';
 import { rect } from './draw.js';
 import { MOOD_COL } from './looks.js';
+import { pursesLine, mayBuyFor, ownPurse, ROLE_NAME } from '../sim/purses.js';
 
 const PW = 520,
   PH = 284,
@@ -15,8 +26,12 @@ const PW = 520,
   TAB_W = 96;
 const fmt = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 
-// Every clickable row and tab, with what it orders. Shared by drawing and clicking.
-export function shopRows(state, st, tab) {
+// Every clickable row and tab, with what it orders. Shared by drawing and clicking. `who` is the player looking:
+// the shop shows what every role can buy, but they buy only for their own roles (R-1106).
+export function shopRows(state, st, tab, who = null) {
+  const own = ownPurse(state, who);
+  // Why the player cannot pay for something from the purse of `role`, or null when they can.
+  const notMine = (role) => (mayBuyFor(state, who, role) ? null : `${ROLE_NAME[role]} BUYS THIS`);
   const rows = [],
     prices = servicePrices(state, st),
     ship = state.ship,
@@ -37,6 +52,7 @@ export function shopRows(state, st, tab) {
   );
   let y = PY + 64;
   const service = (label, info, action, extra) => {
+    const role = action === 'ore' ? null : servicePayer(state, action, who);
     rows.push({
       x: PX + 12,
       y,
@@ -46,7 +62,7 @@ export function shopRows(state, st, tab) {
       right: info.need > 0 ? cost(info.price) : extra || 'FULL',
       enabled: info.need > 0,
       order: { action },
-      desc: '',
+      desc: role ? `PAID BY THE ${ROLE_NAME[role]}` : 'EVERY ROLE GETS THE CREDITS',
     });
     y += 20;
   };
@@ -62,7 +78,8 @@ export function shopRows(state, st, tab) {
   if (state.bounty) service('PAY THE BOUNTY', prices.bounty, 'bounty');
   itemsOf(tab).forEach((id, i) => {
     const item = CATALOG[id],
-      why = blockedReason(state, id, k) || notSoldHere(state, st, id),
+      role = payerOf(id, own),
+      why = blockedReason(state, id, k, own) || notSoldHere(state, st, id) || notMine(role),
       lv = level(ship, id);
     const owned = why === 'INSTALLED' || why === 'MAXED' || why === 'OWNED' || why === 'CARRIED';
     rows.push({
@@ -75,14 +92,14 @@ export function shopRows(state, st, tab) {
       enabled: !why,
       owned,
       order: { action: 'buy', item: id },
-      desc: item.desc + (why && !owned ? '  ·  ' + why : ''),
+      desc: `${ROLE_NAME[role]}  ·  ` + item.desc + (why && !owned ? '  ·  ' + why : ''),
     });
   });
   return rows;
 }
 // Everything that can be clicked in the shop, by name. Used by the browser test.
-export function shopButtons(state, st, tab) {
-  return shopRows(state, st, tab).map((r) => {
+export function shopButtons(state, st, tab, who = null) {
+  return shopRows(state, st, tab, who).map((r) => {
     const name = r.tab
       ? 'tab.' + r.tab
       : r.order.action === 'buy'
@@ -93,8 +110,8 @@ export function shopButtons(state, st, tab) {
 }
 
 // Returns { tab } when a tab was clicked, { order } for something to buy, or null.
-export function shopClick(state, st, tab, mx, my) {
-  const row = shopRows(state, st, tab).find((r) => mx >= r.x && mx < r.x + r.w && my >= r.y && my < r.y + r.h);
+export function shopClick(state, st, tab, mx, my, who = null) {
+  const row = shopRows(state, st, tab, who).find((r) => mx >= r.x && mx < r.x + r.w && my >= r.y && my < r.y + r.h);
   if (!row) return null;
   if (row.tab) return { tab: row.tab };
   return row.enabled ? { order: row.order } : null;
@@ -103,7 +120,7 @@ export function shopClick(state, st, tab, mx, my) {
 // Whose station it is.
 const whose = (st) => (st.side === CREW ? 'YOUR STATION' : FACTIONS[st.side] ? FACTIONS[st.side].name : 'FREE STATION');
 
-export function drawShop(ctx, font, state, st, tab, mouse) {
+export function drawShop(ctx, font, state, st, tab, mouse, who = null) {
   const mood = moodOf(state, st.side);
   const owes = st.favor > 0 ? `  ·  THEY OWE YOU  ·  40% OFF FOR ${fmt(st.favor)}` : '';
   const about = owes || (mood === 'wary' ? '  ·  PRICES ARE UP' : '');
@@ -122,7 +139,7 @@ export function drawShop(ctx, font, state, st, tab, mouse) {
     PY + 32,
     st.favor > 0 ? COL.acid[2] : MOOD_COL[mood],
   );
-  font.draw(ctx, 'CREDITS  ' + state.credits, PX + PW - 12, PY + 12, COL.ochre[2], { align: 'r' });
+  font.draw(ctx, pursesLine(state), PX + PW - 12, PY + 12, COL.ochre[2], { align: 'r' });
   font.draw(
     ctx,
     `HARDPOINTS  ${slotsUsed(ship, 'hard')} / ${ship.slots.hard}     SYSTEMS  ${slotsUsed(ship, 'system')} / ${ship.slots.system}`,
@@ -134,7 +151,7 @@ export function drawShop(ctx, font, state, st, tab, mouse) {
   font.draw(ctx, 'SERVICES', PX + 12, PY + 50, COL.dim);
   rect(ctx, PX + 208, PY + 44, 1, PH - 76, COL.line);
   let hover = null;
-  for (const r of shopRows(state, st, tab)) {
+  for (const r of shopRows(state, st, tab, who)) {
     const over = mouse && mouse.x >= r.x && mouse.x < r.x + r.w && mouse.y >= r.y && mouse.y < r.y + r.h;
     if (over && !r.tab) hover = r;
     if (r.tab) {

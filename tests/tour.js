@@ -6,6 +6,7 @@ import { addPlayer } from '../src/sim/players.js';
 import { thingsOf, findThing } from '../src/sim/things.js';
 import { summon } from '../src/sim/testing.js';
 import { withWreck } from './helpers.js';
+import { earn } from '../src/sim/purses.js';
 
 export const DT = 1 / 60;
 const BUY = [
@@ -133,7 +134,7 @@ function inputs(state, i) {
       dockAt(state, station);
     }
     if (at(80.5)) {
-      state.credits += 3000;
+      earn(state, 3000);
       gunner.board = true;
     }
     if (t > 81 && t < 95 && i % 60 === 0) gunner.shop = [{ action: 'buy', item: BUY[Math.floor(t - 81) % BUY.length] }];

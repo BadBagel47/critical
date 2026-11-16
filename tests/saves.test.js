@@ -16,6 +16,7 @@ import {
   describeSave,
 } from '../src/saves.js';
 import { startTour, runTour } from './tour.js';
+import { fillPurses } from '../src/sim/purses.js';
 
 // Stands in for the browser's storage.
 function fakeStorage(limit = Infinity) {
@@ -46,7 +47,7 @@ test('a saved game comes back exactly as it was, and plays on the same way', () 
 test('the list of saves says where, how long and how rich, and which one is the latest', () => {
   const storage = fakeStorage();
   const s = createState(1);
-  s.credits = 250;
+  fillPurses(s, 250);
   s.time = 90.4;
   writeSlot(storage, '2', s, 5000);
   writeSlot(storage, AUTO, s, 9000);
@@ -121,5 +122,5 @@ test('the save version is raised whenever the game state changes shape', () => {
     .slice(0, 12);
   // When this fails the game state has new, renamed or removed fields, and saves made before the change
   // would no longer load correctly. Raise SAVE_VERSION in src/saves.js and put the new values here.
-  assert.deepEqual({ version: SAVE_VERSION, print }, { version: 23, print: '7e36f6d521e3' });
+  assert.deepEqual({ version: SAVE_VERSION, print }, { version: 24, print: '0791e9c43fdf' });
 });

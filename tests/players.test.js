@@ -7,6 +7,7 @@ import { addPlayer, removePlayer, playerById, holderOf } from '../src/sim/player
 import { thingsOf } from '../src/sim/things.js';
 import { speedOf } from '../src/sim/ship.js';
 import { withWreck } from './helpers.js';
+import { fillPurses } from '../src/sim/purses.js';
 
 const DT = 1 / 60;
 const run = (s, inputs, seconds) => {
@@ -127,7 +128,7 @@ test('station desks only take orders from a player who is inside the station', (
   const station = thingsOf(s, 'station').find((st) => st.sanctuary);
   s.ship.docked = station.id;
   s.ship.fuel = 20;
-  s.credits = 500;
+  fillPurses(s, 500);
   stepPlayers(s, { 1: { shop: [{ action: 'refuel' }] } }, DT);
   assert.equal(s.ship.fuel, 20, 'nothing is sold to someone still on the ship');
   stepPlayers(s, { 1: { board: true } }, DT);

@@ -99,7 +99,7 @@ export function crewCommands(state, inputs) {
     if (state.paused || state.over) continue;
     if (player.inside !== null) {
       if (input.away) (cmds.away ||= {})[player.id] = input.away;
-      if (input.shop) (cmds.shop ||= []).push(...input.shop);
+      if (input.shop) (cmds.shop ||= []).push(...input.shop.map((o) => ({ ...o, player: player.id })));
       if (input.mainframe) (cmds.mainframe ||= []).push(...input.mainframe.map((o) => ({ ...o, player: player.id })));
       continue;
     }

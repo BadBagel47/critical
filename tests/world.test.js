@@ -16,6 +16,7 @@ import { enemies, standingOf } from '../src/sim/sides.js';
 import { priceOf, level, jumpFuel, fuelMarks } from '../src/sim/upgrades.js';
 import { B } from '../src/sim/balance.js';
 import { dist } from '../src/sim/util.js';
+import { fillPurses } from '../src/sim/purses.js';
 
 const DT = 1 / 20;
 const SEEDS = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -265,14 +266,14 @@ test('R-1091 R-882: every price in the sanctuary is that of a neutral base, and 
   for (const k of ['refuel', 'repair', 'rockets', 'chart']) assert.equal(here[k].price, there[k].price, k);
   assert.equal(here.refuel.price, Math.ceil(Math.ceil(B.FUEL_MAX - 20) * B.FUEL_PRICE.neutral));
   s.ship.docked = base.id;
-  s.credits = 1000;
+  fillPurses(s, 1000);
   step(s, { shop: [{ action: 'buy', item: 'armor' }] }, DT);
   assert.equal(level(s.ship, 'armor'), 0, 'armour costs too much for the sanctuary');
   assert.ok(s.events.some((e) => e.type === 'cannotBuy' && e.reason === 'NOT SOLD IN THE SANCTUARY'));
   const price = priceOf(s.ship, 'twin');
   step(s, { shop: [{ action: 'buy', item: 'twin' }] }, DT);
   assert.equal(level(s.ship, 'twin'), 1, 'a cheap one is sold');
-  assert.equal(s.credits, 1000 - price, 'at the full price');
+  assert.equal(s.purses.gunner, 1000 - price, 'at the full price, from the Gunner');
 });
 
 // ---------- jumps and the star map ----------
@@ -365,7 +366,7 @@ test('R-117 R-118 R-119: the system radar shows the systems one jump away, and t
   quiet(s);
   const yard = thingsOf(s, 'station').find((x) => x.home);
   s.ship.docked = yard.id;
-  s.credits = 1000;
+  fillPurses(s, 1000);
   const hops = hopsFrom(s.sectors, 0);
   const one = s.sectors.find((x) => hops[x.id] === 1).id;
   const two = s.sectors.find((x) => hops[x.id] === 2).id;
@@ -373,13 +374,13 @@ test('R-117 R-118 R-119: the system radar shows the systems one jump away, and t
   assert.equal(viewOf(s, one), null);
   assert.equal(priceOf(s.ship, 'sysradar'), 200);
   step(s, { shop: [{ action: 'buy', item: 'sysradar' }] }, DT);
-  assert.equal(s.credits, 800);
+  assert.equal(s.purses.captain, 800);
   assert.ok(viewOf(s, one).live, 'one jump away, as it is now');
   assert.equal(viewOf(s, one).owner, s.sectors[one].owner);
   assert.equal(viewOf(s, two), null, 'but not two');
   assert.equal(priceOf(s.ship, 'sysradar'), 350);
   step(s, { shop: [{ action: 'buy', item: 'sysradar' }] }, DT);
-  assert.equal(s.credits, 450);
+  assert.equal(s.purses.captain, 450);
   assert.ok(viewOf(s, two).live, 'the second level reaches two jumps');
 });
 

@@ -2,6 +2,7 @@
 // They all live in state.things and share the same shape: { id, kind, x, y, heading, ... }.
 // What a kind can do is read from THINGS in kinds.js, so nothing here needs to know the kinds by name.
 import { B } from './balance.js';
+import { earn } from './purses.js';
 import { THINGS } from './kinds.js';
 import { has } from './upgrades.js';
 import { toWorld, dist } from './util.js';
@@ -85,7 +86,7 @@ export function stepSalvage(state, dt) {
       }
     } else if (d < B.SALVAGE_PICKUP) {
       c.ttl = 0;
-      state.credits += c.value;
+      earn(state, c.value);
       state.events.push({ type: 'salvage', value: c.value });
     }
     if (c.ttl <= 0) gone = true;
