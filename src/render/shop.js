@@ -51,6 +51,11 @@ export function shopRows(state, st, tab) {
     y += 20;
   };
   service('REFUEL', prices.refuel, 'refuel');
+  if (ship.ore > 0) {
+    // Selling brings credits in, so the price is shown as a gain.
+    service(`SELL ORE  ·  ${ship.ore}`, prices.ore, 'ore');
+    rows[rows.length - 1].right = '+' + prices.ore.price + ' CR';
+  }
   service('REPAIR EVERYTHING', prices.repair, 'repair', 'NO DAMAGE');
   if (ship.mods.rockets) service('REARM ROCKETS', prices.rockets, 'rockets');
   if (st.chart !== null) service('STAR CHART  ' + state.sectors[st.chart].name, prices.chart, 'chart', 'OWNED');

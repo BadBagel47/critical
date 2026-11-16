@@ -100,6 +100,14 @@ export const CATALOG = {
     price: 200,
     desc: 'SLOWLY REPAIR THE SHIP ON THEIR OWN',
   },
+  solar: {
+    tab: 'system',
+    name: 'SOLAR CELLS',
+    slot: 'system',
+    size: 1,
+    price: 200,
+    desc: 'SLOWLY FILL THE TANK FROM STARLIGHT',
+  },
   dockfield: {
     tab: 'system',
     name: 'DOCKING FIELD',

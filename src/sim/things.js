@@ -76,7 +76,14 @@ export function stepSalvage(state, dt) {
       c.x += ((ship.x - c.x) / d) * B.TRACTOR_PULL * dt;
       c.y += ((ship.y - c.y) / d) * B.TRACTOR_PULL * dt;
     }
-    if (d < B.SALVAGE_PICKUP) {
+    if (d < B.SALVAGE_PICKUP && c.ore) {
+      // Ore goes into the hold, as long as there is room.
+      if (ship.ore < B.ORE_MAX) {
+        c.ttl = 0;
+        ship.ore = Math.min(B.ORE_MAX, ship.ore + c.ore);
+        state.events.push({ type: 'ore', count: ship.ore });
+      }
+    } else if (d < B.SALVAGE_PICKUP) {
       c.ttl = 0;
       state.credits += c.value;
       state.events.push({ type: 'salvage', value: c.value });

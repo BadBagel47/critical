@@ -67,6 +67,9 @@ export function drawBars(ctx, font, state, x = 8, y = 314) {
     font.draw(ctx, name, x + 4, y + 5 + i * 12, COL.dim);
     bar(ctx, x + 46, y + 5 + i * 12, 84, frac, color);
   });
+  // Ore in the hold, just above the panel. It turns into fuel by itself when the tank is too low for a jump.
+  if (ship.ore > 0)
+    label(ctx, font, x, y - 14, `ORE  ${ship.ore}${ship.refined > 0 ? '  ·  REFINING' : ''}`, { fg: COL.ochre[3] });
   // A docked ship is lent an extra shield. It shows as a bright line on top of the shield bar.
   if (ship.dockShield > 0) {
     const w = Math.round(82 * (ship.dockShield / dockShieldMax(ship)));
@@ -212,7 +215,7 @@ function drawCaptainPanel(ctx, font, state) {
     label(ctx, font, 306, 333, text, { fg: out ? COL.ion[2] : COL.text, border: out ? COL.ion[0] : COL.line });
   }
   const keys = has(ship, 'boost')
-    ? 'W S THROTTLE  ·  A D TURN  ·  X STOP  ·  SHIFT BOOST'
+    ? 'W S THROTTLE  ·  A D TURN  ·  X STOP  ·  SHIFT AFTERBURNER'
     : 'W S THROTTLE  ·  A D TURN  ·  X STOP';
   font.draw(ctx, keys, VIEW_W - 8, 346, ship.boosting ? COL.ion[2] : COL.faint, { align: 'r' });
 }
@@ -293,9 +296,12 @@ export function drawOverlay(ctx, font, title, lines, color = COL.text) {
 
 const HELP = [
   ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     F  USE WHAT YOU ARE DOCKED AT'],
-  ['CAPTAIN', 'W S  THROTTLE     A D  TURN     X  FULL STOP     E  DOCK AND UNDOCK     R  DARTS     SHIFT  BOOST'],
+  [
+    'CAPTAIN',
+    'W S  THROTTLE     A D  TURN     X  FULL STOP     E  DOCK AND UNDOCK     R  DARTS     SHIFT  AFTERBURNER',
+  ],
   ['', 'C  SET A COURSE FOR THE NEXT PLACE ON THE MAP'],
-  ['ALL POSTS', 'Z  BUILD UP OR LET GO AN OVERCHARGE     CAPTAIN AND GUNNER  T  MARK A SHIP FOR THE OTHER'],
+  ['ALL POSTS', 'Z  CHARGE THE BOOST, CAPTAIN LETS IT GO     CAPTAIN AND GUNNER  T  MARK A SHIP FOR THE OTHER'],
   ['', 'ON THE MAP  CLICK A STAR CHART TO JUMP TO THAT SECTOR'],
   ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE     Q E  CHANGE WEAPON'],
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW     SHIFT CLICK  QUEUE'],

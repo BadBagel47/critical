@@ -2,7 +2,7 @@
 
 **Förslag, inte byggt.** Skrivet 2026-11-15 efter dina besked. Det ersätter det långa förslaget, som ligger kvar i [proposal-world-v1.md](proposal-world-v1.md).
 
-Varje steg går att provspela innan nästa börjar. Under varje steg står vad du har bestämt, vad agenten föreslår och vilka frågor som behöver svar innan just det steget byggs. **Steg 1 är byggt** och påslaget i alla spel (2026-11-15). Nästa är steg 2, som har fyra frågor att svara på först. Frågorna i steg 2 behöver svar först när steg 1 är provspelat.
+Varje steg går att provspela innan nästa börjar. Under varje steg står vad du har bestämt, vad agenten föreslår och vilka frågor som behöver svar innan just det steget byggs. **Steg 1 är byggt** och påslaget i alla spel (2026-11-15). **Steg 2 är byggt** (2026-11-16). Nästa är steg 3, som har tre frågor att svara på först.
 
 ## Riktningen (bestämt)
 
@@ -61,7 +61,9 @@ Alla är besvarade. Bilderna på stjärnan, bältet och diset visas innan de lä
 - Boosten drar mer bränsle per sekund men lika mycket per sträcka. Den sparar tid, inte bränsle.
 - Överladdningen av vapen och sköld tas bort (F-198).
 
-**Frågor före bygget**
+**Byggt 2026-11-16.** Användaren sa ja till de fyra rekommendationerna nedan. Boosten laddas av Engineer eller Captain och släpps av Captain, och en träff nollställer både den och ett hopp som laddas. Varje asteroid som går sönder lämnar en bit malm. Malmen förädlas till bränsle bara när tanken inte räcker till ett hopp, och resten säljs på stationer. Solcellerna tar en slot och fyller ett hopp på fem minuter. Bränslet är gratis bara på den egna varvsstationen, och kostar 70 procent av normalpriset hos vänliga. En scanning kostar 3 bränsle.
+
+**Frågor före bygget (besvarade 2026-11-16)**
 1. Ska överladdningen av vapen och sköld tas bort? Rekommendation: ja.
 2. Räknas en träff på skölden som beskjutning? Rekommendation: ja. Varje träff nollställer, skott som missar gör det inte.
 3. Ska bränsle fortfarande vara gratis hos vänliga stationer? Rekommendation: bara på den egna varvsstationen. Annars betyder bränslet inte så mycket.

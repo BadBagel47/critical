@@ -74,6 +74,8 @@ const notReady = (state, tool) => {
 const TOOLS = {
   pulse(state, ship) {
     if (ship.pulseCool > 0) return notReady(state, 'pulse');
+    // A scan costs a little fuel, as far as there is any (decided 2026-11-15).
+    ship.fuel = Math.max(0, ship.fuel - B.SCAN_FUEL);
     ship.pulse = { x: ship.x, y: ship.y, t: 0 };
     ship.pulseCool = B.PULSE_COOLDOWN;
     scan(state);

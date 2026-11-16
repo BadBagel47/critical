@@ -97,27 +97,27 @@ export function drawCourse(ctx, font, state, view, cam) {
   label(ctx, font, cx + dx * s, cy + dy * s, name, { anchor: 'c', fg: COL.captain, border: COL.captain });
 }
 
-// ---------- the overcharge and the marks ----------
-// The line that tells a post about the overcharge: that one is ready for its system, or running.
+// ---------- the speed boost and the marks ----------
+// The line that tells the Captain about the boost (F-197): charging, ready, or running.
 export function surgeLine(state, post) {
   const s = state.ship.surge;
   if (!s.sys || SURGE_BY[s.sys] !== post) return null;
-  const name = s.sys.toUpperCase();
-  if (s.left > 0)
-    return { text: `${name} OVERCHARGED  ·  ${Math.ceil(s.left)} S`, color: COL.ion[3], border: COL.ion[1] };
-  if (s.charge >= 1) return { text: `Z  ·  OVERCHARGE ${name}`, color: COL.ion[3], border: COL.ion[1] };
-  return null;
+  if (s.left > 0) return { text: `BOOST  ·  ${Math.ceil(s.left)} S`, color: COL.ion[3], border: COL.ion[1] };
+  if (s.charge >= 1) return { text: 'Z  ·  BOOST READY', color: COL.ion[3], border: COL.ion[1] };
+  return {
+    text: `BOOST CHARGING  ·  ${Math.round(s.charge * 100)}%  ·  A HIT EMPTIES IT`,
+    color: COL.ochre[2],
+    border: COL.ochre[0],
+  };
 }
-// What the Engineer sees of it: what is being built up, that it is ready, or that it is cooling.
+// What the Engineer sees of it: that it is charging, ready, running or cooling.
 export function surgeNote(state) {
   const s = state.ship.surge;
-  if (s.left > 0) return { text: `${s.sys.toUpperCase()} OVERCHARGED  ${Math.ceil(s.left)} S`, color: COL.ion[3] };
-  if (s.cool > 0) return { text: `OVERCHARGE COOLING  ${Math.ceil(s.cool)} S`, color: COL.dim };
-  if (!s.sys) return { text: 'Z  OVERCHARGE THE PICKED SYSTEM', color: COL.faint };
-  const name = s.sys.toUpperCase();
-  if (s.charge < 1) return { text: `OVERCHARGE ${name}  ${Math.round(s.charge * 100)}%`, color: COL.ochre[2] };
-  const who = SURGE_BY[s.sys] === 'engineer' ? 'PRESS Z' : `${SURGE_BY[s.sys].toUpperCase()} PRESSES Z`;
-  return { text: `${name} READY  ·  ${who}`, color: COL.ion[3] };
+  if (s.left > 0) return { text: `BOOST  ${Math.ceil(s.left)} S`, color: COL.ion[3] };
+  if (s.cool > 0) return { text: `BOOST COOLING  ${Math.ceil(s.cool)} S`, color: COL.dim };
+  if (!s.sys) return { text: 'Z  CHARGE THE BOOST FOR THE CAPTAIN', color: COL.faint };
+  if (s.charge < 1) return { text: `BOOST CHARGING  ${Math.round(s.charge * 100)}%`, color: COL.ochre[2] };
+  return { text: 'BOOST READY  ·  CAPTAIN PRESSES Z', color: COL.ion[3] };
 }
 // The marks that the other posts have set, drawn for the one who is looking: the ship that the Gunner wants
 // kept in sight, and the one that the Captain has marked for harder hits.

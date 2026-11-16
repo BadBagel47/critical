@@ -9,6 +9,7 @@ import { currentSector } from './sectors.js';
 import { teleportAllHome } from './boarding.js';
 import { buyUpgrade, hullMax, fuelMax, CATALOG } from './upgrades.js';
 import { payBounty } from './bounty.js';
+import { fuelUnit } from './fuel.js';
 import { turnOnCrew } from './mainframe.js';
 import { forward, headingTo, turnToward, angleDiff, toWorld, dist, rand, randRange, TAU } from './util.js';
 
@@ -192,10 +193,12 @@ export function servicePrices(state, st) {
   const rockets = ship.mods.rockets ? B.ROCKET_LOAD - ship.rockets : 0;
   const chart = st.chart !== null && !state.charts.includes(st.chart) ? 1 : 0;
   return {
-    refuel: { need: fuel, price: Math.ceil(fuel * B.FUEL_PRICE[a] * k) },
+    refuel: { need: fuel, price: Math.ceil(fuel * fuelUnit(st) * k) },
     repair: { need: Math.ceil(wear), price: Math.ceil(wear * B.REPAIR_PRICE[a] * k) },
     rockets: { need: rockets, price: Math.ceil(rockets * B.ROCKET_PRICE[a] * k) },
     chart: { need: chart, price: Math.ceil(B.CHART_PRICE[a] * k) },
+    // Ore from the hold is sold here. `price` is what it brings in.
+    ore: { need: state.ship.ore, price: state.ship.ore * B.ORE_PRICE },
     // A bounty is paid in full wherever it is paid, and a station of the crew's own takes it too.
     bounty: { need: state.bounty ? 1 : 0, price: state.bounty ? state.bounty.amount : 0 },
   };
@@ -213,6 +216,12 @@ function pay(state, price) {
 
 // Each service, once it is known that the ship needs it.
 const SERVICES = {
+  ore(state, st, info) {
+    state.credits += info.price;
+    state.ship.ore = 0;
+    state.ship.refined = 0;
+    state.events.push({ type: 'oreSold', credits: info.price });
+  },
   bounty(state, st, info) {
     if (!pay(state, info.price)) return;
     payBounty(state);
@@ -220,7 +229,7 @@ const SERVICES = {
   // With too few credits the tank is filled as far as the money goes.
   refuel(state, st, info) {
     const ship = state.ship;
-    const unit = B.FUEL_PRICE[st.align] * priceFactor(state, st);
+    const unit = fuelUnit(st) * priceFactor(state, st);
     const amount = unit ? Math.min(info.need, Math.floor(state.credits / unit)) : info.need;
     if (amount <= 0) return refuse(state, 'NOT ENOUGH CREDITS');
     state.credits -= Math.ceil(amount * unit);

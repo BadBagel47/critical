@@ -152,6 +152,13 @@ function drawSalvage(ctx, c, env) {
     ctx.stroke();
     ctx.globalAlpha = 1;
   }
+  if (c.ore) {
+    // A lump of ore: grey rock with a glint of metal.
+    rect(ctx, c.x - 3, c.y - 2, 6, 5, '#5d5a52', COL.out);
+    rect(ctx, c.x - 2, c.y - 3, 4, 1, '#7a766a');
+    rect(ctx, c.x, c.y - 1, 2, 2, blink(env.state, 3, c.id) ? '#9be4ee' : '#c7b98c');
+    return;
+  }
   rect(ctx, c.x - 3, c.y - 3, 6, 6, COL.ochre[1], COL.out);
   rect(ctx, c.x - 1, c.y - 1, 2, 2, blink(env.state, 3, c.id) ? COL.ochre[3] : COL.ochre[2]);
 }

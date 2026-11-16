@@ -86,6 +86,17 @@ export function hurtRock(state, rock, dmg) {
   const ship = state.ship;
   if (dist(rock.x, rock.y, ship.x, ship.y) < B.VISION_SHIP * 1.5)
     state.events.push({ type: 'rockBroken', variant: rock.variant });
+  // Every rock that breaks leaves a piece of ore, to be flown over or pulled in like salvage (F-085).
+  addThing(state, {
+    id: state.nextId++,
+    kind: 'salvage',
+    x: rock.x,
+    y: rock.y,
+    heading: 0,
+    value: 0,
+    ore: 1,
+    ttl: B.SALVAGE_TTL,
+  });
   const piece = PIECES[rock.variant];
   if (piece === null) return;
   const f = forward(rock.heading);

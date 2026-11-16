@@ -26,7 +26,7 @@ function boltMeetsFrigate(state, b) {
   }
   if (!state.over && dist(b.x, b.y, ship.x, ship.y) < B.SHIP_RADIUS) {
     b.ttl = 0;
-    damageShip(state, b.dmg, { x: b.x, y: b.y });
+    damageShip(state, b.dmg, { x: b.x, y: b.y }, true);
     return;
   }
   for (const d of state.darts) {

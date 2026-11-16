@@ -28,6 +28,9 @@ export function createShip() {
     heat: 0,
     haze: 0,
     fuel: B.FUEL_START,
+    // Ore from asteroids in the hold (F-085), and how far the refinery has come with the next piece.
+    ore: 0,
+    refined: 0,
     turretAngle: 0,
     // The turrets on the wings turn by themselves, so that all of them point at what the Gunner aims at.
     wingAngles: [0, 0],
@@ -89,8 +92,7 @@ export const speedOf = (body) => Math.hypot(body.vx, body.vy);
 export const shipNose = (ship) => toWorld(ship, SHIP_GEOM.nose);
 // Whether a system is overcharged right now.
 export const surging = (ship, sys) => ship.surge.left > 0 && ship.surge.sys === sys;
-export const weaponPower = (ship) =>
-  B.WEAPON_POWER[ship.power.weapons] * nodeFactor(ship, 'weapons') * (surging(ship, 'weapons') ? B.SURGE_WEAPONS : 1);
+export const weaponPower = (ship) => B.WEAPON_POWER[ship.power.weapons] * nodeFactor(ship, 'weapons');
 export function fireInterval(ship) {
   const power = weaponPower(ship);
   return power > 0 ? B.FIRE_INTERVAL / power : Infinity;

@@ -11,13 +11,14 @@ export const B = {
   TURN_SMOOTH: 6,
   THROTTLE_RATE: 0.9,
   // The overcharge: how long it takes to build up, how long it lasts, how long it cools, and what it gives.
+  // The speed boost (F-197): the overcharge of the engines. It charges in SURGE_CHARGE seconds at two pips of
+  // engine power, faster with more and slower with less, and a hit on the ship before it is full empties it.
+  // Let go, it gives the engines SURGE_ENGINES times the thrust for SURGE_TIME seconds, and burns fuel as much
+  // faster: it saves time, not fuel.
   SURGE_CHARGE: 6,
-  SURGE_TIME: 5,
+  SURGE_TIME: 12,
   SURGE_COOL: 20,
-  SURGE_WEAPONS: 1.8,
   SURGE_ENGINES: 1.7,
-  SURGE_SHIELD: 0.4,
-  SURGE_RECHARGE: 3,
   // Marks: how near the aim an enemy has to be for the Gunner to mark it, how far off the Captain can mark
   // one, and how much harder the crew's shots hit the one the Captain has marked.
   MARK_REACH: 70,
@@ -279,7 +280,18 @@ export const B = {
   STATION_SHIELD_RECHARGE: 5,
   STATION_REPAIR_DELAY: 20,
   STATION_REPAIR: 2,
-  FUEL_PRICE: { friendly: 0, neutral: 1 },
+  // What fuel costs a unit: free only at the crew's own yard, a little less among friends (decided 2026-11-16).
+  FUEL_PRICE: { home: 0, friendly: 0.7, neutral: 1 },
+  // Ore from asteroids (F-085): how much fuel one piece gives, what it sells for, how much the hold takes, and how
+  // many pieces a second the ship refines when the tank is too low for a jump.
+  ORE_FUEL: 4,
+  ORE_PRICE: 6,
+  ORE_MAX: 30,
+  ORE_REFINE: 0.5,
+  // Solar cells (F-194): fuel a second, about one jump's worth in five minutes.
+  SOLAR_RATE: 25 / 300,
+  // What a scan of the system costs in fuel.
+  SCAN_FUEL: 3,
   REPAIR_PRICE: { friendly: 0.25, neutral: 0.5 },
   ROCKET_PRICE: { friendly: 2, neutral: 4 },
   CHART_PRICE: { friendly: 100, neutral: 150 },

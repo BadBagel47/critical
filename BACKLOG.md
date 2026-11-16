@@ -11,76 +11,69 @@ Prioritet: Hög, Medel, Låg.
 **B** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 
-**C** – strong model, high level – Världen steg 2: bränsle och färd
-- F-085 – Skjut sönder asteroider med de vanliga vapnen och dra in malm att sälja, så att det finns ett lugnare sätt att tjäna pengar
-- F-197 – En speed boost som laddas upp och bryts av beskjutning, så att långa sträckor går fort. Samma regel för hoppet till ett nytt system
-- F-198 – Ta bort överladdningen av vapen och sköld, så att bara motorernas finns kvar
-- F-194 – Solceller som man köper och som laddar bränslet
-- D-100 – Regler och tester som gör att en genererad omgång aldrig kan låsa sig för att pengar eller bränsle är slut
-
-**D** – strong model, high level – Världen steg 3: många system (efter steg 2)
+**C** – strong model, high level – Världen steg 3: många system
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - F-195 – En systemradar som man köper och som visar om närliggande system är vänliga och vems de är
 
-**E** – strong model, high level – Världen steg 4: uppdrag och story (efter steg 3)
+**D** – strong model, high level – Världen steg 4: uppdrag och story (efter steg 3)
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 
-**F** – strong model, high level – Förslag: ekonomi och belöningar
+**E** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**G** – strong model, high level – Baser i två storlekar
+**F** – strong model, high level – Baser i två storlekar
 - F-103 – Ta fram design på stora baser, 1,5 gånger större med mer vapen och starkare sköld, och lägg in dem när designen är godkänd
 - D-072 – Ge stora stationer två våningar med hiss eller trappa, nere luftsluss, services och shipyard, uppe armory och bar
 
-**H** – strong model, high level – Sällsynta skepp
+**G** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**I** – strong model, high level – Handel
+**H** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
-**J** – strong model, medium level – Butik med bilder
+**I** – strong model, medium level – Butik med bilder
 - F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
-**K** – strong model, high level – Värme
+**J** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**L** – strong model, high level – Slå ut och borda
+**K** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**M** – strong model, high level – Missiler och raketer
+**L** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**N** – strong model, high level – Kontakt med andra skepp
+**M** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**O** – strong model, high level – Anomalier
+**N** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**P** – strong model, high level – En värld som förändras
+**O** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**Q** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**P** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**R** – strong model, high level – Ljudeffekter
+**Q** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**S** – strong model, high level – Visuella effekter och feedback
+**R** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 
-**T** – strong model, high level – Uppgraderingar och ekonomi per roll
+**S** – strong model, high level – Uppgraderingar och ekonomi per roll
 - F-188 – Uppgraderingarna sorteras efter kategori och roll
 - D-189 – Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar
 
-**U** – strong model, medium level – Förfina rollerna
+**T** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
@@ -112,15 +105,11 @@ Väntar på användaren: förslagen D-187 (meddelanden), D-193 (permanenta pryla
 | F-070 | Skeppstyp Juggernaut. Ett ovanligt krigsskepp som är långsamt och tungt bestyckat. Patrullerar hos faktioner och dyker i väldigt sällsynta fall upp som pirat. Kräver F-035. Design vald 2026-11-14: förslag E, ett kantigt ägg med smala änden fram, pansarplåtar och monterade kanontorn, mindre än Cruisern | Ej påbörjad |
 | D-095 | Genomgång av faktionerna: riktiga namn och karaktär i stället för platshållarna, och hur anseende höjs och sänks Besked 2026-11-15: läggs i backloggen och tas upp senare. Platshållarnamnen gäller tills dess. | Ej påbörjad |
 | D-097 | Plan över droprates och hur de påverkas av olika skepp Förslaget är framtaget 2026-11-15 i docs/proposal-economy.md och väntar på användarens svar på frågorna där. | Väntar på användaren |
-| D-100 | Vi måste reda ut så att man inte kan hamna i en softlock och inte göra progress för att man har slut på pengar eller bränsle etc Förslaget är framtaget 2026-11-15 i docs/proposal-world.md och väntar på användarens svar på frågorna där. Besked 2026-11-15 efter att förslaget lästs: man ska kunna få slut på både bränsle och pengar, och bränslet ska inte komma tillbaka av sig självt, men man ska ändå komma vidare. Reservtanken i förslaget stryks. Vägarna ut: asteroider som ger resurser som fyller på bränsle (F-085) och solceller som laddar bränslet (F-194), där användaren tror mest på solcellerna Besked 2026-11-15: man får inte låsas av att man råkar förstöra ett skepp som storyn vill att man bordar, se D-052 | Pågår 2026-11-16 |
 | D-172 | Se över vilka minispel man blir straffad av när man misslyckas, och hur. Användaren 2026-11-15, med fel kod som exempel. Läget i dag: i rörspelet på vrak sprängs vraket när tiden går ut, och skeppet tar 60 i skada om det ligger dockat. I kodspelet på stationer kostar en fel kod 6 sekunder, och går tiden ut skickar stationen ut två jaktskepp och låset återställs. I visarspelet på pods slår poden larm efter tre missar eller när tiden går ut, och nästa piratvåg kommer direkt. Att besvara: är straffen lagom och begripliga, ska ett enstaka misstag kosta något eller bara ett helt misslyckande, och ska spelaren få veta priset i förväg. Görs tillsammans med F-171 (Engineer hackar fram koden) och F-163 (låset med ringar), eftersom båda ändrar hur låsen fungerar Förslaget är framtaget 2026-11-15 i docs/proposal-economy.md och väntar på användarens svar på frågorna där. Läget 2026-11-15: en del är bestämd och byggd. Ett misslyckat lås på ett vrak spränger inte längre vraket direkt, utan kostar 40 sekunder av reaktortiden, och det tredje misslyckandet spränger det. Resten väntar på svaren i docs/proposal-economy.md | Väntar på användaren: läget uppdaterat 2026-11-16 i docs/proposal-economy.md avsnitt 3.5, fyra frågor kvar |
 | D-186 | Skeppets dator i praktiken. Användaren 2026-11-15: vi behöver gå igenom hur det skulle fungera i praktiken först, och göra brainstorming innan några förändringar görs. Gäller F-034 (autopilot på lediga poster), som är parkerad och har agentens första förslag. Inget byggs förrän genomgången är gjord Besked 2026-11-15: det ska synas när datorn sköter något. När man startar en omgång väljer man vilka roller datorn får sköta, och som standard är det ingen. Då kan spelare i co-op inte bara slå på datorn och slippa göra sitt jobb. Öppet: om datorn tar en tillåten post av sig själv när ingen sitter där, om valet går att ändra under omgången, om datorn bestämmer själv eller bara utför det man pekat ut, hur mycket sämre den är än en människa, och vad den gör medan besättningen bordar Besked 2026-11-15: en roll som datorn sköter är öppen för alla spelare att handla åt i butiken, se D-189 | Genomgång klar 2026-11-16 i docs/proposal-computer.md, väntar på användarens svar |
 | F-192 | Ryggsäck för utrustning. Användaren 2026-11-15: för att bära mer saker kan man köpa en backpack och sedan uppgradera den så att den håller mer. Den avgör även hur många turrets man kan ta med. Utan ryggsäck får man med sig lite, till exempel en laddning. I dag finns CARGO PACK i butiken, som låter en bordare bära två byten till per tur, och antalet granater, flares, pilar och turrets är fasta tal. Öppet: om ryggsäcken gäller både utrustning och byte eller bara utrustning, om den ersätter CARGO PACK, vilka saker som tar plats i den (laddningar, turrets, granater, flares, pilar), hur många nivåer den har, och om den är en per skepp eller en per bordare. Hör ihop med F-191 och F-188 (uppgraderingar per kategori och roll) | Ej påbörjad |
 | D-193 | Analys: permanenta prylar och sådant som förbrukas. Användaren 2026-11-15: gå igenom vilka prylar som är permanenta och eventuellt kan uppgraderas och hur, samt vilka objekt som förbrukas. En framtida analys, inget byggs. I dag är nästan allt i butiken permanent: ett köp ger granater, flares, pilar, laddningar och en turret på nytt vid varje bordning. Bara bränsle, reparation och krediter går åt. Analysen ska ge en lista över varje sak med förslag på om den är permanent, uppgraderbar eller förbrukas, vad den kostar att fylla på, var man ser vad man har, och hur det hänger ihop med ryggsäcken (F-192), laddningarna (F-191), uppgraderingar per roll (F-188) och ekonomin (D-189, D-104) | Analys klar 2026-11-16 i docs/proposal-items.md, väntar på användarens svar |
-| F-194 | Solceller som laddar bränslet. Användaren 2026-11-15: som i Escape Velocity, där man kan köpa solceller som laddar bränslet. Användaren tror mer på den vägen än på att bränsle kommer tillbaka av sig självt. Agentens tolkning, inte bekräftad: solcellerna är en uppgradering man köper och som fyller på långsamt, medan asteroiderna (F-085) är vägen ut för den som inte har köpt dem. Öppet: hur fort de laddar, om de tar en slot, om de laddar fortare nära en stjärna, och om man kan börja med en enkel variant. Namn och utseende ska vara egna. Hör ihop med D-100 | Pågår 2026-11-16 |
 | F-195 | Systemradar. Användaren 2026-11-15: en uppgradering man köper, som visar om närliggande system är vänliga och vilken faktion de tillhör. Den scannar de närliggande systemen av sig själv, och statusen uppdateras när man kommer inom räckvidd. Öppet: hur många hopp bort den når, om den har nivåer, vad kartan visar utan den, och om den också visar faror och stationer. Hör ihop med D-089 och stjärnkartan som bild | Ej påbörjad |
-| F-197 | Speed boost inom ett system (först tänkt som ett korthopp). Användarens fråga 2026-11-15: ska det finnas en annan motor som kan göra hopp inom ett system, så att man inte behöver åka runt stjärnan hela tiden vid uppdrag? Inte bestämt. Agentens förslag: i första hand hålls färden kort genom hur systemen läggs upp (små system, stjärnan är något man flyger förbi och inte runt, man kommer in på den sida man kom ifrån, och uppdrag inom ett system pekar sällan tvärs över). I andra hand ett korthopp som uppgradering: det tar skeppet till en plats man pekar ut på kartan och kostar lite bränsle, så att man byter tid mot bränsle. Öppet: vad det kostar, om det går att använda i strid, och hur nära en station eller stjärnan man får hoppa. Hör ihop med F-196 och D-089 Besked 2026-11-15: uppdrag får peka tvärs över ett system, så länge systemen inte är för stora och man kan ta sig fram fort. I stället för ett hopp inom systemet: en speed boost (agentens tolkning är att boosten ersätter korthoppet). Den måste förberedas med en uppladdningstid, som påverkas av hur mycket energi motorerna har, så att Engineer och piloten får samarbeta. Blir skeppet beskjutet innan uppladdningen är klar nollställs den, och piloten får försöka igen. Det är för att man inte bara ska kunna fly ur strider utan får tänka efter före. Samma regel ska gälla hoppet till ett nytt system. Tiderna kan kortas med uppgraderingar. Läget i dag: hoppet till ett nytt system laddas i 8 sekunder (4 med Jump Coils) och bryts inte av beskjutning. Det finns redan en överladdning av motorerna som Engineer laddar och Captain löser ut: 6 sekunders laddning, 5 sekunder med 1,7 gånger kraften, 20 sekunders vila. Besked 2026-11-15: boosten och överladdningen av motorerna ska vara samma sak. Överladdningen byggs alltså ut i stället för att en ny sak läggs till. Öppet: hur länge den varar när den används för att resa, om den kostar bränsle, om en träff på skölden räknas som beskjutning, och om regeln om beskjutning också ska gälla överladdningen av vapen och sköld | Pågår 2026-11-16 |
-| F-198 | Ta bort överladdningen av vapen och sköld. Användarens fråga 2026-11-15: för att inte göra spelet för avancerat, vilket det redan är, kanske överladdningen av vapen och sköld ska tas bort? Inte bestämt. I dag kan Engineer ladda upp en överladdning åt ett system, som den som sköter systemet löser ut: vapnen gör 1,8 gånger skadan i fem sekunder, skölden laddas mycket fortare, och motorerna får 1,7 gånger kraften. Med ändringen finns bara motorernas kvar, och den blir speed boosten i F-197. Agentens bedömning: ja. Det tar bort två knappar och två saker att lära sig, och det som är kvar får ett tydligt syfte. Det som går förlorat är ett tillfälle där Engineer och Gunner samarbetar, men det finns kvar genom energifördelningen, reparationerna och märkningen av mål. Användarens anmärkning om att spelet redan är för avancerat gäller mer än detta | Pågår 2026-11-16 |
 | D-187 | Se över hur spelet och skeppet visar meddelanden. Användaren 2026-11-15: just nu läggs allt möjligt på skärmen i en struktur som kan vara svår att prioritera. Allt som visas i dag kanske inte heller ska visas, eller bara visas med uppgraderingar. Kanske ska sensordata få en egen del av gränssnittet. Läget i dag: upp till två statusrader överst i mitten, tillfälliga meddelanden under dem, pilar i skärmkanten mot allt som är känt, en minikarta, och varje posts egna mätare nere i hörnen | Förslag klart 2026-11-16 i docs/proposal-messages.md, väntar på användarens svar |
 | F-188 | Uppgraderingar sorterade efter kategori och roll. Användaren 2026-11-15. Läget i dag: butiken har tre flikar (hull, systems, armory) utan att säga vilken roll en uppgradering hör till | Ej påbörjad |
 | D-189 | Ekonomin delad mellan rollerna. Användaren 2026-11-15: så att alla roller kan ta egna beslut om vad som behöver förbättras. Då undviker man diskussion om att en person vill ha alla förbättringar själv. Läget i dag: en gemensam kassa. Att besvara: hur pengarna delas, vad som köps ur vilken kassa, vad som fortfarande är gemensamt (bränsle, lagning, stjärnkartor), och hur det fungerar för den som spelar ensam. Hör ihop med F-188 och docs/proposal-economy.md Besked 2026-11-15: en roll som datorn sköter (D-186) är öppen för alla spelare att handla åt. Då behöver man inte gå tillbaka till skeppet och byta roll för att köpa den rollens saker | Ej påbörjad |
@@ -137,7 +126,6 @@ Väntar på användaren: förslagen D-187 (meddelanden), D-193 (permanenta pryla
 | F-082 | Från D-075: anropa andra skepp och stationer. Be om bränsle eller hjälp, muta, kräva tribut. En ny uppgift för Captain Sparad idé ur D-180 (2026-11-15): bara Captain kan anropa. | Ej påbörjad |
 | F-083 | Från D-075: skepp i nöd som ber om bränsle eller reparation och betalar eller minns det | Ej påbörjad |
 | F-084 | Från D-075: värme som en andra resurs bredvid energi. Vapen och motorer blir varma, och Engineer måste kyla. Användaren: det där med värme är riktigt bra, då kan vi även göra uppgraderingar som kyler systemen bättre | Ej påbörjad |
-| F-085 | Från D-075: asteroidbrytning. Skjut sönder asteroider och dra in malm att sälja. Användaren 2026-11-14: vi kanske ska börja med att det räcker med vanliga vapen. Om en speciell mining laser ska finnas, se F-091 Besked 2026-11-15: asteroider ska också ge resurser som fyller på bränslet, som en väg vidare för den som har slut på både bränsle och pengar, se D-100 Besked 2026-11-15: det man bryter ger också pengar, genom att det säljs på en bas. Brytningen blir alltså vägen ut ur både tom tank och tom kassa Besked 2026-11-15: asteroider finns i varje system. Baser har aldrig asteroider runt sig som kan störa spelarna och andra skepp, men en bit bort finns det fler, med större samlingar i vissa områden. De genereras och är inte ett fast antal, så att spelarna kan välja att lägga tid på att bryta om de vill | Pågår 2026-11-16 |
 | F-091 | Ska man ha en speciell mining laser för att mina asteroider? Ska vanliga vapen kunna skjuta sönder asteroider? Om ja, ska de ge miningresurser eller är det reserverat för mining laser? Tas upp när F-085 är byggd och provad med vanliga vapen | Väntar på användaren |
 | D-093 | Eventuellt skapa nytt eller fler minigames Besked 2026-11-15: läggs i backloggen och tas upp senare. I dag finns tre låsspel: rör (vrak), kod (stationer) och visare (pods). | Ej påbörjad |
 | F-090 | Spela på mobil och surfplatta med pekskärm, i liggande format. Användaren 2026-11-14: mobil är viktigt. I dag finns bara tangentbord, mus och handkontroll. Agentens förslag: bygg pekstyrningen tidigt och låt varje ny skärm fungera med både mus och fingrar från början Tillägg 2026-11-15: bordningen har fått två tangenter till som behöver knappar på pekskärm: L för lampan och Q för att kasta en flare. | Ej påbörjad |
@@ -318,3 +306,8 @@ Väntar på användaren: förslagen D-187 (meddelanden), D-193 (permanenta pryla
 | F-151 | Figurer som rör sig: fötter som tar steg när man går, blixt från pipan och en liten rekyl när man skjuter, loot som bärs framför sig, en vit blixt och en knuff bakåt vid träff, gnistor som stiger när man teleporteras hem, och vakter som faller blir liggande. Gäller bordare, vakter och folk på stationer. Byggt med de bilder som finns, enligt designen. Grafiken ses över mer framöver (D-207) | 2026-11-16 |
 | F-205 | Stjärnan på mobil: varje bild av stjärnan gäller en bestämd tidpunkt, och övertoningen följer klockan i stället för hur lång tid bilden tog att räkna ut. Tiden mellan bilderna anpassas efter hur snabb enheten är, så att en långsam telefon får färre bilder som tonas jämnare. Stjärnan kan då ligga lite efter men hoppar inte. Mätläget (fps i adressen) visar hur många stjärnbilder i sekunden som blir klara. Provat med en sex gånger nedbromsad processor, inte på en riktig telefon | 2026-11-16 |
 | F-202 | Ljus från rätt håll, andra steget: en explosion lyser upp sidan av skepp, fregatten, asteroider, stationer och vrak som vetter mot den, så länge den brinner. Bara den starkaste explosionen nära en sak räknas, och bortre sidan mörknar inte. Stjärnans ljus (första steget) fanns redan. Skott och motorer ger fortfarande bara sitt sken utan riktning | 2026-11-16 |
+| F-085 | Asteroidbrytning: varje asteroid som går sönder lämnar en bit malm, som flygs över eller dras in med traktorstrålen och läggs i lastrummet (högst 30). Malmen blir bränsle av sig själv när tanken inte räcker till ett hopp, och resten säljs på stationer (SELL ORE). Vanliga vapen räcker | 2026-11-16 |
+| F-197 | Speed boost: motorernas överladdning laddas av Engineer eller Captain med Z, fortare ju mer energi motorerna har, och släpps av Captain. Den ger 1,7 gånger dragkraften i 12 sekunder och drar bränsle i samma takt, så den sparar tid och inte bränsle. En träff på skeppet, också på skölden, nollställer den medan den laddas. Ett hopp som laddas börjar om vid en träff, så att man inte kan fly ur en strid | 2026-11-16 |
+| F-198 | Överladdningen av vapen och sköld är borttagen. Bara motorernas finns kvar, som speed boost | 2026-11-16 |
+| F-194 | Solceller: en uppgradering för 200 krediter som tar en systemslot och fyller tanken med ungefär ett hopp på fem minuter | 2026-11-16 |
+| D-100 | Aldrig fast utan bränsle eller pengar: med tom tank kryper skeppet fram, vanliga vapen bryter asteroider utan ammunition, malmen blir bränsle när tanken är låg, solceller fyller på, och den egna varvsstationen ger alltid gratis bränsle. Bränsle är annars inte gratis (70 procent av priset hos vänliga), och en scanning kostar 3 bränsle. Testerna kontrollerar att en besättning utan bränsle och pengar kommer till ett hopp. Storyns mål som förstörs (besked 2026-11-15) hör till D-052 | 2026-11-16 |

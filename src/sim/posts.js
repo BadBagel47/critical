@@ -75,7 +75,11 @@ export function stepCaptain(state, cmd, dt) {
       if (ship.docked) undock(state);
       else dock(state);
     }
-    if (cmd.surge) fireSurge(state, 'captain');
+    // Z starts to charge the boost, and lets it go when it is full.
+    if (cmd.surge) {
+      if (ship.surge.sys) fireSurge(state, 'captain');
+      else startSurge(state, 'engines');
+    }
     if (cmd.mark) markByCaptain(state);
   }
   // Without power the engines give nothing: no thrust and no steering. The ship drifts on.
@@ -92,7 +96,9 @@ export function stepCaptain(state, cmd, dt) {
   // The afterburner trades fuel for speed while it is held.
   ship.boosting = !!(cmd && cmd.boost && has(ship, 'boost') && ship.fuel > 0 && ship.throttle > 0);
   if (ship.boosting) thrust *= B.BOOST_POWER;
-  const burn = B.FUEL_BURN * Math.abs(ship.throttle) * enginePower * (ship.boosting ? B.BOOST_BURN : 1);
+  // The boost burns fuel as much faster as it goes, so that a stretch costs the same fuel with or without it.
+  const surge = surging(ship, 'engines') ? B.SURGE_ENGINES : 1;
+  const burn = B.FUEL_BURN * Math.abs(ship.throttle) * enginePower * (ship.boosting ? B.BOOST_BURN : 1) * surge;
   ship.fuel = Math.max(0, ship.fuel - burn * dt);
   if (ship.fuel <= 0) thrust *= B.ADRIFT_FACTOR;
   ship.turn += (turnInput - ship.turn) * Math.min(1, B.TURN_SMOOTH * dt);
@@ -126,7 +132,6 @@ export function stepGunner(state, cmd, dt) {
   const ship = state.ship;
   ship.firing = false;
   pickWeapon(ship, cmd && cmd.weapon);
-  if (cmd && cmd.surge) fireSurge(state, 'gunner');
   if (cmd && cmd.mark) markByGunner(state, cmd.mark);
   if (cmd && cmd.aim) {
     const mount = turretMount(ship);
@@ -204,11 +209,8 @@ export function stepEngineer(state, cmd, dt) {
   if (cmd) {
     for (const p of cmd.power || []) setPower(state, p.sys, p.delta);
     if (cmd.tool) useTool(state, cmd.tool);
-    // The same key builds up an overcharge and lets one for the shields go.
-    if (cmd.surge) {
-      if (state.ship.surge.sys === 'shields' && state.ship.surge.charge >= 1) fireSurge(state, 'engineer');
-      else startSurge(state, cmd.surge);
-    }
+    // The Engineer starts to charge the boost for the Captain, whichever system is picked.
+    if (cmd.surge) startSurge(state, 'engines');
     if (cmd.repair && state.ship.nodes[cmd.repair.node]) {
       const i = cmd.repair.node;
       if (!cmd.repair.queue) crew.queue = [i];

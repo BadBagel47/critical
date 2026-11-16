@@ -2,10 +2,20 @@
 import { B } from './balance.js';
 import { rand } from './util.js';
 import { nodeStatus } from './ship.js';
+import { breakSurge } from './teamwork.js';
 
-export function damageShip(state, dmg, at) {
+// `shot` is a hit from a weapon. It breaks off a boost that is charging and a jump that is being charged, so that
+// nobody can simply fly or jump out of a fight (F-197). A hit on the shield counts, a miss does not.
+export function damageShip(state, dmg, at, shot = false) {
   const ship = state.ship;
   ship.lastHit = state.time;
+  if (shot) {
+    breakSurge(state);
+    if (state.jump && state.jump.t > 0) {
+      state.jump.t = 0;
+      state.events.push({ type: 'jumpBroken' });
+    }
+  }
   // A docked ship has an extra shield from what it is docked at. That one is used up first.
   const extra = Math.min(ship.dockShield, dmg);
   ship.dockShield -= extra;

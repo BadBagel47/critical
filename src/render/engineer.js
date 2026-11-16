@@ -353,7 +353,7 @@ export function drawEngineerStrip(ctx, font, state, view) {
   if (!hurt.length)
     font.draw(
       ctx,
-      busy ? surge.text : 'LEFT RIGHT PICK  ·  UP DOWN POWER  ·  Z OVERCHARGE',
+      busy ? surge.text : 'LEFT RIGHT PICK  ·  UP DOWN POWER  ·  Z CHARGE THE BOOST',
       466,
       343,
       busy ? surge.color : COL.faint,

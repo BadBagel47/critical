@@ -8,7 +8,7 @@
 import { B } from './balance.js';
 import { stepCaptain, stepGunner, stepEngineer, stepDrones } from './posts.js';
 import { crewCommands } from './players.js';
-import { nodeFactor, surging } from './ship.js';
+import { nodeFactor } from './ship.js';
 import { stepSurge, stepMarks } from './teamwork.js';
 import { stepRocks } from './rocks.js';
 import { stepSystem } from './system.js';
@@ -18,6 +18,7 @@ import { stepBolts, stepRockets, stepCollisions } from './shots.js';
 import { stepStations } from './stations.js';
 import { stepTraffic } from './traffic.js';
 import { stepSiege } from './siege.js';
+import { stepFuel } from './fuel.js';
 import { stepHunt } from './bounty.js';
 import { CREW, enemies, stepStanding, stepStrife } from './sides.js';
 import { stepDarts } from './darts.js';
@@ -39,10 +40,9 @@ function rechargeShield(state, dt) {
     ship.shield = Math.max(0, ship.shield - (shieldMax(ship) / B.SHIELD_DROP) * dt);
     return;
   }
-  const surge = surging(ship, 'shields');
-  if (!surge && state.time - ship.lastHit <= B.SHIELD_DELAY) return;
+  if (state.time - ship.lastHit <= B.SHIELD_DELAY) return;
   const emitters = nodeFactor(ship, 'shields');
-  const rate = B.SHIELD_RECHARGE[ship.power.shields] * (surge ? B.SURGE_RECHARGE : 1);
+  const rate = B.SHIELD_RECHARGE[ship.power.shields];
   ship.shield = Math.min(shieldMax(ship), ship.shield + rate * emitters * dt);
 }
 
@@ -76,6 +76,7 @@ export function step(state, cmds, dt) {
   const ship = state.ship;
   stepCaptain(state, cmds.captain, dt);
   stepJump(state, cmds.captain, dt);
+  stepFuel(state, dt);
   stepEngineer(state, cmds.engineer, dt);
   stepDrones(state, dt);
   stepGunner(state, cmds.gunner, dt);

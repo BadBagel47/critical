@@ -2,15 +2,16 @@
 // and the marks that the Captain and the Gunner can set for each other to see.
 import { B } from './balance.js';
 import { CREW, enemies } from './sides.js';
-import { shieldMax } from './upgrades.js';
 import { dist } from './util.js';
 
-// ---------- the overcharge ----------
-// The Engineer charges it for one system. When it is full, the post that runs that system lets it go, and
-// the system is stronger for a few seconds. Then it has to cool before the next one.
-export const SURGE_BY = { weapons: 'gunner', shields: 'engineer', engines: 'captain' };
+// ---------- the speed boost ----------
+// The overcharge of the engines (F-197). The Engineer or the Captain starts to charge it, and it charges faster
+// the more power the engines have. A hit on the ship before it is full empties it. When it is full, the Captain
+// lets it go, and the engines push harder for a while. Then it has to cool before the next one. The overcharge
+// of the weapons and the shield is gone (F-198).
+export const SURGE_BY = { engines: 'captain' };
 
-export function startSurge(state, sys) {
+export function startSurge(state, sys = 'engines') {
   const ship = state.ship,
     s = ship.surge;
   if (!SURGE_BY[sys] || s.left > 0) return;
@@ -33,9 +34,15 @@ export function fireSurge(state, post) {
   if (!s.sys || s.charge < 1 || s.left > 0 || SURGE_BY[s.sys] !== post) return;
   s.left = B.SURGE_TIME;
   s.charge = 0;
-  // The shield gets a part of itself back at once, and then recharges fast.
-  if (s.sys === 'shields') ship.shield = Math.min(shieldMax(ship), ship.shield + shieldMax(ship) * B.SURGE_SHIELD);
   state.events.push({ type: 'surgeUsed', sys: s.sys });
+}
+
+// The ship is hit by a shot: a boost that is still charging is lost.
+export function breakSurge(state) {
+  const s = state.ship.surge;
+  if (!s.sys || s.left > 0 || s.charge >= 1 || s.charge <= 0) return;
+  s.charge = 0;
+  state.events.push({ type: 'surgeBroken' });
 }
 
 export function stepSurge(state, dt) {
@@ -57,7 +64,7 @@ export function stepSurge(state, dt) {
     s.charge = 0;
     return;
   }
-  s.charge = Math.min(1, s.charge + dt / B.SURGE_CHARGE);
+  s.charge = Math.min(1, s.charge + (dt / B.SURGE_CHARGE) * (ship.power[s.sys] / 2));
   if (s.charge >= 1) state.events.push({ type: 'surgeReady', sys: s.sys });
 }
 

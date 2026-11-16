@@ -2031,42 +2031,30 @@ test('a station that is taken over becomes a trading floor', () => {
 });
 
 // ---------- what the posts do for each other ----------
-test('the Engineer builds up an overcharge and the post that runs the system lets it go', () => {
+test('the boost charges, the Captain lets it go, and only the engines can be overcharged', () => {
   const s = quiet(createState(1));
   const surge = s.ship.surge;
   step(s, { engineer: { surge: 'weapons' } }, DT);
-  assert.equal(surge.sys, 'weapons');
-  step(s, { gunner: { surge: true } }, DT);
+  assert.equal(surge.sys, 'engines', 'whichever system is picked, it is the engines that are charged');
+  step(s, { captain: { surge: true } }, DT);
   assert.equal(surge.left, 0, 'it cannot be let go before it is full');
-  run(s, {}, B.SURGE_CHARGE + 0.1);
+  run(s, {}, (B.SURGE_CHARGE * 2) / s.ship.power.engines + 0.1);
   assert.equal(surge.charge, 1);
   const before = weaponPower(s.ship);
-  step(s, { captain: { surge: true } }, DT);
-  assert.equal(surge.left, 0, 'the Captain does not run the weapons');
   step(s, { gunner: { surge: true } }, DT);
+  assert.equal(surge.left, 0, 'the Gunner has no overcharge any more');
+  step(s, { captain: { surge: true } }, DT);
   assert.ok(surge.left > 0);
-  assert.ok(Math.abs(weaponPower(s.ship) - before * B.SURGE_WEAPONS) < 1e-9, 'the weapons are stronger while it lasts');
+  assert.equal(weaponPower(s.ship), before, 'the weapons are as they were');
   run(s, {}, B.SURGE_TIME + 0.1);
-  assert.ok(Math.abs(weaponPower(s.ship) - before) < 1e-9, 'and as before when it is over');
-  step(s, { engineer: { surge: 'engines' } }, DT);
+  step(s, { captain: { surge: true } }, DT);
   assert.equal(surge.sys, null, 'a new one cannot be started while it cools');
   run(s, {}, B.SURGE_COOL);
-  step(s, { engineer: { surge: 'engines' } }, DT);
-  assert.equal(surge.sys, 'engines');
+  step(s, { captain: { surge: true } }, DT);
+  assert.equal(surge.sys, 'engines', 'the Captain can start one too');
   s.ship.power.engines = 0;
   step(s, {}, DT);
-  assert.equal(surge.sys, null, 'a system without power loses its charge');
-});
-
-test('an overcharge of the shields gives some shield back at once, and the Engineer lets it go', () => {
-  const s = quiet(createState(1));
-  s.ship.shield = 0;
-  s.ship.lastHit = s.time;
-  step(s, { engineer: { surge: 'shields' } }, DT);
-  run(s, {}, B.SURGE_CHARGE + 0.1);
-  step(s, { engineer: { surge: 'shields' } }, DT);
-  assert.ok(s.ship.surge.left > 0, 'the same key lets it go');
-  assert.ok(s.ship.shield >= shieldMax(s.ship) * B.SURGE_SHIELD - 1);
+  assert.equal(surge.sys, null, 'engines without power lose the charge');
 });
 
 test("the posts mark things for each other, and the Captain's mark makes shots hit harder", () => {
