@@ -1016,6 +1016,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1172 | En sak som går att köpa och uppgradera visar sin nivå som LV 0/5 innan den är köpt, och LV 2/5 och så vidare efter. | bestämd | Användaren 2026-11-16 (D-243) | – |
 | R-1173 | Man kan inte ha fler delar än man kan installera: när en roll har lika många delar som platser, installerade eller i förrådet, går det inte att köpa fler, och inga fler dyker upp som loot. | bestämd | Användaren 2026-11-16 (D-243) | – |
 | R-1174 | Platser är permanenta uppgraderingar: en plats som är köpt finns kvar, och det som sitter i den byts när man vill. | bestämd | Användaren 2026-11-16 (D-243) | – |
+| R-1175 | En sak man har max av, installerad och i förrådet tillsammans, finns inte i butiken och dyker inte upp som loot. | bestämd | Användaren 2026-11-16 (D-243) | – |
+| R-1176 | Filtret på vad sakerna är har UPGRADES (delar till skeppet), BOARDING (bordarnas utrustning) och SLOTS (extra platser). Tjänsterna syns alltid för sig. | bestämd | Användaren 2026-11-16 (D-243, K1) | – |
 | R-834 | Neutrala shipyards är alltid öppna mot betalning. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-835 | Neutrala shipyards har samma priser som vänliga så länge spelet testas. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-836 | Stationer säljer kartan till nästa sektor. | byggd | HANDOFF beslut 2026-11-14 | saknas |
