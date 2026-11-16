@@ -713,6 +713,11 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1149 | Lockdown har ett stilla rött filter över ljuset och stilla röda dörrlampor, med stängda dörrar och utan roterande ljus. På en egen bas är det gult i stället för rött. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
 | R-1150 | Rött ljus betyder alltid att stället räknar besättningen som fiende: stilla i lockdown, roterande och blinkande vid larm. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
 | R-1151 | Fönstren utanpå lyser stilla rött i lockdown och pulserar långsamt rött vid larm. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1182 | Antalet vakter och roterande larmljus följer hur stor ytan är, så att det känns lika tätt överallt, och larmljusen sprids jämnt i gångar och lastrum. Utgångsläge: ett larmljus per 300 rutor golv och en vakt per 500 rutor i lockdown och larm (en per 1200 i lugnt läge), justeras vid provspel. | bestämd | Användaren 2026-11-16 (designtest D-249) | – |
+| R-1183 | Ett fraktskepps insida genereras varje gång och följer skeppets form: aktern med motorerna, fyra rader containrar på båda sidor om en ryggrad och fören med bryggan. | förslag | BACKLOG D-249 | – |
+| R-1184 | Varje fraktskepp har minst ett stort lastrum för eldstrider, och tre vägar längs skeppet: ryggraden, lastrummen och servicegångar längs skrovet, med tvärgångar emellan och inga återvändsgränder utom rummen. | förslag | BACKLOG D-249 | – |
+| R-1185 | Ett fraktskeppsvrak är samma skepp med en eller två containrar bortslitna. | förslag | BACKLOG D-249 | – |
+| R-1186 | Fraktskeppets insida blir ungefär 92 gånger 31 rutor, större än i dag (R-485). | förslag | BACKLOG D-249 | – |
 
 ## Lås och inbrott
 

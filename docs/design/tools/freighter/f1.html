@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Critical – designtest: fraktskeppets insida (D-249)</title>
+<style>
+  :root { --bg:#0b0c11; --panel:#14161e; --line:#262a36; --text:#d6d9e2; --dim:#8a90a0; --acc:#d9a441; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px 14px 60px; }
+  h1 { font-size: 20px; margin: 4px 0 2px; }
+  h2 { font-size: 17px; margin: 28px 0 8px; }
+  p.lead { color: var(--dim); margin: 0 0 12px; }
+  .stage { position: relative; background:#000; border:1px solid var(--line); border-radius:6px; overflow:hidden; touch-action:none; }
+  canvas.view { display:block; width:100%; height:auto; image-rendering: pixelated; }
+  .tag { position:absolute; left:8px; top:8px; background:rgba(10,11,16,.82); border:1px solid #333848; border-radius:4px; padding:2px 8px; font-size:13px; pointer-events:none; }
+  .float { position:absolute; right:8px; bottom:8px; display:flex; gap:6px; }
+  .float button { border:1px solid #6a5a2a; border-radius:6px; background:rgba(40,32,14,.9); color:var(--acc); padding:8px 14px; font-weight:600; }
+  .float button[hidden] { display:none; }
+  .bar { display:flex; flex-wrap:wrap; gap:6px; margin: 10px 0 4px; }
+  .grp { display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .grp .lbl { padding:8px 8px; font-size:12px; color:var(--dim); background:#0f1117; border-right:1px solid var(--line); }
+  button { background:var(--panel); color:var(--text); border:0; border-right:1px solid var(--line); padding:8px 11px; font:inherit; font-size:14px; cursor:pointer; }
+  .grp button:last-child { border-right:0; }
+  button.on { background:#2a2414; color:var(--acc); }
+  .hint { color: var(--dim); font-size: 13px; margin: 2px 0 0; }
+  .legend { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:13px; color:#c2c6d0; margin-top:6px; }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:2px; vertical-align:-2px; margin-right:5px; }
+  .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:10px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 12px; }
+  .card h3 { margin:0 0 4px; font-size:15px; color:var(--acc); }
+  .card p, .card li { margin:0; color:#c2c6d0; font-size:14px; }
+  .card ul { margin:0; padding-left:18px; }
+  details { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px 12px; margin-top:10px; }
+  summary { cursor:pointer; color:var(--acc); }
+  details li, details p { font-size:14px; color:#c2c6d0; }
+  #seed { color: var(--dim); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Designtest: fraktskeppets insida (D-249)</h1>
+  <p class="lead">Ett fraktskepp inuti, genererat varje gång och med samma form som i rymden: aktern med motorerna till vänster, en ryggrad med containrar på båda sidor och fören med bryggan till höger. Fregatten dockar vid en luftsluss i den nedre flanken. <span id="seed"></span></p>
+
+  <div class="stage" id="stage">
+    <canvas class="view" id="view" width="640" height="360"></canvas>
+    <div class="tag" id="tag">Fraktskeppet</div>
+    <div class="float"><button id="fire">Skjut</button></div>
+  </div>
+  <div class="bar">
+    <div class="grp" id="modes"><span class="lbl">Läge</span><button data-mode="normal" class="on">Normal</button><button data-mode="lockdown">Lockdown</button><button data-mode="alarm">Larm</button><button data-mode="wreck">Vrak</button></div>
+    <div class="grp" id="hulls"><span class="lbl">Sida</span><button data-hull="charter" class="on">Charter</button><button data-hull="wardens">Wardens</button><button data-hull="drifters">Drifters</button></div>
+  </div>
+  <div class="bar">
+    <div class="grp">
+      <button id="newbase">Nytt skepp</button><button id="tour" class="on">Rundtur</button><button id="overview">Hela skeppet</button><button id="plan">Spelplan</button>
+    </div>
+  </div>
+  <p class="hint">Dator: WASD för att gå, musen siktar, klick eller mellanslag skjuter, L tänder lampan. Mobil: dra för att gå. Rundturen går in genom luftslussen, genom det stora lastrummet, akterut till motorerna och fram till bryggan längs en servicegång.</p>
+  <div class="legend">
+    <span><i style="border:2px solid #e8c050"></i>Lågt skydd: stoppar skott, inte blickar</span>
+    <span><i style="border:2px solid #60d0ff"></i>Högt skydd: stoppar skott, blickar och ljus</span>
+    <span><i style="background:#c0402a"></i>Tunna som exploderar</span>
+    <span><i style="background:#e0b040"></i>Larmad dörr</span>
+    <span><i style="background:rgba(240,200,80,.55)"></i>Kamera</span>
+    <span><i style="background:#9ad0ff"></i>Vakternas rundor</span>
+  </div>
+
+  <h2>Planen</h2>
+  <div class="cards">
+    <div class="card"><h3>Samma form som i rymden</h3><ul>
+      <li>Aktern är bred med motorerna längst bak. Mitten är fyra rader containrar på var sida om ryggraden, som på skeppet utifrån. Fören smalnar av mot bryggan.</li>
+      <li>Containrarna syns också utanpå skrovet i sidans färger.</li>
+    </ul></div>
+    <div class="card"><h3>Tre vägar längs skeppet</h3><ul>
+      <li><b>Ryggraden:</b> den snabba vägen rakt igenom, men öppen. Lågt skydd här och där.</li>
+      <li><b>Lastrummen:</b> containrar och lådor i grupper med gångar emellan. Gott om skydd och plats att röra sig och skjuta.</li>
+      <li><b>Servicegångarna</b> längs skrovet: smala och skyddade bakom väggar, med öppningar in mot lastrummen. Där kan man ta sig runt en eldstrid och komma från sidan.</li>
+      <li>Tvärgångar mellan containrarna binder ihop de tre. Det finns inga återvändsgränder utom rummen.</li>
+    </ul></div>
+    <div class="card"><h3>Den stora öppna ytan</h3><ul>
+      <li>Varje skepp har minst ett stort lastrum som är två containrar långt, för eldstrider. Fler containrar kan vara lastrum eller rum.</li>
+      <li>Ett stort lastrum har dörrar mot ryggraden, mot tvärgångarna i ändarna och ibland mot servicegången, så man kan komma in från flera håll.</li>
+    </ul></div>
+    <div class="card"><h3>Det som slumpas</h3><ul>
+      <li>Vilka containrar som är lastrum och vilka som är rum (kojer, mässen, köket, sjukrummet, verkstaden, förråd), var tvärgångarna finns, vilka bitar av servicegångarna som finns och var dörrarna sitter.</li>
+      <li>Aktern har motorerna och rum för bränsle, luft och reservdelar. Fören har bryggan, kaptenens hytt, radion och valvet.</li>
+    </ul></div>
+    <div class="card"><h3>Lägena</h3><ul>
+      <li><b>Normal:</b> besättningen arbetar, vakterna är få.</li>
+      <li><b>Lockdown:</b> ett utslaget skepp med folk och ström kvar (F-081): det stilla röda filtret och vakter på rundor.</li>
+      <li><b>Larm:</b> roterande ljus och blink, och fler vakter.</li>
+      <li><b>Vrak:</b> dött och mörkt, bara ficklampan och några gnistor. En eller två containrar är bortslitna, och där syns rymden genom hålet.</li>
+    </ul></div>
+  </div>
+
+  <details>
+    <summary>För agenten: hur generatorn fungerar</summary>
+    <ul>
+      <li><b>Rutnät</b> 100 × 40 rutor, skeppet ligger längs x med fören åt höger. Aktern x 2–15, containrarna x 16–72 (fyra kolumner om 12 rutor med tvärgångar om 3 emellan), fören x 73–92. Ryggraden är y 19–21, containrarna y 7–18 och 22–33, servicegångarna y 5–6 och 34–35.</li>
+      <li><b>Fast skelett först:</b> ryggraden, tvärgångarna, servicegångarna och luftslussen. Ett stort lastrum väljs först: på en sida tas tvärgången mellan två kolumner bort. Containrar utan tvärgång emellan blir ett rum.</li>
+      <li><b>Containrar:</b> lastrum eller rum (BSP-delning), sedan dörrar mot ryggraden, tvärgångar och servicegångar. Gångar mot gångar har ingen vägg alls.</li>
+      <li><b>Vrak</b> görs av samma plan: en eller två containrar slits bort sist, och dörrarna dit försvinner.</li>
+      <li><b>Kontroll:</b> allt ska gå att nå från luftslussen, annars görs ett nytt.</li>
+    </ul>
+  </details>
+</main>
+<script>
+'use strict';
+// ================================================================== basics
+const T = 16, W = 100, H = 40, WW = W * T, WH = H * T, OUT = -1, ROCK = -2, FREE = -3;
+const C = 50, CY = 20;
+//@@ 136-151
+//@@ 152-161
+// The freighter's shape, bow to the right: the stern with the engines, the containers in four columns on both sides of
+// the spine, and the bow narrowing to the bridge.
+const SX0 = 2, SX1 = 15, CX0 = 16, CX1 = 72, BX0 = 73, BX1 = 92;
+const COLS = [0, 1, 2, 3].map((k) => [CX0 + k * 15, CX0 + k * 15 + 11]);
+const SEAMS = [0, 1, 2].map((k) => [CX0 + k * 15 + 12, CX0 + k * 15 + 14]);
+const bowHalf = (x) => Math.round(12 - ((x - BX0) * 7) / (BX1 - BX0));
+function inShip(x, y) {
+  const d = Math.abs(y - CY);
+  if (x >= SX0 && x <= SX1) return d <= 15 && (x - SX0) + (15 - d) >= 3;
+  if (x >= CX0 && x <= CX1) return d <= 15;
+  if (x >= BX0 && x <= BX1) return d <= bowHalf(x);
+  return false;
+}
+// What the generic pieces expect of the base, kept empty for a ship.
+const LINK_BASE = [];
+let LINKS = [];
+const OPT = { own: false, side: 'hostile', attack: false, def: 1, yard: false, wreck: false, hull: 'charter' };
+const ATT = { hostile: [255, 70, 55], neutral: [215, 225, 240], friendly: [92, 224, 32], own: [32, 212, 240] };
+const attCol = () => ATT[OPT.side], attHex = () => rgb(ATT[OPT.side]);
+const CREW = [88, 176, 160], CREW_HEX = '#58b0a0';
+// The containers' colours on the outside, per side, as on the ships in space.
+const HULLS = {
+  charter: { plate: '#5a5e68', cont: ['#7a4a30', '#3a3e4a', '#7a4a30', '#3a8a74'], stripe: '#d9a441' },
+  wardens: { plate: '#4e5a6a', cont: ['#3a4a6a', '#5a6a7a', '#3a4a6a', '#6a7a8a'], stripe: '#6fb8ff' },
+  drifters: { plate: '#5a5248', cont: ['#6a5a3a', '#5a3a3a', '#7a6a4a', '#4a5a3a'], stripe: '#c96a3a' },
+};
+
+// ================================================================== a floor
+let D, decks = [];
+function newDeck(i) {
+  return { i, grid: new Int16Array(W * H).fill(OUT), rooms: [], doors: [], mask: new Uint8Array(WW * WH), wallRects: [], wallSegs: [], built: {} };
+}
+const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? OUT : D.grid[y * W + x]);
+const setT = (x, y, v) => { if (x >= 0 && y >= 0 && x < W && y < H) D.grid[y * W + x] = v; };
+function addRoom(name, kind, o = {}) {
+  const id = D.rooms.length;
+  D.rooms.push({ id, name, kind, open: !!o.open, glass: !!o.glass, staff: !!o.staff, tint: o.tint || '#9aa0b0', label: o.label !== false, dark: !!o.dark, x0: 99, y0: 99, x1: -1, y1: -1, n: 0 });
+  return id;
+}
+//@@ 187-228
+//@@ 257-295
+function touches(d, a, b) {
+  const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]];
+  const ids = g.map(([x, y]) => at(x, y));
+  return ids.includes(a) && ids.includes(b);
+}
+//@@ 491-496
+const FIXED = ['corridor', 'service', 'airlock', 'hold', 'command', 'engines'];
+function fillLeftovers() {
+  for (let pass = 0; pass < 8; pass++) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (at(x, y) !== FREE) continue;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const v = at(x + dx, y + dy); if (v >= 0 && !FIXED.includes(D.rooms[v].kind)) { setT(x, y, v); break; } }
+  }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (at(x, y) === FREE) setT(x, y, D.fillId);
+}
+const own = (r) => rr(...r);
+const carveR = (id, r, only) => carve(id, ...own(r), only);
+function leafRooms(regions, staff, min = 5, max = 11) {
+  const out = [];
+  for (const reg of regions) {
+    const leaves = [];
+    bsp(...own(reg), leaves, min, max);
+    for (const [x0, y0, x1, y1] of leaves) {
+      let n = 0; for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (at(x, y) === FREE) n++;
+      if (n < 12) continue;
+      const id = addRoom('ROOM', 'store', { staff });
+      carve(id, x0, y0, x1, y1, [FREE]);
+      out.push(id);
+    }
+  }
+  return out;
+}
+const nameRoom = (id, name, kind, tint, o = {}) => Object.assign(D.rooms[id], { name, kind, tint, ...o });
+function doorSpots(a, b) {
+  const deep = (o, at0, s, id, dir) => { for (const t of [s, s + 1]) for (let k = 0; k < 2; k++) { const [x, y] = o === 'v' ? [dir > 0 ? at0 + k : at0 - 1 - k, t] : [t, dir > 0 ? at0 + k : at0 - 1 - k]; if (at(x, y) !== id) return false; } return true; };
+  const out = [];
+  for (const run of contacts(a, b)) {
+    if (run.to - run.from < 1) continue;
+    const spots = [];
+    for (let s = run.from; s < run.to; s++) {
+      const [ax, ay] = run.o === 'v' ? [run.at - 1, s] : [s, run.at - 1];
+      const side = at(ax, ay) === a ? -1 : 1;
+      if (deep(run.o, run.at, s, a, side) && deep(run.o, run.at, s, b, -side)) spots.push(s);
+    }
+    if (spots.length) out.push({ run, spots });
+  }
+  return out.sort((p, q) => q.spots.length - p.spots.length);
+}
+function linkDoor(id, o, kind) { const l = doorSpots(id, o); if (!l.length) return false; const { run, spots } = l[0]; putDoor(run, spots[Math.floor(spots.length / 2)], kind); return true; }
+const putDoor = (run, s, kind) => (run.o === 'v' ? door('v', run.at, s, kind) : door('h', s, run.at, kind));
+function doorBetween(a, b, kind = 'slide', where = 0.5) {
+  const list = doorSpots(a, b);
+  if (!list.length) {
+    const runs = contacts(a, b).filter((r) => r.to - r.from >= 1);
+    if (!runs.length) return false;
+    const run = runs.reduce((p, q) => (q.to - q.from > p.to - p.from ? q : p));
+    const len = run.to - run.from + 1;
+    putDoor(run, run.from + Math.max(0, Math.min(len - 2, Math.floor((len - 2) * where))), kind);
+    return true;
+  }
+  const { run, spots } = list[0];
+  const want = spots[0] + (spots[spots.length - 1] - spots[0]) * where;
+  putDoor(run, spots.reduce((p, q) => (Math.abs(q - want) < Math.abs(p - want) ? q : p)), kind);
+  return true;
+}
+function hallDoors(room, hall, kind = 'slide') {
+  const list = doorSpots(room, hall);
+  if (!list.length) return false;
+  const { run, spots } = list[0];
+  const span = spots[spots.length - 1] - spots[0];
+  const at2 = span > 11 ? [0.15, 0.85] : [0.3 + R() * 0.4];
+  for (const f of at2) { const want = spots[0] + span * f; putDoor(run, spots.reduce((p, q) => (Math.abs(q - want) < Math.abs(p - want) ? q : p)), kind); }
+  return true;
+}
+const touching = (a, b) => contacts(a, b).some((r) => r.to - r.from >= 1);
+
+// ================================================================== the freighter
+function genF() {
+  D = newDeck(0); D.guns = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (inShip(x, y)) setT(x, y, FREE);
+  const UP = { wy: [5, 6], cy: [7, 18], seamY: [5, 18] }, DN = { wy: [34, 35], cy: [22, 33], seamY: [22, 35] };
+  // the big hold first: on one side the crossway between two columns goes, and the two containers are one hold
+  const bigSide = R() < 0.5 ? 'up' : 'dn', bigK = ri(0, 2);
+  const seamOn = { up: SEAMS.map((_, k) => !(bigSide === 'up' && k === bigK) && R() < 0.85), dn: SEAMS.map((_, k) => !(bigSide === 'dn' && k === bigK) && R() < 0.85) };
+  // the airlock: in the lower flank, at a crossway that is there, as near the middle as can be
+  const lockK = [1, 0, 2].find((k) => seamOn.dn[k]) ?? (seamOn.dn[1] = true, 1);
+  const lock = addRoom('AIRLOCK', 'airlock', { tint: '#d9a441', label: false });
+  carve(lock, SEAMS[lockK][0], 33, SEAMS[lockK][1], 35, [FREE]);
+  D.entryLock = lock;
+  // the spine, all along the ship
+  const spine = addRoom('SPINE', 'corridor', { tint: '#8a90a0', label: false });
+  carve(spine, 9, 19, 82, 21, [FREE]);
+  // crossways from the spine to the hull, between the containers
+  const seams = [];
+  for (const side of ['up', 'dn']) SEAMS.forEach(([x0, x1], k) => {
+    if (!seamOn[side][k]) return;
+    const id = addRoom('CROSSWAY', 'corridor', { tint: '#8a90a0', label: false });
+    const [y0, y1] = (side === 'up' ? UP : DN).seamY;
+    carve(id, x0, y0, x1, y1, [FREE]);
+    seams.push({ id, side, k });
+  });
+  // service ways along the hull, in pieces between the crossways; some pieces are not there
+  const ways = [];
+  for (const side of ['up', 'dn']) {
+    const [y0, y1] = (side === 'up' ? UP : DN).wy;
+    const cuts = [CX0 - 1, ...SEAMS.filter((_, k) => seamOn[side][k]).map((s) => s), CX1 + 1];
+    for (let k = 0; k + 1 < cuts.length; k++) {
+      const a = Array.isArray(cuts[k]) ? cuts[k][1] + 1 : cuts[k] + 1, b = Array.isArray(cuts[k + 1]) ? cuts[k + 1][0] - 1 : cuts[k + 1] - 1;
+      if (b - a < 3 || R() < 0.3) continue;
+      const id = addRoom('SERVICE WAY', 'service', { tint: '#8a90a0', label: false });
+      carve(id, a, y0, b, y1, [FREE]);
+      ways.push({ id, side, a, b });
+    }
+  }
+  // the containers: columns without a crossway between them are one container
+  const conts = [];
+  for (const side of ['up', 'dn']) {
+    const s = side === 'up' ? UP : DN;
+    let start = 0;
+    for (let k = 0; k < 4; k++) {
+      if (k < 3 && !seamOn[side][k]) continue;
+      const x0 = COLS[start][0], x1 = COLS[k][1];
+      conts.push({ side, x0, x1, y0: side === 'up' ? 5 : s.cy[0], y1: side === 'up' ? s.cy[1] : 35, cols: k - start + 1, big: side === bigSide && start <= bigK && k >= bigK + 1 });
+      start = k + 1;
+    }
+  }
+  const holds = [], modules = [];
+  // a container of rooms: strips across it, five to seven tiles wide, now and then one cut in two
+  const strips = (c) => {
+    const ids = [];
+    let x = c.x0;
+    while (x <= c.x1) {
+      let w = ri(5, 7); if (c.x1 - (x + w - 1) < 5) w = c.x1 - x + 1;
+      const cut = R() < 0.3 ? ri(c.y0 + 4, c.y1 - 4) : null;
+      for (const [y0, y1] of cut ? [[c.y0, cut], [cut + 1, c.y1]] : [[c.y0, c.y1]]) { const id = addRoom('ROOM', 'store'); carve(id, x, y0, x + w - 1, y1, [FREE]); ids.push(id); }
+      x += w;
+    }
+    return ids;
+  };
+  for (const c of conts) {
+    const hold = c.big || (c.cols >= 2 ? R() < 0.4 : R() < 0.3);
+    if (hold) { const id = addRoom('CARGO HOLD', 'hold', { tint: '#c9a24a' }); carve(id, c.x0, c.y0, c.x1, c.y1, [FREE]); holds.push(id); c.room = id; }
+    else { c.rooms = strips(c); modules.push(...c.rooms); }
+  }
+  // the stern: the engines across the back, rooms on both sides of the spine
+  const eng = addRoom('ENGINES', 'engines', { tint: '#d98a3a' });
+  carve(eng, SX0, 5, 8, 35, [FREE]);
+  const stern = leafRooms([[9, 5, 15, 18], [9, 22, 15, 35]], false, 5, 9);
+  // the bow: the bridge in the nose, rooms behind it
+  const bridge = addRoom('BRIDGE', 'command', { tint: '#5fd1c0' });
+  carve(bridge, 83, 5, BX1, 35, [FREE]);
+  const bow = leafRooms([[73, 5, 82, 18], [73, 22, 82, 35]], false, 5, 9);
+  D.fillId = spine;
+  fillLeftovers();
+  bounds();
+  // what the rooms are for
+  const byX = (a, b) => D.rooms[a].cx - D.rooms[b].cx;
+  const sternNames = [['REACTOR', 'tanks', '#d98a3a'], ['FUEL', 'fuel', '#d98a3a'], ['AIR PLANT', 'tanks', '#5fae9a'], ['SPARES', 'store', '#9a8a6a']];
+  shuffle(stern.slice()).forEach((id, k) => nameRoom(id, ...sternNames[k % sternNames.length]));
+  const bowNames = [['VAULT', 'vault', '#e0b040'], ['CAPTAIN', 'chief', '#c9a06a'], ['COMMS', 'comms', '#62e08a'], ['NAVIGATION', 'control', '#6fb8ff'], ['OFFICE', 'chief', '#c9a06a'], ['STORES', 'store', '#9a8a6a']];
+  bow.sort((a, b) => D.rooms[b].n - D.rooms[a].n).forEach((id, k) => nameRoom(id, ...bowNames[Math.min(k, bowNames.length - 1)]));
+  const POOL = [['CREW BUNKS', 'barracks', '#b0b8c8'], ['MESS', 'messd', '#c9a06a'], ['GALLEY', 'kitchen', '#c98a3a'], ['WORKSHOP', 'workshop', '#c98a3a'], ['STORES', 'store', '#9a8a6a'], ['LOCKERS', 'lockers', '#b0b8c8'], ['WATER', 'tanks', '#5fae9a'], ['CABINS', 'cabin', '#9a8aaa'], ['MED BAY', 'med', '#e07070'], ['SPARES', 'store', '#9a8a6a']];
+  shuffle(modules.slice()).forEach((id, k) => nameRoom(id, ...POOL[k % POOL.length]));
+  // doors: holds open onto the spine, the crossways at their ends, and sometimes the service way
+  const seamIds = seams.map((s) => s.id), wayIds = ways.map((w) => w.id);
+  for (const h of holds) {
+    hallDoors(h, spine);
+    for (const s of seamIds) if (touching(h, s)) doorBetween(h, s, 'slide', 0.5);
+    for (const w of wayIds) if (touching(h, w) && R() < 0.6) doorBetween(h, w, 'slide', 0.3 + R() * 0.4);
+  }
+  for (const id of modules) {
+    if (touching(id, spine)) doorBetween(id, spine, 'slide', 0.3 + R() * 0.4);
+    else { const s = seamIds.find((q) => touching(id, q)) ?? wayIds.find((q) => touching(id, q)); if (s !== undefined) doorBetween(id, s); }
+    for (const w of wayIds) if (touching(id, w) && R() < 0.35) doorBetween(id, w);
+  }
+  for (const p of shuffle(neighbours().filter((q) => modules.includes(q.a) && modules.includes(q.b) && q.n >= 3))) if (R() < 0.45) doorBetween(p.a, p.b);
+  doorBetween(eng, spine, 'pressure');
+  for (const id of stern) { if (touching(id, spine)) doorBetween(id, spine); if (R() < 0.6) doorBetween(id, eng); for (const w of wayIds) if (touching(id, w) && R() < 0.6) doorBetween(id, w); }
+  doorBetween(bridge, spine, 'pressure');
+  for (const id of bow) {
+    const kind = D.rooms[id].kind === 'vault' ? 'alarm' : 'slide';
+    if (touching(id, spine)) doorBetween(id, spine, kind);
+    else if (touching(id, bridge)) doorBetween(id, bridge, kind);
+    for (const w of wayIds) if (kind === 'slide' && touching(id, w) && R() < 0.6) doorBetween(id, w);
+  }
+  // the airlock: the crossway inside, the hatch in the hull
+  const lockSeam = seams.find((s) => s.side === 'dn' && s.k === lockK);
+  doorBetween(lock, lockSeam.id, 'lockB'); door('h', SEAMS[lockK][0], 36, 'hatch');
+  for (const d of D.doors) if (d.kind === 'lockB' || d.kind === 'hatch') d.pair = 'main';
+  // a wreck: one or two containers torn away at the end, with their doors
+  if (OPT.wreck) {
+    const cand = conts.filter((c) => !c.big && !(c.side === 'dn' && c.x0 <= SEAMS[lockK][1] + 1 && c.x1 >= SEAMS[lockK][0] - 1));
+    D.torn = [];
+    for (const c of shuffle(cand).slice(0, R() < 0.5 ? 1 : 2)) {
+      const mine = c.room !== undefined ? [c.room] : c.rooms;
+      for (let y = c.y0; y <= c.y1; y++) for (let x = c.x0; x <= c.x1; x++) if (mine.includes(at(x, y))) setT(x, y, OUT);
+      D.torn.push(c);
+    }
+    D.doors = D.doors.filter((d) => { const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]]; return d.kind === 'hatch' || g.every(([x, y]) => at(x, y) >= 0); });
+    bounds();
+  }
+  D.conts = conts; D.seams = seams; D.ways = ways; D.holds = holds; D.spine = spine; D.lockK = lockK;
+  repairDoors(spine);
+  return D;
+}

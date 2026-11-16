@@ -1,0 +1,83 @@
+
+// ================================================================== switching
+const upBtn = { hidden: true }, downBtn = { hidden: true };
+const tag = document.getElementById('tag');
+const NAMES = ['Fraktskeppet'];
+const MODENAMES = { normal: 'normal', lockdown: 'lockdown', alarm: 'larm', wreck: 'vrak' };
+function setDeck(i) {
+  outside = false; approach = false; sizeView();
+  me.deck = 0; D = decks[0];
+  if (!D.built[MODE]) { buildDeck(); buildStaticLight(); D.built[MODE] = snapshot(); }
+  else Object.assign(D, D.built[MODE]);
+  for (const d of D.doors) if (d.kind !== 'arch') d.open = 0;
+  buildStaticLight();
+  npcs = castFor(0);
+  tag.textContent = `Fraktskeppet · ${MODENAMES[MODE]}`;
+}
+const setOn = (sel, on) => document.querySelector(sel).classList.toggle('on', on);
+const stopTour = () => { if (tour) { tour = false; setOn('#tour', false); } };
+function startTour() { tour = true; setOn('#tour', true); tourAt = 0; tourPath = null; tourWait = 0; setDeck(0); const s = startOf(0); me.x = s[0]; me.y = s[1]; me.a = -Math.PI / 2; }
+function newBase(seed) {
+  makeBase(seed);
+  buildTour();
+  document.getElementById('seed').textContent = `(skepp nr ${SEED})`;
+}
+// A wreck is the same ship with containers torn away, so the plan is made again from the same number.
+function setMode(m) {
+  const wasWreck = OPT.wreck;
+  MODE = m; OPT.wreck = m === 'wreck'; me.lamp = m !== 'normal';
+  if (OPT.wreck !== wasWreck) { tryOnce(SEED); buildTour(); }
+  decks[0].built = {};
+  const keep = { x: me.x, y: me.y };
+  setDeck(0);
+  if (blocked(keep.x, keep.y, 5, true)) { const s = startOf(0); me.x = s[0]; me.y = s[1]; }
+  if (tour) startTour();
+}
+const pickIn = (sel, attr, f) => document.getElementById(sel).addEventListener('click', (e) => {
+  const v = e.target.dataset[attr]; if (v === undefined) return;
+  document.querySelectorAll('#' + sel + ' button').forEach((b) => b.classList.toggle('on', b === e.target));
+  f(v);
+});
+document.getElementById('fire').onclick = () => { stopTour(); fire(); };
+pickIn('modes', 'mode', setMode);
+pickIn('hulls', 'hull', (v) => { OPT.hull = v; decks[0].built = {}; setDeck(0); });
+document.getElementById('newbase').onclick = () => { newBase((Math.random() * 1e6) | 0); if (tour) startTour(); else { setDeck(0); const s = startOf(0); me.x = s[0]; me.y = s[1]; } };
+document.getElementById('tour').onclick = () => { if (tour) stopTour(); else startTour(); };
+document.getElementById('overview').onclick = () => { overview = !overview; setOn('#overview', overview); sizeView(); };
+document.getElementById('plan').onclick = () => { planView = !planView; setOn('#plan', planView); };
+addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (['w', 'a', 's', 'd', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) { keys.add(k); stopTour(); if (k.startsWith('arrow')) e.preventDefault(); }
+  if (k === ' ') { stopTour(); fire(); e.preventDefault(); }
+  if (k === 'l') me.lamp = !me.lamp;
+});
+addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+const toWorld = (e) => { const r = view.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * VW + camX, y: ((e.clientY - r.top) / r.height) * VH + camY }; };
+view.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') pointer = toWorld(e); else if (touchGoal) touchGoal = toWorld(e); });
+view.addEventListener('pointerdown', (e) => { if (overview) return; if (e.pointerType === 'mouse') { pointer = toWorld(e); stopTour(); fire(); return; } stopTour(); touchGoal = toWorld(e); view.setPointerCapture(e.pointerId); });
+view.addEventListener('pointerup', () => (touchGoal = null)); view.addEventListener('pointercancel', () => (touchGoal = null));
+view.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') pointer = null; });
+
+// ================================================================== go
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  frame(now / 1000, dt);
+  requestAnimationFrame(loop);
+}
+function go() {
+  outside = false;
+  sizeView();
+  newBase(1 + ((Math.random() * 1e6) | 0));
+  startTour();
+  requestAnimationFrame(loop);
+}
+{
+  const SRC = { frigate: '//@@IMG:frigate' };
+  let n = 0;
+  for (const k in SRC) { const im = new Image(); im.onload = im.onerror = () => { if (++n === 1) go(); }; im.src = SRC[k]; IMG[k] = im; }
+}
+window.__design = { blocked: (...a) => blocked(...a), tryOnce, newBase, setDeck, me, get decks() { return decks; }, setTour: (v) => { tour = v; }, setOverview: (v) => { overview = v; sizeView(); }, setPlan: (v) => (planView = v), setMode, OPT, fire, get D() { return D; }, check, get SEED() { return SEED; }, startOf: (i) => startOf(i), makeBase, get TOUR() { return TOUR; }, findPath: (...a) => findPathNear(...a), startTour, get tourAt() { return tourAt; } };
+</script>
+</body>
+</html>
