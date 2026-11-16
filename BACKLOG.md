@@ -88,7 +88,7 @@ Väntar på användaren: förslagen D-187 (meddelanden), D-193 (permanenta pryla
 
 | ID | Vad | Status |
 |---|---|---|
-| D-220 | Regelbok: samla alla spelregler i docs/rules.md, en kort mening per regel med eget nummer (R-001 …), status (bestämd, förslag, byggd, ersatt) och källa, sorterade efter ämne. Gå igenom besluten i HANDOFF.md, beskeden i backloggen och förslagsdokumenten, för över dem och visa krockar för användaren. Varje byggd regel får ett test med regelns nummer, och en kontroll säger till om en byggd regel saknar test. Användaren 2026-11-16: ja, det känns nödvändigt för att jobba effektivt. Exempel på krockar som redan funnits: gratis bränsle på den egna varvsstationen mot fristaden utan varv, och Cruisern mot piraternas slutbas | Ej påbörjad |
+| D-220 | Regelbok: samla alla spelregler i docs/rules.md, en kort mening per regel med eget nummer (R-001 …), status (bestämd, förslag, byggd, ersatt) och källa, sorterade efter ämne. Gå igenom besluten i HANDOFF.md, beskeden i backloggen och förslagsdokumenten, för över dem och visa krockar för användaren. Varje byggd regel får ett test med regelns nummer, och en kontroll säger till om en byggd regel saknar test. Användaren 2026-11-16: ja, det känns nödvändigt för att jobba effektivt. Exempel på krockar som redan funnits: gratis bränsle på den egna varvsstationen mot fristaden utan varv, och Cruisern mot piraternas slutbas | Pågår 2026-11-16 |
 | F-050 | Justerade nivåer för vapen, sköld, motorer och engineering så att det känns att det är svårt i början och att det ska vara värt att uppgradera | Ej påbörjad |
 
 ## Medel
