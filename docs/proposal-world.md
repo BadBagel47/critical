@@ -101,7 +101,8 @@ Alla är besvarade. Bilderna på stjärnan, bältet och diset visas innan de lä
 - En stjärnkarta som köps eller hittas visar 3 system i närheten med status som när kartan köptes: stationer, vems de är och farligheten. Den uppdateras inte efteråt, och effekten är samma som en scanning av de systemen. Öppet: om antalet ska vara färre i en kort omgång, där tre system är en stor del av kartan.
 - Ett hopp till ett outforskat system kostar lika mycket bränsle som andra hopp.
 - Bebodda och tomma system (användarens idé): 8, 12 eller 18 är antalet bebodda system, med stationer, vrak och uppdrag. Lika många tomma system, utan stationer, binder ihop dem: 16, 24 eller 36 system totalt. Det finns fler tomma system ju längre ut man kommer. Då får också korta omgångar fler hopp, och en karta med 3 system blir inte för stor.
-- Kvar att svara på: systemradarns räckvidd och pris, systemens storlek, hur farligheten ökar, var Cruisern finns, vad som finns i ett tomt system och om tomma system kan ha något eget.
+- Ett tomt system har asteroider, ibland ett vrak eller en pod, och ibland pirater. Asteroider finns alltid, i varje system, så att man kan skaffa bränsle om det tar slut.
+- Kvar att svara på: systemradarns räckvidd och pris, systemens storlek, hur farligheten ökar, var Cruisern finns och om tomma system kan ha något eget.
 
 ## Steg 4 – Uppdrag och story
 
