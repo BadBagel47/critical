@@ -43,7 +43,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 - Slutet är piraternas slutbas med en boss. I dag är det Cruisern i The Maw.
 - Standardbasen har tre våningar, och övertagandet kräver först ett steg i källaren och sedan mainframen överst. I dag har stationerna en våning, och mainframen står i rummet längst in.
 - Ingen flyttas tillbaka till skeppet av sig själv, och skeppet får inte hoppa medan någon är inne. I dag kallas alla hem när skeppet lägger ut.
-- Kartan har 20, 35 eller 50 system (R-1195). I dag har den 16, 24 eller 36.
+- Kartan har 25, 40 eller 55 system, och 40 procent är bebodda (R-1196, R-1197). I dag har den 16, 24 eller 36, och hälften är bebodda.
+- Piraterna håller en femtedel av de bebodda systemen (R-1198), slutet ligger minst 5, 6 eller 7 hopp bort (R-1199) och systemen är 3000, 4000 eller 5000 från mitten till kanten (R-1200). I dag är det en fjärdedel, 4, 5 eller 6 hopp och 1200, 1800 eller 2400.
 - Ungefär en fjärdedel av varje sidas baser har varv (R-1194). I dag har alla faktionsbaser varv och inga neutrala baser.
 - En övertagen bas får inget varv, utan det köps. I dag får en övertagen station shipyard.
 - Faktioner kan vara i krig med varandra. I dag slåss de bara i omstridda system.
@@ -68,7 +69,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1096 | Vägen till slutet öppnas också genom uppdrag som öppnar nya vägar. | bestämd | Användaren 2026-11-16 (F-234) | – |
 | R-1097 | Vrak är en bonus för den som hittar dem, inte en stor inkomst som man kan räkna med. | byggd | Användaren 2026-11-16 | tests/world.test.js |
 | R-1098 | Tills uppdragen finns är vägen till slutet stängd, och den öppnas av slutets stjärnkarta, som ligger i valvet på en piratbas. | byggd | Användaren 2026-11-16 (F-234, förslag 7) | tests/sim.test.js |
-| R-1099 | Slutet ligger i det system som ligger längst bort, minst 4, 5 eller 6 hopp från fristaden efter kartans storlek, med en enda hoppväg in. | byggd | Användaren 2026-11-16 (F-234, förslag 5 och 6) | tests/world.test.js |
+| R-1099 | Slutet ligger i det system som ligger längst bort, minst 4, 5 eller 6 hopp från fristaden efter kartans storlek, med en enda hoppväg in. | ersatt av: R-1199 | Användaren 2026-11-16 (F-234, förslag 5 och 6) | tests/world.test.js |
+| R-1199 | Slutet ligger i det system som ligger längst bort, minst 5, 6 eller 7 hopp från fristaden efter kartans storlek, med en enda hoppväg in. | bestämd | Användaren 2026-11-16 (F-258, kartsimuleringen) | – |
 | R-1100 | Fristaden har inga vrak. Där piraterna håller systemet finns oftast ett vrak och ibland två, i vartannat omstritt system ett, och annars sällan något. | byggd | Användaren 2026-11-16 (F-233, förslag 1 och 2) | tests/world.test.js |
 | R-1101 | Inget nytt vrak driver in när ett har sprängts. Kommer man tillbaka till ett system efter en stund kan ett nytt ligga där, oftast där piraterna finns, aldrig i fristaden. | byggd | Användaren 2026-11-16 (F-233, förslag 3) | tests/world.test.js |
 | R-1102 | En nedskjuten gunboat eller ett fraktskepp lämnar ett vrak ibland, inte varje gång. | byggd | Användaren 2026-11-16 (F-233, förslag 4) | tests/sim.test.js |
@@ -162,7 +164,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-079 | Stjärnan och diset är påslagna i alla spel. | byggd | HANDOFF beslut 2026-11-15 | saknas |
 | R-080 | Andra skepp påverkas inte av stjärnan eller diset (avvikelse). | byggd | HANDOFF beslut 2026-11-15; BACKLOG F-196 | saknas |
 | R-081 | Systemen är runda som ett solsystem, med en stjärna i mitten och ett asteroidbälte. | byggd | proposal-world.md steg 1, BACKLOG F-196 | saknas |
-| R-082 | Systemen finns i tre storlekar: 1200, 1800 och 2400 punkter från mitten. | byggd | proposal-world.md steg 1 (förslag), BACKLOG F-196, src/sim/balance.js | saknas |
+| R-082 | Systemen finns i tre storlekar: 1200, 1800 och 2400 punkter från mitten. | ersatt av: R-1200 | proposal-world.md steg 1 (förslag), BACKLOG F-196, src/sim/balance.js | saknas |
+| R-1200 | Systemen finns i tre storlekar: 3000, 4000 och 5000 punkter från mitten till kanten. | bestämd | Användaren 2026-11-16 (F-258, kartsimuleringen) | – |
 | R-083 | Diset ritas som en mjuk ring på kartan. | byggd | proposal-world.md steg 1 | saknas |
 | R-084 | Stjärnans mitt bränner först skölden och sedan skrovet tre gånger hårdare. | byggd | proposal-world.md steg 1, BACKLOG F-196 | saknas |
 | R-085 | Med vanlig sköld går skeppet förlorat rakt över stjärnan, men med den bättre skölden och all energi på sköld och motorer klarar det sig. | byggd | proposal-world.md steg 1, BACKLOG F-196 | saknas |
@@ -193,8 +196,11 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-110 | Fristaden ligger i eller nära mitten av stjärnkartan. | byggd | proposal-bases.md §5 | tests/world.test.js |
 | R-111 | Systemen genereras för varje omgång. | byggd | proposal-world.md steg 3, BACKLOG D-089 | tests/world.test.js |
 | R-112 | Vid start väljer man 8, 12 eller 18 bebodda system (det ska provas). | ersatt av: R-1195 | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
-| R-1195 | Kartan har 20 system på SHORT, 35 på MEDIUM och 50 på LONG, bebodda och tomma tillsammans. Hur många som är bebodda är inte bestämt. | bestämd | Användaren 2026-11-16 (K6, F-258) | – |
-| R-113 | Det finns lika många tomma system som bebodda, alltså 16, 24 eller 36 totalt, och fler tomma ju längre ut man kommer. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-1195 | Kartan har 20 system på SHORT, 35 på MEDIUM och 50 på LONG, bebodda och tomma tillsammans. Hur många som är bebodda är inte bestämt. | ersatt av: R-1196 | Användaren 2026-11-16 (K6, F-258) | – |
+| R-1196 | Kartan har 25 system på SHORT, 40 på MEDIUM och 55 på LONG, bebodda och tomma tillsammans. | bestämd | Användaren 2026-11-16 (F-258, kartsimuleringen) | – |
+| R-113 | Det finns lika många tomma system som bebodda, alltså 16, 24 eller 36 totalt, och fler tomma ju längre ut man kommer. | ersatt av: R-1197 | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-1197 | 40 procent av systemen är bebodda, alltså 10, 16 eller 22, och resten är tomma, fler ju längre ut man kommer. | bestämd | Användaren 2026-11-16 (F-258, kartsimuleringen), K7 | – |
+| R-1198 | Piraterna håller ungefär en femtedel av de bebodda systemen, de som ligger längst ut, och slutet räknas in. | bestämd | Användaren 2026-11-16 (F-258, kartsimuleringen) | – |
 | R-114 | Antalet system avgör hur många uppdrag det finns före slutet. | bestämd | proposal-world.md steg 3, BACKLOG D-052 | – |
 | R-115 | Man upptäcker system genom att hoppa dit, och stjärnkartan visar närliggande obesökta system som outforskade. | byggd | proposal-world.md steg 3, BACKLOG D-089 | tests/sim.test.js |
 | R-116 | En sond skickas till ett närliggande system, ett hopp bort, och visar vad som finns där. | byggd | proposal-world.md steg 3 | tests/world.test.js |
