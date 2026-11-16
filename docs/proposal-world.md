@@ -95,6 +95,12 @@ Alla är besvarade. Bilderna på stjärnan, bältet och diset visas innan de lä
 2. Vad ger en karta som man köper eller hittar, nu när man kan upptäcka själv? Rekommendation: den visar en grupp system som om man hade varit där.
 3. Ska ett hopp ut i det outforskade kosta mer? Rekommendation: nej. Risken är att man inte vet vad som väntar.
 
+**Besked 2026-11-16**
+- Antal system att välja mellan vid start: 8, 12 eller 18. Det provas.
+- Hoppvägar: 2–3 från varje system.
+- En stjärnkarta som köps eller hittas visar 3 system i närheten med status som när kartan köptes: stationer, vems de är och farligheten. Den uppdateras inte efteråt, och effekten är samma som en scanning av de systemen. Öppet: om antalet ska vara färre i en kort omgång, där tre system är en stor del av kartan.
+- Kvar att svara på: bränsle för hopp till outforskade system, systemradarns räckvidd och pris, systemens storlek, hur farligheten ökar och var Cruisern finns.
+
 ## Steg 4 – Uppdrag och story
 
 **Bestämt**
