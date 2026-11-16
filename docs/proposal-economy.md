@@ -257,6 +257,19 @@ Skälen:
 - **Pod.** Tre ringar på 25 sekunder med tre försök är lagom som det är. Det enda som saknas är att larmet ska betyda något: först piraterna, sedan lasten.
 - **Ensam spelare.** Den som sitter i ett lås kan inte skjuta. Ingen av ändringarna gör det farligare än i dag, och vraket blir förlåtande i stället för allt eller inget.
 
+### 3.5 Läget 2026-11-16
+
+Sedan förslaget skrevs har en del av det byggts:
+- **Vrak:** ett misslyckat lås kostar 40 sekunder av reaktortiden, och det tredje misslyckandet spränger vraket (fråga 10 och steg 2, byggt).
+- **Kod med F-171:** Engineer hackar fram koden en siffra i taget, och koden byts inte längre av sig själv (byggt). Hur fel siffror ska straffas är inte ändrat än.
+- **Lockdown och larm finns nu** (2026-11-15). Tillägget om att en station är i larm i stället för lockdown efter ett misslyckat lås kan alltså byggas.
+
+Kvar för D-172 (genomgången av straff i låsspelen), som väntar på dina svar:
+1. Fråga 11: ett enstaka misstag kostar aldrig något utanför låset, som fast regel.
+2. Steg 1: priset för ett misstag och ett misslyckande står på skärmen innan klockan startar.
+3. Podens lås går inte att öppna medan den larmar.
+4. Ett misslyckat stationslås gör att stationen är i larm, inte i lockdown, när besättningen kommer in. Rekommendation: ja, nu när lockdown finns. Den som klantar till låset förlorar chansen att smyga.
+
 ## 4. Förslag på ordning
 
 Varje steg är litet nog att provspela för sig. Inget steg startar utan ditt klartecken.
