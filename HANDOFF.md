@@ -69,6 +69,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - [docs/music-brief.md](docs/music-brief.md): underlag för den agent som gör musiken (F-048). Säger vad som gäller, hur musiken kopplas in och vilka filer den får röra.
 - `docs/proposal-world.md`: förslag (inte byggt) om världen i fyra steg: ett system som känns rätt, bränsle och färd, många system, uppdrag och story. Bara frågorna i steg 1 behöver svar först. Det första långa förslaget ligger i `docs/proposal-world-v1.md` och behövs för detaljerna i steg 4.
 - `docs/proposal-economy.md`: förslag (inte godkänt) om ekonomin, vad skepp och vrak lämnar efter sig och vad ett misslyckat lås kostar. Slutar med 12 frågor till användaren. Inkomsterna per timme i det är uppskattningar, inte mätningar.
+- `docs/rules.md`: **regelboken**, alla spelregler med nummer, status, källa och test (D-220). Det som står där gäller; förslagsdokumenten är underlag. Överst står krockar som väntar på användarens beslut och beslut som inte är byggda än. Kontrolleras av `tests/rules.test.js`.
 - `docs/proposal-messages.md`: förslag (inte godkänt) om hur meddelanden och sensordata visas (D-187), med fem frågor.
 - `docs/proposal-items.md`: analys och förslag (inte godkänt) om vilka prylar som är permanenta och vilka som förbrukas (D-193), med fem frågor.
 - `docs/proposal-computer.md`: genomgång (inte godkänd) av hur skeppets dator skulle sköta lediga poster (D-186, F-034), med sju frågor.
@@ -133,7 +134,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 ## Decisions
 
 Arbetssätt
-- Regelboken (2026-11-16): alla spelregler ska samlas i docs/rules.md med nummer, status och källa, och kontrolleras mot varje nytt beslut. Projektregeln står i AGENTS.md. Regelboken byggs i D-220.
+- Regelboken (2026-11-16): alla spelregler ska samlas i docs/rules.md med nummer, status och källa, och kontrolleras mot varje nytt beslut. Projektregeln står i AGENTS.md. Regelboken finns sedan 2026-11-16 i docs/rules.md.
 
 Spelet
 - Bränsle och färd (2026-11-16, användaren sa ja till rekommendationerna i docs/proposal-world.md steg 2): överladdningen av vapen och sköld är borttagen, en träff på skölden nollställer boosten och ett hopp som laddas, bränslet är gratis bara på den egna varvsstationen, och solcellerna tar en slot och fyller ett hopp på ungefär fem minuter.

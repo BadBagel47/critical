@@ -26,7 +26,7 @@ const run = (s, cmds, seconds) => {
 // A pirate bolt that hits the frigate in the next step.
 const shoot = (s) => s.bolts.push({ x: s.ship.x + 4, y: s.ship.y, vx: -10, vy: 0, ttl: 1, side: 'pirate', dmg: 1 });
 
-test('a hit empties a boost that is charging, and a miss does not', () => {
+test('R-002: a hit empties a boost that is charging, and a miss does not', () => {
   const s = quiet();
   step(s, { captain: { surge: true } }, DT);
   run(s, {}, 1);
@@ -63,7 +63,7 @@ test('more engine power charges the boost faster, and it burns fuel as much fast
   assert.ok(Math.abs(burn(true) / burn(false) - B.SURGE_ENGINES) < 0.01);
 });
 
-test('a jump that is charging starts over when the ship is hit', () => {
+test('R-025: a jump that is charging starts over when the ship is hit', () => {
   const s = quiet();
   s.charts.push(1);
   s.ship.fuel = 100;
@@ -75,7 +75,7 @@ test('a jump that is charging starts over when the ship is hit', () => {
   assert.ok(s.jump.t < 0.2, 'it has to charge again from the start');
 });
 
-test('a broken rock leaves ore, which goes into the hold and sells at a station', () => {
+test('R-027: a broken rock leaves ore, which goes into the hold and sells at a station', () => {
   const s = quiet();
   const rock = newRock(s, s.ship.x + 3, s.ship.y, 1);
   addThing(s, rock);
@@ -106,7 +106,7 @@ test('the ship refines ore into fuel only when the tank is too low for a jump', 
   assert.ok(s.ship.ore < 10 && s.ship.fuel > 0, 'with too little, it becomes fuel');
 });
 
-test('solar cells fill the tank slowly, about a jump in five minutes', () => {
+test('R-005: solar cells fill the tank slowly, about a jump in five minutes', () => {
   const s = quiet();
   s.ship.mods.solar = 1;
   s.ship.fuel = 0;
@@ -130,7 +130,7 @@ test('fuel is free at the crew’s own yard only, and a scan costs fuel', () => 
 });
 
 // ---------- never stuck (D-100) ----------
-test('a crew with no fuel and no money gets on: ore from rocks becomes enough fuel for a jump', () => {
+test('R-010: a crew with no fuel and no money gets on: ore from rocks becomes enough fuel for a jump', () => {
   const s = quiet();
   s.ship.fuel = 0;
   s.credits = 0;
@@ -157,7 +157,7 @@ test('a crew with no fuel and no money gets on: ore from rocks becomes enough fu
   assert.ok(s.jump, 'and the jump can start');
 });
 
-test('with an empty tank the ship still moves, at a fraction of its power', () => {
+test('R-020: with an empty tank the ship still moves, at a fraction of its power', () => {
   const s = quiet();
   s.ship.fuel = 0;
   s.ship.vx = s.ship.vy = 0;

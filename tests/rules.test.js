@@ -13,7 +13,7 @@ const STATUSES = ['byggd', 'bestämd', 'förslag', 'ersatt'];
 // Every row of a rule table: | R-001 | the rule | status | source | test |
 const rules = book
   .split('\n')
-  .filter((l) => /^\| R-\d{3} \|/.test(l))
+  .filter((l) => /^\| R-\d{3,} \|/.test(l))
   .map((l) => {
     const [id, text, status, source, check] = l
       .split('|')
@@ -27,10 +27,10 @@ const testText = readdirSync(new URL('.', import.meta.url))
   .filter((f) => f.endsWith('.test.js') && f !== 'rules.test.js')
   .map((f) => readFileSync(new URL(f, import.meta.url), 'utf8'))
   .join('\n');
-const tested = new Set(testText.match(/R-\d{3}/g) || []);
+const tested = new Set(testText.match(/R-\d{3,}/g) || []);
 
 // How many built rules may still lack a test. Lower it as tests are written; never raise it.
-const LACKING = 1000;
+const LACKING = 678;
 
 test('the rule book has rules, each number once, each with a known status and a source', () => {
   assert.ok(rules.length > 20, 'the book has rules in it');
@@ -38,18 +38,22 @@ test('the rule book has rules, each number once, each with a known status and a 
   for (const r of rules) {
     assert.ok(!seen.has(r.id), `${r.id} is used twice`);
     seen.add(r.id);
-    assert.ok(STATUSES.some((s) => r.status.startsWith(s)), `${r.id} has the status "${r.status}"`);
+    assert.ok(
+      STATUSES.some((s) => r.status.startsWith(s)),
+      `${r.id} has the status "${r.status}"`,
+    );
     assert.ok(r.source.length > 0, `${r.id} says where it comes from`);
     assert.ok(r.text.length > 0, `${r.id} says something`);
   }
 });
 
-test('a replaced rule says which rule replaced it, and that rule exists', () => {
+test('a replaced rule says what replaced it, and a rule it names is in the book', () => {
   const ids = new Set(rules.map((r) => r.id));
   for (const r of rules.filter((x) => x.status.startsWith('ersatt'))) {
-    const by = (r.status.match(/R-\d{3}/) || [])[0];
-    assert.ok(by, `${r.id} is replaced, but not said by which rule`);
-    assert.ok(ids.has(by), `${r.id} is replaced by ${by}, which is not in the book`);
+    assert.ok(/^ersatt av: \S/.test(r.status), `${r.id} is replaced, but does not say by what`);
+    for (const by of r.status.match(/R-\d{3,}/g) || []) {
+      assert.ok(ids.has(by), `${r.id} is replaced by ${by}, which is not in the book`);
+    }
   }
 });
 
