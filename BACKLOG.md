@@ -103,6 +103,7 @@ Väntar på användaren: förslagen D-187 (meddelanden), D-193 (permanenta pryla
 
 | ID | Vad | Status |
 |---|---|---|
+| B-259 | Markören blir väldigt långsam när fler skepp med aggro kommer in. Användaren 2026-11-16: "Behöver vi optimera?" Ska undersökas med en mätning innan något ändras | Ej påbörjad |
 | F-258 | Större kartor efter kartsimuleringen (artefakten "Kartsimulering Critical ST8", användarens värden 2026-11-16): 25, 40 eller 55 system (R-1196), 40 procent bebodda (R-1197), piraterna en femtedel av de bebodda (R-1198), slutet minst 5, 6 eller 7 hopp bort (R-1199), systemen 3000, 4000 eller 5000 från mitten till kanten (R-1200), och varv på ungefär en fjärdedel av varje grupperings baser, också neutrala och piraternas (R-1194). Spridning: tomma system ska inte ligga i klumpar eller bilda återvändsgränder utan något i, och vägen till slutet ska inte bli en lång svans av tomma system. I simuleringen väljs de tomma ett i taget och undviker varandra, och högst ett tomt system i rad på vägen till slutet. Spridningen ska gälla spelet, och varje gruppering har minst ett varv (användaren 2026-11-16, K8). Större system påverkar flygtider, bränsle och ekonomibladet. Användaren 2026-11-16 | Pågår 2026-11-16 |
 | F-222 | Provspelslista med testlägen. En lista över det som är byggt men inte provspelat, med en direktlänk per sak, och adresser som startar rätt situation direkt (till exempel anfall på egen station, bas med personaldel, tom tank vid asteroider). Synpunkterna förs in i regelboken. Användaren 2026-11-16: ja | Ej påbörjad |
 | D-223 | Innehållskatalog som skapas ur koden: skeppsklasser, vakttyper, stationer, faktioner, uppgraderingar, utrustning och låsspel med sina viktigaste siffror, så att det alltid finns en överblick som stämmer. Användaren 2026-11-16: ja | Ej påbörjad |
@@ -114,6 +115,7 @@ Väntar på användaren: förslagen D-187 (meddelanden), D-193 (permanenta pryla
 
 | ID | Vad | Status |
 |---|---|---|
+| F-260 | Faktionernas namn får unika stilar, så att man ser vems ett system eller en bas är på namnet. Användaren 2026-11-16. Hör ihop med att två baser i samma system kunde få samma namn, som rättas i F-258 | Ej påbörjad |
 | F-255 | Visa Gunner när dartsen är hela igen. Användaren 2026-11-16: en dart som kommer hem lagas, och en som skjutits ner byggs upp igen efter en stund, och det behöver synas för Gunner. Det ska gå genom hur skeppet meddelar status (D-187, docs/proposal-messages.md) | Ej påbörjad |
 | D-256 | Inventera alla meddelanden som kan dyka upp i spelet: vad som visas, när, för vem och var, så att D-187 har en fullständig lista att utgå från. Användaren 2026-11-16 | Ej påbörjad |
 | D-257 | Smuggeluppdrag från skumt folk på baser. Användaren 2026-11-16: det ska gå att prata med skumma personer på baser för att få smuggeluppdrag. Hör ihop med uppdragen (D-073) och handeln (F-068) | Ej påbörjad |
