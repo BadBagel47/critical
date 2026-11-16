@@ -364,6 +364,7 @@ Baser, fristad och varv (användaren, 2026-11-16). Detaljer och vad som är för
 - Skeppet börjar med en enkel fast kanon rakt fram som alltid sitter kvar och går att uppgradera billigt. Den används mest för att bryta malm. Kanontorn köps.
 - En övertagen bas får inget varv. Varvet köps som en permanent uppgradering, och alla standardbaser kan köpa det. På eget varv får man tillbaka tre fjärdedelar när man byter bort en del, annars hälften. Inget förråd. Försvaret köps i mainframen som i dag, och fullt utbyggt gör det risken för övertagande mycket låg. Ersätter "en övertagen station får shipyard".
 - Utsidan av baserna ska bli större (inte 1:1) och hänga ihop med våningarna. Den gamla designen behöver inte följas men ska passa in i världen. Design av varv och utsida görs före bygge.
+- Piraternas slutbas börjar i botten: man kommer in vid dockorna i industrivåningen och arbetar sig uppåt.
 - Dockningsringen vrids i fasta lägen och får en demo med full design före bygge. Vägen ut provas i ett designtest före bygge.
 
 Grafik

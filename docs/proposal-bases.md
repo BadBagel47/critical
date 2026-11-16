@@ -182,6 +182,7 @@ Sidorna är designtester. De används inte av spelet, och koden i dem är inte t
 - Bossen är en pirat i en mech-dräkt, och bossrummet har mekanik som man använder för att besegra den.
 - När bossen är besegrad tar man över basen. Den sprängs inte, och det finns ingen flykt på tid.
 - Vad som händer när någon faller följer reglerna som redan finns.
+- Slutbasen börjar i botten (användaren, 2026-11-16): man kommer in vid dockorna i industrivåningen och arbetar sig uppåt, till skillnad från standardbasen där man kommer in i mitten.
 - En skattkammare och bränsletunnor finns med.
 
 **Förslag** (visat i `interior-pirate-base.html`, inte provspelat):
@@ -204,8 +205,7 @@ Spelet gör i dag ljussättning med en ljuskarta bara på mörka ställen (vrak 
 1. Hur tar sig den som spelar ensam tillbaka på fötter när hen faller i en bas? Förslag: en medkit eller en nödsändare som för en tillbaka till slussen. Behöver stämmas av mot reglerna för när någon faller.
 2. Ska det man gör i källaren kunna göras både tyst och högljutt, och vad skiljer i så fall?
 3. Exakt vilka steg skärper läget efter källaren, och hur fort?
-4. Ska slutbasen också ha entrén i mitten och källaren först, eller behålla dockorna nere som i designtestet?
-5. Vad kostar ett varv, och vad kostar startkanonens uppgraderingar?
-6. Siffrorna för anpassningen efter antal spelare (sätts vid provspel).
-7. Datorns undantag i avsnitt 4 bygger på docs/proposal-computer.md, som inte är godkänt än. Det behöver hänga med när det förslaget besvaras.
-8. Regeln om att aldrig fastna (D-100) och dess test bygger i dag på att den egna varvsstationen alltid ger gratis bränsle. Utan eget varv i början behöver den stödja sig på fristaden (billigt bränsle, malm som blir bränsle). Agentens förslag, inte bestämt.
+4. Vad kostar ett varv, och vad kostar startkanonens uppgraderingar?
+5. Siffrorna för anpassningen efter antal spelare (sätts vid provspel).
+6. Datorns undantag i avsnitt 4 bygger på docs/proposal-computer.md, som inte är godkänt än. Det behöver hänga med när det förslaget besvaras.
+7. Regeln om att aldrig fastna (D-100) håller utan eget varv i början: skeppet gör redan bränsle av malm när tanken inte räcker till ett hopp, och solceller fyller på. Det som ändras är att gratis bränsle hemma försvinner tills man har köpt ett varv, och att testet för D-100 inte kan räkna med det.
