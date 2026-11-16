@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Critical – designtest: piraternas asteroidbas</title>
+<style>
+  :root { --bg:#0b0c11; --panel:#14161e; --line:#262a36; --text:#d6d9e2; --dim:#8a90a0; --acc:#d9a441; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px 14px 60px; }
+  h1 { font-size: 20px; margin: 4px 0 2px; }
+  h2 { font-size: 17px; margin: 28px 0 8px; }
+  p.lead { color: var(--dim); margin: 0 0 12px; }
+  .stage { position: relative; background:#000; border:1px solid var(--line); border-radius:6px; overflow:hidden; touch-action:none; }
+  canvas.view { display:block; width:100%; height:auto; image-rendering: pixelated; }
+  .tag { position:absolute; left:8px; top:8px; background:rgba(10,11,16,.82); border:1px solid #333848; border-radius:4px; padding:2px 8px; font-size:13px; pointer-events:none; }
+  .bossbar { position:absolute; left:50%; top:8px; transform:translateX(-50%); width:min(60%,360px); background:rgba(10,11,16,.85); border:1px solid #5a3a5a; border-radius:4px; padding:3px 8px 5px; font-size:12px; color:#e8c8e8; pointer-events:none; }
+  .bossbar[hidden] { display:none; }
+  .bossbar .hp { height:6px; background:#2a1a2a; border-radius:3px; margin-top:3px; overflow:hidden; }
+  .bossbar .hp i { display:block; height:100%; background:#c05050; }
+  .float { position:absolute; right:8px; bottom:8px; display:flex; gap:6px; }
+  .float button { border:1px solid #6a5a2a; border-radius:6px; background:rgba(40,32,14,.9); color:var(--acc); padding:8px 14px; font-weight:600; }
+  .float button[hidden] { display:none; }
+  .bar { display:flex; flex-wrap:wrap; gap:6px; margin: 10px 0 4px; }
+  .grp { display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  button { background:var(--panel); color:var(--text); border:0; border-right:1px solid var(--line); padding:8px 11px; font:inherit; font-size:14px; cursor:pointer; }
+  .grp button:last-child { border-right:0; }
+  button.on { background:#2a2414; color:var(--acc); }
+  .hint { color: var(--dim); font-size: 13px; margin: 2px 0 0; }
+  .legend { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:13px; color:#c2c6d0; margin-top:6px; }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:2px; vertical-align:-2px; margin-right:5px; }
+  .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:10px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 12px; }
+  .card h3 { margin:0 0 4px; font-size:15px; color:var(--acc); }
+  .card p, .card li { margin:0; color:#c2c6d0; font-size:14px; }
+  .card ul { margin:0; padding-left:18px; }
+  details { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px 12px; margin-top:10px; }
+  summary { cursor:pointer; color:var(--acc); }
+  details li, details p { font-size:14px; color:#c2c6d0; }
+  #seed { color: var(--dim); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Designtest: piraternas asteroidbas</h1>
+  <p class="lead">Slutbasen, borrad in i en asteroid. Berget är våning 1, en byggd bostadsdel ligger ovanpå som våning 2, och ledningstornet med bossen står högst upp som våning 3. Utsidan ritas från samma plan som insidan. Varje tryck på ”Ny bas” ger en ny bas. Inget av detta finns i spelet.</p>
+
+  <div class="stage" id="stage">
+    <canvas class="view" id="view" width="640" height="360"></canvas>
+    <div class="tag" id="tag">Utsidan</div>
+    <div class="bossbar" id="bossbar" hidden><span id="bossname">KAPTEN VESS · MECH</span> <span id="bossstate"></span><div class="hp"><i id="bosshp" style="width:100%"></i></div></div>
+    <div class="float"><button id="fire">Skjut</button><button id="up" hidden>▲ Upp</button><button id="down" hidden>▼ Ner</button></div>
+  </div>
+  <div class="bar">
+    <div class="grp" id="decks">
+      <button data-deck="-1" class="on">Utsidan</button><button data-deck="0">Våning 1</button><button data-deck="1">Våning 2</button><button data-deck="2">Våning 3</button>
+    </div>
+    <div class="grp" id="modes"><button data-mode="lockdown" class="on">Lockdown</button><button data-mode="alarm">Larm</button></div>
+    <div class="grp">
+      <button id="newbase">Ny bas</button><button id="tour" class="on">Rundtur</button><button id="overview">Hela våningen</button><button id="plan">Spelplan</button><button id="boss">Till bossen</button>
+    </div>
+  </div>
+  <p class="hint">Dator: WASD för att gå, musen siktar, klick eller mellanslag skjuter, U och N byter våning. Mobil: dra för att gå och tryck på Skjut. Skjut på röda tunnor, och på bossens pyloner för att ta ner hennes sköld. Bossen skadar inte dig i det här testet. <span id="seed"></span></p>
+  <div class="legend">
+    <span><i style="border:2px solid #e8c050"></i>Lågt skydd: stoppar skott, inte blickar</span>
+    <span><i style="border:2px solid #60d0ff"></i>Högt skydd: stoppar skott, blickar och ljus</span>
+    <span><i style="background:#c0402a"></i>Tunna som exploderar</span>
+    <span><i style="background:#e0b040"></i>Larmad dörr</span>
+    <span><i style="background:rgba(240,200,80,.55)"></i>Kamera</span>
+    <span><i style="background:rgba(255,70,50,.6)"></i>Turret</span>
+    <span><i style="background:#9ad0ff"></i>Vakternas rundor</span>
+  </div>
+
+  <h2>Hur basen är byggd</h2>
+  <div class="cards">
+    <div class="card"><h3>Våning 1 · Berget</h3><ul>
+      <li>Skitigt och industriellt, med råa bergväggar och varmt, gult ljus.</li>
+      <li>Tre vägar in: huvuddockan (bevakad hall), lastdockan (rakt in i lastgrottan) och en dold servicelucka som leder in i en mörk spricka.</li>
+      <li>Lastgrottan är det stora öppna rummet, med containrar, lådor och tunnor och flera vakter.</li>
+      <li>Runt om: reaktor, raffinaderi, bränsledepå, borrhall, kaserner, verkstad, förråd och kanonnästen som syns utanpå.</li>
+      <li>Tunnlar binder ihop rummen i ett nät med flera slingor. Smala sprickor är mörka smygvägar.</li>
+    </ul></div>
+    <div class="card"><h3>Våning 2 · Bostaden</h3><ul>
+      <li>Ljus, ren och städad: ljusa golv, trä och mattor, växter och fönster ut mot rymden.</li>
+      <li>Ett stort atrium i mitten med planteringar och soffor att ta skydd bakom.</li>
+      <li>Lounge, bar, mäss, gym, hytter, sjukrum och kaptenens egen svit.</li>
+      <li>En servicegång bakom väggarna, genom kök, tvätt och förråd, är smygvägen.</li>
+      <li>Skattvalvet ligger här bakom en larmad dörr.</li>
+      <li>Förslag: här är det tänt även i lockdown, eftersom piraterna bor här. De röda ljusen finns bara i hallarna. Det gör våningen svårare att smyga på och skiljer den från de andra.</li>
+    </ul></div>
+    <div class="card"><h3>Våning 3 · Tornet</h3><ul>
+      <li>Kallt och tekniskt, med blått ljus.</li>
+      <li>En ring av rum runt bossrummet: säkerhetskontroll med turret, serverhall, elcentral, vapenförråd, kaserner med mera.</li>
+      <li>Bossrummet har tre ingångar, en gångbro längs väggen och mainframen i mitten.</li>
+    </ul></div>
+    <div class="card"><h3>Tre vägar upp på varje våning</h3><ul>
+      <li><b>Hissen</b>, bevakad. Den högljudda vägen.</li>
+      <li><b>Trappan</b>, nås via sprickor eller servicegången. Den tysta vägen.</li>
+      <li><b>Stegen</b>, en genväg bakom en larmad dörr.</li>
+    </ul></div>
+    <div class="card"><h3>Skydd och tunnor</h3><ul>
+      <li><b>Lågt skydd</b> (lådor, bänkar, räcken, soffor) stoppar skott men inte blickar. Bra i strid, dåligt att gömma sig bakom.</li>
+      <li><b>Högt skydd</b> (containrar, pelare, skåp, tankar) stoppar allt. Man kan gömma sig helt bakom det men inte skjuta igenom det.</li>
+      <li>Öppna ytor har öar av skydd med några rutors mellanrum, och inga trånga flaskhalsar.</li>
+      <li>Tunnor som exploderar finns bara i lastgrottan, bränsledepån, raffinaderiet och borrhallen.</li>
+    </ul></div>
+    <div class="card"><h3>Bossen: kapten Vess i mech</h3><ul>
+      <li>Fas 1: tre pyloner håller hennes sköld uppe. Skjut sönder dem (Gunner) eller hacka dem (Engineer, snabbare). De laddar upp igen efter en stund.</li>
+      <li>Fas 2 (60 %): rustningen spricker och hon rusar fram. Lågt skydd hon går in i går sönder.</li>
+      <li>Fas 3 (25 %): hon kallar in drönare, och pylonerna slås på en sista gång.</li>
+      <li>Hennes svep varnas med en röd sikteslinje på golvet en sekund innan.</li>
+      <li>Engineer kan vända rummets turrets mot henne från mainframen, och elcentralen kan släcka rummet.</li>
+      <li>När hon faller tas basen över vid mainframen, som vanligt. Ingen sprängning, ingen flykt.</li>
+      <li>Faller laget gäller dagens regel: man teleporteras hem. Förslag: skadan på bossen och utslagna pyloner ligger kvar till nästa försök, så att man aldrig fastnar.</li>
+    </ul></div>
+  </div>
+
+  <details>
+    <summary>För agenten: hur generatorn fungerar</summary>
+    <ul>
+      <li><b>Samma rutnät för alla våningar</b> (80 × 80 rutor, mittpunkt i 40, 40). Hiss, trappa och stege ligger på samma rutor på båda våningarna de förbinder. Hela basen vrids en kvarts varv åt slumpat håll, så att vägarna in hamnar olika.</li>
+      <li><b>Våning 1:</b> berget är en brusig cirkel. Fasta delar placeras först (docker, lastgrotta som ett moln av cirklar, hall, länkar), sedan rummen genom slumpad placering inuti berget. Ett minsta uppspännande träd mellan rummen plus extra kanter ger tunnlar med slingor, tre rutor breda. Sprickor är skakiga gångar, två till tre rutor breda, som alltid når trappan och serviceluckan.</li>
+      <li><b>Våning 2 och 3:</b> ett fast skelett (atrium, korridorer, servicegång eller ringen runt bossrummet), och resten delas upp med BSP i rum mellan 5 och 11 rutor. Rumssorten väljs efter storlek och läge.</li>
+      <li><b>Väggar:</b> på kanterna mellan rutor. Byggda rum får tunna metallväggar, grottor och sprickor får bergkant och öppningar utan dörrar.</li>
+      <li><b>Kontroll:</b> varje bas testas när den skapas. Allt ska gå att nå, och varje våning ska ha alla tre vägarna upp. Annars görs en ny.</li>
+      <li><b>Utsidan</b> räknas ut punkt för punkt från samma rutnät: berget med skuggning, bostadsdelen med upplysta fönster där rummen har glas, tornet med en kupol över bossrummet, dockor och kanonnästen där de finns inne.</li>
+    </ul>
+  </details>
+</main>
+<script>
+'use strict';
+// ================================================================== basics
+const T = 16, W = 80, H = 80, WW = W * T, WH = H * T, OUT = -1, ROCK = -2, FREE = -3;
+const C = 40;
+const hash = (x, y, s = 0) => {
+  let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+};
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, w | 0); c.height = Math.max(1, h | 0); const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
+const rgb = (c, k = 1) => `rgb(${Math.max(0, Math.min(255, c[0] * k)) | 0},${Math.max(0, Math.min(255, c[1] * k)) | 0},${Math.max(0, Math.min(255, c[2] * k)) | 0})`;
+const hex = (s) => [parseInt(s.slice(1, 3), 16), parseInt(s.slice(3, 5), 16), parseInt(s.slice(5, 7), 16)];
+const shade = (s, k) => rgb(hex(s), k);
+const overlaps = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+let R = Math.random;
+function seeded(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const ri = (a, b) => a + Math.floor(R() * (b - a + 1));
+const pick = (l) => l[Math.floor(R() * l.length)];
+function shuffle(l) { for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; } return l; }
+
+// ================================================================== turning the whole base a quarter at a time
+let K = 0;
+const rp = (x, y) => { for (let k = 0; k < K; k++) [x, y] = [W - 1 - y, x]; return [x, y]; };
+const rr = (x0, y0, x1, y1) => { const [a, b] = rp(x0, y0), [c, d] = rp(x1, y1); return [Math.min(a, c), Math.min(b, d), Math.max(a, c), Math.max(b, d)]; };
+const rd = (dx, dy) => { for (let k = 0; k < K; k++) [dx, dy] = [-dy, dx]; return [dx, dy]; };
+
+function cham(x, y, x0, y0, x1, y1, c) {
+  if (x < x0 || x > x1 || y < y0 || y > y1) return false;
+  return Math.min(x - x0, x1 - x) + Math.min(y - y0, y1 - y) >= c;
+}
+const FOOT2 = (x, y) => cham(x, y, 14, 14, 65, 65, 9);
+const FOOT3 = (x, y) => cham(x, y, 22, 22, 57, 57, 5);
+// Ways between floors, in the frame before turning. The same tiles on both floors they join.
+const LINK_BASE = [
+  { key: 'L_MAIN', name: 'LIFT', kind: 'lift', r: [37, 51, 41, 54], decks: [0, 1], way: 'loud' },
+  { key: 'L_QUIET', name: 'STAIRS', kind: 'stairs', r: [22, 56, 24, 61], decks: [0, 1], way: 'quiet' },
+  { key: 'L_ALARM', name: 'LADDER', kind: 'ladder', r: [60, 22, 61, 23], decks: [0, 1], way: 'alarm' },
+  { key: 'T_MAIN', name: 'LIFT', kind: 'lift', r: [37, 24, 42, 26], decks: [1, 2], way: 'loud' },
+  { key: 'T_QUIET', name: 'STAIRS', kind: 'stairs', r: [52, 51, 54, 55], decks: [1, 2], way: 'quiet' },
+  { key: 'T_ALARM', name: 'LADDER', kind: 'ladder', r: [25, 40, 26, 41], decks: [1, 2], way: 'alarm' },
+];
+let LINKS = [];
+
+// ================================================================== a floor
+let D, decks = [];
+function newDeck(i) {
+  return { i, grid: new Int16Array(W * H).fill(OUT), rooms: [], doors: [], mask: new Uint8Array(WW * WH), wallRects: [], wallSegs: [], built: {} };
+}
+const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? OUT : D.grid[y * W + x]);
+const setT = (x, y, v) => { if (x >= 0 && y >= 0 && x < W && y < H) D.grid[y * W + x] = v; };
+function addRoom(name, kind, o = {}) {
+  const id = D.rooms.length;
+  D.rooms.push({ id, name, kind, open: !!o.open, glass: !!o.glass, tint: o.tint || '#9aa0b0', label: o.label !== false, dark: !!o.dark, x0: 99, y0: 99, x1: -1, y1: -1, n: 0 });
+  return id;
+}
+// Put a rectangle of tiles into a room. `only` says which tiles may be taken.
+function carve(id, x0, y0, x1, y1, only) {
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const v = at(x, y); if (only === undefined || only.includes(v)) setT(x, y, id); }
+}
+function bounds() {
+  for (const r of D.rooms) { r.x0 = 99; r.y0 = 99; r.x1 = -1; r.y1 = -1; r.n = 0; r.cx = 0; r.cy = 0; }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const v = at(x, y); if (v < 0) continue;
+    const r = D.rooms[v]; r.x0 = Math.min(r.x0, x); r.y0 = Math.min(r.y0, y); r.x1 = Math.max(r.x1, x); r.y1 = Math.max(r.y1, y); r.n++; r.cx += x; r.cy += y;
+  }
+  for (const r of D.rooms) if (r.n) { r.cx /= r.n; r.cy /= r.n; }
+}
+const door = (o, x, y, kind = 'slide') => { if (!D.doors.some((d) => d.o === o && Math.abs(d.x - x) + Math.abs(d.y - y) < 2)) D.doors.push({ o, x, y, kind, open: kind === 'arch' ? 1 : 0 }); };
+const doorAt = (o, x, y) => D.doors.find((d) => d.o === o && (o === 'v' ? d.x === x && (d.y === y || d.y === y - 1) : d.y === y && (d.x === x || d.x === x - 1)));
+const doorGeom = (d) => (d.o === 'v' ? { x: d.x * T, y: d.y * T, len: 2 * T, cx: d.x * T, cy: d.y * T + T } : { x: d.x * T, y: d.y * T, len: 2 * T, cx: d.x * T + T, cy: d.y * T });
+
+// The edges between two rooms, as runs of tiles. Returns [{o, at, from, to}] for edges where a is on one side
+// and b on the other.
+function contacts(a, b) {
+  const runs = [];
+  for (let x = 1; x < W; x++) {
+    let run = null;
+    for (let y = 0; y < H; y++) {
+      const p = at(x - 1, y), q = at(x, y);
+      const hit = (p === a && q === b) || (p === b && q === a);
+      if (hit) { if (run) run.to = y; else run = { o: 'v', at: x, from: y, to: y }; }
+      else if (run) { runs.push(run); run = null; }
+    }
+    if (run) runs.push(run);
+  }
+  for (let y = 1; y < H; y++) {
+    let run = null;
+    for (let x = 0; x < W; x++) {
+      const p = at(x, y - 1), q = at(x, y);
+      const hit = (p === a && q === b) || (p === b && q === a);
+      if (hit) { if (run) run.to = x; else run = { o: 'h', at: y, from: x, to: x }; }
+      else if (run) { runs.push(run); run = null; }
+    }
+    if (run) runs.push(run);
+  }
+  return runs;
+}
+// A door in the middle of the longest run between two rooms.
+function doorBetween(a, b, kind = 'slide', where = 0.5) {
+  const runs = contacts(a, b).filter((r) => r.to - r.from >= 1);
+  if (!runs.length) return false;
+  const run = runs.reduce((p, q) => (q.to - q.from > p.to - p.from ? q : p));
+  const len = run.to - run.from + 1;
+  const s = run.from + Math.max(0, Math.min(len - 2, Math.floor((len - 2) * where)));
+  if (run.o === 'v') door('v', run.at, s, kind); else door('h', s, run.at, kind);
+  return true;
+}
+// A door from a lift, stairs or ladder into a room: on the side where the room is deepest, so it never opens onto
+// a strip too narrow to walk.
+function linkDoor(id, o, kind) {
+  const runs = contacts(id, o).filter((r) => r.to - r.from >= 1);
+  let best = null;
+  for (const run of runs) {
+    const mid = Math.floor((run.from + run.to) / 2);
+    let depth = 0;
+    if (run.o === 'v') { const dir = at(run.at - 1, mid) === id ? 1 : -1; for (let k = 0; k < 4; k++) if (at(dir > 0 ? run.at + k : run.at - 1 - k, mid) === o) depth++; else break; }
+    else { const dir = at(mid, run.at - 1) === id ? 1 : -1; for (let k = 0; k < 4; k++) if (at(mid, dir > 0 ? run.at + k : run.at - 1 - k) === o) depth++; else break; }
+    const score = depth * 10 + (run.to - run.from);
+    if (!best || score > best.score) best = { run, score };
+  }
+  if (!best || best.score < 20) return false;
+  const run = best.run, len = run.to - run.from + 1, st = run.from + Math.floor((len - 2) / 2);
+  run.o === 'v' ? door('v', run.at, st, kind) : door('h', st, run.at, kind);
+  return true;
+}
+// Make sure every room can be reached on the plan: a room that cannot gets a door to a neighbour that can.
+function repairDoors(startId) {
+  for (let pass = 0; pass < 40; pass++) {
+    const pairs = neighbours();
+    const linked = (a, b) => {
+      if (edgeType(a, b) === 0) return true;
+      return D.doors.some((d) => d.kind !== 'hatch' && touches(d, a, b));
+    };
+    const seen = new Set([startId]), q = [startId];
+    for (let k = 0; k < q.length; k++) for (const p of pairs) {
+      if (p.a !== q[k] && p.b !== q[k]) continue;
+      const o = p.a === q[k] ? p.b : p.a;
+      if (!seen.has(o) && linked(p.a, p.b)) { seen.add(o); q.push(o); }
+    }
+    const lost = D.rooms.filter((r) => r.n && !seen.has(r.id));
+    if (!lost.length) return;
+    let fixed = false;
+    for (const r of lost) {
+      const cand = pairs.filter((p) => (p.a === r.id || p.b === r.id) && seen.has(p.a === r.id ? p.b : p.a) && p.n >= 2).sort((x, y) => y.n - x.n);
+      for (const p of cand) {
+        const o = p.a === r.id ? p.b : p.a, O = D.rooms[o];
+        const kind = r.kind === 'treasury' || O.kind === 'treasury' || r.kind === 'ladder' ? 'alarm' : r.kind === 'lift' ? 'lift' : 'slide';
+        if (['lift', 'stairs', 'ladder'].includes(r.kind) ? linkDoor(r.id, o, kind) || doorBetween(r.id, o, kind) : doorBetween(r.id, o, kind)) { fixed = true; break; }
+      }
+      if (fixed) break;
+    }
+    if (!fixed) return;
+  }
+}
+// Every pair of rooms that touch.
+function neighbours() {
+  const pairs = new Map();
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const a = at(x, y); if (a < 0) continue;
+    for (const [dx, dy] of [[1, 0], [0, 1]]) { const b = at(x + dx, y + dy); if (b >= 0 && b !== a) { const k = Math.min(a, b) + ',' + Math.max(a, b); pairs.set(k, (pairs.get(k) || 0) + 1); } }
+  }
+  return [...pairs.entries()].map(([k, n]) => { const [a, b] = k.split(',').map(Number); return { a, b, n }; });
+}
+
+// ================================================================== floor 1: the rock
+function gen1() {
+  D = newDeck(0);
+  const ph = [R() * 6.28, R() * 6.28, R() * 6.28];
+  const rockR = (t) => 34.5 + 1.8 * Math.sin(3 * t + ph[0]) + 1.3 * Math.sin(5 * t + ph[1]) + 0.8 * Math.sin(11 * t + ph[2]);
+  D.rockR = rockR;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const dx = x + 0.5 - C, dy = y + 0.5 - C;
+    if (Math.hypot(dx, dy) < rockR(Math.atan2(dy, dx))) setT(x, y, ROCK);
+  }
+  const inRock = (x, y, m = 0) => { const dx = x + 0.5 - C, dy = y + 0.5 - C; return Math.hypot(dx, dy) < rockR(Math.atan2(dy, dx)) - m; };
+  const nodes = [];
+  // the ways up
+  for (const l of LINKS.filter((l) => l.decks[0] === 0)) {
+    const id = addRoom(l.name, l.kind, { tint: '#d9a441', label: false });
+    carve(id, ...l.r);
+    l.room0 = id;
+    nodes.push({ id, x: (l.r[0] + l.r[2]) / 2, y: (l.r[1] + l.r[3]) / 2, link: l });
+  }
+  // docks: an airlock outside the rock and a tunnel into it
+  const DOCKS = [
+    { name: 'MAIN DOCK', dir: [0, 1], off: 0, w: 4, L: 5, kind: 'main' },
+    { name: 'CARGO DOCK', dir: [1, 0], off: 2, w: 4, L: 3, kind: 'cargo' },
+    { name: 'HATCH', dir: [-1, 0], off: -7, w: 2, L: 3, kind: 'hatch' },
+  ];
+  D.docks = [];
+  for (const s of DOCKS) {
+    const [dx, dy] = rd(...s.dir), [qx, qy] = [-dy, dx];
+    const px = C + qx * s.off - (dx < 0 ? 1 : 0) * 0, py = C + qy * s.off;
+    // the airlock starts where the rock has ended under the whole width of the dock
+    let e = 0;
+    for (let k = -s.w / 2; k < s.w / 2; k++) { let t = 0; while (inRock(Math.floor(px + dx * t + qx * k), Math.floor(py + dy * t + qy * k))) t++; e = Math.max(e, t); }
+    const cells = (t0, t1) => { const out = []; for (let t = t0; t <= t1; t++) for (let k = -s.w / 2; k < s.w / 2; k++) out.push([Math.floor(px + dx * t + qx * k), Math.floor(py + dy * t + qy * k)]); return out; };
+    const lock = addRoom(s.kind === 'hatch' ? 'HATCH' : 'AIRLOCK', 'airlock', { tint: '#d9a441', label: false });
+    for (const [x, y] of cells(e, e + (s.kind === 'hatch' ? 1 : 2))) setT(x, y, lock);
+    const tun = addRoom(s.name, s.kind === 'hatch' ? 'fissure' : 'dock', { tint: '#8aa0c0', open: s.kind === 'hatch', dark: s.kind === 'hatch', label: s.kind !== 'hatch' });
+    for (const [x, y] of cells(e - s.L, e - 1)) if (at(x, y) === ROCK || at(x, y) === OUT) setT(x, y, tun);
+    D.docks.push({ ...s, dx, dy, qx, qy, px, py, e, lock, tun, inner: [px + dx * (e - s.L), py + dy * (e - s.L)] });
+  }
+  const [mainD, cargoD, hatchD] = D.docks;
+  // the cargo hold: a cave in the rock, reached straight from the cargo dock
+  const hold = addRoom('CARGO HOLD', 'cave', { open: true, tint: '#c9a24a' });
+  const hx = C + cargoD.dx * 14 + cargoD.qx * 2, hy = C + cargoD.dy * 14 + cargoD.qy * 2;
+  const blobs = [[hx, hy, 8]];
+  for (let k = 0; k < 9; k++) blobs.push([hx + (R() - 0.5) * 18 * (cargoD.dx ? 0.6 : 1), hy + (R() - 0.5) * 18 * (cargoD.dy ? 0.6 : 1), 4 + R() * 3.5]);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (at(x, y) !== ROCK || !inRock(x, y, 3)) continue;
+    if (blobs.some(([bx, by, br]) => Math.hypot(x + 0.5 - bx, y + 0.5 - by) < br)) setT(x, y, hold);
+  }
+  for (let t = cargoD.e - cargoD.L; t > 0; t--) {
+    let reached = false;
+    for (let k = -2; k < 2; k++) { const x = Math.floor(cargoD.px + cargoD.dx * t + cargoD.qx * k), y = Math.floor(cargoD.py + cargoD.dy * t + cargoD.qy * k); if (at(x, y) === hold) reached = true; if (at(x, y) === ROCK) setT(x, y, hold); }
+    if (reached) break;
+  }
+  nodes.push({ id: hold, x: hx, y: hy, big: true });
+  // the hall inside the main dock: guarded, the loud way in
+  const hall = addRoom('DOCK HALL', 'hall', { tint: '#c98a3a' });
+  {
+    const [ix, iy] = mainD.inner;
+    const cx = ix - mainD.dx * 4, cy = iy - mainD.dy * 4;
+    const hw = mainD.dx ? 4 : 7, hh = mainD.dy ? 4 : 7;
+    carve(hall, Math.round(cx - hw), Math.round(cy - hh), Math.round(cx + hw - 1), Math.round(cy + hh - 1), [ROCK]);
+    nodes.push({ id: hall, x: cx, y: cy, big: true });
+  }
+  // rooms placed in the rock where they fit
+  const SPECS = [
+    ['REACTOR', 'power', 10, 10], ['REFINERY', 'refinery', 12, 9], ['FUEL DEPOT', 'fuel', 9, 8], ['BARRACKS', 'barracks', 10, 8], ['DRILL BAY', 'drill', 11, 9],
+    ['WORKSHOP', 'workshop', 9, 7], ['STORES', 'store', 8, 7], ['PUMPS', 'tanks', 8, 7], ['MESS', 'messd', 9, 7],
+  ];
+  const free = (x0, y0, x1, y1, m) => { for (let y = y0 - m; y <= y1 + m; y++) for (let x = x0 - m; x <= x1 + m; x++) if (at(x, y) !== ROCK || !inRock(x, y, 2)) return false; return true; };
+  for (const [name, kind, w0, h0] of SPECS) {
+    for (let k = 0; k < 500; k++) {
+      const [w, h] = R() < 0.5 ? [w0, h0] : [h0, w0];
+      const a = R() * 6.28, d = 6 + R() * 22;
+      const x0 = Math.round(C + Math.cos(a) * d - w / 2), y0 = Math.round(C + Math.sin(a) * d - h / 2);
+      if (!free(x0, y0, x0 + w - 1, y0 + h - 1, 2)) continue;
+      const id = addRoom(name, kind, { tint: '#c98a3a' });
+      carve(id, x0, y0, x0 + w - 1, y0 + h - 1);
+      nodes.push({ id, x: x0 + w / 2, y: y0 + h / 2 });
+      break;
+    }
+  }
+  // gun nests at the edge of the rock: the turrets seen from outside
+  D.guns = [];
+  for (const base of [-1.1, 2.4]) {
+    const a = base + K * Math.PI / 2;
+    for (let k = 0; k < 60; k++) {
+      const aa = a + (R() - 0.5) * 0.6, d = rockR(aa) - 5;
+      const x0 = Math.round(C + Math.cos(aa) * d - 2.5), y0 = Math.round(C + Math.sin(aa) * d - 2.5);
+      if (!free(x0, y0, x0 + 4, y0 + 4, 1)) continue;
+      const id = addRoom('GUN NEST', 'gun', { tint: '#d06a2a' });
+      carve(id, x0, y0, x0 + 4, y0 + 4);
+      nodes.push({ id, x: x0 + 2.5, y: y0 + 2.5 });
+      D.guns.push({ x: x0 + 2.5, y: y0 + 2.5, a: aa });
+      break;
+    }
+  }
+  // tunnels: a tree between all places, plus a few more for loops
+  const tun = addRoom('TUNNELS', 'corridor', { tint: '#8a90a0', label: false });
+  const fis = addRoom('FISSURE', 'fissure', { open: true, dark: true, tint: '#7a6a5a', label: false });
+  const loud = nodes.filter((n) => !(n.link && n.link.way === 'quiet'));
+  const inTree = [loud[0]], edges = [];
+  const rest = loud.slice(1);
+  while (rest.length) {
+    let best = null;
+    for (const a of inTree) for (const b of rest) { const d = Math.hypot(a.x - b.x, a.y - b.y); if (!best || d < best.d) best = { a, b, d }; }
+    edges.push([best.a, best.b]); inTree.push(best.b); rest.splice(rest.indexOf(best.b), 1);
+  }
+  for (const a of loud) {
+    const others = loud.filter((b) => b !== a && !edges.some(([p, q]) => (p === a && q === b) || (p === b && q === a))).sort((p, q) => Math.hypot(p.x - a.x, p.y - a.y) - Math.hypot(q.x - a.x, q.y - a.y));
+    if (others[0] && R() < 0.45 && Math.hypot(others[0].x - a.x, others[0].y - a.y) < 24) edges.push([a, others[0]]);
+  }
+  for (const [a, b] of edges) tunnel(a, b, tun);
+  // fissures: the quiet way, from the hatch and to the stairs, and a few more
+  const quiet = nodes.find((n) => n.link && n.link.way === 'quiet');
+  // a small cave where the hatch comes in, so the cracks always meet it
+  const hatchNode = { id: hatchD.tun, x: hatchD.inner[0] - hatchD.dx * 2 - hatchD.qx * 0.5, y: hatchD.inner[1] - hatchD.dy * 2 - hatchD.qy * 0.5 };
+  for (let j = -4; j <= 4; j++) for (let i = -4; i <= 4; i++) { const X = Math.floor(hatchNode.x + i), Y = Math.floor(hatchNode.y + j); if (Math.hypot(X + 0.5 - hatchNode.x, Y + 0.5 - hatchNode.y) < 2.8 && at(X, Y) === ROCK) setT(X, Y, hatchD.tun); }
+  const near = (p, list, n) => list.filter((q) => q !== p).sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)).slice(0, n);
+  const crackTo = [];
+  for (const q of near(quiet, loud, 2)) crackTo.push([quiet, q]);
+  crackTo.push([hatchNode, near(hatchNode, loud, 1)[0]]);
+  crackTo.push([hatchNode, quiet]);
+  for (let k = 0; k < 2; k++) { const a = pick(loud), b = near(a, loud, 3)[2]; if (b) crackTo.push([a, b]); }
+  for (const [a, b] of crackTo) crack(a, b, fis);
+  // the main dock tunnel and the hall are one way: make sure they meet
+  tunnel({ x: mainD.inner[0], y: mainD.inner[1] }, nodes.find((n) => n.id === hall), tun);
+  bounds();
+  // doors
+  for (const s of D.docks) {
+    // outer hatch and pressure door
+    const outer = s.kind === 'hatch' ? s.e + 2 : s.e + 3;
+    dockDoor(s, outer, 'hatch'); dockDoor(s, s.e, 'pressure');
+  }
+  for (const { a, b, n } of neighbours()) {
+    const A = D.rooms[a], B = D.rooms[b];
+    if (A.open || B.open || n < 2) continue;
+    if (D.doors.some((d) => (d.kind === 'hatch' || d.kind === 'pressure') && touches(d, a, b))) continue;
+    if (A.kind === 'airlock' || B.kind === 'airlock') continue;
+    let kind = 'slide';
+    if (A.kind === 'ladder' || B.kind === 'ladder') kind = 'alarm';
+    else if (A.kind === 'lift' || B.kind === 'lift') kind = 'lift';
+    else if (A.kind === 'dock' || B.kind === 'dock') kind = 'pressure';
+    if (A.kind === 'corridor' || B.kind === 'corridor') {
+      const runs = contacts(a, b).filter((q) => q.to - q.from >= 1);
+      for (const run of runs) { const len = run.to - run.from + 1, st = run.from + Math.floor((len - 2) / 2); run.o === 'v' ? door('v', run.at, st, kind) : door('h', st, run.at, kind); }
+    } else doorBetween(a, b, kind);
+  }
+  repairDoors(D.docks[0].tun);
+  return D;
+}
+function touches(d, a, b) {
+  const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]];
+  const ids = g.map(([x, y]) => at(x, y));
+  return ids.includes(a) && ids.includes(b);
+}
+function dockDoor(s, t, kind) {
+  // the edge between step t-1 and t along the dock, across its middle two tiles
+  const x1 = Math.floor(s.px + s.dx * t - (s.dx ? 0 : 0)), y1 = Math.floor(s.py + s.dy * t);
+  if (s.dx === 0) { // vertical dock: an 'h' door
+    const x = Math.min(Math.floor(s.px + s.qx * -1), Math.floor(s.px));
+    const y = s.dy > 0 ? Math.floor(s.py) + t : Math.floor(s.py) - t + 1;
+    door('h', x, y, kind);
+  } else {
+    const y = Math.min(Math.floor(s.py + s.qy * -1), Math.floor(s.py));
+    const x = s.dx > 0 ? Math.floor(s.px) + t : Math.floor(s.px) - t + 1;
+    door('v', x, y, kind);
+  }
+  void x1; void y1;
+}
+// A tunnel three tiles wide, in an L, through rock only.
+function tunnel(a, b, id) {
+  let x = Math.round(a.x), y = Math.round(a.y);
+  const tx = Math.round(b.x), ty = Math.round(b.y);
+  const xFirst = R() < 0.5;
+  const dig = (cx, cy) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (at(cx + i, cy + j) === ROCK) setT(cx + i, cy + j, id); };
+  const goX = () => { while (x !== tx) { x += Math.sign(tx - x); dig(x, y); } };
+  const goY = () => { while (y !== ty) { y += Math.sign(ty - y); dig(x, y); } };
+  dig(x, y);
+  if (xFirst) { goX(); goY(); } else { goY(); goX(); }
+}
+// A crack: a shaky path two or three tiles wide.
+function crack(a, b, id) {
+  let x = a.x, y = a.y;
+  for (let k = 0; k < 200; k++) {
+    const dx = b.x - x, dy = b.y - y, d = Math.hypot(dx, dy);
+    if (d < 1.5) break;
+    x += dx / d + (R() - 0.5) * 0.9; y += dy / d + (R() - 0.5) * 0.9;
+    // wide where it starts and ends, so it always joins what it leads to
+    const r = k < 4 || d < 5 ? 2.2 : R() < 0.3 ? 1.9 : 1.5;
+    for (let j = -2; j <= 2; j++) for (let i = -2; i <= 2; i++) if (Math.hypot(i, j) <= r) { const X = Math.floor(x + i), Y = Math.floor(y + j); if (at(X, Y) === ROCK) setT(X, Y, id); }
+  }
+}
+
+// ================================================================== floor 2: where the pirates live
+function bsp(x0, y0, x1, y1, out, min = 5, max = 11) {
+  const w = x1 - x0 + 1, h = y1 - y0 + 1;
+  if (w <= max && h <= max) { out.push([x0, y0, x1, y1]); return; }
+  if (w >= h) { const s = x0 + ri(min, w - min); bsp(x0, y0, s - 1, y1, out, min, max); bsp(s, y0, x1, y1, out, min, max); }
+  else { const s = y0 + ri(min, h - min); bsp(x0, y0, x1, s - 1, out, min, max); bsp(x0, s, x1, y1, out, min, max); }
+}
+function fillLeftovers() {
+  // tiles no room took join the room next to them
+  for (let pass = 0; pass < 6; pass++) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (at(x, y) !== FREE) continue;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const v = at(x + dx, y + dy); if (v >= 0 && !['corridor', 'service', 'boss', 'lift', 'stairs', 'ladder', 'atrium'].includes(D.rooms[v].kind)) { setT(x, y, v); break; } }
+  }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (at(x, y) === FREE) setT(x, y, D.fillId);
+}
+function gen2() {
+  D = newDeck(1);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (FOOT2(x, y)) setT(x, y, FREE);
+  const own = (r) => rr(...r);
+  const atrium = addRoom('ATRIUM', 'atrium', { tint: '#c9a06a' });
+  carve(atrium, ...own([30, 30, 49, 47]), [FREE]);
+  const cN = addRoom('PROMENADE', 'corridor', { tint: '#8aa0c0', label: false });
+  carve(cN, ...own([14, 27, 65, 29]), [FREE]);
+  const cS = addRoom('HALL', 'corridor', { tint: '#8aa0c0', label: false });
+  carve(cS, ...own([14, 48, 65, 50]), [FREE]);
+  const sv = addRoom('SERVICE', 'service', { tint: '#8a90a0', label: false });
+  carve(sv, ...own([14, 62, 65, 65]), [FREE]); carve(sv, ...own([52, 56, 54, 61]), [FREE]);
+  const side = R();
+  const regions = [own([14, 14, 65, 26])];
+  if (side < 0.65) { const c = addRoom('HALL', 'corridor', { tint: '#8aa0c0', label: false }); carve(c, ...own([18, 30, 20, 47]), [FREE]); regions.push(own([14, 30, 17, 47]), own([21, 30, 29, 47])); }
+  else regions.push(own([14, 30, 29, 47]));
+  if (side > 0.35) { const c = addRoom('HALL', 'corridor', { tint: '#8aa0c0', label: false }); carve(c, ...own([59, 30, 61, 47]), [FREE]); regions.push(own([62, 30, 65, 47]), own([50, 30, 58, 47])); }
+  else regions.push(own([50, 30, 65, 47]));
+  const s1 = own([14, 51, 65, 61]);
+  // links first, so the rooms are cut round them
+  for (const l of LINKS.filter((l) => l.decks.includes(1))) {
+    const id = addRoom(l.name, l.kind, { tint: '#d9a441', label: false });
+    carve(id, ...l.r);
+    l[l.decks[0] === 1 ? 'room0' : 'room1'] = id;
+    l.d2 = id;
+  }
+  // rooms
+  const leaves = [], service = [];
+  for (const r of regions) bsp(...r, leaves);
+  bsp(...s1, service, 6, 15);
+  const rooms = [];
+  for (const [x0, y0, x1, y1] of [...leaves.map((l) => [...l, 0]), ...service.map((l) => [...l, 1])]) {
+    let n = 0; for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (at(x, y) === FREE) n++;
+    if (n < 12) continue;
+    const id = addRoom('ROOM', 'quarters', { tint: '#8a7ab0' });
+    carve(id, x0, y0, x1, y1, [FREE]);
+    rooms.push({ id, n, svc: arguments.length >= 0 && service.some((s) => s[0] === x0 && s[1] === y0) });
+  }
+  D.fillId = rooms.length ? rooms[0].id : atrium;
+  fillLeftovers();
+  bounds();
+  // what each room is for
+  const glassy = (id) => { const r = D.rooms[id]; for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (at(x, y) === id && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(x + dx, y + dy) === OUT)) return true; return false; };
+  const svcRooms = rooms.filter((r) => r.svc), liveRooms = rooms.filter((r) => !r.svc).sort((a, b) => b.n - a.n);
+  const SVC = ['KITCHEN', ...shuffle(['LAUNDRY', 'PANTRY', 'BOILERS', 'STORES', 'FREEZER', 'WORKROOM'])];
+  const SVK = { KITCHEN: 'kitchen', LAUNDRY: 'laundry', PANTRY: 'store', STORES: 'store', BOILERS: 'tanks', FREEZER: 'store', WORKROOM: 'workshop' };
+  svcRooms.sort((a, b) => b.n - a.n).forEach((r, i) => { const nm = SVC[i % SVC.length]; Object.assign(D.rooms[r.id], { name: nm, kind: SVK[nm], tint: '#c98a3a' }); });
+  const LIVE = [['LOUNGE', 'lounge', '#c9a06a'], ['BAR', 'bar', '#c9a06a'], ['MESS', 'mess', '#c9a06a'], ['CAPTAIN', 'suite', '#d9a441'], ['GYM', 'gym', '#7ac060'], ['MEDBAY', 'med', '#9ad0d8']];
+  const outer = liveRooms.filter((r) => glassy(r.id));
+  const used = new Set();
+  for (const [nm, kind, tint] of LIVE) {
+    const pool = ['LOUNGE', 'BAR', 'CAPTAIN'].includes(nm) && outer.some((r) => !used.has(r)) ? outer : liveRooms;
+    const r = pool.find((q) => !used.has(q)); if (!r) break;
+    used.add(r); Object.assign(D.rooms[r.id], { name: nm, kind, tint });
+  }
+  // the treasury: a small room at the edge, behind an alarmed door
+  const small = liveRooms.filter((r) => !used.has(r)).sort((a, b) => a.n - b.n);
+  if (small[0]) { used.add(small[0]); Object.assign(D.rooms[small[0].id], { name: 'TREASURY', kind: 'treasury', tint: '#ffb347' }); }
+  const EXTRA = [['CABINS', 'quarters', '#8a7ab0'], ['CABINS', 'quarters', '#8a7ab0'], ['WASH', 'wash', '#9ad0d8'], ['GAMES', 'games', '#c9a06a'], ['CABINS', 'quarters', '#8a7ab0'], ['STUDY', 'study', '#c9a06a'], ['CABINS', 'quarters', '#8a7ab0'], ['WASH', 'wash', '#9ad0d8']];
+  liveRooms.filter((r) => !used.has(r)).forEach((r, i) => { const [name, kind, tint] = i < EXTRA.length ? EXTRA[i] : EXTRA[i % 2]; Object.assign(D.rooms[r.id], { name, kind, tint }); });
+  for (const r of D.rooms) if (['lounge', 'bar', 'suite', 'quarters', 'gym', 'mess'].includes(r.kind)) r.glass = true;
+  // doors
+  const corrs = D.rooms.filter((r) => r.kind === 'corridor' || r.kind === 'service').map((r) => r.id);
+  const pairs = neighbours();
+  const linked = new Set();
+  for (const r of D.rooms) {
+    if (['corridor', 'service', 'atrium', 'lift', 'stairs', 'ladder'].includes(r.kind)) continue;
+    const mine = pairs.filter((p) => (p.a === r.id || p.b === r.id) && corrs.includes(p.a === r.id ? p.b : p.a) && p.n >= 2).sort((p, q) => q.n - p.n);
+    const svcRoom = svcRooms.some((s) => s.id === r.id);
+    const take = svcRoom ? mine.slice(0, 2) : mine.slice(0, 1);
+    for (const p of take) { doorBetween(p.a, p.b, r.kind === 'treasury' ? 'alarm' : 'slide', 0.3 + R() * 0.4); linked.add(r.id); }
+  }
+  // rooms with no hall get a door to a neighbour; some others get one too, for more ways round
+  for (const p of shuffle(pairs.slice())) {
+    const A = D.rooms[p.a], B = D.rooms[p.b];
+    const plain = (X) => !['corridor', 'service', 'atrium', 'lift', 'stairs', 'ladder'].includes(X.kind);
+    if (!plain(A) || !plain(B) || p.n < 2) continue;
+    const vault = A.kind === 'treasury' || B.kind === 'treasury';
+    if (vault && linked.has(A.kind === 'treasury' ? p.a : p.b)) continue;
+    if (!linked.has(p.a) || !linked.has(p.b) || (!vault && R() < 0.3)) { doorBetween(p.a, p.b, vault ? 'alarm' : 'slide'); linked.add(p.a); linked.add(p.b); }
+  }
+  // the atrium opens wide onto the halls
+  for (const c of corrs) for (const run of contacts(atrium, c)) {
+    const len = run.to - run.from + 1; if (len < 4) continue;
+    for (const f of [0.25, 0.7]) { const s = run.from + Math.floor((len - 2) * f); run.o === 'v' ? door('v', run.at, s, 'arch') : door('h', s, run.at, 'arch'); }
+  }
+  // the ways up and down
+  for (const l of LINKS.filter((l) => l.decks.includes(1))) {
+    const id = l.d2;
+    const touching = pairs.filter((p) => (p.a === id || p.b === id) && p.n >= 2).map((p) => ({ o: p.a === id ? p.b : p.a, n: p.n }));
+    const kind = l.kind === 'ladder' ? 'alarm' : l.kind === 'lift' ? 'lift' : 'slide';
+    // prefer a hall; the quiet stairs go to the service corridor
+    const pref = touching.sort((p, q) => (corrs.includes(q.o) ? 10 : 0) + (D.rooms[q.o].kind === 'service' ? 20 : 0) + q.n - ((corrs.includes(p.o) ? 10 : 0) + (D.rooms[p.o].kind === 'service' ? 20 : 0) + p.n));
+    for (const p of pref) if (linkDoor(id, p.o, kind)) break;
+  }
+  repairDoors(cS);
+  return D;
+}
+
+// ================================================================== floor 3: the tower and the boss
+function gen3() {
+  D = newDeck(2);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (FOOT3(x, y)) setT(x, y, FREE);
+  const boss = addRoom('THE HALL OF VESS', 'boss', { tint: '#d070d0' });
+  carve(boss, 29, 29, 50, 50, [FREE]);
+  for (const l of LINKS.filter((l) => l.decks.includes(2))) { const id = addRoom(l.name, l.kind, { tint: '#d9a441', label: false }); carve(id, ...l.r); l.d3 = id; }
+  const bands = [[22, 22, 57, 28, 'x'], [22, 51, 57, 57, 'x'], [22, 29, 28, 50, 'y'], [51, 29, 57, 50, 'y']];
+  const ring = [];
+  for (const [x0, y0, x1, y1, ax] of bands) {
+    const len = ax === 'x' ? x1 - x0 + 1 : y1 - y0 + 1;
+    const n = len > 30 ? 3 : 2;
+    let s = 0;
+    for (let k = 0; k < n; k++) {
+      const e = k === n - 1 ? len - 1 : s + Math.floor(len / n) + ri(-2, 2) - 1;
+      const id = addRoom('ROOM', 'control', { tint: '#6fb8ff' });
+      if (ax === 'x') carve(id, x0 + s, y0, x0 + e, y1, [FREE]); else carve(id, x0, y0 + s, x1, y0 + e, [FREE]);
+      ring.push(id); s = e + 1;
+    }
+  }
+  D.fillId = ring[0];
+  fillLeftovers();
+  bounds();
+  // names
+  const roomOf = (l) => { const [x0, y0, x1, y1] = l.r; const ids = new Map(); for (let y = y0 - 1; y <= y1 + 1; y++) for (let x = x0 - 1; x <= x1 + 1; x++) { const v = at(x, y); if (v >= 0 && ring.includes(v)) ids.set(v, (ids.get(v) || 0) + 1); } return [...ids.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]; };
+  const named = new Set();
+  const nameIt = (id, name, kind, tint) => { if (id === undefined || named.has(id)) return; named.add(id); Object.assign(D.rooms[id], { name, kind, tint }); };
+  const lk = (key) => LINKS.find((l) => l.key === key);
+  nameIt(roomOf(lk('T_MAIN')), 'SECURITY', 'security', '#b0b8c8');
+  nameIt(roomOf(lk('T_QUIET')), 'POWER', 'breaker', '#d9a441');
+  nameIt(roomOf(lk('T_ALARM')), 'SERVERS', 'server', '#5fd1c0');
+  const POOL = shuffle([['ARMORY', 'armory', '#d98a3a'], ['COMMS', 'comms', '#6fb8ff'], ['BARRACKS', 'barracks', '#b0b8c8'], ['COOLING', 'tanks', '#5fae9a'], ['VIEW', 'view', '#6fb8ff'], ['CONTROL', 'control', '#6fb8ff'], ['ARCHIVE', 'store', '#9a8a6a']]);
+  for (const id of ring) if (!named.has(id)) { const p = POOL.pop() || ['CONTROL', 'control', '#6fb8ff']; nameIt(id, ...p); }
+  for (const id of ring) if (D.rooms[id].kind === 'view') D.rooms[id].glass = true;
+  // doors round the ring
+  const pairs = neighbours();
+  for (const p of pairs) if (ring.includes(p.a) && ring.includes(p.b) && p.n >= 2) doorBetween(p.a, p.b, 'slide', 0.3 + R() * 0.4);
+  // three ways into the boss room, from three of its four sides
+  const sides = shuffle([0, 1, 2, 3]).slice(0, 3);
+  for (const s of sides) {
+    const cand = ring.map((id) => ({ id, runs: contacts(boss, id).filter((r) => (s < 2 ? r.o === 'h' : r.o === 'v') && (s === 0 ? r.at === 29 : s === 1 ? r.at === 51 : s === 2 ? r.at === 29 : r.at === 51)) })).filter((c) => c.runs.length).sort((a, b) => (b.runs[0].to - b.runs[0].from) - (a.runs[0].to - a.runs[0].from));
+    if (!cand[0]) continue;
+    const run = cand[0].runs[0], len = run.to - run.from + 1;
+    const st = run.from + Math.floor((len - 2) / 2);
+    run.o === 'v' ? door('v', run.at, st, 'pressure') : door('h', st, run.at, 'pressure');
+  }
+  for (const l of LINKS.filter((l) => l.decks.includes(2))) {
+    const id = l.d3, o = roomOf(l);
+    const kind = l.kind === 'ladder' ? 'alarm' : l.kind === 'lift' ? 'lift' : 'slide';
+    const around = neighbours().filter((p) => (p.a === id || p.b === id) && p.n >= 2).map((p) => (p.a === id ? p.b : p.a)).filter((q) => q !== boss);
+    for (const q of [o, ...around]) if (q !== undefined && linkDoor(id, q, kind)) break;
+  }
+  repairDoors(LINKS.find((l) => l.key === 'T_MAIN').d3);
+  return D;
+}
+
+// ================================================================== walls
+function maskRect(x, y, w, h, t) {
+  for (let j = Math.max(0, y | 0); j < Math.min(WH, (y + h) | 0); j++)
+    for (let i = Math.max(0, x | 0); i < Math.min(WW, (x + w) | 0); i++) if (t > D.mask[j * WW + i] || t === 3) D.mask[j * WW + i] = t;
+}
+// 0 none, 1 inner wall, 2 hull, 4 glass, 5 rock edge
+function edgeType(a, b) {
+  if (a === b) return 0;
+  if (a < 0 && b < 0) return 0;
+  if (a < 0 || b < 0) { const r = D.rooms[a < 0 ? b : a], o = a < 0 ? a : b; if (o === ROCK) return r.open ? 5 : 2; return r.glass ? 4 : 2; }
+  if (D.rooms[a].open || D.rooms[b].open) return 0;
+  const flow = (k) => k === 'corridor' || k === 'service';
+  if (flow(D.rooms[a].kind) && flow(D.rooms[b].kind)) return 0;
+  return 1;
+}
+function buildWalls() {
+  for (let x = 1; x < W; x++) {
+    let run = null;
+    const flush = () => { if (run) addRun('v', x, run); run = null; };
+    for (let y = 0; y < H; y++) {
+      const a = at(x - 1, y), b = at(x, y);
+      const t = doorAt('v', x, y) ? 0 : edgeType(a, b);
+      const side = a < 0 ? -1 : b < 0 ? 1 : 0;
+      if (t && run && run.t === t && run.side === side) run.y1 = y; else { flush(); if (t) run = { t, side, y0: y, y1: y }; }
+    }
+    flush();
+  }
+  for (let y = 1; y < H; y++) {
+    let run = null;
+    const flush = () => { if (run) addRun('h', y, run); run = null; };
+    for (let x = 0; x < W; x++) {
+      const a = at(x, y - 1), b = at(x, y);
+      const t = doorAt('h', x, y) ? 0 : edgeType(a, b);
+      const side = a < 0 ? -1 : b < 0 ? 1 : 0;
+      if (t && run && run.t === t && run.side === side) run.x1 = x; else { flush(); if (t) run = { t, side, x0: x, x1: x }; }
+    }
+    flush();
+  }
+  for (const d of D.doors) {
+    const g = doorGeom(d);
+    const ends = d.o === 'v' ? [[g.x, g.y], [g.x, g.y + g.len]] : [[g.x, g.y], [g.x + g.len, g.y]];
+    const s = d.kind === 'arch' ? 4 : d.kind === 'slide' || d.kind === 'alarm' ? 6 : 8;
+    for (const [ex, ey] of ends) maskRect(ex - s / 2, ey - s / 2, s, s, d.kind === 'arch' ? 1 : 3);
+  }
+}
+function addRun(o, at0, run) {
+  const outer = run.t !== 1;
+  const rock = run.t === 5;
+  const e = at0 * T;
+  const thick = rock ? 4 : outer ? 8 : 4, ext = rock ? 1 : outer ? 6 : 2;
+  let x, y, w, h, seg;
+  if (o === 'v') {
+    x = outer ? (run.side < 0 ? e - (thick - 2) : e - 2) : e - 2; w = thick;
+    if (rock) x = run.side < 0 ? e - 4 : e;
+    y = run.y0 * T - ext; h = (run.y1 - run.y0 + 1) * T + ext * 2;
+    const sx = rock ? e : outer ? (run.side < 0 ? e - 5 : e + 5) : e;
+    seg = [sx, run.y0 * T - ext, sx, (run.y1 + 1) * T + ext];
+  } else {
+    y = outer ? (run.side < 0 ? e - (thick - 2) : e - 2) : e - 2; h = thick;
+    if (rock) y = run.side < 0 ? e - 4 : e;
+    x = run.x0 * T - ext; w = (run.x1 - run.x0 + 1) * T + ext * 2;
+    const sy = rock ? e : outer ? (run.side < 0 ? e - 5 : e + 5) : e;
+    seg = [run.x0 * T - ext, sy, (run.x1 + 1) * T + ext, sy];
+  }
+  maskRect(x, y, w, h, run.t);
+  D.wallRects.push({ x, y, w, h });
+  D.wallSegs.push(seg);
+}
+
+// ================================================================== drawing helpers
+let A, E, MODE = 'lockdown';
+const box = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x | 0, y | 0, w | 0, h | 0); };
+function block(x, y, w, h, c, o = {}) {
+  const base = hex(c);
+  if (!o.noShadow) { A.fillStyle = 'rgba(0,0,0,0.45)'; A.fillRect(x + 2, y + 2, w, h); }
+  box(A, x, y, w, h, rgb(base, 0.55)); box(A, x + 1, y + 1, w - 2, h - 2, c);
+  box(A, x + 1, y + 1, w - 2, 1, rgb(base, 1.3)); box(A, x + 1, y + 1, 1, h - 2, rgb(base, 1.18));
+  box(A, x + 1, y + h - 2, w - 2, 1, rgb(base, 0.78)); box(A, x + w - 2, y + 1, 1, h - 2, rgb(base, 0.82));
+}
+function disc(g, cx, cy, r, c) { g.fillStyle = c; for (let j = -r; j <= r; j++) { const k = Math.floor(Math.sqrt(r * r - j * j + r * 0.6)); g.fillRect((cx - k) | 0, (cy + j) | 0, k * 2 + 1, 1); } }
+function screen(x, y, w, h, c = '#5fd1e0', dim = 1) {
+  box(A, x, y, w, h, '#101820');
+  box(E, x, y, w, h, shade(c, 0.3 * dim));
+  for (let j = y + 1; j < y + h - 1; j += 2) box(E, x + 1, j, Math.max(1, ((w - 2) * (0.35 + 0.65 * hash(x, j))) | 0), 1, shade(c, 0.85 * dim));
+}
+function hazard(x, y, w, h, dim = 1) {
+  A.save(); A.beginPath(); A.rect(x, y, w, h); A.clip();
+  box(A, x, y, w, h, '#1c1c1e'); A.fillStyle = shade('#a8842e', dim);
+  for (let k = -h; k < w + h; k += 6) { A.beginPath(); A.moveTo(x + k, y); A.lineTo(x + k + 3, y); A.lineTo(x + k + 3 - h, y + h); A.lineTo(x + k - h, y + h); A.fill(); }
+  A.restore();
+}
+const GLYPH = {
+  A: '010101111101101', B: '110101110101110', C: '011100100100011', D: '110101101101110', E: '111100110100111', F: '111100110100100', G: '011100101101011', H: '101101111101101', I: '111010010010111',
+  J: '001001001101010', K: '101101110101101', L: '100100100100111', M: '101111111101101', N: '110101101101101', O: '010101101101010', P: '110101110100100', Q: '010101101110011', R: '110101110101101',
+  S: '011100010001110', T: '111010010010010', U: '101101101101111', V: '101101101101010', W: '101101111111101', X: '101101010101101', Y: '101101010010010', Z: '111001010100111', ' ': '000000000000000', "'": '010010000000000',
+};
+function paint(g, text, cx, cy, col, plate) {
+  const w = text.length * 4 - 1, x0 = Math.round(cx - w / 2), y0 = Math.round(cy - 2);
+  if (plate) box(g, x0 - 2, y0 - 2, w + 4, 9, plate);
+  g.fillStyle = col;
+  [...text].forEach((ch, i) => { const b = GLYPH[ch] || GLYPH[' ']; for (let k = 0; k < 15; k++) if (b[k] === '1') g.fillRect(x0 + i * 4 + (k % 3), y0 + ((k / 3) | 0), 1, 1); });
+}
+
+// ================================================================== floors, by deck style
+function floorTile(r, tx, ty) {
+  const x = tx * T, y = ty * T, g = A, kind = r.kind;
+  const noise = (cols, count) => { for (let k = 0; k < count; k++) box(g, x + ((hash(tx, ty, k + 3) * 16) | 0), y + ((hash(tx, ty, k + 40) * 16) | 0), 1 + (k % 2), 1, cols[k % cols.length]); };
+  const deck = D.i;
+  if (kind === 'cave' || kind === 'fissure') {
+    // rough stone, with metal plates laid where people walk most
+    box(g, x, y, T, T, kind === 'fissure' ? '#2a2622' : '#312c27');
+    noise(['#3a342e', '#26221e', '#403830', '#2c2824'], 14);
+    if (kind === 'cave' && hash(tx >> 1, ty >> 1, 7) < 0.45) { box(g, x + 1, y + 1, T - 2, T - 2, '#3a3833'); box(g, x + 2, y + 2, 1, 1, '#4a4842'); box(g, x + T - 3, y + T - 3, 1, 1, '#4a4842'); noise(['#2e2c28'], 3); }
+    return;
+  }
+  if (deck === 0) {
+    // the rock floor: dirty metal, grating, oil
+    switch (kind) {
+      case 'corridor': case 'dock': case 'hall': {
+        box(g, x, y, T, T, '#2c2b29');
+        for (let k = 1; k < T; k += 3) box(g, x + k, y + 1, 1, T - 2, '#242321');
+        box(g, x, y, T, 1, '#1d1c1a'); box(g, x, y, 1, T, '#353330');
+        noise(['#3a352c', '#1e1c1a'], 4);
+        if (hash(tx, ty, 9) < 0.08) { disc(g, x + 8, y + 8, 4, 'rgba(10,8,6,0.35)'); }
+        break;
+      }
+      case 'power': case 'tanks': case 'refinery': case 'drill': {
+        box(g, x, y, T, T, '#262624');
+        if (ty % 3 === 0) box(g, x, y + 6, T, 3, '#3a2d26');
+        for (let k = 0; k < T; k += 2) box(g, x, y + k, T, 1, 'rgba(10,10,8,0.5)');
+        for (let k = 0; k < T; k += 4) box(g, x + k, y, 1, T, 'rgba(10,10,8,0.4)');
+        noise(['#3a3024'], 2);
+        break;
+      }
+      default: {
+        box(g, x, y, T, T, '#2e2c2a'); box(g, x, y, T, 1, '#222120'); box(g, x, y, 1, T, '#222120');
+        box(g, x + 2, y + 2, 2, 2, '#383532'); box(g, x + 12, y + 12, 2, 2, '#383532');
+        noise(['#36332e', '#262420', '#3a3024'], 5);
+      }
+    }
+    return;
+  }
+  if (deck === 1) {
+    // clean and light: pale tiles, wood, carpet
+    switch (kind) {
+      case 'corridor': case 'atrium': {
+        const c = kind === 'atrium' ? ['#5e5f62', '#58595c'] : ['#525458', '#4d4f53'];
+        box(g, x, y, T, T, c[(tx + ty) % 2]); box(g, x, y, T, 1, '#45474b'); box(g, x, y, 1, T, '#45474b'); box(g, x + 1, y + 1, T - 2, 1, '#66686c');
+        break;
+      }
+      case 'service': {
+        box(g, x, y, T, T, '#3a3c3e'); box(g, x, y, T, 1, '#2e3032'); box(g, x, y, 1, T, '#2e3032'); noise(['#424446'], 2);
+        break;
+      }
+      case 'lounge': case 'suite': case 'bar': {
+        box(g, x, y, T, T, kind === 'bar' ? '#4a3a2e' : '#4e3e30');
+        for (let k = 0; k < T; k += 4) box(g, x, y + k, T, 1, kind === 'bar' ? '#3e3026' : '#423428');
+        box(g, x + ((ty * 7) % 16), y, 1, T, '#3e3026');
+        break;
+      }
+      case 'quarters': {
+        box(g, x, y, T, T, '#4a4a58'); noise(['#52525f', '#44444f'], 8);
+        break;
+      }
+      case 'med': case 'wash': case 'kitchen': case 'laundry': {
+        for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) box(g, x + i * 8, y + j * 8, 8, 8, (i + j) % 2 ? '#64686c' : '#5e6266');
+        box(g, x, y, T, 1, '#4e5256'); box(g, x, y, 1, T, '#4e5256');
+        break;
+      }
+      case 'gym': {
+        box(g, x, y, T, T, '#3e4a3c'); box(g, x, y, T, 1, '#344032'); noise(['#46523f'], 3);
+        break;
+      }
+      case 'treasury': { box(g, x, y, T, T, '#4a4030'); box(g, x + 1, y + 1, T - 2, T - 2, '#54482f'); break; }
+      default: { box(g, x, y, T, T, '#56585c'); box(g, x, y, T, 1, '#46484c'); box(g, x, y, 1, T, '#46484c'); }
+    }
+    return;
+  }
+  // the tower: cold and technical
+  switch (kind) {
+    case 'boss': {
+      const rx = tx - 29, ry = ty - 29;
+      const edge = Math.min(rx, ry, 21 - rx, 21 - ry);
+      if (edge <= 2) { box(g, x, y, T, T, '#2a3240'); for (let k = 1; k < T; k += 3) box(g, x + k, y + 1, 1, T - 2, '#222a36'); box(g, x, y, T, 1, '#3a4456'); }
+      else { box(g, x, y, T, T, (tx + ty) % 2 ? '#22262e' : '#20242b'); box(g, x, y, T, 1, '#1a1d23'); box(g, x, y, 1, T, '#1a1d23'); box(g, x + 7, y + 7, 2, 2, '#2c323c'); }
+      break;
+    }
+    case 'server': case 'security': case 'control': case 'comms': {
+      box(g, x, y, T, T, '#232830'); box(g, x + 1, y + 1, T - 2, T - 2, '#272d36');
+      for (let j = 3; j < T - 2; j += 3) for (let i = 3; i < T - 2; i += 3) box(g, x + i, y + j, 1, 1, '#1c2027');
+      break;
+    }
+    default: { box(g, x, y, T, T, '#262b33'); box(g, x, y, T, 1, '#1e222a'); box(g, x, y, 1, T, '#1e222a'); box(g, x + 2, y + 2, T - 4, 1, '#2c323c'); }
+  }
+}
+function rockTile(tx, ty) {
+  const x = tx * T, y = ty * T;
+  box(A, x, y, T, T, '#1e1b18');
+  for (let k = 0; k < 10; k++) box(A, x + ((hash(tx, ty, k) * 15) | 0), y + ((hash(ty, tx, k) * 15) | 0), 2, 1 + (k % 2), ['#26221e', '#18160f', '#2a2520', '#14120f'][k % 4]);
+}
+
+// ================================================================== furnishing
+let solids, lights, emitters, cams, turrets, zones, barrels, pylons;
+// low cover stops shots, not sight; high cover stops both, and light
+const solid = (x, y, w, h, high = false, extra = {}) => { const s = { x, y, w, h, high, ...extra }; solids.push(s); return s; };
+const L = { white: [215, 225, 240], warm: [255, 200, 150], amber: [255, 178, 96], sodium: [255, 180, 100], cyan: [120, 200, 255], teal: [90, 220, 200], reactor: [255, 140, 60], cold: [180, 205, 235], red: [255, 50, 40], plant: [200, 255, 180] };
+const B = (r) => ({ X0: r.x0 * T, Y0: r.y0 * T, X1: (r.x1 + 1) * T, Y1: (r.y1 + 1) * T });
+function fits(r, x, y, w, h, gap = 2) {
+  const q = { x, y, w, h };
+  for (const [px, py] of [[x, y], [x + w - 1, y], [x, y + h - 1], [x + w - 1, y + h - 1], [x + w / 2, y], [x + w / 2, y + h - 1], [x, y + h / 2], [x + w - 1, y + h / 2]]) {
+    for (const [dx, dy] of [[0, 0], [-4, 0], [4, 0], [0, -4], [0, 4]]) if (at(Math.floor((px + dx) / T), Math.floor((py + dy) / T)) !== r.id) return false;
+  }
+  if (zones.some((z) => overlaps(q, z))) return false;
+  if (solids.some((s) => overlaps(q, { x: s.x - gap, y: s.y - gap, w: s.w + gap * 2, h: s.h + gap * 2 }))) return false;
+  return true;
+}
+function put(r, x, y, w, h, draw, high = false, isSolid = true, extra) {
+  x = Math.round(x); y = Math.round(y);
+  if (!fits(r, x, y, w, h)) return null;
+  draw(x, y, w, h);
+  return isSolid ? solid(x, y, w, h, high, extra) : {};
+}
+function row(r, side, along, deep, step, draw, high = false) {
+  const b = B(r); let n = 0;
+  const horiz = side === 'n' || side === 's';
+  const a0 = (horiz ? b.X0 : b.Y0) + 5, a1 = (horiz ? b.X1 : b.Y1) - 5;
+  for (let a = a0; a + along <= a1; a += 2) {
+    // a row along a wall: find where that wall actually is at this point
+    let x, y;
+    if (horiz) { x = a; y = side === 'n' ? edgeAt(r, a + along / 2, 'n') + 5 : edgeAt(r, a + along / 2, 's') - 5 - deep; }
+    else { y = a; x = side === 'w' ? edgeAt(r, a + along / 2, 'w') + 5 : edgeAt(r, a + along / 2, 'e') - 5 - deep; }
+    if (x === null || y === null || isNaN(x) || isNaN(y)) continue;
+    const w = horiz ? along : deep, h = horiz ? deep : along;
+    if (put(r, x, y, w, h, (X, Y, Wd, Ht) => draw(X, Y, Wd, Ht, n), high)) { n++; a += along + step - 2; }
+  }
+  return n;
+}
+// Where the wall of a room is, along a line through px.
+function edgeAt(r, p, side) {
+  const t = Math.floor(p / T);
+  if (side === 'n' || side === 's') { for (let y = side === 'n' ? r.y0 : r.y1; side === 'n' ? y <= r.y1 : y >= r.y0; y += side === 'n' ? 1 : -1) if (at(t, y) === r.id) return side === 'n' ? y * T : (y + 1) * T; }
+  else { for (let x = side === 'w' ? r.x0 : r.x1; side === 'w' ? x <= r.x1 : x >= r.x0; x += side === 'w' ? 1 : -1) if (at(x, t) === r.id) return side === 'w' ? x * T : (x + 1) * T; }
+  return NaN;
+}
+// Random spots in a room for loose things.
+function scatter(r, n, w, h, draw, high, tries = 120) {
+  let k = 0;
+  for (let i = 0; i < tries && k < n; i++) {
+    const tx = r.x0 + Math.floor(R() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R() * (r.y1 - r.y0 + 1));
+    if (at(tx, ty) !== r.id) continue;
+    const [ww, hh] = R() < 0.5 ? [w, h] : [h, w];
+    if (put(r, tx * T + R() * 8, ty * T + R() * 8, ww, hh, (X, Y, Wd, Ht) => draw(X, Y, Wd, Ht, k), high)) k++;
+  }
+  return k;
+}
+const P = {
+  crate(x, y, w, h, n = 0) { const c = ['#6e4630', '#3f5f5a', '#5a5d3a', '#55586a'][n % 4]; block(x, y, w, h, c); box(A, x + (w >> 1), y + 1, 1, h - 2, shade(c, 0.65)); box(A, x + 1, y + (h >> 1), w - 2, 1, shade(c, 0.65)); },
+  container(x, y, w, h, n = 0) { const c = ['#3f5f5a', '#6e4630', '#5a5d3a', '#55586a', '#5a3a4a'][n % 5]; block(x, y, w, h, c); const al = w >= h; for (let k = 4; k < (al ? w : h) - 3; k += 4) al ? box(A, x + k, y + 2, 1, h - 4, shade(c, 0.8)) : box(A, x + 2, y + k, w - 4, 1, shade(c, 0.8)); box(A, x + 3, y + 3, 4, 2, '#c9c2a8'); },
+  shelf(x, y, w, h, n = 0) { block(x, y, w, h, '#3d4250'); const hz = w >= h; for (let k = 2; k < (hz ? w : h) - 4; k += 6) { const c = ['#6a5040', '#4a5a50', '#5a5a64', '#6e6040', '#7a6a50'][(k + n) % 5]; hz ? box(A, x + k, y + 2, 4, h - 4, c) : box(A, x + 2, y + k, w - 4, 4, c); } },
+  locker(x, y, w, h, c = '#4a4e5a') { block(x, y, w, h, c); const hz = w >= h; for (let k = 6; k < (hz ? w : h) - 2; k += 6) hz ? box(A, x + k, y + 1, 1, h - 2, shade(c, 0.65)) : box(A, x + 1, y + k, w - 2, 1, shade(c, 0.65)); },
+  console(x, y, w, h, c = '#6fb8ff') { block(x, y, w, h, '#3a3f4b'); const hz = w >= h; hz ? screen(x + 2, y + 2, w - 4, h - 5, c) : screen(x + 2, y + 2, w - 5, h - 4, c); },
+  rack(x, y, w, h) { block(x, y, w, h, '#2a2e36'); const hz = w >= h; for (let k = 3; k < (hz ? w : h) - 3; k += 5) { hz ? box(A, x + k, y + 2, 3, h - 4, '#3a3f48') : box(A, x + 2, y + k, w - 4, 3, '#3a3f48'); emitters.push({ x: hz ? x + k + 1 : x + 3, y: hz ? y + 3 : y + k + 1, c: k % 10 ? '#62e08a' : '#5fd1e0', p: hash(x, k) * 10, rate: 0.5 + hash(k, y) }); } },
+  bed(x, y, w, h, top = '#5a5a6a', pillow = '#9a96a6', blanket = '#4a4e66') { block(x, y, w, h, '#3a3d48'); const hz = w > h; box(A, x + 2, y + 2, w - 4, h - 4, top); hz ? box(A, x + 2, y + 2, 7, h - 4, pillow) : box(A, x + 2, y + 2, w - 4, 7, pillow); hz ? box(A, x + 11, y + 2, w - 13, h - 4, blanket) : box(A, x + 2, y + 11, w - 4, h - 13, blanket); },
+  table(x, y, w, h, top = '#5a5650') { block(x, y, w, h, top); box(A, x + 4, y + 3, 3, 3, '#c0b8a0'); },
+  seat(x, y, r = 4, c = '#5a5048') { disc(A, x + 1, y + 1, r, 'rgba(0,0,0,0.5)'); disc(A, x, y, r, shade(c, 0.6)); disc(A, x, y, r - 1, c); },
+  tank(x, y, r, c = '#4a6a62') { disc(A, x + 2, y + 2, r, 'rgba(0,0,0,0.45)'); disc(A, x, y, r, shade(c, 0.6)); disc(A, x, y, r - 1, c); disc(A, x - 2, y - 2, Math.max(1, (r / 3) | 0), shade(c, 1.35)); box(A, x - 1, y - 1, 3, 3, shade(c, 0.7)); },
+  plant(x, y, r = 5, pot = '#4a3e30') { disc(A, x + 1, y + 2, r, 'rgba(0,0,0,0.4)'); disc(A, x, y, r, pot); for (let k = 0; k < r * 5; k++) { const a = hash(x, y, k) * 6.28, d = Math.sqrt(hash(y, x, k)) * r; box(A, x + Math.cos(a) * d, y + Math.sin(a) * d, 2, 2, ['#3e6a34', '#4e8040', '#2e5228', '#5a9048'][k % 4]); } },
+  sofa(x, y, w, h, c = '#7a5a4a') { block(x, y, w, h, shade(c, 0.8)); const hz = w >= h; hz ? box(A, x + 2, y + 2, w - 4, 3, shade(c, 1.15)) : box(A, x + 2, y + 2, 3, h - 4, shade(c, 1.15)); hz ? box(A, x + 2, y + 6, w - 4, h - 8, c) : box(A, x + 6, y + 2, w - 8, h - 4, c); },
+  barrel(x, y) { disc(A, x + 6, y + 7, 5, 'rgba(0,0,0,0.45)'); disc(A, x + 5, y + 5, 5, '#5a1e14'); disc(A, x + 5, y + 5, 4, '#a8361e'); box(A, x + 2, y + 4, 7, 1, '#d8b040'); box(A, x + 3, y + 2, 2, 2, '#d06a4a'); disc(A, x + 5, y + 5, 1, '#3a1a10'); },
+  rocks(x, y, n) { for (let k = 0; k < n; k++) { const s = 2 + ((hash(x, y, k) * 4) | 0); box(A, x + hash(k, x) * 14, y + hash(k, y) * 14, s, s - 1, ['#3e3730', '#4a4238', '#2e2a25'][k % 3]); } },
+};
+// A barrel that blows up when shot.
+function barrelAt(r, x, y) { const s = put(r, x, y, 11, 11, (X, Y) => P.barrel(X, Y), false, true, { barrel: true }); if (s) barrels.push(s); return s; }
+function barrelCluster(r, n) {
+  for (let i = 0; i < 40 && n > 0; i++) {
+    const tx = r.x0 + Math.floor(R() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R() * (r.y1 - r.y0 + 1));
+    if (at(tx, ty) !== r.id) continue;
+    const bx = tx * T, by = ty * T;
+    let k = 0; for (const [ox, oy] of [[0, 0], [12, 1], [5, 11], [-7, 8]]) if (k < Math.min(n, ri(2, 4)) && barrelAt(r, bx + ox, by + oy)) k++;
+    n -= k;
+  }
+}
+
+function furnish(r) {
+  const b = B(r), cx = (b.X0 + b.X1) / 2, cy = (b.Y0 + b.Y1) / 2, w = b.X1 - b.X0, h = b.Y1 - b.Y0;
+  switch (r.kind) {
+    // -------- the rock
+    case 'cave': {
+      // containers in rows with lanes between, crates as low cover, barrels near the fuel corner
+      let n = 0;
+      for (let ty = r.y0 + 2; ty <= r.y1 - 3; ty += 5) for (let tx = r.x0 + 2; tx <= r.x1 - 3; tx += 6) {
+        if (R() < 0.3) continue;
+        const big = R() < 0.55, [ww, hh] = big ? (R() < 0.5 ? [44, 20] : [20, 44]) : [16, 16];
+        put(r, tx * T + ri(-4, 4), ty * T + ri(-4, 4), ww, hh, (X, Y, Wd, Ht) => (big ? P.container(X, Y, Wd, Ht, n) : P.crate(X, Y, Wd, Ht, n)), big);
+        n++;
+      }
+      scatter(r, 14, 12, 10, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k + 2), false);
+      barrelCluster(r, 6);
+      for (let k = 0; k < 30; k++) { const tx = r.x0 + Math.floor(R() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R() * (r.y1 - r.y0 + 1)); if (at(tx, ty) === r.id) P.rocks(tx * T, ty * T, 5); }
+      // a loader and a crane rail painted across
+      put(r, cx - 10, cy + 30, 22, 16, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#8a6a2a'); box(A, X + Wd, Y + 3, 6, 2, '#5a5d64'); box(A, X + Wd, Y + 11, 6, 2, '#5a5d64'); disc(A, X + 8, Y + 8, 4, '#3a3d44'); });
+      for (let x = b.X0; x < b.X1; x += 8) if (at(Math.floor(x / T), Math.floor(cy / T)) === r.id) box(A, x, cy, 5, 2, '#7a6630');
+      for (let k = 0; k < 6; k++) { const tx = r.x0 + Math.floor(R() * (r.x1 - r.x0)), ty = r.y0 + Math.floor(R() * (r.y1 - r.y0)); if (at(tx, ty) === r.id) lights.push({ x: tx * T + 8, y: ty * T + 8, r: 130, col: L.sodium, i: 0.8, kind: 'static' }); }
+      break;
+    }
+    case 'fissure': {
+      for (let k = 0; k < 40; k++) { const tx = r.x0 + Math.floor(R() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R() * (r.y1 - r.y0 + 1)); if (at(tx, ty) === r.id) P.rocks(tx * T, ty * T, 4); }
+      break;
+    }
+    case 'hall': {
+      // barricades of welded plates and crates: low cover facing the dock
+      scatter(r, 6, 26, 8, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#4a4440'); for (let k = 3; k < Math.max(Wd, Ht) - 2; k += 7) Wd > Ht ? box(A, X + k, Y + 2, 1, Ht - 4, '#2e2a26') : box(A, X + 2, Y + k, Wd - 4, 1, '#2e2a26'); hazard(X + 1, Y + 1, Wd > Ht ? Wd - 2 : 2, Wd > Ht ? 2 : Ht - 2, 0.6); }, false);
+      scatter(r, 4, 16, 16, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k), false);
+      row(r, 'n', 30, 10, 20, (X, Y, Wd, Ht) => P.locker(X, Y, Wd, Ht), true);
+      break;
+    }
+    case 'power': {
+      put(r, cx - 26, cy - 26, 52, 52, () => {
+        disc(A, cx + 2, cy + 2, 25, 'rgba(0,0,0,0.45)'); disc(A, cx, cy, 25, '#2e3038'); disc(A, cx, cy, 23, '#4c5060'); disc(A, cx, cy, 18, '#3a3d48'); disc(A, cx, cy, 11, '#24262c');
+        for (let k = 0; k < 12; k++) { const a = (k / 12) * 6.283; box(A, cx + Math.cos(a) * 21 - 1, cy + Math.sin(a) * 21 - 1, 2, 2, '#6a7080'); }
+        disc(A, cx, cy, 7, '#5a3a2a'); disc(E, cx, cy, 7, '#a85a20');
+      }, true);
+      for (let k = 0; k < 40; k++) { const a = (k / 40) * 6.283; if (k % 2) box(A, cx + Math.cos(a) * 34 - 1, cy + Math.sin(a) * 34 - 1, 2, 2, '#7a6630'); }
+      lights.push({ x: cx, y: cy, r: 170, col: L.reactor, i: 0.9, kind: 'pulse', speed: 0.5 });
+      row(r, 'n', 26, 9, 20, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#ffb347'));
+      break;
+    }
+    case 'refinery': case 'drill': {
+      // big hoppers and machines (high), conveyors and carts (low), barrels
+      scatter(r, 2, 30, 26, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#4a4238'); box(A, X + 4, Y + 4, Wd - 8, Ht - 8, '#2a2620'); P.rocks(X + 6, Y + 6, 8); hazard(X + 1, Y + 1, Wd - 2, 2, 0.6); }, true);
+      scatter(r, 2, 46, 8, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#3a3a3e'); const hz = Wd > Ht; for (let k = 2; k < (hz ? Wd : Ht) - 2; k += 4) hz ? box(A, X + k, Y + 2, 2, Ht - 4, '#2a2a2e') : box(A, X + 2, Y + k, Wd - 4, 2, '#2a2a2e'); }, false);
+      scatter(r, 3, 14, 10, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#5a4a3a'); P.rocks(X + 2, Y + 1, 4); }, false);
+      barrelCluster(r, 4);
+      break;
+    }
+    case 'fuel': {
+      scatter(r, 4, 22, 22, (X, Y) => P.tank(X + 11, Y + 11, 11, '#6a4a3a'), true);
+      barrelCluster(r, 8);
+      break;
+    }
+    case 'barracks': {
+      row(r, 'n', 16, 30, 6, (X, Y, Wd, Ht) => P.bed(X, Y, Wd, Ht, '#4a4a42', '#7a786a', '#3e4a3a'));
+      row(r, 's', 30, 9, 8, (X, Y, Wd, Ht) => P.locker(X, Y, Wd, Ht), true);
+      scatter(r, 1, 30, 16, (X, Y, Wd, Ht) => P.table(X, Y, Wd, Ht, '#4a4236'), false);
+      break;
+    }
+    case 'workshop': {
+      row(r, 'n', 36, 12, 8, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#4b4236'); for (let k = 0; k < 4; k++) box(A, X + 4 + k * 8, Y + 3, 4, 2 + (k % 3), ['#7a7f88', '#8a5a3a', '#5a6a7a'][k % 3]); }, false);
+      row(r, 'w', 30, 10, 10, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      scatter(r, 3, 14, 14, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k), false);
+      break;
+    }
+    case 'store': {
+      row(r, 'w', 30, 10, 4, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      row(r, 'e', 30, 10, 4, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n + 2), true);
+      scatter(r, 2, 14, 14, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k), false);
+      break;
+    }
+    case 'tanks': {
+      scatter(r, 6, 20, 20, (X, Y) => P.tank(X + 10, Y + 10, 10, D.i === 2 ? '#3a5a6a' : '#4a6a62'), true);
+      break;
+    }
+    case 'messd': {
+      for (let k = 0; k < 3; k++) scatter(r, 1, 34, 12, (X, Y, Wd, Ht) => { P.table(X, Y, Wd, Ht, '#4a4236'); }, false);
+      row(r, 'e', 26, 8, 20, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#3a4a5a'); screen(X + 2, Y + 3, 4, 10, '#ffb347'); }, true);
+      break;
+    }
+    case 'gun': {
+      put(r, cx - 10, cy - 10, 20, 20, () => { disc(A, cx, cy, 9, '#2a2d34'); disc(A, cx, cy, 8, '#4a4458'); box(A, cx - 2, cy - 14, 4, 12, '#24262c'); box(E, cx - 1, cy - 1, 2, 2, '#ff3b30'); }, true);
+      scatter(r, 2, 10, 10, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k), false);
+      break;
+    }
+    case 'dock': case 'airlock': {
+      const L0 = B(r); hazard(L0.X0 + 2, L0.Y0 + 2, L0.X1 - L0.X0 - 4, 3); hazard(L0.X0 + 2, L0.Y1 - 5, L0.X1 - L0.X0 - 4, 3);
+      break;
+    }
+    // -------- the home
+    case 'atrium': {
+      // a garden in the middle (high), planters and sofas around (mixed), open lanes between
+      put(r, cx - 24, cy - 18, 48, 36, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#6a6258'); box(A, X + 3, Y + 3, Wd - 6, Ht - 6, '#3a4a30'); for (let k = 0; k < 6; k++) P.plant(X + 8 + (k % 3) * 16, Y + 10 + Math.floor(k / 3) * 16, 6, '#3a4a30'); box(E, X + 3, Y + 3, Wd - 6, 1, '#2a4a20'); }, true);
+      for (const [dx, dy] of [[-90, -70], [90, -70], [-90, 70], [90, 70], [0, -100], [0, 100], [-130, 0], [130, 0]]) put(r, cx + dx - 7, cy + dy - 7, 14, 14, (X, Y) => P.plant(X + 7, Y + 7, 7, '#7a6a58'), true);
+      scatter(r, 6, 30, 10, (X, Y, Wd, Ht, k) => P.sofa(X, Y, Wd, Ht, ['#7a5a4a', '#4a6a7a', '#6a7a5a'][k % 3]), false);
+      scatter(r, 4, 14, 14, (X, Y, Wd, Ht) => P.table(X, Y, Wd, Ht, '#8a7a68'), false);
+      for (const [dx, dy] of [[-60, -40], [60, -40], [-60, 40], [60, 40]]) put(r, cx + dx - 6, cy + dy - 6, 12, 12, (X, Y) => { block(X, Y, 12, 12, '#7a7c80'); box(A, X + 3, Y + 3, 6, 6, '#8a8c90'); }, true);
+      break;
+    }
+    case 'lounge': case 'suite': {
+      scatter(r, r.kind === 'suite' ? 2 : 4, 32, 12, (X, Y, Wd, Ht, k) => P.sofa(X, Y, Wd, Ht, r.kind === 'suite' ? '#7a3a4a' : ['#7a5a4a', '#4a6a7a'][k % 2]), false);
+      scatter(r, 3, 16, 16, (X, Y, Wd, Ht) => P.table(X, Y, Wd, Ht, '#8a7a68'), false);
+      scatter(r, 4, 12, 12, (X, Y) => P.plant(X + 6, Y + 6, 6, '#7a6a58'), true);
+      if (r.kind === 'suite') {
+        put(r, cx, cy - 20, 34, 40, (X, Y, Wd, Ht) => P.bed(X, Y, Wd, Ht, '#7a5a6a', '#d8d0c8', '#8a3a4a'), false);
+        row(r, 'w', 30, 9, 10, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+        scatter(r, 2, 10, 10, (X, Y) => { block(X, Y, 10, 10, '#c9a441'); box(E, X + 2, Y + 2, 6, 1, '#4a3a10'); }, false);
+      }
+      break;
+    }
+    case 'bar': {
+      row(r, 'n', 60, 12, 10, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#6a4a36'); box(A, X + 2, Y + 2, Wd - 4, 2, '#8a6a4a'); for (let k = 3; k < Wd - 3; k += 3) { box(A, X + k, Y - 4, 2, 3, ['#5a8a6a', '#8a5a3a', '#6a7aa0', '#a08a4a'][k % 4]); box(E, X + k, Y - 4, 1, 1, ['#203a2a', '#3a2010', '#20283a', '#3a3010'][k % 4]); } }, false);
+      scatter(r, 6, 18, 16, (X, Y, Wd, Ht) => { P.table(X, Y, Wd, Ht, '#7a5a40'); P.seat(X - 4, Y + 8, 3); P.seat(X + Wd + 3, Y + 8, 3); }, false);
+      scatter(r, 2, 12, 12, (X, Y) => P.plant(X + 6, Y + 6, 6, '#7a6a58'), true);
+      put(r, b.X1 - 14, cy - 12, 8, 24, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#3a4a5a'); screen(X + 2, Y + 2, 4, 20, '#62e08a'); }, true);
+      break;
+    }
+    case 'mess': {
+      for (let k = 0; k < 4; k++) scatter(r, 1, 40, 12, (X, Y, Wd, Ht) => { block(X, Y - 6, Wd, 4, '#6a6a70'); block(X, Y + Ht + 2, Wd, 4, '#6a6a70'); P.table(X, Y, Wd, Ht, '#9a9a96'); }, false);
+      row(r, 'e', 26, 8, 20, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#6a7a8a'); screen(X + 2, Y + 3, 4, 10, '#ffb347'); }, true);
+      break;
+    }
+    case 'kitchen': {
+      row(r, 'n', 40, 12, 4, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#8a8c90'); for (let k = 6; k < Wd - 4; k += 10) disc(A, X + k, Y + 6, 2, '#2e2f34'); box(E, X + 3, Y + 2, 2, 1, '#ff8a40'); }, false);
+      row(r, 's', 40, 12, 4, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#9a9ca0'); box(A, X + 3, Y + 3, Wd - 6, 6, '#7a7c80'); }, false);
+      scatter(r, 1, 14, 20, (X, Y, Wd, Ht) => block(X, Y, Wd, Ht, '#b0b4b8'), true);
+      break;
+    }
+    case 'laundry': {
+      row(r, 'n', 12, 12, 2, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#a0a4a8'); disc(A, X + 6, Y + 6, 4, '#4a5058'); disc(A, X + 6, Y + 6, 2, '#6a8090'); }, false);
+      row(r, 's', 30, 9, 6, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      break;
+    }
+    case 'quarters': {
+      row(r, 'n', 16, 30, 6, (X, Y, Wd, Ht) => P.bed(X, Y, Wd, Ht, '#8a8a96', '#d8d4dc', '#5a6a8a'));
+      row(r, 's', 16, 30, 6, (X, Y, Wd, Ht) => P.bed(X, Y, Wd, Ht, '#8a8a96', '#d8d4dc', '#7a5a6a'));
+      row(r, 'w', 24, 9, 8, (X, Y, Wd, Ht) => P.locker(X, Y, Wd, Ht, '#7a7c86'), true);
+      break;
+    }
+    case 'med': {
+      row(r, 'n', 18, 34, 12, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#8a9096'); box(A, X + 3, Y + 3, Wd - 6, Ht - 6, '#c8d0d4'); box(A, X + 4, Y + 4, Wd - 8, 7, '#e8eef0'); screen(X + Wd - 6, Y + Ht - 10, 4, 6, '#62e08a'); }, false);
+      row(r, 's', 34, 12, 10, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#9aa0a6'); box(A, X + 6, Y + 3, 6, 6, '#c04a4a'); }, true);
+      break;
+    }
+    case 'wash': {
+      row(r, 'n', 14, 14, 2, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#8a9096'); disc(A, X + 7, Y + 7, 3, '#b0b8c0'); }, false);
+      break;
+    }
+    case 'gym': {
+      scatter(r, 3, 26, 10, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#4a4e54'); box(A, X + 2, Y + Ht / 2 - 1, Wd - 4, 2, '#8a8e94'); }, false);
+      scatter(r, 2, 8, 8, (X, Y) => { disc(A, X + 4, Y + 4, 4, '#7a3a2a'); disc(A, X + 3, Y + 3, 1, '#9a5a4a'); }, true);
+      break;
+    }
+    case 'games': {
+      put(r, cx - 24, cy - 14, 48, 28, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#5a3e2a'); box(A, X + 3, Y + 3, Wd - 6, Ht - 6, '#2e6a4a'); for (const [a, b2] of [[4, 4], [Wd - 6, 4], [4, Ht - 6], [Wd - 6, Ht - 6]]) box(A, X + a, Y + b2, 2, 2, '#14181a'); });
+      scatter(r, 2, 18, 16, (X, Y, Wd, Ht) => { P.table(X, Y, Wd, Ht, '#7a5a40'); P.seat(X - 4, Y + 8, 3); P.seat(X + Wd + 3, Y + 8, 3); }, false);
+      row(r, 'n', 30, 9, 10, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      break;
+    }
+    case 'study': {
+      row(r, 'n', 30, 9, 4, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      scatter(r, 2, 26, 14, (X, Y, Wd, Ht) => { P.table(X, Y, Wd, Ht, '#6a4a32'); P.seat(X + Wd / 2, Y + Ht + 5, 3); }, false);
+      scatter(r, 2, 12, 12, (X, Y) => P.plant(X + 6, Y + 6, 6, '#7a6a58'), true);
+      break;
+    }
+    case 'games': {
+      put(r, cx - 24, cy - 14, 48, 28, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#5a3e2a'); box(A, X + 3, Y + 3, Wd - 6, Ht - 6, '#2e6a4a'); for (const [a, b2] of [[4, 4], [Wd - 6, 4], [4, Ht - 6], [Wd - 6, Ht - 6]]) box(A, X + a, Y + b2, 2, 2, '#14181a'); });
+      scatter(r, 2, 18, 16, (X, Y, Wd, Ht) => { P.table(X, Y, Wd, Ht, '#7a5a40'); P.seat(X - 4, Y + 8, 3); P.seat(X + Wd + 3, Y + 8, 3); }, false);
+      row(r, 'n', 30, 9, 10, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      break;
+    }
+    case 'study': {
+      row(r, 'n', 30, 9, 4, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      scatter(r, 2, 26, 14, (X, Y, Wd, Ht) => { P.table(X, Y, Wd, Ht, '#6a4a32'); P.seat(X + Wd / 2, Y + Ht + 5, 3); }, false);
+      scatter(r, 2, 12, 12, (X, Y) => P.plant(X + 6, Y + 6, 6, '#7a6a58'), true);
+      break;
+    }
+    case 'treasury': {
+      row(r, 'n', 14, 14, 4, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#5a5d64'); disc(A, X + 7, Y + 7, 4, '#3a3d44'); box(A, X + 7, Y + 7, 4, 1, '#8a8e96'); }, true);
+      scatter(r, 4, 14, 12, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#6a4a1a'); box(A, X + 2, Y + 2, Wd - 4, Ht - 4, '#c9902a'); box(A, X + 2, Y + 2, Wd - 4, 1, '#f0c050'); box(E, X + 2, Y + 2, Wd - 4, 1, '#4a3608'); }, false);
+      lights.push({ x: cx, y: cy, r: 70, col: L.amber, i: 0.6, kind: 'static' });
+      break;
+    }
+    // -------- the tower
+    case 'security': {
+      row(r, 'n', 40, 10, 8, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#5fd1c0'), false);
+      scatter(r, 3, 28, 8, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#4a5260'); hazard(X + 1, Y + 1, Wd > Ht ? Wd - 2 : 2, Wd > Ht ? 2 : Ht - 2, 0.6); }, false);
+      break;
+    }
+    case 'server': { row(r, 'w', 36, 12, 8, (X, Y, Wd, Ht) => P.rack(X, Y, Wd, Ht), true); row(r, 'e', 36, 12, 8, (X, Y, Wd, Ht) => P.rack(X, Y, Wd, Ht), true); break; }
+    case 'breaker': {
+      row(r, 'e', 30, 10, 6, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#4a4c54'); for (let k = 4; k < Ht - 4; k += 6) { box(A, X + 2, Y + k, 6, 3, '#2a2d34'); box(A, X + 3, Y + k + 1, 2, 1, '#c9a441'); } }, true);
+      scatter(r, 1, 14, 12, (X, Y) => { block(X, Y, 14, 12, '#5a5c64'); box(A, X + 3, Y + 3, 8, 3, '#c94030'); box(E, X + 3, Y + 3, 2, 2, '#ff3b30'); }, false);
+      break;
+    }
+    case 'armory': { row(r, 'n', 30, 8, 6, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#3a3d44'); for (let k = 3; k < Wd - 3; k += 5) box(A, X + k, Y + 1, 2, Ht - 2, '#1f2126'); }, true); scatter(r, 3, 14, 14, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k + 1), false); break; }
+    case 'comms': { row(r, 'n', 28, 10, 6, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#62e08a'), false); scatter(r, 1, 18, 18, (X, Y) => { disc(A, X + 9, Y + 9, 9, '#3a3d48'); disc(A, X + 9, Y + 9, 7, '#5a5f6e'); disc(A, X + 9, Y + 9, 2, '#2a2d34'); }, true); break; }
+    case 'control': { row(r, 'n', 30, 10, 6, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#6fb8ff'), false); scatter(r, 2, 8, 8, (X, Y) => P.seat(X + 4, Y + 4), false); break; }
+    case 'view': { scatter(r, 3, 26, 8, (X, Y, Wd, Ht) => block(X, Y, Wd, Ht, '#4a4a5a'), false); break; }
+    case 'boss': furnishBoss(r); break;
+    case 'lift': {
+      const L0 = B(r);
+      box(A, L0.X0 + 2, L0.Y0 + 2, L0.X1 - L0.X0 - 4, L0.Y1 - L0.Y0 - 4, '#2a2b30');
+      hazard(L0.X0 + 2, L0.Y0 + 2, L0.X1 - L0.X0 - 4, 3); hazard(L0.X0 + 2, L0.Y1 - 5, L0.X1 - L0.X0 - 4, 3);
+      for (let k = L0.X0 + 6; k < L0.X1 - 6; k += 4) box(A, k, L0.Y0 + 8, 2, L0.Y1 - L0.Y0 - 16, '#33353c');
+      break;
+    }
+    case 'stairs': {
+      const L0 = B(r), hz = L0.X1 - L0.X0 > L0.Y1 - L0.Y0;
+      if (hz) for (let k = L0.X0 + 4; k < L0.X1 - 4; k += 5) { box(A, k, L0.Y0 + 4, 4, L0.Y1 - L0.Y0 - 8, '#3a3d46'); box(A, k + 4, L0.Y0 + 4, 1, L0.Y1 - L0.Y0 - 8, '#1e1f24'); box(A, k, L0.Y0 + 4, 1, L0.Y1 - L0.Y0 - 8, '#4a4e58'); }
+      else for (let k = L0.Y0 + 4; k < L0.Y1 - 4; k += 5) { box(A, L0.X0 + 4, k, L0.X1 - L0.X0 - 8, 4, '#3a3d46'); box(A, L0.X0 + 4, k + 4, L0.X1 - L0.X0 - 8, 1, '#1e1f24'); box(A, L0.X0 + 4, k, L0.X1 - L0.X0 - 8, 1, '#4a4e58'); }
+      break;
+    }
+    case 'ladder': {
+      const L0 = B(r);
+      hazard(L0.X0 + 3, L0.Y0 + 3, L0.X1 - L0.X0 - 6, L0.Y1 - L0.Y0 - 6, 0.7);
+      box(A, L0.X0 + 8, L0.Y0 + 8, L0.X1 - L0.X0 - 16, L0.Y1 - L0.Y0 - 16, '#151619');
+      for (let k = L0.Y0 + 10; k < L0.Y1 - 10; k += 4) box(A, L0.X0 + 10, k, L0.X1 - L0.X0 - 20, 1, '#7a7f88');
+      break;
+    }
+  }
+}
+// Keep a way clear through every room: from each way in to every other, and to the middle. Nothing is put there.
+function reservePaths() {
+  for (const r of D.rooms) {
+    if (!r.n || ['boss', 'lift', 'stairs', 'ladder'].includes(r.kind)) continue;
+    const entries = [];
+    for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) {
+      if (at(x, y) !== r.id) continue;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const v = at(x + dx, y + dy); if (v < 0 || v === r.id) continue;
+        const o = dx ? 'v' : 'h', ex = dx > 0 ? x + 1 : x, ey = dy > 0 ? y + 1 : y;
+        if (edgeType(r.id, v) === 0 || doorAt(o, ex, ey)) { entries.push([x, y]); break; }
+      }
+    }
+    if (!entries.length) continue;
+    const idx = (x, y) => y * W + x;
+    const prev = new Map([[idx(...entries[0]), -1]]);
+    const q = [entries[0]];
+    for (let k = 0; k < q.length; k++) {
+      const [x, y] = q[k];
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (at(nx, ny) !== r.id || prev.has(idx(nx, ny))) continue; prev.set(idx(nx, ny), idx(x, y)); q.push([nx, ny]); }
+    }
+    const goals = entries.filter((_, i) => i % 2 === 0);
+    if (!['atrium', 'cave', 'hall', 'power'].includes(r.kind)) goals.push([Math.round(r.cx), Math.round(r.cy)]);
+    for (const [gx, gy] of goals) {
+      let c = idx(gx, gy);
+      if (!prev.has(c)) continue;
+      for (let guard = 0; c !== -1 && guard < 400; guard++) { const x = c % W, y = (c / W) | 0; zones.push({ x: x * T + 3, y: y * T + 3, w: 10, h: 10 }); c = prev.get(c); }
+    }
+  }
+}
+// The boss room: the mainframe in the middle, a ring of low cover, four pillars, three pylons and a walkway with a
+// railing round the walls.
+let boss = null;
+function furnishBoss(r) {
+  const cx = 40 * T, cy = 40 * T;
+  put(r, cx - 48, cy - 48, 96, 96, () => {
+    A.fillStyle = 'rgba(0,0,0,0.5)'; A.fillRect(cx - 44, cy - 44, 96, 96);
+    block(cx - 48, cy - 48, 96, 96, '#2a2e36'); block(cx - 38, cy - 38, 76, 76, '#3a3f4b');
+    disc(A, cx, cy, 24, '#1a2028'); disc(A, cx, cy, 18, '#24303a');
+    disc(E, cx, cy, 18, '#3a1a3a'); disc(E, cx, cy, 8, '#c060c0');
+    for (let k = 0; k < 8; k++) emitters.push({ x: cx - 40 + k * 10, y: cy - 44, c: '#d070d0', p: k, rate: 0.7 });
+  }, true);
+  lights.push({ x: cx, y: cy, r: 220, col: [200, 90, 220], i: 0.55, kind: 'pulse', speed: 0.3 });
+  // pylons
+  pylons = [];
+  for (let k = 0; k < 3; k++) {
+    const a = -Math.PI / 2 + (k / 3) * 6.283 + 0.5;
+    const x = cx + Math.cos(a) * 112, y = cy + Math.sin(a) * 112;
+    const s = put(r, x - 9, y - 9, 18, 18, (X, Y) => { disc(A, X + 9, Y + 9, 9, '#2a2d34'); disc(A, X + 9, Y + 9, 7, '#4a3a5a'); }, true, true, { pylon: true });
+    if (s) pylons.push({ x, y, alive: true, s, back: 0 });
+  }
+  // low ring
+  for (let k = 0; k < 8; k++) { const a = (k / 8) * 6.283 + 0.39; const x = cx + Math.cos(a) * 96, y = cy + Math.sin(a) * 96; put(r, x - 14, y - 6, 28, 12, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#d070d0'), false); }
+  // pillars
+  for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) put(r, cx + sx * 104 - 14, cy + sy * 104 - 14, 28, 28, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#3e4452'); box(A, X + 4, Y + 4, Wd - 8, Ht - 8, '#4a5262'); }, true);
+  // the walkway: a railing two tiles in from the walls, with gaps at the stairs and doors
+  const rail = (x, y, w, h) => { const q = { x, y, w, h }; if (zones.some((z) => overlaps(q, z))) return; box(A, x + 1, y + 1, w, h, 'rgba(0,0,0,0.5)'); box(A, x, y, w, h, '#8a90a0'); box(A, x, y, w, 1, '#b0b8c8'); solid(x, y, w, h, false); };
+  const lo = 32 * T, hi = 48 * T;
+  for (let p = lo; p < hi; p += 16) {
+    const gap = Math.abs(p + 8 - 40 * T) < 24;
+    if (gap) continue;
+    rail(p, lo - 2, 16, 3); rail(p, hi - 1, 16, 3); rail(lo - 2, p, 3, 16); rail(hi - 1, p, 3, 16);
+  }
+  boss = { x: cx, y: cy + 80, a: -Math.PI / 2, hp: 1, phase: 1, t: 0, aim: 0, tele: 0, sweep: 0, drones: [], walked: 0, moving: false };
+}
+
+// ================================================================== light
+let occluders = [];
+function buildOccluders() {
+  occluders = D.wallSegs.slice();
+  for (const d of D.doors) {
+    if (doorOpen(d) > 0.5) continue;
+    const g = doorGeom(d);
+    occluders.push(d.o === 'v' ? [g.x, g.y - 2, g.x, g.y + g.len + 2] : [g.x - 2, g.y, g.x + g.len + 2, g.y]);
+  }
+  for (const r of D.solids) {
+    if (!r.high || r.dead) continue;
+    const x0 = r.x + 3, y0 = r.y + 3, x1 = r.x + r.w - 3, y1 = r.y + r.h - 3;
+    if (x1 <= x0 || y1 <= y0) continue;
+    occluders.push([x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]);
+  }
+}
+// What can be seen from a point within a square of half-size r: a polygon, by rays to every corner nearby.
+function visPoly(px, py, r) {
+  const segs = [];
+  for (const s of occluders) {
+    if (Math.max(s[0], s[2]) < px - r || Math.min(s[0], s[2]) > px + r || Math.max(s[1], s[3]) < py - r || Math.min(s[1], s[3]) > py + r) continue;
+    segs.push(s);
+  }
+  const x0 = px - r, y0 = py - r, x1 = px + r, y1 = py + r;
+  segs.push([x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]);
+  const angles = [];
+  for (const s of segs) for (const [ex, ey] of [[s[0], s[1]], [s[2], s[3]]]) { const a = Math.atan2(ey - py, ex - px); angles.push(a - 0.0002, a, a + 0.0002); }
+  angles.sort((a, b) => a - b);
+  const pts = [];
+  for (const a of angles) {
+    const dx = Math.cos(a), dy = Math.sin(a);
+    let best = Infinity;
+    for (const s of segs) {
+      const sx = s[2] - s[0], sy = s[3] - s[1];
+      const den = dx * sy - dy * sx;
+      if (Math.abs(den) < 1e-9) continue;
+      const qx = s[0] - px, qy = s[1] - py;
+      const t = (qx * sy - qy * sx) / den;
+      const u = (qx * dy - qy * dx) / den;
+      if (t > 0 && u >= -1e-6 && u <= 1 + 1e-6 && t < best) best = t;
+    }
+    if (best < Infinity) pts.push(px + dx * best, py + dy * best);
+  }
+  return pts;
+}
+function drawLight(g, l, i, cone) {
+  if (!l.poly) l.poly = visPoly(l.x, l.y, l.r);
+  const p = l.poly;
+  g.save();
+  g.beginPath(); g.moveTo(p[0], p[1]); for (let k = 2; k < p.length; k += 2) g.lineTo(p[k], p[k + 1]); g.closePath(); g.clip();
+  if (cone) { g.beginPath(); g.moveTo(l.x, l.y); g.arc(l.x, l.y, l.r, cone.a - cone.w, cone.a + cone.w); g.closePath(); g.clip(); }
+  const gr = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
+  gr.addColorStop(0, rgb(l.col, i * 1.1));
+  gr.addColorStop(0.22, rgb(l.col, i * 0.92));
+  gr.addColorStop(0.55, rgb(l.col, i * 0.45));
+  gr.addColorStop(0.82, rgb(l.col, i * 0.14));
+  gr.addColorStop(1, 'rgb(0,0,0)');
+  g.fillStyle = gr;
+  g.fillRect(l.x - l.r, l.y - l.r, l.r * 2, l.r * 2);
+  g.restore();
+}
+
+const LS = 0.5;
+const STYLE = [
+  { ambient: [52, 48, 46], alarmAmbient: [44, 30, 32], room: { corridor: [L.sodium, 0.55, 6], dock: [L.white, 0.6, 4], hall: [L.amber, 0.75, 5], power: [L.warm, 0.3, 7], refinery: [L.sodium, 0.7, 6], drill: [L.sodium, 0.7, 6], fuel: [L.amber, 0.6, 5], barracks: [L.warm, 0.6, 5], workshop: [L.warm, 0.7, 5], store: [L.warm, 0.5, 5], tanks: [L.teal, 0.45, 6], messd: [L.warm, 0.65, 5], gun: [L.amber, 0.5, 4], airlock: [L.white, 0.6, 4], lift: [L.white, 0.7, 4], stairs: [L.white, 0.5, 4], ladder: [L.amber, 0.5, 3] } },
+  { ambient: [128, 126, 120], alarmAmbient: [92, 64, 64], room: { games: [L.warm, 0.7, 5], study: [L.warm, 0.7, 5], workshop: [L.white, 0.7, 5], corridor: [L.white, 0.85, 5], atrium: [L.warm, 0.8, 6], service: [L.white, 0.4, 6], lounge: [L.warm, 0.85, 5], suite: [L.warm, 0.75, 5], bar: [L.warm, 0.7, 5], mess: [L.white, 0.9, 5], kitchen: [L.white, 0.9, 5], laundry: [L.white, 0.7, 5], store: [L.warm, 0.6, 5], tanks: [L.teal, 0.5, 6], quarters: [L.warm, 0.75, 5], med: [L.cold, 0.95, 5], wash: [L.cold, 0.8, 4], gym: [L.white, 0.8, 5], treasury: [L.amber, 0.4, 5], lift: [L.white, 0.8, 4], stairs: [L.white, 0.6, 4], ladder: [L.amber, 0.5, 3] } },
+  { ambient: [56, 62, 78], alarmAmbient: [50, 34, 42], room: { boss: [L.cyan, 0.4, 7], security: [L.cold, 0.7, 5], server: [L.teal, 0.55, 5], breaker: [L.amber, 0.5, 5], armory: [L.cold, 0.6, 5], comms: [L.cyan, 0.55, 5], barracks: [L.cold, 0.55, 5], tanks: [L.teal, 0.5, 5], view: [L.cyan, 0.45, 5], control: [L.cyan, 0.6, 5], store: [L.cold, 0.5, 5], lift: [L.white, 0.7, 4], stairs: [L.white, 0.6, 4], ladder: [L.amber, 0.5, 3] } },
+];
+function roomLights(r) {
+  const spec = STYLE[D.i].room[r.kind]; if (!spec) return;
+  const [col, i, step] = spec;
+  const spots = [];
+  for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) {
+    if (at(x, y) !== r.id || x % step !== Math.floor(step / 2) || y % step !== Math.floor(step / 2)) continue;
+    const px = x * T + 8, py = y * T + 8;
+    if (D.solids.some((t) => t.high && px > t.x && px < t.x + t.w && py > t.y && py < t.y + t.h)) continue;
+    spots.push([px, py]);
+  }
+  if (!spots.length && r.n) spots.push([r.cx * T + 8, r.cy * T + 8]);
+  const k = MODE === 'alarm' ? 0.6 : 1;
+  for (const [px, py] of spots) lights.push({ x: px, y: py, r: 30 + step * 14, col, i: i * k, kind: 'static' });
+}
+function buildStaticLight(near) {
+  buildOccluders();
+  for (const l of D.lights) if (!near || Math.hypot(l.x - near.x, l.y - near.y) < l.r + 40) l.poly = null;
+  const [c, g] = mk(WW * LS, WH * LS);
+  g.imageSmoothingEnabled = true;
+  const st = STYLE[D.i];
+  g.fillStyle = rgb(MODE === 'alarm' ? st.alarmAmbient : st.ambient); g.fillRect(0, 0, c.width, c.height);
+  g.save(); g.scale(LS, LS); g.globalCompositeOperation = 'lighter';
+  for (const l of D.lights) if (l.kind === 'static') drawLight(g, l, l.i);
+  g.restore();
+  const [tmp, tg] = mk(c.width, c.height);
+  tg.filter = 'blur(1px)'; tg.drawImage(c, 0, 0); g.drawImage(tmp, 0, 0);
+  D.stat = c;
+}
+
+// ================================================================== building a floor's pictures
+let alb, emi;
+function buildDeck() {
+  solids = []; lights = []; emitters = []; cams = []; turrets = []; zones = []; barrels = []; pylons = [];
+  D.solids = solids;
+  for (const d of D.doors) { const g = doorGeom(d); zones.push(d.o === 'v' ? { x: g.x - 26, y: g.y - 4, w: 52, h: g.len + 8 } : { x: g.x - 4, y: g.y - 26, w: g.len + 8, h: 52 }); }
+  for (const l of LINKS) if (l.decks.includes(D.i)) { const [x0, y0, x1, y1] = l.r; zones.push({ x: x0 * T - 4, y: y0 * T - 4, w: (x1 - x0 + 1) * T + 8, h: (y1 - y0 + 1) * T + 8 }); }
+  let ag, eg;
+  [alb, ag] = mk(WW, WH); [emi, eg] = mk(WW, WH);
+  A = ag; E = eg;
+  box(A, 0, 0, WW, WH, '#06070b');
+  for (let k = 0; k < 1400; k++) { const x = (hash(k, 7) * WW) | 0, y = (hash(k, 8) * WH) | 0; const b = hash(k, 9); box(E, x, y, 1, 1, b > 0.9 ? '#9aa4c0' : b > 0.6 ? '#3a4058' : '#22263a'); }
+  // what is below: the rock's surface under the home, the home's roof under the tower
+  if (D.i > 0) {
+    const below = decks[D.i - 1];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const v = below.grid[y * W + x];
+      if (v === OUT || at(x, y) !== OUT) continue;
+      const X = x * T, Y = y * T;
+      if (D.i === 1) { // the asteroid's surface
+        box(A, X, Y, T, T, '#2a2622');
+        for (let k = 0; k < 9; k++) box(A, X + hash(x, y, k) * 15, Y + hash(y, x, k) * 15, 2, 2, ['#332e28', '#221e1a', '#3a342c'][k % 3]);
+        if (hash(x >> 2, y >> 2, 3) < 0.12 && (x + y) % 4 === 0) disc(A, X + 8, Y + 8, 5, '#1e1a17');
+      } else { // the home's roof
+        box(A, X, Y, T, T, '#3a3c42'); box(A, X, Y, T, 1, '#30323a'); box(A, X, Y, 1, T, '#30323a'); box(A, X + 1, Y + 1, T - 2, 1, '#44464e');
+        if ((x + y) % 5 === 0) box(A, X + 6, Y + 6, 3, 3, '#2a2c32');
+      }
+    }
+  }
+  // the floor, and the rock round the rooms on the first floor
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const v = at(x, y);
+    if (v >= 0) floorTile(D.rooms[v], x, y); else if (v === ROCK) rockTile(x, y);
+  }
+  // painted names at the doors
+  const painted = [];
+  for (const d of D.doors) {
+    if (d.kind === 'hatch' || d.kind === 'arch') continue;
+    const g = doorGeom(d);
+    const sides = d.o === 'v' ? [[d.x - 1, d.y, -1], [d.x, d.y, 1]] : [[d.x, d.y - 1, -1], [d.x, d.y, 1]];
+    for (const [tx, ty, s] of sides) {
+      const here = at(tx, ty), otherT = d.o === 'v' ? [s < 0 ? d.x : d.x - 1, d.y] : [d.x, s < 0 ? d.y : d.y - 1];
+      const other = D.rooms[at(...otherT)];
+      if (here < 0 || !other) continue;
+      const c = other.tint;
+      if (d.o === 'v') box(A, s < 0 ? g.x - 6 : g.x + 4, g.y + 3, 2, g.len - 6, shade(c, 0.6)); else box(A, g.x + 3, s < 0 ? g.y - 6 : g.y + 4, g.len - 6, 2, shade(c, 0.6));
+      const hr = D.rooms[here];
+      if (!['corridor', 'service', 'atrium', 'hall'].includes(hr.kind) || !other.label) continue;
+      const text = other.name, off = 14;
+      const px = d.o === 'v' ? g.x + (s < 0 ? -off - text.length * 2 : off + text.length * 2) : g.cx;
+      const py = d.o === 'v' ? g.cy : g.y + (s < 0 ? -off : off);
+      const rect = { x: px - text.length * 2 - 4, y: py - 5, w: text.length * 4 + 8, h: 10 };
+      if (painted.some((q) => overlaps(q, rect))) continue;
+      painted.push(rect);
+      paint(A, text, px, py, shade(c, D.i === 1 ? 0.55 : 0.85));
+    }
+    if (d.kind === 'pressure') { if (d.o === 'v') { hazard(g.x - 12, g.y + 2, 4, g.len - 4, 0.7); hazard(g.x + 8, g.y + 2, 4, g.len - 4, 0.7); } else { hazard(g.x + 2, g.y - 12, g.len - 4, 4, 0.7); hazard(g.x + 2, g.y + 8, g.len - 4, 4, 0.7); } }
+  }
+  // furnishing: the boss room first, then the rest
+  reservePaths();
+  for (const r of [...D.rooms].sort((a, b) => (b.kind === 'boss') - (a.kind === 'boss'))) if (r.n) furnish(r);
+  // a ladder passing through without a stop is a closed shaft
+  for (const l of LINKS) {
+    if (l.decks.includes(D.i)) continue;
+    if (!(D.i > Math.min(...l.decks) && D.i < Math.max(...l.decks))) continue;
+    const [x0, y0, x1, y1] = l.r;
+    if (at(x0, y0) < 0) continue;
+    const X = x0 * T + 2, Y = y0 * T + 2, Wd = (x1 - x0 + 1) * T - 4, Ht = (y1 - y0 + 1) * T - 4;
+    block(X, Y, Wd, Ht, '#3a3d48'); solid(X, Y, Wd, Ht, true);
+  }
+  for (const r of D.rooms) if (r.n) roomLights(r);
+  SPECIAL();
+  // red: rotating lights in the halls, only a few before the alarm, many when it goes
+  for (const r of D.rooms) {
+    if (!['corridor', 'dock', 'hall', 'cave', 'atrium', 'security', 'boss'].includes(r.kind)) continue;
+    const every = MODE === 'alarm' ? 61 : 197;
+    for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) {
+      if (at(x, y) !== r.id || (x * 7 + y * 13) % every !== 0) continue;
+      lights.push({ x: x * T + 8, y: y * T + 8, r: 160, col: L.red, i: MODE === 'alarm' ? 1 : 0.7, kind: 'beacon', phase: hash(x, y) * 6 });
+    }
+  }
+  drawWalls();
+  Object.assign(D, { alb, emi, solids, lights, emitters, cams, turrets, barrels, pylons, boss: D.i === 2 ? boss : null });
+  bucket();
+  computeWalk();
+}
+function SPECIAL() {
+  // cameras watch crossings; the tower's security room has a turret on the lift
+  if (D.i === 2) {
+    const sec = D.rooms.find((r) => r.kind === 'security');
+    const lk = LINKS.find((l) => l.key === 'T_MAIN');
+    if (sec && lk) { const [x0, y0, x1, y1] = lk.r; const tx = ((x0 + x1 + 1) / 2) * T, ty = ((y0 + y1 + 1) / 2) * T; const fx = sec.cx * T + 8, fy = sec.cy * T + 8; turrets.push({ x: fx + (tx - fx) * -0.2, y: fy + (ty - fy) * -0.2, a: Math.atan2(ty - fy, tx - fx), w: 0.2, r: 200 }); }
+  }
+  const halls = D.rooms.filter((r) => ['corridor', 'atrium', 'cave', 'control', 'hall'].includes(r.kind) && r.n > 20);
+  for (const r of halls.slice(0, 3)) {
+    // on a wall tile at the room's edge
+    for (let k = 0; k < 40; k++) {
+      const tx = r.x0 + Math.floor(R() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R() * (r.y1 - r.y0 + 1));
+      if (at(tx, ty) !== r.id) continue;
+      const out = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dx, dy]) => at(tx + dx, ty + dy) !== r.id);
+      if (!out) continue;
+      cams.push({ x: tx * T + 8 + out[0] * 6, y: ty * T + 8 + out[1] * 6, a: Math.atan2(-out[1], -out[0]), sweep: 0.6, r: 150 });
+      break;
+    }
+  }
+}
+function drawWalls() {
+  const g = alb.getContext('2d');
+  const img = g.getImageData(0, 0, WW, WH);
+  const d = img.data, M = D.mask;
+  const m = (x, y) => (x < 0 || y < 0 || x >= WW || y >= WH ? 0 : M[y * WW + x]);
+  const set = (i, c) => { d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; };
+  const dark = (i, k) => { d[i] *= k; d[i + 1] *= k; d[i + 2] *= k; };
+  const style = [
+    { 1: ['#4e4a46', '#6e6860', '#2c2a28'], 2: ['#3e3a36', '#5e5850', '#1c1a18'], 3: ['#5a5650', '#8a847a', '#30302c'], 4: ['#1b2c3a', '#4a7a98', '#0e1820'], 5: ['#3a342e', '#5a5048', '#1a1714'] },
+    { 1: ['#8a8c92', '#b4b6bc', '#5a5c62'], 2: ['#6a6c74', '#9a9ca4', '#3a3c42'], 3: ['#9a9ca2', '#c4c6cc', '#5a5c62'], 4: ['#2a4a5e', '#6aaacc', '#14283a'], 5: ['#3a342e', '#5a5048', '#1a1714'] },
+    { 1: ['#3e4656', '#5e6a80', '#222834'], 2: ['#323a48', '#525e74', '#181c24'], 3: ['#4a5262', '#7a86a0', '#262c36'], 4: ['#1b2c3a', '#4a7a98', '#0e1820'], 5: ['#3a342e', '#5a5048', '#1a1714'] },
+  ][D.i];
+  const C3 = {}; for (const k in style) C3[k] = style[k].map(hex);
+  for (let y = 0; y < WH; y++) for (let x = 0; x < WW; x++) {
+    const i = (y * WW + x) * 4, t = M[y * WW + x];
+    if (t) {
+      const [top, hi, lo] = C3[t];
+      let col = top;
+      if (!m(x, y - 1) || !m(x - 1, y)) col = hi; else if (!m(x, y + 1) || !m(x + 1, y)) col = lo;
+      set(i, col);
+      if (t === 5) { const n = hash(x >> 1, y >> 1, 4); if (n < 0.3) dark(i, 0.75); else if (n > 0.85) dark(i, 1.2); }
+      if (t === 2 && col === top) { if (x % 16 === 0 || y % 16 === 0) dark(i, 0.8); else if (x % 8 === 4 && y % 8 === 4) set(i, hi); }
+      if (t === 4 && col === top && (x + y) % 9 === 0) set(i, hex('#3a6a88'));
+      if (t === 3 && col === top && (x + y) % 4 < 2) set(i, hex('#8a7234'));
+    } else if (m(x - 2, y - 2) || m(x - 1, y - 2) || m(x - 2, y - 1)) dark(i, 0.6);
+    else if (m(x, y - 1) || m(x - 1, y) || m(x + 1, y) || m(x, y + 1)) dark(i, 0.82);
+  }
+  g.putImageData(img, 0, 0);
+}
+
+// ================================================================== collision, quickly: rects in buckets of 64 points
+const BK = 64, BN = WW / BK;
+function bucket() {
+  D.bk = Array.from({ length: BN * BN }, () => []);
+  const add = (r) => { for (let j = Math.floor(r.y / BK); j <= Math.floor((r.y + r.h) / BK); j++) for (let i = Math.floor(r.x / BK); i <= Math.floor((r.x + r.w) / BK); i++) if (i >= 0 && j >= 0 && i < BN && j < BN) D.bk[j * BN + i].push(r); };
+  D.wallRects.forEach(add); D.solids.forEach(add);
+}
+function rectHit(x, y, r, b) { const cx = Math.max(b.x, Math.min(x, b.x + b.w)), cy = Math.max(b.y, Math.min(y, b.y + b.h)); return (x - cx) ** 2 + (y - cy) ** 2 < r * r; }
+function blocked(x, y, r, planning = false) {
+  for (let ty = Math.floor((y - r) / T); ty <= Math.floor((y + r) / T); ty++) for (let tx = Math.floor((x - r) / T); tx <= Math.floor((x + r) / T); tx++) if (at(tx, ty) < 0 && rectHit(x, y, r, { x: tx * T, y: ty * T, w: T, h: T })) return true;
+  const list = D.bk[Math.floor(y / BK) * BN + Math.floor(x / BK)] || [];
+  for (const b of list) if (!b.dead && rectHit(x, y, r, b)) return true;
+  if (Math.floor(y / BK) !== Math.floor((y + r) / BK) || Math.floor(x / BK) !== Math.floor((x + r) / BK) || Math.floor((y - r) / BK) !== Math.floor(y / BK) || Math.floor((x - r) / BK) !== Math.floor(x / BK)) {
+    for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r]]) for (const b of D.bk[Math.floor((y + dy) / BK) * BN + Math.floor((x + dx) / BK)] || []) if (!b.dead && rectHit(x, y, r, b)) return true;
+  }
+  for (const d of D.doors) {
+    const shut = d.kind === 'hatch' || d.kind === 'locked' || (!planning && doorOpen(d) < 0.6);
+    if (!shut) continue;
+    const g = doorGeom(d);
+    if (Math.abs(g.cx - x) > 40 || Math.abs(g.cy - y) > 40) continue;
+    const b = d.o === 'v' ? { x: g.x - 3, y: g.y, w: 6, h: g.len } : { x: g.x, y: g.y - 3, w: g.len, h: 6 };
+    if (rectHit(x, y, r, b)) return true;
+  }
+  return false;
+}
+const doorOpen = (d) => (d.kind === 'hatch' || d.kind === 'locked' ? 0 : d.open);
+
+// ================================================================== finding the way
+const CW = 8, CN = WW / CW;
+function computeWalk() {
+  const walk = new Uint8Array(CN * CN);
+  for (let j = 0; j < CN; j++) for (let i = 0; i < CN; i++) walk[j * CN + i] = blocked(i * CW + 4, j * CW + 4, 5, true) ? 0 : 1;
+  D.walk = walk;
+}
+function nearestWalk(x, y) {
+  const i0 = Math.floor(x / CW), j0 = Math.floor(y / CW);
+  for (let r = 0; r < 14; r++) for (let j = j0 - r; j <= j0 + r; j++) for (let i = i0 - r; i <= i0 + r; i++) { if (i < 0 || j < 0 || i >= CN || j >= CN) continue; if (D.walk[j * CN + i]) return j * CN + i; }
+  return -1;
+}
+function flood(s) {
+  const seen = new Uint8Array(CN * CN); if (s < 0) return seen;
+  seen[s] = 1; const q = [s];
+  for (let k = 0; k < q.length; k++) { const c = q[k], ci = c % CN, cj = (c / CN) | 0; for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ni = ci + di, nj = cj + dj; if (ni < 0 || nj < 0 || ni >= CN || nj >= CN) continue; const n = nj * CN + ni; if (!seen[n] && D.walk[n]) { seen[n] = 1; q.push(n); } } }
+  return seen;
+}
+function findPath(x0, y0, x1, y1) {
+  const s = nearestWalk(x0, y0), t = nearestWalk(x1, y1);
+  if (s < 0 || t < 0) return null;
+  const prev = new Int32Array(CN * CN).fill(-1); prev[s] = s;
+  const q = [s];
+  const N8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+  for (let k = 0; k < q.length; k++) {
+    const c = q[k]; if (c === t) break;
+    const ci = c % CN, cj = (c / CN) | 0;
+    for (const [di, dj] of N8) {
+      const ni = ci + di, nj = cj + dj; if (ni < 0 || nj < 0 || ni >= CN || nj >= CN) continue;
+      const n = nj * CN + ni;
+      if (prev[n] >= 0 || !D.walk[n]) continue;
+      if (di && dj && (!D.walk[cj * CN + ni] || !D.walk[nj * CN + ci])) continue;
+      prev[n] = c; q.push(n);
+    }
+  }
+  if (prev[t] < 0) return null;
+  const pts = [];
+  for (let c = t; c !== s; c = prev[c]) pts.push([(c % CN) * CW + 4, ((c / CN) | 0) * CW + 4]);
+  pts.reverse();
+  const out = [];
+  for (let k = 0; k < pts.length; k++) {
+    if (k > 0 && k < pts.length - 1) { const a = pts[k - 1], b = pts[k], c = pts[k + 1]; if (b[0] - a[0] === c[0] - b[0] && b[1] - a[1] === c[1] - b[1]) continue; }
+    out.push(pts[k]);
+  }
+  return out.length ? out : [[x1, y1]];
+}
+
+// ================================================================== making a whole base, and checking it
+let SEED = 0;
+function tryOnce(seed) {
+  SEED = seed;
+  R = seeded(SEED);
+  K = Math.floor(R() * 4);
+  LINKS = LINK_BASE.map((l) => ({ ...l, r: rr(...l.r) }));
+  decks = [gen1(), gen2(), gen3()];
+  for (const d of decks) { D = d; bounds(); buildWalls(); }
+  let problems = check();
+  // A room that cannot be reached gets a door to a neighbour that can, where both sides are clear; then again.
+  for (let round = 0; round < 4 && problems.length; round++) {
+    let changed = false;
+    decks.forEach((d, i) => {
+      D = d;
+      const seen = flood(nearestWalk(...startOf(i)));
+      const reach = (tx, ty) => { for (let jj = 0; jj < 2; jj++) for (let ii = 0; ii < 2; ii++) if (seen[(ty * 2 + jj) * CN + tx * 2 + ii]) return true; return false; };
+      const open = (tx, ty) => { for (let jj = 0; jj < 2; jj++) for (let ii = 0; ii < 2; ii++) if (D.walk[(ty * 2 + jj) * CN + tx * 2 + ii]) return true; return false; };
+      const roomReached = (r) => { for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (at(x, y) === r.id && reach(x, y)) return true; return false; };
+      for (const r of d.rooms) {
+        if (!r.n || roomReached(r) || r.kind === 'vault') continue;
+        let done = false;
+        for (const p of neighbours().filter((q) => q.a === r.id || q.b === r.id)) {
+          const o = p.a === r.id ? p.b : p.a;
+          for (const run of contacts(r.id, o)) {
+            if (run.to - run.from < 1) continue;
+            for (let st = run.from; st < run.to && !done; st++) {
+              const cells = run.o === 'v' ? [[run.at - 1, st], [run.at, st], [run.at - 1, st + 1], [run.at, st + 1]] : [[st, run.at - 1], [st, run.at], [st + 1, run.at - 1], [st + 1, run.at]];
+              const mine = cells.filter(([x, y]) => at(x, y) === r.id), theirs = cells.filter(([x, y]) => at(x, y) === o);
+              if (mine.every(([x, y]) => open(x, y)) && theirs.every(([x, y]) => reach(x, y))) {
+                const kind = r.kind === 'treasury' || r.kind === 'ladder' ? 'alarm' : r.kind === 'lift' ? 'lift' : 'slide';
+                run.o === 'v' ? door('v', run.at, st, kind) : door('h', st, run.at, kind);
+                done = true;
+              }
+            }
+            if (done) break;
+          }
+          if (done) break;
+        }
+        if (done) changed = true;
+      }
+    });
+    if (!changed) break;
+    for (const d of decks) { D = d; d.mask.fill(0); d.wallRects = []; d.wallSegs = []; buildWalls(); d.built = {}; }
+    problems = check();
+  }
+  return problems;
+}
+function startOf(i) {
+  if (i === 0) { const s = decks[0].docks[0]; return [(s.px + s.dx * (s.e + 1)) * T, (s.py + s.dy * (s.e + 1)) * T]; }
+  const l = LINKS.find((q) => q.decks.includes(i) && q.way === 'loud');
+  return [((l.r[0] + l.r[2] + 1) / 2) * T, ((l.r[1] + l.r[3] + 1) / 2) * T];
+}
+function makeBase(seed) {
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const problems = tryOnce(seed + attempt);
+    window.__problems = problems;
+    if (!problems.length) return true;
+  }
+  return false;
+}
+// Everything must be reachable: from the main dock on floor 1, and from where each way up arrives above.
+function check() {
+  const problems = [], keep = MODE;
+  decks.forEach((d, i) => {
+    D = d; MODE = 'lockdown'; R = seeded(SEED * 7 + i);
+    buildDeck(); D.built = { lockdown: snapshot() };
+    let start;
+    if (i === 0) { const s = d.docks[0]; start = [(s.px + s.dx * (s.e + 1)) * T, (s.py + s.dy * (s.e + 1)) * T]; }
+    else { const l = LINKS.find((l) => l.decks.includes(i) && l.way === 'loud'); start = [((l.r[0] + l.r[2] + 1) / 2) * T, ((l.r[1] + l.r[3] + 1) / 2) * T]; }
+    const seen = flood(nearestWalk(...start));
+    for (const r of d.rooms) {
+      if (!r.n) continue;
+      let ok = false;
+      for (let y = r.y0; y <= r.y1 && !ok; y++) for (let x = r.x0; x <= r.x1 && !ok; x++) {
+        if (at(x, y) !== r.id) continue;
+        for (let jj = 0; jj < 2; jj++) for (let ii = 0; ii < 2; ii++) { const c = (y * 2 + jj) * CN + x * 2 + ii; if (D.walk[c] && seen[c]) ok = true; }
+      }
+      if (!ok) problems.push(`floor ${i + 1}: ${r.name} (${r.kind})`);
+    }
+    // the three ways up must be on this floor and reachable
+    const ups = LINKS.filter((l) => l.decks[0] === i);
+    if (i < 2 && ups.length !== 3) problems.push(`floor ${i + 1}: ${ups.length} ways up`);
+  });
+  MODE = keep;
+  return problems;
+}
+const snapshot = () => ({ alb: D.alb, emi: D.emi, solids: D.solids, lights: D.lights, emitters: D.emitters, cams: D.cams, turrets: D.turrets, barrels: D.barrels, pylons: D.pylons, boss: D.boss, walk: D.walk, bk: D.bk });
+
+// ================================================================== figures
+const KINDS = {
+  captain: { name: 'Captain', suit: '#6b7280', helm: '#7d8696', acc: '#6fb8ff', visor: '#7fe3ff', pack: true, gun: 'rifle', lamp: true },
+  gunner: { name: 'Gunner', suit: '#6b7280', helm: '#7d8696', acc: '#d98a3a', visor: '#7fe3ff', pack: true, gun: 'rifle', lamp: true },
+  engineer: { name: 'Engineer', suit: '#6b7280', helm: '#7d8696', acc: '#9ad04a', visor: '#7fe3ff', pack: true, gun: 'rifle', lamp: true },
+  watch: { name: 'Väktare', suit: '#5d5a44', helm: '#363a44', acc: '#807c5e', visor: '#ff3b30', cap: true, gun: 'pistol', eye: 1 },
+  soldier: { name: 'Soldat', suit: '#4a5248', helm: '#5a6258', acc: '#2f352e', visor: '#ff3b30', pack: true, gun: 'rifle', eye: 2 },
+  tech: { name: 'Tekniker', suit: '#8a6a35', helm: '#5a5f6a', acc: '#5c4622', visor: '#ff3b30', pack: 'big', gun: 'tool', eye: 1 },
+  heavy: { name: 'Tung vakt', suit: '#4e4858', helm: '#625a6e', acc: '#2e2a36', visor: '#ff3b30', pack: true, gun: 'heavy', eye: 3, big: true },
+  drone: { name: 'Drönare', drone: true, visor: '#ff3b30' },
+  crewman: { name: 'Besättning', suit: '#5a6a7a', helm: '#4a5664', acc: '#c9a06a', visor: '#ffd28a', pack: false, gun: 'none' },
+};
+const spriteCache = new Map();
+function sprite(kind, pose) {
+  const key = kind + '|' + JSON.stringify(pose);
+  let s = spriteCache.get(key);
+  if (s) return s;
+  const S = 32;
+  const [a, ag] = mk(S, S), [e, eg] = mk(S, S);
+  drawSprite(ag, eg, KINDS[kind], pose, S / 2);
+  outline(ag, S);
+  if (pose.hit) {
+    ag.globalCompositeOperation = 'source-in'; ag.fillStyle = '#f2f2ff'; ag.fillRect(0, 0, S, S);
+    eg.globalCompositeOperation = 'source-over'; eg.globalAlpha = 0.5; eg.drawImage(a, 0, 0);
+  }
+  s = { a, e, S };
+  spriteCache.set(key, s);
+  return s;
+}
+function drawSprite(g, eg, k, pose, c) {
+  const px = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(c + x, c + y, w, h); };
+  const ex = (x, y, w, h, col) => { eg.fillStyle = col; eg.fillRect(c + x, c + y, w, h); };
+  const stride = pose.walk === undefined ? 0 : [0, 2, 0, -2][pose.walk % 4];
+  const kick = pose.fire ? -1 : 0;
+  const dk = (col, f) => shade(col, f);
+  if (k.drone) {
+    const spin = (pose.walk || 0) % 2;
+    px(-6, -1, 13, 2, '#2a2d34'); px(-1, -6, 2, 13, '#2a2d34');
+    for (const [ox, oy] of [[-7, -7], [4, -7], [-7, 4], [4, 4]]) {
+      px(ox + 1, oy + 1, 2, 2, '#4a4e58');
+      g.fillStyle = 'rgba(170,180,195,0.6)';
+      if (spin) { g.fillRect(c + ox - 1, c + oy + 1, 6, 1); g.fillRect(c + ox + 1, c + oy - 1, 2, 6); }
+      else { g.fillRect(c + ox - 1, c + oy - 1, 1, 1); g.fillRect(c + ox + 4, c + oy + 4, 1, 1); g.fillRect(c + ox, c + oy + 3, 4, 1); g.fillRect(c + ox + 3, c + oy, 1, 3); }
+    }
+    px(-3, -3, 7, 7, '#50555f'); px(-3, -3, 6, 1, '#8a909c'); px(-3, -2, 1, 5, '#727884'); px(-2, 3, 6, 1, '#363a42'); px(3, -2, 1, 5, '#3c4048');
+    px(4, -1, 1, 2, '#5a1a18'); ex(4, -1, 1, 2, k.visor);
+    return;
+  }
+  const b = k.big ? 1 : 0;
+  const suit = k.suit, sd = dk(suit, 0.62), sl = dk(suit, 1.32);
+  // feet, stepping
+  px(-2 + stride, -4 - b, 4, 2, '#1c1d22'); px(-2 - stride, 2 + b, 4, 2, '#1c1d22');
+  // backpack
+  if (k.pack) {
+    const pw = k.pack === 'big' ? 4 : 3, x0 = -5 - pw - b;
+    px(x0, -3, pw, 7, k.pack === 'big' ? '#5c4a34' : '#3a3f48'); px(x0, -3, pw, 1, '#5a626e'); px(x0, 3, pw, 1, '#23262c');
+    if (k.lamp) { px(x0, 0, 1, 1, dk(k.acc, 0.6)); ex(x0, 0, 1, 1, dk(k.acc, 0.8)); }
+  }
+  // the gun, under the arms
+  const len = { rifle: 10, pistol: 5, tool: 8, heavy: 12, none: 0 }[k.gun];
+  if (!pose.carry && len) {
+    const gy = k.gun === 'heavy' ? 0 : 1, gh = k.gun === 'heavy' ? 3 : 2;
+    px(1 + kick, gy, len, gh, '#1f2126'); px(1 + kick, gy, len, 1, '#4a4e58');
+    if (k.gun === 'tool') { px(len + 1 + kick, gy, 1, 2, '#c87a30'); ex(len + 1 + kick, gy, 1, 2, '#7a3a10'); }
+    if (k.lamp) { px(len + kick, gy + 1, 1, 1, '#d8e0e8'); ex(len + kick, gy + 1, 1, 1, '#c0d0e0'); }
+    if (pose.fire) {
+      const mx = 1 + len + kick;
+      ex(mx, gy - 1, 2, gh + 2, '#ffc860'); ex(mx + 2, gy, 2, gh, '#fff4c8'); ex(mx + 1, gy - 2, 1, 1, '#ff9a40'); ex(mx + 1, gy + gh + 1, 1, 1, '#ff9a40'); ex(mx + 4, gy, 1, 1, '#ffd890');
+    }
+  }
+  // shoulders: wide across, shallow front to back
+  const tx = -4 - b + kick, tw = 6 + b, ty = -6 - b, th = 12 + b * 2;
+  px(tx, ty + 1, tw, th - 2, suit); px(tx + 1, ty, tw - 2, th, suit);
+  px(tx + 1, ty, tw - 2, 1, sl); px(tx, ty + 1, 1, th - 3, dk(suit, 1.15));
+  px(tx + 1, ty + th - 1, tw - 2, 1, sd); px(tx + tw - 1, ty + 2, 1, th - 4, dk(suit, 0.8));
+  // pauldrons in the colour of the post
+  const pc = k.cap ? dk(suit, 0.85) : k.acc;
+  px(tx + 1, ty, 3, 2, pc); px(tx + 1, ty + th - 2, 3, 2, dk(pc, 0.8));
+  px(tx + 1, ty, 3, 1, dk(pc, 1.25));
+  if (pose.carry) {
+    px(tx + tw - 1, ty + 1, 3, 2, suit); px(tx + tw - 1, ty + th - 3, 3, 2, suit);
+    px(3 + kick, -4, 7, 8, '#6a4a1a'); px(4 + kick, -3, 5, 6, '#c9902a'); px(4 + kick, -3, 5, 1, '#f0c050'); px(6 + kick, -1, 1, 2, '#6a4a1a');
+    ex(4 + kick, -3, 5, 1, '#4a3608');
+    if (len) { px(-6 - b, -6, 1, 11, '#24262c'); px(-5 - b, -6, 1, 1, '#4a4e58'); }
+  } else if (len) {
+    // the near arm to the grip, the far arm out to the front of the gun
+    px(tx + tw - 1, ty + th - 3, 2, 2, suit); px(tx + tw + 1, 2, 2, 2, dk(suit, 0.9)); px(tx + tw + 2, 2, 2, 1, '#2a2c30');
+    px(tx + tw - 1, ty + 1, 2, 2, suit); px(tx + tw + 1, ty + 3, 2, 2, suit); px(tx + tw + 3, -1, 2, 2, dk(suit, 0.9)); px(tx + tw + 4, 0, 2, 1, '#2a2c30');
+  } else {
+    px(tx + 1 + stride, ty - 1, 3, 2, suit); px(tx + 1 - stride, ty + th - 1, 3, 2, suit);
+  }
+  // the head
+  const hx = -2 - b + kick, hs = 5 + b;
+  if (k.cap) {
+    px(hx, -2, hs, hs - 1, k.helm); px(hx + 1, -3, hs - 2, 1, k.helm); px(hx + hs, -2, 2, hs - 1, dk(k.helm, 0.7));
+    px(hx + 1, -2, 2, 1, dk(k.helm, 1.4)); px(hx + 1, 2, hs - 2, 1, dk(k.helm, 0.75));
+    if (!k.eyeless) { px(hx + hs - 1, -1, 1, 1, '#4a1210'); ex(hx + hs - 1, -1, 1, 1, k.visor); } else px(hx + hs - 1, -1, 1, 2, k.visor);
+  } else {
+    const hl = dk(k.helm, 1.25);
+    px(hx, -2, hs, hs - 1, hl); px(hx + 1, -3, hs - 2, hs + 1, hl);
+    px(hx + 1, -3, 2, 1, dk(k.helm, 1.6)); px(hx, -2, 1, 2, dk(k.helm, 1.5));
+    px(hx + 1, 1 + b, hs - 2, 1, k.helm); px(hx + hs - 1, -1, 1, 2 + b, k.helm);
+    if (k.eye) {
+      const ey = k.eye === 3 ? -2 : -1, eh = k.eye === 3 ? 4 : k.eye;
+      px(hx + hs - 1, ey, 1, eh, '#2a0808'); ex(hx + hs - 1, ey, 1, eh, k.visor);
+    } else {
+      px(hx + hs - 2, -2, 2, 4, dk(k.visor, 0.3)); ex(hx + hs - 2, -2, 2, 4, dk(k.visor, 0.45)); ex(hx + hs - 1, -1, 1, 2, k.visor);
+    }
+  }
+}
+// A dark rim round the whole figure, so it reads on any floor.
+function outline(g, S) {
+  const img = g.getImageData(0, 0, S, S), d = img.data, out = new Uint8Array(S * S);
+  const on = (x, y) => x >= 0 && y >= 0 && x < S && y < S && d[(y * S + x) * 4 + 3] > 100;
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) out[y * S + x] = 1;
+  for (let i = 0; i < S * S; i++) if (out[i]) { d[i * 4] = 10; d[i * 4 + 1] = 11; d[i * 4 + 2] = 15; d[i * 4 + 3] = 220; }
+  g.putImageData(img, 0, 0);
+}
+// Down: on its back, flat out. Drawn on its own.
+function spriteDown(kind) {
+  const key = kind + '|down';
+  let s = spriteCache.get(key);
+  if (s) return s;
+  const S = 32, c = 16;
+  const [a, g] = mk(S, S), [e] = mk(S, S);
+  const k = KINDS[kind];
+  const px = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(c + x, c + y, w, h); };
+  if (k.drone) {
+    px(-5, -3, 9, 7, '#2a2d34'); px(-4, -2, 7, 5, '#3c4048'); px(-4, -2, 7, 1, '#5a5e68');
+    px(-9, -6, 3, 3, '#3a3d44'); px(6, 4, 3, 3, '#3a3d44'); px(7, -7, 2, 2, '#3a3d44'); px(-1, 6, 4, 1, '#2a2d34');
+  } else {
+    const suit = k.suit;
+    px(-10, -3, 6, 2, '#1c1d22'); px(-9, 1, 6, 2, '#1c1d22');
+    px(-5, -4, 9, 8, suit); px(-5, -4, 9, 1, shade(suit, 1.3)); px(-5, 3, 9, 1, shade(suit, 0.65));
+    px(-4, -6, 3, 2, k.cap ? shade(suit, 0.85) : k.acc); px(-4, 4, 3, 2, shade(k.cap ? suit : k.acc, 0.8));
+    px(-1, -8, 2, 3, suit); px(1, -9, 2, 2, shade(suit, 0.85));
+    px(0, 5, 4, 2, suit);
+    px(4, -3, 5, 5, shade(k.helm, 1.2)); px(5, -4, 3, 7, shade(k.helm, 1.2)); px(8, -2, 1, 3, shade(k.helm, 0.7));
+    if (k.gun !== 'none') { px(1, 9, 10, 2, '#1f2126'); px(1, 9, 10, 1, '#4a4e58'); }
+  }
+  outline(g, S);
+  s = { a, e, S };
+  spriteCache.set(key, s);
+  return s;
+}
+
+
+Object.assign(KINDS, {
+  pirate1: { name: 'Pirat', suit: '#5a3a5a', helm: '#2a1e1a', acc: '#9a5a3a', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  pirate2: { name: 'Pirat', suit: '#4a4a3a', helm: '#8a5a2a', acc: '#6a3a5a', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+});
+// The boss: a pirate captain in a walking machine, 48 points across, drawn facing right.
+function bossSprite(phase, step, fire) {
+  const key = 'boss' + phase + '|' + step + '|' + fire;
+  let s = spriteCache.get(key);
+  if (s) return s;
+  const S = 64, c = 32;
+  const [a, g] = mk(S, S), [e, eg] = mk(S, S);
+  const px = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(c + x, c + y, w, h); };
+  const ex = (x, y, w, h, col) => { eg.fillStyle = col; eg.fillRect(c + x, c + y, w, h); };
+  const st = [0, 3, 0, -3][step % 4];
+  // feet
+  px(-6 + st, -17, 12, 6, '#1e1c22'); px(-5 + st, -16, 10, 4, '#3a3440');
+  px(-6 - st, 11, 12, 6, '#1e1c22'); px(-5 - st, 12, 10, 4, '#3a3440');
+  // legs
+  px(-3 + st / 2, -13, 6, 6, '#3a3040'); px(-3 - st / 2, 7, 6, 6, '#3a3040');
+  // the hull of the machine
+  px(-13, -11, 22, 22, '#20182a');
+  px(-12, -10, 20, 20, '#5a3a5a'); px(-12, -10, 20, 2, '#7a5a7a'); px(-12, -10, 2, 20, '#6e4e6e'); px(-12, 8, 20, 2, '#3e2a3e');
+  // hazard stripes and rust
+  for (let k = -10; k < 8; k += 4) px(-12, k, 2, 2, '#a8842e');
+  px(-6, -8, 3, 2, '#7a4a2a'); px(2, 5, 4, 2, '#6a3a22');
+  // the cockpit with the captain in it
+  px(-4, -6, 10, 12, '#14101a'); px(-3, -5, 8, 10, '#2a3a4a');
+  px(-1, -3, 5, 6, '#3a2a20'); px(0, -2, 3, 4, '#c8a080'); px(3, -1, 1, 2, '#ff3b30');
+  ex(-3, -5, 8, 1, '#203040'); ex(3, -1, 1, 2, '#ff3b30');
+  // the shoulder cannon (top) and the arm gun (bottom)
+  px(-8, -16, 10, 6, '#3a3040'); px(2, -15, 16, 4, '#24202a'); px(2, -15, 16, 1, '#4a4450'); px(16, -16, 3, 6, '#1a181e');
+  px(-4, 10, 8, 6, '#3a3040'); px(4, 11, 14, 3, '#24202a'); px(4, 11, 14, 1, '#4a4450'); for (let k = 6; k < 18; k += 3) px(k, 13, 1, 1, '#4a4450');
+  // the reactor on its back
+  px(-17, -5, 5, 10, '#2a2230'); px(-16, -3, 3, 6, '#5a2a1a'); ex(-16, -3, 3, 6, '#a85a20');
+  if (phase >= 2) { // cracked armour, sparks
+    px(-9, -9, 1, 6, '#14101a'); px(-8, -4, 3, 1, '#14101a'); px(4, 3, 1, 5, '#14101a'); px(-11, 2, 4, 1, '#14101a');
+    ex(-8, -4, 1, 1, '#ffd27a'); ex(4, 5, 1, 1, '#ffb050');
+  }
+  if (fire) { ex(18, 10, 4, 5, '#ffc860'); ex(21, 11, 3, 3, '#fff4c8'); }
+  s = { a, e, S };
+  spriteCache.set(key, s);
+  return s;
+}
+
+// ================================================================== the people
+const me = { kind: 'gunner', x: 0, y: 0, a: 0, walked: 0, moving: false, lamp: true, fire: 0, r: 5, deck: 0 };
+let npcs = [];
+function castFor(deck) {
+  const d = decks[deck], out = [];
+  const R2 = seeded(SEED * 31 + deck);
+  const roomsOf = (kinds) => d.rooms.filter((r) => kinds.includes(r.kind) && r.n);
+  const spot = (r) => { for (let k = 0; k < 40; k++) { const tx = r.x0 + Math.floor(R2() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R2() * (r.y1 - r.y0 + 1)); if (d.grid[ty * W + tx] === r.id) { const px = tx * T + 8, py = ty * T + 8; const c = nearestWalk(px, py); if (c >= 0) return [(c % CN) * CW + 4, ((c / CN) | 0) * CW + 4]; } } return null; };
+  const add = (kind, route, o = {}) => { route = route.filter(Boolean); if (!route.length) return; out.push({ kind, x: route[0][0], y: route[0][1], a: R2() * 6.28, route, at: 0, path: null, walked: 0, wait: R2() * 2, post: route.length === 1, guard: !kind.startsWith('pirate'), speed: kind === 'heavy' ? 18 : kind === 'drone' ? 30 : MODE === 'alarm' ? 40 : 24, hover: kind === 'drone', r: 5, ...o }); };
+  D = d;
+  if (deck === 0) {
+    const hold = roomsOf(['cave'])[0], hall = roomsOf(['hall'])[0];
+    if (hold) { add('soldier', [spot(hold), spot(hold), spot(hold), spot(hold)]); add('soldier', [spot(hold), spot(hold), spot(hold)]); add('heavy', [spot(hold)]); add('watch', [spot(hold), spot(hold)]); }
+    if (hall) { add('heavy', [spot(hall)]); add('watch', [spot(hall), spot(hall)]); }
+    for (const r of roomsOf(['barracks'])) { add('pirate1', [spot(r)]); add('pirate2', [spot(r)]); }
+    for (const r of roomsOf(['refinery', 'drill'])) add('tech', [spot(r), spot(r)]);
+    for (const r of roomsOf(['power'])) add('drone', [spot(r), spot(r), spot(r)]);
+    const tun = roomsOf(['corridor'])[0]; if (tun) add('watch', [spot(tun), spot(tun), spot(tun)]);
+  }
+  if (deck === 1) {
+    const atr = roomsOf(['atrium'])[0];
+    if (atr) { add('soldier', [spot(atr), spot(atr), spot(atr)]); add('pirate1', [spot(atr)]); add('pirate2', [spot(atr)]); }
+    for (const r of roomsOf(['bar', 'lounge', 'mess'])) { add('pirate1', [spot(r)]); add('pirate2', [spot(r), spot(r)]); }
+    for (const r of roomsOf(['corridor'])) add('watch', [spot(r), spot(r)]);
+    for (const r of roomsOf(['kitchen'])) add('pirate2', [spot(r), spot(r)]);
+    for (const r of roomsOf(['suite'])) add('heavy', [spot(r)]);
+  }
+  if (deck === 2) {
+    for (const r of roomsOf(['security'])) { add('heavy', [spot(r)]); add('soldier', [spot(r), spot(r)]); }
+    for (const r of roomsOf(['barracks', 'armory'])) add('soldier', [spot(r), spot(r)]);
+    const ring = roomsOf(['control', 'comms', 'server', 'view', 'store', 'tanks']);
+    if (ring.length > 2) add('drone', [spot(ring[0]), spot(ring[1]), spot(ring[2])]);
+    for (const r of roomsOf(['breaker'])) add('watch', [spot(r)]);
+  }
+  return out;
+}
+
+// ================================================================== view
+const view = document.getElementById('view');
+const vg = view.getContext('2d');
+let VW = 640, VH = 360, overview = false, planView = false, outside = true;
+let cA, cAG, cE, cEG, cL, cLG, cB, cBG, cB2, cB2G;
+function sizeView() {
+  VW = overview && !outside ? WW : 640; VH = outside ? 520 : overview ? WH : 360;
+  view.width = VW; view.height = VH; vg.imageSmoothingEnabled = false;
+  [cA, cAG] = mk(VW, VH); [cE, cEG] = mk(VW, VH); [cL, cLG] = mk(VW * LS, VH * LS);
+  [cB, cBG] = mk(VW / 4, VH / 4); [cB2, cB2G] = mk(VW / 4, VH / 4);
+  cLG.imageSmoothingEnabled = true; cBG.imageSmoothingEnabled = true; cB2G.imageSmoothingEnabled = true;
+}
+let camX = 0, camY = 0;
+const shots = [], blasts = [], decals = [];
+
+function drawFigure(f, t) {
+  let s;
+  if (f.down) s = spriteDown(f.kind);
+  else { const pose = {}; if (f.moving) pose.walk = Math.floor(f.walked / 5) % 4; if (f.kind === 'drone') pose.walk = Math.floor(t * 20) % 2; if (f.fire > 0) pose.fire = 1; s = sprite(f.kind, pose); }
+  const bob = f.hover ? Math.round(Math.sin(t * 3)) : 0;
+  cAG.fillStyle = 'rgba(0,0,0,0.4)'; cAG.beginPath(); cAG.ellipse(Math.round(f.x) + 1, Math.round(f.y) + 2 + (f.hover ? 3 : 0), f.kind === 'heavy' ? 8 : 6, f.kind === 'heavy' ? 7 : 5, 0, 0, 7); cAG.fill();
+  for (const [g, img] of [[cAG, s.a], [cEG, s.e]]) { g.save(); g.translate(Math.round(f.x), Math.round(f.y) + bob); g.rotate(f.a); g.drawImage(img, -s.S / 2, -s.S / 2); g.restore(); }
+}
+function drawDoors(t) {
+  for (const d of D.doors) {
+    if (d.kind === 'arch') continue;
+    const gm = doorGeom(d), o = doorOpen(d);
+    const heavy = ['pressure', 'hatch', 'locked', 'lift'].includes(d.kind);
+    const th = heavy ? 6 : 4, half = gm.len / 2, leaf = Math.max(0, half * (1 - o));
+    const col = D.i === 1 ? (heavy ? '#8a8c94' : '#a4a6ac') : D.i === 2 ? '#4a5262' : heavy ? '#5a5650' : '#4e4c48';
+    const draw = (x, y, w, h) => {
+      if (w <= 0 || h <= 0) return;
+      box(cAG, x, y, w, h, shade(col, 0.6)); box(cAG, x + (w > h ? 0 : 1), y + (w > h ? 1 : 0), w > h ? w : w - 2, w > h ? h - 2 : h, col);
+      if (d.kind === 'pressure' || d.kind === 'hatch') { cAG.save(); cAG.beginPath(); cAG.rect(x, y, w, h); cAG.clip(); cAG.fillStyle = '#8a7234'; for (let k = -10; k < Math.max(w, h) + 10; k += 5) { if (w > h) cAG.fillRect(x + k, y + 1, 2, h - 2); else cAG.fillRect(x + 1, y + k, w - 2, 2); } cAG.restore(); }
+    };
+    if (d.o === 'v') { draw(gm.x - th / 2, gm.y, th, leaf); draw(gm.x - th / 2, gm.y + gm.len - leaf, th, leaf); }
+    else { draw(gm.x, gm.y - th / 2, leaf, th); draw(gm.x + gm.len - leaf, gm.y - th / 2, leaf, th); }
+    const lx = d.o === 'v' ? gm.x - 1 : gm.x - 6, ly = d.o === 'v' ? gm.y - 6 : gm.y - 1;
+    box(cAG, lx, ly, 2, 2, '#202228'); box(cEG, lx, ly, 2, 2, '#ff3b30');
+    if (d.kind === 'alarm' && Math.hypot(me.x - gm.cx, me.y - gm.cy) < 70) { const ex = d.o === 'v' ? gm.x - 1 : gm.x + gm.len + 4, ey = d.o === 'v' ? gm.y + gm.len + 4 : gm.y - 1; box(cEG, ex, ey, 2, 2, '#ffd040'); }
+  }
+}
+const linkHere = () => (outside ? null : LINKS.find((l) => l.decks.includes(me.deck) && me.x >= l.r[0] * T && me.x < (l.r[2] + 1) * T && me.y >= l.r[1] * T && me.y < (l.r[3] + 1) * T));
+function changeDeck(dir) {
+  const l = linkHere(); if (!l) return false;
+  const k = l.decks.indexOf(me.deck) + dir;
+  if (k < 0 || k >= l.decks.length) return false;
+  setDeck(l.decks[k]); return true;
+}
+
+// ---------------------------------------------------------------- shooting
+function fire() {
+  if (outside) return;
+  me.fire = 0.12;
+  const ax = Math.cos(me.a), ay = Math.sin(me.a);
+  let x = me.x + ax * 10, y = me.y + ay * 10, hit = null;
+  for (let s = 0; s < 360; s += 2) {
+    x += ax * 2; y += ay * 2;
+    if (at(Math.floor(x / T), Math.floor(y / T)) < 0) break;
+    const list = D.bk[Math.floor(y / BK) * BN + Math.floor(x / BK)] || [];
+    const b = list.find((q) => !q.dead && x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    if (b) { hit = b; break; }
+    if (D.boss && D.boss.hp > 0 && Math.hypot(x - D.boss.x, y - D.boss.y) < 18) { hit = 'boss'; break; }
+    if (D.doors.some((d) => { if (doorOpen(d) > 0.5) return false; const g = doorGeom(d); return d.o === 'v' ? Math.abs(x - g.x) < 3 && y > g.y && y < g.y + g.len : Math.abs(y - g.y) < 3 && x > g.x && x < g.x + g.len; })) break;
+  }
+  shots.push({ x0: me.x + ax * 10, y0: me.y + ay * 10, x1: x, y1: y, life: 0.08 });
+  if (hit && hit.barrel) explode(hit);
+  else if (hit && hit.pylon) { const p = D.pylons.find((q) => q.s === hit); if (p && p.alive) { p.alive = false; p.back = 14; hit.dead = true; blasts.push({ x: p.x, y: p.y, life: 0.5, r: 90 }); buildStaticLight({ x: p.x, y: p.y }); } }
+  else if (hit === 'boss') { const b = D.boss; if (!D.pylons.some((p) => p.alive)) { b.hp = Math.max(0, b.hp - 0.025); b.hurt = 0.1; } else b.blocked = 0.15; }
+}
+function explode(b) {
+  if (b.dead) return;
+  b.dead = true;
+  const x = b.x + 5, y = b.y + 5;
+  blasts.push({ x, y, life: 0.5, r: 140 });
+  for (let k = 0; k < 40; k++) { const a = hash(k, x | 0) * 6.28, d = Math.sqrt(hash(y | 0, k)) * 26; decals.push([x + Math.cos(a) * d, y + Math.sin(a) * d]); }
+  // the barrels near it go too, a moment later
+  for (const o of D.barrels) if (!o.dead && Math.hypot(o.x - b.x, o.y - b.y) < 44) setTimeout(() => explode(o), 160);
+  // low cover close by is blown away
+  for (const s of D.solids) if (!s.high && !s.barrel && !s.pylon && !s.dead && Math.hypot(s.x + s.w / 2 - x, s.y + s.h / 2 - y) < 30) { s.dead = true; s.burnt = true; }
+  buildStaticLight({ x, y });
+}
+
+// ---------------------------------------------------------------- the boss
+function stepBoss(t, dt) {
+  const b = D.boss; if (!b || b.hp <= 0) return;
+  const shield = D.pylons.some((p) => p.alive);
+  for (const p of D.pylons) if (!p.alive && p.back > 0 && b.phase === 1) { p.back -= dt; if (p.back <= 0) { p.alive = true; p.s.dead = false; buildStaticLight({ x: p.x, y: p.y }); } }
+  if (b.phase === 1 && b.hp <= 0.6) { b.phase = 2; }
+  if (b.phase === 2 && b.hp <= 0.25) {
+    b.phase = 3;
+    for (const p of D.pylons) { p.alive = true; p.s.dead = false; p.back = 0; }
+    buildStaticLight();
+    for (let k = 0; k < 2; k++) npcs.push({ kind: 'drone', x: 40 * T + (k ? 150 : -150), y: 40 * T - 150, a: 0, route: [[40 * T - 120, 40 * T + 120], [40 * T + 120, 40 * T + 120], [40 * T, 40 * T - 140]], at: 0, path: null, walked: 0, wait: 0, guard: true, speed: 34, hover: true, r: 5 });
+  }
+  // face the player and telegraph the sweep: a red line on the floor for a second, then the burst
+  const want = Math.atan2(me.y - b.y, me.x - b.x);
+  b.t += dt;
+  if (b.tele <= 0 && b.sweep <= 0) { b.a = turn(b.a, want, 1.5 * dt); if (b.t > 4) { b.t = 0; b.tele = 1; b.aim = b.a; } }
+  else if (b.tele > 0) { b.tele -= dt; if (b.tele <= 0) b.sweep = 0.8; }
+  else if (b.sweep > 0) {
+    b.sweep -= dt; b.a = b.aim + (0.8 - b.sweep) * 0.8 - 0.32;
+    if (Math.floor(b.sweep * 12) !== Math.floor((b.sweep + dt) * 12)) {
+      const ax = Math.cos(b.a), ay = Math.sin(b.a);
+      let x = b.x + ax * 20, y = b.y + ay * 20;
+      for (let s = 0; s < 300; s += 3) { x += ax * 3; y += ay * 3; if (blocked(x, y, 1, true)) break; }
+      shots.push({ x0: b.x + ax * 20, y0: b.y + ay * 20, x1: x, y1: y, life: 0.06, boss: true });
+      b.fire = 0.06;
+    }
+  }
+  // in phase two she rushes; low cover in her way breaks
+  if (b.phase >= 2 && b.tele <= 0 && b.sweep <= 0) {
+    const d = Math.hypot(me.x - b.x, me.y - b.y);
+    if (d > 60) {
+      const sp = (b.phase === 2 ? 42 : 30) * dt, nx = b.x + Math.cos(want) * sp, ny = b.y + Math.sin(want) * sp;
+      for (const s of D.solids) if (!s.high && !s.dead && rectHit(nx, ny, 16, s)) { s.dead = true; s.burnt = true; blasts.push({ x: s.x + s.w / 2, y: s.y + s.h / 2, life: 0.25, r: 50 }); }
+      if (!blockedBig(nx, ny)) { b.x = nx; b.y = ny; b.walked += sp; b.moving = true; } else b.moving = false;
+    } else b.moving = false;
+  } else b.moving = false;
+  if (b.fire > 0) b.fire -= dt;
+  if (b.hurt > 0) b.hurt -= dt;
+  if (b.blocked > 0) b.blocked -= dt;
+}
+const blockedBig = (x, y) => { for (const s of D.solids) if (s.high && !s.dead && rectHit(x, y, 16, s)) return true; return blocked(x, y, 14, true); };
+function drawBoss(t) {
+  const b = D.boss; if (!b) return;
+  const shield = D.pylons.some((p) => p.alive);
+  if (b.tele > 0) { // the red line on the floor
+    const ax = Math.cos(b.aim), ay = Math.sin(b.aim);
+    const len = 260 * (1 - b.tele * 0.6);
+    cEG.strokeStyle = 'rgba(255,40,30,0.75)'; cEG.lineWidth = 2; cEG.beginPath(); cEG.moveTo(b.x + ax * 20, b.y + ay * 20); cEG.lineTo(b.x + ax * len, b.y + ay * len); cEG.stroke();
+    cEG.strokeStyle = 'rgba(255,40,30,0.25)'; cEG.lineWidth = 6; cEG.beginPath(); cEG.moveTo(b.x + Math.cos(b.aim - 0.32) * 40, b.y + Math.sin(b.aim - 0.32) * 40); cEG.arc(b.x, b.y, 60, b.aim - 0.32, b.aim + 0.48); cEG.stroke();
+  }
+  // beams from the pylons, pulsing slowly
+  for (const p of D.pylons) {
+    box(cEG, p.x - 2, p.y - 2, 4, 4, p.alive ? '#d070ff' : '#301030');
+    if (!p.alive || b.hp <= 0) continue;
+    cEG.strokeStyle = `rgba(200,110,255,${0.35 + 0.2 * Math.sin(t * 2)})`; cEG.lineWidth = 2; cEG.beginPath(); cEG.moveTo(p.x, p.y); cEG.lineTo(b.x, b.y); cEG.stroke();
+  }
+  if (b.hp <= 0) { const s = bossSprite(b.phase, 0, false); cAG.save(); cAG.translate(b.x, b.y); cAG.rotate(b.a); cAG.globalAlpha = 0.7; cAG.drawImage(s.a, -32, -32); cAG.restore(); return; }
+  cAG.fillStyle = 'rgba(0,0,0,0.45)'; cAG.beginPath(); cAG.ellipse(b.x + 2, b.y + 4, 22, 18, 0, 0, 7); cAG.fill();
+  const s = bossSprite(b.phase, b.moving ? Math.floor(b.walked / 8) % 4 : 0, b.fire > 0);
+  for (const [g, img] of [[cAG, s.a], [cEG, s.e]]) { g.save(); g.translate(Math.round(b.x), Math.round(b.y)); g.rotate(b.a); g.drawImage(img, -32, -32); g.restore(); }
+  if (b.hurt > 0) { cEG.fillStyle = 'rgba(255,255,255,0.35)'; cEG.beginPath(); cEG.arc(b.x, b.y, 20, 0, 7); cEG.fill(); }
+  if (shield) { cEG.strokeStyle = `rgba(200,120,255,${0.45 + 0.15 * Math.sin(t * 2.2) + (b.blocked > 0 ? 0.3 : 0)})`; cEG.lineWidth = 2; cEG.beginPath(); cEG.arc(b.x, b.y, 28, 0, 7); cEG.stroke(); cEG.strokeStyle = 'rgba(200,120,255,0.12)'; cEG.lineWidth = 5; cEG.beginPath(); cEG.arc(b.x, b.y, 26, 0, 7); cEG.stroke(); }
+}
+
+// ---------------------------------------------------------------- the tour
+let tour = true, tourAt = 0, tourWait = 0, tourPath = null, TOUR = [];
+function buildTour() {
+  TOUR = [];
+  const centre = (d, kinds) => { const r = decks[d].rooms.find((q) => kinds.includes(q.kind) && q.n); return r ? [d, r.cx * T + 8, r.cy * T + 8] : null; };
+  const linkPt = (key) => { const l = LINKS.find((q) => q.key === key); return [((l.r[0] + l.r[2] + 1) / 2) * T, ((l.r[1] + l.r[3] + 1) / 2) * T]; };
+  const s = decks[0].docks[0];
+  TOUR.push([0, (s.px + s.dx * (s.e + 1)) * T, (s.py + s.dy * (s.e + 1)) * T, 1]);
+  for (const k of [['hall'], ['cave'], ['refinery', 'drill'], ['power']]) { const p = centre(0, k); if (p) TOUR.push([...p, 1]); }
+  TOUR.push([0, ...linkPt('L_MAIN'), 0.5], ['up']);
+  for (const k of [['atrium'], ['bar', 'lounge'], ['kitchen', 'laundry'], ['service']]) { const p = centre(1, k); if (p) TOUR.push([...p, 1]); }
+  TOUR.push([1, ...linkPt('T_QUIET'), 0.5], ['up']);
+  for (const k of [['breaker'], ['security']]) { const p = centre(2, k); if (p) TOUR.push([...p, 1]); }
+  TOUR.push([2, 40 * T, 30.5 * T, 0.5], [2, 40 * T, 36 * T, 0.5], [2, 32 * T, 34 * T, 2], [2, 47 * T, 46 * T, 2]);
+  TOUR.push(['restart']);
+}
+
+// ---------------------------------------------------------------- every frame
+const keys = new Set();
+let pointer = null, touchGoal = null;
+const turn = (a, b, k) => { const d = ((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI; return a + Math.max(-k, Math.min(k, d)); };
+function frame(t, dt) {
+  if (outside) { drawOutside(t); return; }
+  let mx = 0, my = 0;
+  if (keys.has('a') || keys.has('arrowleft')) mx -= 1;
+  if (keys.has('d') || keys.has('arrowright')) mx += 1;
+  if (keys.has('w') || keys.has('arrowup')) my -= 1;
+  if (keys.has('s') || keys.has('arrowdown')) my += 1;
+  if (touchGoal) { const dx = touchGoal.x - me.x, dy = touchGoal.y - me.y, d = Math.hypot(dx, dy); if (d > 4) { mx = dx / d; my = dy / d; } }
+  if (tour && !overview) {
+    const step = TOUR[tourAt];
+    me.moving = false;
+    if (tourWait > 0) { tourWait -= dt; if (D.boss && me.deck === 2 && Math.hypot(D.boss.x - me.x, D.boss.y - me.y) < 260) { me.a = turn(me.a, Math.atan2(D.boss.y - me.y, D.boss.x - me.x), 6 * dt); if (Math.floor(t * 4) !== Math.floor((t - dt) * 4)) { const target = D.pylons.find((p) => p.alive); if (target) me.a = Math.atan2(target.y - me.y, target.x - me.x); fire(); } } }
+    else if (step[0] === 'up') { changeDeck(1); tourAt++; tourPath = null; tourWait = 0.6; }
+    else if (step[0] === 'restart') { startTour(); }
+    else if (step[0] !== me.deck) tourAt++;
+    else {
+      if (!tourPath) tourPath = findPath(me.x, me.y, step[1], step[2]) || [[step[1], step[2]]];
+      const p = tourPath[0], dx = p[0] - me.x, dy = p[1] - me.y, d = Math.hypot(dx, dy);
+      if (d < 2) { tourPath.shift(); if (!tourPath.length) { tourPath = null; tourWait = step[3] || 0; tourAt++; } }
+      else { const sp = Math.min(d, 64 * dt); me.x += (dx / d) * sp; me.y += (dy / d) * sp; me.walked += sp; me.moving = true; me.a = turn(me.a, Math.atan2(dy, dx), 8 * dt); }
+    }
+  } else {
+    const len = Math.hypot(mx, my);
+    me.moving = len > 0.01;
+    if (me.moving) {
+      const sp = 64 * dt, bx = me.x, by = me.y;
+      if (!blocked(me.x + (mx / len) * sp, me.y, me.r)) me.x += (mx / len) * sp;
+      if (!blocked(me.x, me.y + (my / len) * sp, me.r)) me.y += (my / len) * sp;
+      me.walked += Math.hypot(me.x - bx, me.y - by);
+      if (!pointer || touchGoal) me.a = turn(me.a, Math.atan2(my, mx), 8 * dt);
+    }
+    if (pointer && !touchGoal) me.a = Math.atan2(pointer.y - me.y, pointer.x - me.x);
+  }
+  if (me.fire > 0) me.fire -= dt;
+  const l = linkHere(), k = l ? l.decks.indexOf(me.deck) : -1;
+  upBtn.hidden = !(l && k < l.decks.length - 1); downBtn.hidden = !(l && k > 0);
+  if (l) { upBtn.textContent = '▲ Våning ' + (l.decks[k + 1] + 1); downBtn.textContent = '▼ Våning ' + (l.decks[k - 1] + 1); }
+  for (const n of npcs) {
+    if (n.wait > 0) { n.wait -= dt; n.moving = false; if (n.post) n.a += Math.sin(t * 0.9 + n.x) * 0.5 * dt; continue; }
+    if (n.post) { n.moving = false; n.wait = 2; continue; }
+    if (!n.path) { const g = n.route[n.at]; n.path = findPath(n.x, n.y, g[0], g[1]) || [[g[0], g[1]]]; }
+    const p = n.path[0], dx = p[0] - n.x, dy = p[1] - n.y, d = Math.hypot(dx, dy);
+    if (d < 2) { n.path.shift(); if (!n.path.length) { n.path = null; n.at = (n.at + 1) % n.route.length; n.wait = n.guard ? 1.4 : 2 + hash(n.at, n.x | 0) * 3; } continue; }
+    const sp = Math.min(d, n.speed * dt);
+    n.x += (dx / d) * sp; n.y += (dy / d) * sp; n.walked += sp; n.moving = true; n.a = turn(n.a, Math.atan2(dy, dx), 6 * dt);
+  }
+  stepDoors(dt, [me, ...npcs]);
+  if (doorsChanged) { buildStaticLight(doorsChanged); doorsChanged = null; }
+  stepBoss(t, dt);
+  updateBossBar();
+  // camera
+  if (overview) { camX = 0; camY = 0; } else { camX = Math.round(Math.max(0, Math.min(WW - VW, me.x - VW / 2))); camY = Math.round(Math.max(0, Math.min(WH - VH, me.y - VH / 2))); }
+  cAG.clearRect(0, 0, VW, VH); cAG.drawImage(D.alb, camX, camY, VW, VH, 0, 0, VW, VH);
+  cEG.clearRect(0, 0, VW, VH); cEG.drawImage(D.emi, camX, camY, VW, VH, 0, 0, VW, VH);
+  cAG.save(); cAG.translate(-camX, -camY); cEG.save(); cEG.translate(-camX, -camY);
+  // what was blown up
+  for (const [x, y] of decals) box(cAG, x, y, 2, 2, 'rgba(12,10,8,0.6)');
+  for (const s of D.solids) if (s.dead) { box(cAG, s.x, s.y, s.w, s.h, 'rgba(16,14,12,0.75)'); if (s.burnt) for (let k = 0; k < 4; k++) box(cAG, s.x + hash(k, s.x) * s.w, s.y + hash(s.y, k) * s.h, 2, 2, '#4a4038'); }
+  drawDoors(t);
+  for (const b of D.emitters) { const on = b.rate === 0 ? 0.55 + 0.45 * Math.sin(t * 1.6) : Math.sin(t * b.rate + b.p) > -0.2 ? 1 : 0.15; cEG.globalAlpha = on; box(cEG, b.x, b.y, 1, 1, b.c); cEG.globalAlpha = 1; }
+  for (const c of D.cams) { const a = c.a + Math.sin(t * 0.5) * c.sweep; c.now = a; box(cAG, c.x - 2, c.y - 2, 5, 5, '#2a2d34'); box(cAG, c.x - 1 + Math.cos(a) * 2, c.y - 1 + Math.sin(a) * 2, 3, 3, '#4a4e58'); box(cEG, Math.round(c.x + Math.cos(a) * 3), Math.round(c.y + Math.sin(a) * 3), 1, 1, '#ff3b30'); }
+  for (const u of D.turrets) { disc(cAG, u.x, u.y, 6, '#2a2d34'); disc(cAG, u.x, u.y, 5, '#4a4e58'); box(cAG, u.x + Math.cos(u.a) * 7 - 1, u.y + Math.sin(u.a) * 7 - 1, 3, 3, '#24262c'); box(cEG, u.x - 1, u.y - 1, 2, 2, '#ff3b30'); }
+  for (const f of npcs) drawFigure(f, t);
+  drawBoss(t);
+  drawFigure(me, t);
+  for (const s of shots) { cEG.strokeStyle = s.boss ? 'rgba(255,170,90,0.9)' : 'rgba(255,230,160,0.9)'; cEG.lineWidth = 1; cEG.beginPath(); cEG.moveTo(s.x0, s.y0); cEG.lineTo(s.x1, s.y1); cEG.stroke(); s.life -= dt; }
+  for (let k = shots.length - 1; k >= 0; k--) if (shots[k].life <= 0) shots.splice(k, 1);
+  for (const b of blasts) { const k = b.life / 0.5; disc(cEG, b.x, b.y, Math.max(1, (1 - k) * 18 + 4) | 0, `rgba(255,${160 + 80 * k | 0},80,${k})`); }
+  cAG.restore(); cEG.restore();
+  // light
+  cLG.drawImage(D.stat, camX * LS, camY * LS, VW * LS, VH * LS, 0, 0, VW * LS, VH * LS);
+  cLG.save(); cLG.scale(LS, LS); cLG.translate(-camX, -camY); cLG.globalCompositeOperation = 'lighter';
+  const inView = (q) => q.x + q.r > camX && q.x - q.r < camX + VW && q.y + q.r > camY && q.y - q.r < camY + VH;
+  for (const q of D.lights) {
+    if (q.kind === 'static' || !inView(q)) continue;
+    if (q.kind === 'pulse') drawLight(cLG, q, q.i * (0.8 + 0.2 * Math.sin(t * q.speed * 6.28)));
+    if (q.kind === 'beacon') drawLight(cLG, q, q.i, { a: t * (MODE === 'alarm' ? 4.5 : 2.2) + q.phase * 2, w: 0.42 });
+  }
+  const lit = (x, y, r, col, i, cone) => { const q = { x, y, r, col }; if (inView(q)) drawLight(cLG, q, i, cone); };
+  if (me.lamp) { lit(me.x + Math.cos(me.a) * 8, me.y + Math.sin(me.a) * 8, 170, [235, 238, 225], D.i === 1 ? 0.4 : 0.9, { a: me.a, w: 0.38 }); lit(me.x, me.y, 30, [160, 165, 175], 0.35); }
+  for (const n of npcs) if (n.guard) lit(n.x + Math.cos(n.a) * 6, n.y + Math.sin(n.a) * 6, 90, [180, 50, 40], 0.4, { a: n.a, w: 0.5 });
+  for (const b of blasts) { lit(b.x, b.y, b.r, [255, 170, 90], b.life * 2.4); b.life -= dt; }
+  for (let k = blasts.length - 1; k >= 0; k--) if (blasts[k].life <= 0) blasts.splice(k, 1);
+  if (me.fire > 0.05) lit(me.x + Math.cos(me.a) * 14, me.y + Math.sin(me.a) * 14, 70, [255, 210, 140], 0.8);
+  cLG.restore();
+  vg.globalCompositeOperation = 'source-over';
+  vg.drawImage(cA, 0, 0);
+  vg.globalCompositeOperation = 'multiply'; vg.imageSmoothingEnabled = true; vg.drawImage(cL, 0, 0, VW, VH); vg.imageSmoothingEnabled = false;
+  vg.globalCompositeOperation = 'lighter'; vg.drawImage(cE, 0, 0);
+  cBG.clearRect(0, 0, cB.width, cB.height); cBG.drawImage(cE, 0, 0, cB.width, cB.height);
+  cB2G.clearRect(0, 0, cB.width, cB.height); cB2G.filter = 'blur(2px)'; cB2G.drawImage(cB, 0, 0); cB2G.filter = 'none';
+  vg.globalAlpha = 0.9; vg.imageSmoothingEnabled = true; vg.drawImage(cB2, 0, 0, VW, VH); vg.drawImage(cB2, 0, 0, VW, VH); vg.imageSmoothingEnabled = false; vg.globalAlpha = 1;
+  vg.globalCompositeOperation = 'source-over';
+  if (MODE === 'alarm') {
+    const k = 0.32 + 0.22 * Math.sin(t * 2.2);
+    const gr = vg.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * 0.35, VW / 2, VH / 2, Math.max(VW, VH) * 0.62);
+    gr.addColorStop(0, 'rgba(255,40,30,0)'); gr.addColorStop(1, `rgba(255,40,30,${k})`); vg.fillStyle = gr; vg.fillRect(0, 0, VW, VH);
+  }
+  if (planView) drawPlan();
+}
+let doorsChanged = null;
+function stepDoors(dt, people) {
+  for (const d of D.doors) {
+    if (d.kind === 'hatch' || d.kind === 'locked' || d.kind === 'arch') continue;
+    const g = doorGeom(d);
+    const near = people.some((f) => Math.abs(f.x - g.cx) < 30 && Math.abs(f.y - g.cy) < 30);
+    const before = doorOpen(d) > 0.5;
+    d.open = Math.max(0, Math.min(1, d.open + (near ? 4 : -2.5) * dt));
+    if ((doorOpen(d) > 0.5) !== before) doorsChanged = { x: g.cx, y: g.cy };
+  }
+}
+function updateBossBar() {
+  const b = D.boss, bar = document.getElementById('bossbar');
+  const show = b && me.deck === 2 && Math.abs(me.x - 40 * T) < 13 * T && Math.abs(me.y - 40 * T) < 13 * T;
+  bar.hidden = !show;
+  if (!show) return;
+  document.getElementById('bosshp').style.width = b.hp * 100 + '%';
+  const shield = D.pylons.some((p) => p.alive);
+  document.getElementById('bossstate').textContent = b.hp <= 0 ? '· besegrad, ta över mainframen' : `· fas ${b.phase}${shield ? ' · sköld uppe' : ' · sköld nere'}`;
+}
+
+// ---------------------------------------------------------------- the game plan on top
+function drawPlan() {
+  vg.save(); vg.translate(-camX, -camY);
+  for (const s of D.solids) {
+    if (s.dead || s.pylon) continue;
+    if (s.x + s.w < camX || s.x > camX + VW || s.y + s.h < camY || s.y > camY + VH) continue;
+    vg.strokeStyle = s.barrel ? '#ff6040' : s.high ? 'rgba(96,208,255,0.9)' : 'rgba(232,192,80,0.9)';
+    vg.lineWidth = 1; vg.strokeRect(s.x + 0.5, s.y + 0.5, s.w - 1, s.h - 1);
+  }
+  const cone = (x, y, a, w, r, fill) => { vg.fillStyle = fill; vg.beginPath(); vg.moveTo(x, y); vg.arc(x, y, r, a - w, a + w); vg.closePath(); vg.fill(); };
+  for (const c of D.cams) cone(c.x, c.y, c.now ?? c.a, 0.35, c.r, 'rgba(240,200,80,0.22)');
+  for (const u of D.turrets) cone(u.x, u.y, u.a, u.w, u.r, 'rgba(255,70,50,0.3)');
+  vg.setLineDash([3, 3]); vg.strokeStyle = 'rgba(154,208,255,0.75)'; vg.lineWidth = 1;
+  for (const n of npcs) if (n.guard && n.route.length > 1) { vg.beginPath(); n.route.forEach((p, i) => (i ? vg.lineTo(p[0], p[1]) : vg.moveTo(p[0], p[1]))); vg.closePath(); vg.stroke(); }
+  vg.setLineDash([]);
+  for (const d of D.doors) { const g = doorGeom(d); const c = d.kind === 'alarm' ? '#e0b040' : null; if (!c) continue; vg.strokeStyle = c; vg.lineWidth = 3; vg.beginPath(); if (d.o === 'v') { vg.moveTo(g.x, g.y + 2); vg.lineTo(g.x, g.y + g.len - 2); } else { vg.moveTo(g.x + 2, g.y); vg.lineTo(g.x + g.len - 2, g.y); } vg.stroke(); }
+  vg.font = 'bold ' + (overview ? 13 : 9) + 'px system-ui, sans-serif'; vg.textAlign = 'center';
+  for (const r of D.rooms) { if (!r.label || !r.n || r.n < 6) continue; const x = r.cx * T + 8, y = r.cy * T + 8; vg.fillStyle = 'rgba(0,0,0,0.8)'; vg.fillText(r.name, x + 1, y + 1); vg.fillStyle = r.tint; vg.fillText(r.name, x, y); }
+  for (const l of LINKS) { if (!l.decks.includes(me.deck)) continue; const x = ((l.r[0] + l.r[2] + 1) / 2) * T, y = ((l.r[1] + l.r[3] + 1) / 2) * T; const txt = `${l.name} ${l.decks.map((k) => k + 1).join('-')}${l.way === 'alarm' ? ' (LARM)' : l.way === 'quiet' ? ' (TYST)' : ''}`; vg.fillStyle = 'rgba(0,0,0,0.85)'; vg.fillText(txt, x + 1, y + 1); vg.fillStyle = l.way === 'alarm' ? '#ffd040' : l.way === 'quiet' ? '#9ad0ff' : '#ffd27a'; vg.fillText(txt, x, y); }
+  vg.restore();
+}
+
+// ================================================================== the outside, at the scale of space
+const FRIGATE = new Image();
+FRIGATE.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAABsCAYAAADJ0PRnAAAHYklEQVR42u1dXWgUVxT+dhBxUy2RLKVJaLNkly21iWlshBpUlIotfbBJHiqCkNQHfRAEW7SRgGIhtE2phUJA8KHmpUWQaKAP1lparNiH/sSYqLjspKtmNypJDNbuSh86fUjvcvfunf+5d3aT+WBhd+7Mved+c86555w7kwABAgQIECBAgAABAgSocERqGrRITYMWMKFDzsCJ09rAidNlRVKoHIgBgMN9x4uOD/QfAwDMzN4JLVmCIjUNGksMi4H+Y76SpPhNzvj4BMbHJ0rayfHDfcfhp8kpfmrQ+XPDnpyz6Agi2hOLJ0zPjcUTvmqRUs7aUw5aJJ2g9k07ND+urUgfVAnwhSCr/of1Q0uGICc+xS8/FJhYORFElmo75kWbGd1HoEFL2UlXEpaViyCsE3ZihouWIDWVREdnVwlh5UCStDICnb3TxABAR2dXSUbf3NxU0CqaqObmJqklkJAscrp2dmNi/FrJZElpgwdeu5pKoqn5VQyfGZJCUkgWOZNqCrnckyKC1FSy5DerMbxzqqpWojEWl0KSIoscMx+kppIYPDuCwbMjhd9GmFRT6NrZLTwuEu6kr1y+hLr6qOE5g2dHuL9P9B4y7bti4yCiPWbkuEFdfVS4FoVkmVY2k0b16kjBn9D+ZvTfdqzduK6oj+tX/kCrcrXEL6mpJOYfzRQRL9IfKbL8Ts+evUXOtqOzC7F4wtDXEAdNx0ixeAI9e/ZK80eKSHKGP4vqRsrk9+PGnhLtAYC1G9fhcWOP4bX0GKJI8txJ006561Da9Pz5mxdw3aANTc8aXk+PIcJpC3PStPaIhsixhBFkRXsqYSzhcVA2syB89eoIt/3ArnZ8+c0F3Ta9NIT0KzKMEEYQER4AHk5nDAnSI8CsjfRbkeUOWviZ2TshUYHc/3FPoe/nauvLP1CM1DRodMDGK3PQ5YxYPFHI2nkaRGpFvOvZsgc7dsVk84k1LdziF5upGwWLvOPJm2OVnc0vBvhecjUrayxpgtg6tJPVTDSE2q9eqZUH1lGbkSKr9Cq8HmRWTXQDGVVFIcs8ABBySB1IBEhdiNSDqNioPAkiWkPuLgBsf3O7JR9i18TINRe/uwhgoWgGwHOTU0SYFG1Weo+t7HlvV9Hv9W3N3O+8c3l9k3G9NrmQaH/DbvW4Wdp5/VRVrSw5z8sSbMhLf8MDj6BwuMrRePl8zhJBNElu/VLIS39jlaDff71aKFNkM2ndkgXdls2k8dr6dssEeeWXFC/9jRkGDy53bc52+vDCLzl20k7qv/u/+Mc1QU76cFOrXuZGe4jq60F0tY82RSMZ6uqj2Lh5G4bPDNkuhyhutYcIQH+nj9GrlpcmRq+EvHFZGZxqkeJEe1jNyGbSGOl9RvdODu3LQ00lPTMxNZXE0L68rjbxZHG6Ta2YEUJ/eHeCCKSOTev289XXqudmZdSnOjbNJYnIzpuXbYIiNQ1ay7rXQX/07hZNTl/fB5ZWoGwmXZgA+c5+2PPMzJQeW48kAGDnZURSyIigFeEwqlfXFI61b3qjyDnT5Fy+kcP5u8+XmF8u9wRbVk3gp7+aCvGQ2zhITSULfbJxUDaTRseL97H5lYVgNNZSi3c++bvQT2Msjqs//0AlvLN4ms/rxkmKU+fMkjMT3S1t1TJCXX0UM9HduHwjV6RJTp214tYHEHKsBIyyAsVJNVVEkhsfaEpQa9sG3TY75MgOFFmS7M7NMkGjv/2i22aHHD9ASHIyN8cmRlYFJ+TIzsVYkowibs99kBPN8SsXc6Plnm37GC3XZvmT0Z11ctftyiKFIDtgnzG0Cj/2x0wJam3bYMmZWQFJMMtlN7W1bQN+/P5bdwQ5JYf34JTR5qGdXQ2aYDcPUlmZmzATq619QbgGhFeEERY8jrCd1du3xnCyew4P7k8JE/7B/Smc7J7D7Vtj5UmQUeYOAJ2f5oTHQewYdmUUSlB//+eG7ec+rBIeB7Fj2JVRaC5mhq299zD/aFaY+s8/msXW3nuuVjHXTtrpKvb2jncBAPF4I+YvfVQwD7daNHhwOd7av/D9wPu9SKUmHUfLvq5iROCJ8WvYskqMiZ0/N2y4cVjWq9higVSC/MjmpRPkJGKt3nYUsXjCMxOLxROo3nYUMmSXokEikkxZiWtgYm5XMTqOeZrPO1ZVUYGi3QT64XQGK8Jh9wSRl1A+HhsFABxpaS16eYQlqRy2fIxkIeQYzMubOMiIJLYEwZY7RIAey0geQo6nJjYzeyd0pKVVo4jhksSWRenXoUQTZPTeGJGNJUdvXo40SK8DmiRWyKJrbsLS0xROqoyct300HoG8OVjVJlepBiHJymAiXkWwMGnX74+5XuadCuDFc9KiZKMh7e8HJda0eNqnjJfphGbzLO7+mcRLL3tDksgSq28EARBanw7KHUuFIF6Z080x0ZDmpNnH+dzA7LG5wMQCHxQQVDGQusyL3COreJCn2k9NzWkPNU07NTWnscfoD6+dPrboTMzLFUfmv7IJ+aFJ7ET1NILX7vc/QwoQwB7+A+dv0qgYBAbmAAAAAElFTkSuQmCC';
+let outsideImg = null;
+function buildOutside() {
+  // one pixel of space is 3.6 points inside: the base is about 1.5 times a station's size
+  const S = 0.28, N = Math.round(WW * S);
+  const [c, g] = mk(N, N);
+  const img = g.createImageData(N, N), d = img.data;
+  const [lc, lg] = mk(N, N);
+  const lim = lg.createImageData(N, N), ld = lim.data;
+  const d0 = decks[0], d1 = decks[1], d2 = decks[2];
+  const tileAt = (dk, x, y) => { const tx = Math.floor(x / S / T), ty = Math.floor(y / S / T); return tx < 0 || ty < 0 || tx >= W || ty >= H ? OUT : dk.grid[ty * W + tx]; };
+  const rockR = d0.rockR;
+  const height = (x, y) => { const tx = x / S / T, ty = y / S / T; const dd = Math.hypot(tx - C, ty - C), th = Math.atan2(ty - C, tx - C); return Math.max(0, (rockR(th) - dd) / 6) + 0.25 * Math.sin(tx * 0.9 + ty * 0.4) * Math.sin(ty * 0.7) + 0.15 * hash(Math.floor(tx * 1.5), Math.floor(ty * 1.5)); };
+  const craters = []; for (let k = 0; k < 18; k++) { const a = hash(k, 1, SEED) * 6.28, r = Math.sqrt(hash(k, 2, SEED)) * 30; craters.push([C + Math.cos(a) * r, C + Math.sin(a) * r, 1 + hash(k, 3, SEED) * 3]); }
+  const set = (i, col) => { d[i] = col[0]; d[i + 1] = col[1]; d[i + 2] = col[2]; d[i + 3] = 255; };
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const i = (y * N + x) * 4;
+    const v0 = tileAt(d0, x, y), v1 = tileAt(d1, x, y), v2 = tileAt(d2, x, y);
+    const tx = x / S / T, ty = y / S / T;
+    if (v2 !== OUT) { // the tower
+      const r = v2 >= 0 ? d2.rooms[v2] : null;
+      let col = [62, 68, 82];
+      if (r && r.kind === 'boss') { const dd = Math.hypot(tx - 40, ty - 40); col = dd < 9 ? [78, 54, 86] : [70, 76, 92]; if (dd < 9 && dd > 8.2) col = [120, 80, 130]; if (dd < 2) { ld[i] = 140; ld[i + 1] = 60; ld[i + 2] = 160; ld[i + 3] = 255; } }
+      if ((Math.floor(tx * 2) + Math.floor(ty * 2)) % 7 === 0) col = col.map((q) => q * 0.85);
+      const edge = tileAt(d2, x + 1, y) === OUT || tileAt(d2, x, y + 1) === OUT; const edge2 = tileAt(d2, x - 1, y) === OUT || tileAt(d2, x, y - 1) === OUT;
+      if (edge) col = col.map((q) => q * 0.55); else if (edge2) col = col.map((q) => q * 1.35);
+      set(i, col);
+      if (r && r.glass && (tileAt(d2, x + 2, y) === OUT || tileAt(d2, x - 2, y) === OUT || tileAt(d2, x, y + 2) === OUT || tileAt(d2, x, y - 2) === OUT) && (x + y) % 3) { set(i, [70, 110, 140]); ld[i] = 90; ld[i + 1] = 150; ld[i + 2] = 200; ld[i + 3] = 255; }
+      continue;
+    }
+    if (v1 !== OUT) { // the home on top of the rock
+      const r = v1 >= 0 ? d1.rooms[v1] : null;
+      let col = [96, 98, 104];
+      if ((Math.floor(tx) + Math.floor(ty)) % 2) col = [90, 92, 98];
+      if (Math.floor(tx * 4) % 4 === 0 || Math.floor(ty * 4) % 4 === 0) col = col.map((q) => q * 0.88);
+      const edge = tileAt(d1, x + 1, y) === OUT || tileAt(d1, x, y + 1) === OUT; const edge2 = tileAt(d1, x - 1, y) === OUT || tileAt(d1, x, y - 1) === OUT;
+      if (edge) col = col.map((q) => q * 0.5); else if (edge2) col = col.map((q) => q * 1.3);
+      // the tower's shadow falls on it
+      if (tileAt(d2, x - 3, y - 3) !== OUT) col = col.map((q) => q * 0.6);
+      set(i, col);
+      if (r && r.glass && (tileAt(d1, x + 2, y) === OUT || tileAt(d1, x - 2, y) === OUT || tileAt(d1, x, y + 2) === OUT || tileAt(d1, x, y - 2) === OUT) && (x + y) % 3) { set(i, [90, 120, 140]); ld[i] = 255; ld[i + 1] = 210; ld[i + 2] = 150; ld[i + 3] = 255; }
+      continue;
+    }
+    if (v0 !== OUT) {
+      const r = v0 >= 0 ? d0.rooms[v0] : null;
+      if (r && (r.kind === 'airlock')) { // docking arms stick out of the rock
+        set(i, [86, 80, 76]);
+        const out = tileAt(d0, x + 2, y) === OUT || tileAt(d0, x - 2, y) === OUT || tileAt(d0, x, y + 2) === OUT || tileAt(d0, x, y - 2) === OUT;
+        if (out && (x + y) % 2) { ld[i] = 255; ld[i + 1] = 120; ld[i + 2] = 70; ld[i + 3] = 255; }
+        continue;
+      }
+      // the rock, lit from the upper left
+      const hx = height(x + 1, y) - height(x - 1, y), hy = height(x, y + 1) - height(x, y - 1);
+      let lum = 0.75 - (hx + hy) * 2.2;
+      for (const [cx, cy, cr] of craters) { const dd = Math.hypot(tx - cx, ty - cy); if (dd < cr) { const k = dd / cr; lum *= tx - cx + ty - cy < 0 ? 0.6 + k * 0.3 : 1.1 + (1 - k) * 0.15; } else if (dd < cr + 0.5) lum *= 1.2; }
+      // the edge of the rock darkens
+      const dd = Math.hypot(tx - C, ty - C), edge = rockR(Math.atan2(ty - C, tx - C)) - dd;
+      if (edge < 2) lum *= 0.5 + edge * 0.25;
+      lum *= 0.85 + 0.3 * hash(x >> 1, y >> 1, 11);
+      // the home's shadow
+      if (tileAt(d1, x - 4, y - 4) !== OUT) lum *= 0.55;
+      set(i, [Math.min(255, 92 * lum), Math.min(255, 82 * lum), Math.min(255, 72 * lum)]);
+    }
+  }
+  g.putImageData(img, 0, 0); lg.putImageData(lim, 0, 0);
+  // gun towers and the dock lights on top
+  for (const gun of d0.guns) {
+    const x = gun.x * T * S, y = gun.y * T * S;
+    disc(g, x, y, 4, '#2a2230'); disc(g, x, y, 3, '#5a3a5a');
+    g.fillStyle = '#1a181e'; g.save(); g.translate(x, y); g.rotate(gun.a); g.fillRect(2, -1, 7, 2); g.restore();
+    disc(lg, x, y, 1, '#ff3b30');
+  }
+  // antennas on the tower
+  for (const [ax, ay] of [[24, 24], [55, 25], [25, 55]]) { const x = ax * T * S, y = ay * T * S; g.fillStyle = '#8a90a0'; g.fillRect(x, y - 6, 1, 7); g.fillRect(x - 2, y - 6, 5, 1); lg.fillStyle = '#ff3b30'; lg.fillRect(x, y - 7, 1, 1); }
+  outsideImg = { c, lc, N, S };
+}
+function drawOutside(t) {
+  if (!outsideImg) buildOutside();
+  const { c, lc, N, S } = outsideImg;
+  vg.globalCompositeOperation = 'source-over';
+  vg.fillStyle = '#05060a'; vg.fillRect(0, 0, VW, VH);
+  for (let k = 0; k < 300; k++) { const b = hash(k, 3); vg.fillStyle = b > 0.9 ? '#9aa4c0' : b > 0.6 ? '#3a4058' : '#22263a'; vg.fillRect(hash(k, 1) * VW, hash(k, 2) * VH, 1, 1); }
+  const s0 = decks[0].docks[0];
+  const ox = Math.round((VW - N) / 2 - s0.dx * 54), oy = Math.round((VH - N) / 2 - s0.dy * 54);
+  vg.drawImage(c, ox, oy);
+  vg.globalCompositeOperation = 'lighter';
+  vg.globalAlpha = 0.8 + 0.2 * Math.sin(t * 1.5); vg.drawImage(lc, ox, oy);
+  vg.filter = 'blur(2px)'; vg.drawImage(lc, ox, oy); vg.filter = 'none'; vg.globalAlpha = 1;
+  vg.globalCompositeOperation = 'source-over';
+  // the frigate, docked at the main dock, at true scale
+  const s = decks[0].docks[0];
+  const tipx = (s.px + s.dx * (s.e + 3)) * T * S + ox, tipy = (s.py + s.dy * (s.e + 3)) * T * S + oy;
+  if (FRIGATE.complete && FRIGATE.width) {
+    vg.save(); vg.translate(tipx + s.dx * 36, tipy + s.dy * 36); vg.rotate(Math.atan2(-s.dy, -s.dx) + Math.PI / 2); vg.drawImage(FRIGATE, -FRIGATE.width / 2, -FRIGATE.height / 2); vg.restore();
+  }
+  vg.font = '600 12px system-ui, sans-serif'; vg.fillStyle = '#8a90a0'; vg.textAlign = 'left';
+  vg.fillText('Fregatten, dockad vid huvuddockan, i samma skala som i spelet', 10, VH - 12);
+}
+
+// ================================================================== switching
+const upBtn = document.getElementById('up'), downBtn = document.getElementById('down');
+const tag = document.getElementById('tag');
+const NAMES = ['Våning 1 · Berget', 'Våning 2 · Bostaden', 'Våning 3 · Tornet'];
+function setDeck(i) {
+  document.getElementById('fire').hidden = i < 0;
+  if (i < 0) { outside = true; sizeView(); tag.textContent = 'Utsidan'; markDeck(-1); document.getElementById('bossbar').hidden = true; return; }
+  outside = false; sizeView();
+  me.deck = i; D = decks[i];
+  if (!D.built[MODE]) { R = seeded(SEED * 7 + i); buildDeck(); D.built[MODE] = snapshot(); }
+  else Object.assign(D, D.built[MODE]);
+  for (const d of D.doors) if (d.kind !== 'arch') d.open = 0;
+  buildStaticLight();
+  npcs = castFor(i);
+  tag.textContent = NAMES[i];
+  markDeck(i);
+}
+const markDeck = (i) => document.querySelectorAll('#decks button').forEach((b) => b.classList.toggle('on', +b.dataset.deck === i));
+const setOn = (sel, on) => document.querySelector(sel).classList.toggle('on', on);
+const stopTour = () => { if (tour) { tour = false; setOn('#tour', false); } };
+function startTour() { tour = true; setOn('#tour', true); tourAt = 0; tourPath = null; tourWait = 0; setDeck(0); me.x = TOUR[0][1]; me.y = TOUR[0][2]; me.a = Math.atan2(-decks[0].docks[0].dy, -decks[0].docks[0].dx); }
+function newBase(seed) {
+  makeBase(seed);
+  outsideImg = null;
+  buildTour();
+  document.getElementById('seed').textContent = `(bas nr ${SEED})`;
+}
+upBtn.onclick = () => { stopTour(); changeDeck(1); };
+downBtn.onclick = () => { stopTour(); changeDeck(-1); };
+document.getElementById('fire').onclick = () => { stopTour(); fire(); };
+document.getElementById('decks').addEventListener('click', (e) => {
+  const i = e.target.dataset.deck; if (i === undefined) return;
+  stopTour();
+  if (+i < 0) { setDeck(-1); return; }
+  setDeck(+i);
+  // arrive where the loud way comes up, or at the main dock
+  if (+i === 0) { const s = decks[0].docks[0]; me.x = (s.px + s.dx * (s.e + 1)) * T; me.y = (s.py + s.dy * (s.e + 1)) * T; }
+  else { const l = LINKS.find((q) => q.decks[1] === +i && q.way === 'loud'); me.x = ((l.r[0] + l.r[2] + 1) / 2) * T; me.y = ((l.r[1] + l.r[3] + 1) / 2) * T; }
+});
+document.getElementById('modes').addEventListener('click', (e) => {
+  const m = e.target.dataset.mode; if (!m) return;
+  document.querySelectorAll('#modes button').forEach((b) => b.classList.toggle('on', b === e.target));
+  MODE = m; if (!outside) setDeck(me.deck);
+});
+document.getElementById('newbase').onclick = () => { newBase((Math.random() * 1e6) | 0); if (tour) startTour(); else setDeck(outside ? -1 : 0); };
+document.getElementById('tour').onclick = () => { if (tour) stopTour(); else startTour(); };
+document.getElementById('overview').onclick = () => { overview = !overview; setOn('#overview', overview); sizeView(); };
+document.getElementById('plan').onclick = () => { planView = !planView; setOn('#plan', planView); };
+document.getElementById('boss').onclick = () => {
+  stopTour(); setDeck(2);
+  // stand in the doorway of the boss room's first entrance
+  const d = D.doors.find((q) => q.kind === 'pressure');
+  const g = doorGeom(d);
+  const inX = g.cx + (d.o === 'v' ? (g.cx < 40 * T ? 30 : -30) : 0), inY = g.cy + (d.o === 'h' ? (g.cy < 40 * T ? 30 : -30) : 0);
+  me.x = inX; me.y = inY;
+};
+addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (['w', 'a', 's', 'd', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) { keys.add(k); stopTour(); if (k.startsWith('arrow')) e.preventDefault(); }
+  if (k === 'u') { stopTour(); changeDeck(1); }
+  if (k === 'n') { stopTour(); changeDeck(-1); }
+  if (k === ' ') { stopTour(); fire(); e.preventDefault(); }
+  if (k === 'l') me.lamp = !me.lamp;
+});
+addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+const toWorld = (e) => { const r = view.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * VW + camX, y: ((e.clientY - r.top) / r.height) * VH + camY }; };
+view.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') pointer = toWorld(e); else if (touchGoal) touchGoal = toWorld(e); });
+view.addEventListener('pointerdown', (e) => { if (overview || outside) return; if (e.pointerType === 'mouse') { pointer = toWorld(e); stopTour(); fire(); return; } stopTour(); touchGoal = toWorld(e); view.setPointerCapture(e.pointerId); });
+view.addEventListener('pointerup', () => (touchGoal = null)); view.addEventListener('pointercancel', () => (touchGoal = null));
+view.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') pointer = null; });
+
+// ================================================================== go
+sizeView();
+newBase(1 + ((Math.random() * 1e6) | 0));
+setDeck(-1);
+let last = performance.now(), outsideTime = 0;
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  // the tour starts outside for a moment, then goes in
+  if (tour && outside) { outsideTime += dt; if (outsideTime > 3) { outsideTime = 0; startTour(); } }
+  frame(now / 1000, dt);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+window.__design = { blocked: (...a) => blocked(...a), tryOnce, flood: (...a) => flood(...a), nearestWalk: (...a) => nearestWalk(...a), get LINKS() { return LINKS; }, setD: (d) => { D = d; }, newBase, setDeck, me, get decks() { return decks; }, setTour: (v) => { tour = v; }, setOverview: (v) => { overview = v; sizeView(); }, setPlan: (v) => (planView = v), setMode: (m) => { MODE = m; if (!outside) setDeck(me.deck); }, fire, get D() { return D; }, check, get SEED() { return SEED; } };
+</script>
+</body>
+</html>

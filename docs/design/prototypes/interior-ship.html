@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Critical – designtest: fraktskeppets insida</title>
+<style>
+  :root { --bg:#0b0c11; --panel:#14161e; --line:#262a36; --text:#d6d9e2; --dim:#8a90a0; --acc:#d9a441; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px 14px 60px; }
+  h1 { font-size: 20px; margin: 4px 0 2px; letter-spacing: .02em; }
+  h2 { font-size: 17px; margin: 28px 0 8px; }
+  p.lead { color: var(--dim); margin: 0 0 12px; }
+  .stage { position: relative; background:#000; border:1px solid var(--line); border-radius:6px; overflow:hidden; touch-action:none; }
+  canvas.view { display:block; width:100%; height:auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+  .bar { display:flex; flex-wrap:wrap; gap:6px; margin: 10px 0 4px; }
+  .bar .grp { display:flex; gap:0; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  button { background:var(--panel); color:var(--text); border:0; border-right:1px solid var(--line); padding:8px 11px; font:inherit; font-size:14px; cursor:pointer; }
+  .grp button:last-child { border-right:0; }
+  button.on { background:#2a2414; color:var(--acc); }
+  .hint { color: var(--dim); font-size: 13px; margin: 2px 0 0; }
+  .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:10px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 12px; }
+  .card h3 { margin:0 0 4px; font-size:15px; color:var(--acc); }
+  .card p, .card li { margin:0; color:#c2c6d0; font-size:14px; }
+  .card ul { margin:0; padding-left:18px; }
+  details { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px 12px; margin-top:10px; }
+  summary { cursor:pointer; color:var(--acc); }
+  details li, details p { font-size:14px; color:#c2c6d0; }
+  code { background:#1d2029; padding:0 4px; border-radius:3px; font-size:13px; }
+  #sheet { width:100%; max-width: 760px; image-rendering: pixelated; display:block; background:#101219; border:1px solid var(--line); border-radius:6px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Designtest: fraktskeppets insida</h1>
+  <p class="lead">Ett eget förslag på hur ett skepp man bordar kan se ut inuti: tunna väggar, rum som ligger där de skulle ligga på ett riktigt skepp, nya figurer och ljus. Inget av detta finns i spelet. Gå runt själv eller låt rundturen gå.</p>
+
+  <div class="stage" id="stage"><canvas class="view" id="view" width="640" height="360"></canvas></div>
+  <div class="bar">
+    <div class="grp" id="modes">
+      <button data-mode="normal" class="on">Ström på</button>
+      <button data-mode="lockdown">Lockdown</button>
+      <button data-mode="wreck">Vrak</button>
+    </div>
+    <div class="grp" id="views">
+      <button data-view="full" class="on">Ljus</button>
+      <button data-view="flat">Utan ljus</button>
+      <button data-view="light">Bara ljuset</button>
+    </div>
+    <div class="grp">
+      <button id="tour" class="on">Rundtur</button>
+      <button id="overview">Hela skeppet</button>
+      <button id="labels">Rumsnamn</button>
+      <button id="flare">Flare</button>
+    </div>
+  </div>
+  <p class="hint">Dator: WASD eller pilar för att gå, musen styr ficklampan, Q kastar en flare, L tänder och släcker lampan. Mobil: dra med fingret dit du vill gå. Rundturen slutar när du tar över.</p>
+
+  <h2>Figurerna</h2>
+  <canvas id="sheet" width="760" height="560"></canvas>
+  <p class="hint">Ritade 4 gånger större än i spelet. Samma pixlar som i skeppet ovan, där de vrids efter hur de tittar.</p>
+
+  <h2>Vad som är annorlunda</h2>
+  <div class="cards">
+    <div class="card"><h3>Väggar</h3><ul>
+      <li>Väggar ligger mellan rutorna i stället för att vara egna rutor. Innerväggar är 4 punkter tjocka, skrovet 8.</li>
+      <li>Två rum delar samma vägg, så det blir aldrig dubbla väggar.</li>
+      <li>Väggens ovansida har en ljus och en mörk kant och kastar en smal skugga, så att den känns hög utan att man ser den snett.</li>
+    </ul></div>
+    <div class="card"><h3>Planlösning</h3><ul>
+      <li>Skeppet är byggt bakifrån och fram: motorer och reaktor, lastrum, bostäder, kommandodel och brygga i fören.</li>
+      <li>Skotten delar skeppet i sektioner med tryckdörrar emellan.</li>
+      <li>Luftslussen ligger på sidan, mitt för lastrummet, med ett rum för rymddräkter bredvid.</li>
+      <li>Tre vägar runt (servicegång, lastrum, nedre förråd) så att man kan flankera och smyga.</li>
+    </ul></div>
+    <div class="card"><h3>Rummen och skydd</h3><ul>
+      <li>Allt man kan gömma sig bakom är sådant som hör hemma i rummet: containrar, bänkar, serverskåp, tankar.</li>
+      <li>Varje rum har eget golv och eget ljus, så man ser var man är utan skyltar.</li>
+      <li>Kaptenens hytt är valvet, med kassaskåpet och en låst dörr. Mainframen står i serverrummet vid bryggan.</li>
+    </ul></div>
+    <div class="card"><h3>Ljuset</h3><ul>
+      <li>Bilden multipliceras med en ljuskarta, så svärtan finns kvar och inget blir mjölkigt.</li>
+      <li>Allt som lyser själv (skärmar, lampor, visir, reaktorn) läggs ovanpå efteråt och får ett svagt sken.</li>
+      <li>Väggar, stängda dörrar och höga saker kastar skugga, även från ficklampan.</li>
+      <li>Varje rum har sin ljusfärg: varm reaktor, gult lastrum, kall brygga.</li>
+      <li>Rött betyder fortfarande fiende: bara i lockdown och i vakternas ögon.</li>
+    </ul></div>
+  </div>
+
+  <details>
+    <summary>För agenten: hur det kan byggas</summary>
+    <p><b>Väggar på kanter.</b> Planen blir en ruta per golvbit med ett rumsnummer. En vägg finns där två grannrutor har olika rum, utom där en dörr står. Skrov där ena sidan är utanför skeppet. Det ger tunna väggar och inga dubbla väggar av sig själv. Gång och sikt kollar kanten mellan två rutor i stället för rutan. Rutstorleken 16 kan vara kvar.</p>
+    <p><b>Generering.</b> Lägg ut sektioner längs skeppet i fast ordning (motor, last, bostad, kommando, brygga), skott mellan sektionerna med tryckdörr på ryggraden, och dela varje sektion i rum efter funktion. Inredningen väljs per rumssort och ställs mot väggarna så att mitten och dörrarna blir fria.</p>
+    <p><b>Ljus i fyra lager.</b> 1) Bilden ritas fullt upplyst. 2) En ljuskarta i halv upplösning: omgivningsljus plus varje lampa som en radiell gradient, klippt med en synlighetspolygon mot väggar, stängda dörrar och höga saker. Lampor som står still räknas en gång och ritas om bara när en dörr byter läge. 3) Bilden multipliceras med ljuskartan. 4) Självlysande pixlar läggs på med addition, plus en suddig kopia i fjärdedels upplösning som sken. Flimmer och snurrande ljus hålls under 2 per sekund.</p>
+    <p><b>Figurer.</b> 24 × 24 pixlar, ritade åt höger och vridna i spelet. Lager: skugga, fötter (gångsteg), ryggsäck, axlar, armar och vapen, hjälm, visir. Visir, ögon, mynningsflamma och lysdioder ligger i ett eget självlysande lager så att de syns i mörker.</p>
+  </details>
+</main>
+
+<script>
+'use strict';
+// ------------------------------------------------------------------ basics
+const T = 16, W = 66, H = 28, WW = W * T, WH = H * T;
+const OUT = -1;
+const hash = (x, y, s = 0) => {
+  let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+};
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
+const rgb = (c, k = 1) => `rgb(${Math.min(255, c[0] * k) | 0},${Math.min(255, c[1] * k) | 0},${Math.min(255, c[2] * k) | 0})`;
+const hex = (s) => [parseInt(s.slice(1, 3), 16), parseInt(s.slice(3, 5), 16), parseInt(s.slice(5, 7), 16)];
+const shade = (s, k) => rgb(hex(s), k);
+
+// ------------------------------------------------------------------ the hull and the rooms
+// Which rows are inside the hull for each column. Bow to the right, like the game.
+function hullRows(x) {
+  if (x >= 2 && x <= 51) return [4, 23];
+  if (x >= 52 && x <= 56) return [6, 21];
+  if (x >= 57 && x <= 59) return [7, 20];
+  if (x === 60) return [8, 19];
+  if (x === 61) return [9, 18];
+  if (x === 62) return [10, 17];
+  if (x === 63) return [11, 16];
+  return null;
+}
+const inHull = (x, y) => { const r = hullRows(x); return !!r && y >= r[0] && y <= r[1]; };
+
+const grid = new Int16Array(W * H).fill(OUT);
+const rooms = [];
+function room(name, kind, x0, y0, x1, y1, tint) {
+  const id = rooms.length;
+  rooms.push({ id, name, kind, x0, y0, x1, y1, tint });
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (inHull(x, y)) grid[y * W + x] = id;
+  return id;
+}
+const R = {};
+R.work = room('WORKSHOP', 'eng', 2, 4, 12, 8, '#c98a3a');
+R.reactor = room('REACTOR', 'eng', 2, 9, 12, 18, '#d06a2a');
+R.life = room('LIFE SUPPORT', 'life', 2, 19, 12, 23, '#5fae9a');
+R.serv = room('SERVICE', 'corridor', 13, 4, 37, 5, '#8a90a0');
+R.cargo = room('CARGO', 'cargo', 13, 6, 37, 19, '#c9a24a');
+R.store = room('STORES', 'store', 13, 20, 21, 23, '#9a8a6a');
+R.airlock = room('AIRLOCK', 'airlock', 22, 20, 25, 23, '#d9a441');
+R.eva = room('SUITS', 'store', 26, 20, 30, 23, '#7a9ab0');
+R.drone = room('DRONE BAY', 'store', 31, 20, 37, 23, '#5fb0b8');
+R.mess = room('MESS', 'mess', 38, 4, 45, 12, '#c9a06a');
+R.cabA = room('CREW', 'cabin', 46, 4, 48, 12, '#8a7ab0');
+R.cabB = room('CREW', 'cabin', 49, 4, 51, 12, '#8a7ab0');
+R.spine = room('SPINE', 'corridor', 38, 13, 55, 14, '#8a90a0');
+R.med = room('MEDBAY', 'med', 38, 15, 43, 23, '#9ad0d8');
+R.cabC = room('CREW', 'cabin', 44, 15, 46, 23, '#8a7ab0');
+R.cabD = room('CREW', 'cabin', 47, 15, 49, 23, '#8a7ab0');
+R.head = room('WASH', 'med', 50, 15, 51, 23, '#9ad0d8');
+R.server = room('MAINFRAME', 'server', 52, 6, 55, 12, '#5fd1c0');
+R.captain = room('CAPTAIN', 'captain', 52, 15, 55, 21, '#d9a441');
+R.bridge = room('BRIDGE', 'bridge', 56, 6, 63, 21, '#6fb8ff');
+const roomAt = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? OUT : grid[y * W + x]);
+
+// Doors sit on the edge between two tiles. 'v' is the left edge of tile x, rows y and y+1. 'h' is the top edge of
+// row y, columns x and x+1.
+//   slide: opens for whoever comes near   pressure: the same, heavier, between sections
+//   locked: the vault                      hatch: the outer door of the airlock
+const doors = [];
+const door = (o, x, y, kind = 'slide') => doors.push({ o, x, y, kind, open: 0, jam: null });
+door('h', 4, 9); door('h', 4, 19); door('v', 13, 4); door('v', 13, 13, 'pressure'); door('v', 13, 21);
+door('h', 20, 6); door('h', 30, 6); door('h', 16, 20); door('h', 23, 20); door('v', 26, 21); door('h', 33, 20);
+door('h', 23, 24, 'hatch');
+door('v', 38, 4, 'pressure'); door('v', 38, 13, 'pressure');
+door('h', 41, 13); door('h', 46, 13); door('h', 49, 13);
+door('h', 40, 15); door('h', 44, 15); door('h', 47, 15); door('h', 50, 15);
+door('h', 53, 13); door('h', 53, 15, 'locked'); door('v', 56, 13, 'pressure'); door('v', 56, 8);
+const doorAt = (o, x, y) => doors.find((d) => d.o === o && d.x === x && (d.y === y || d.y === y - 1) && d.o === 'v')
+  || doors.find((d) => d.o === o && d.o === 'h' && d.y === y && (d.x === x || d.x === x - 1));
+function doorGeom(d) {
+  if (d.o === 'v') return { x: d.x * T, y: d.y * T, len: 2 * T, cx: d.x * T, cy: d.y * T + T };
+  return { x: d.x * T, y: d.y * T, len: 2 * T, cx: d.x * T + T, cy: d.y * T };
+}
+
+// ------------------------------------------------------------------ walls
+// Wall types in the mask: 1 inner wall, 2 hull, 3 door frame, 4 glass.
+const mask = new Uint8Array(WW * WH);
+const wallRects = []; // for walking
+const occluders = []; // segments that stop light and sight, built per state
+function maskRect(x, y, w, h, t) {
+  for (let j = Math.max(0, y); j < Math.min(WH, y + h); j++)
+    for (let i = Math.max(0, x); i < Math.min(WW, x + w); i++) if (t > mask[j * WW + i] || t === 3) mask[j * WW + i] = t;
+}
+const wallSegs = [];
+function buildWalls() {
+  // Vertical edges.
+  for (let x = 1; x < W; x++) {
+    let run = null;
+    const flush = () => { if (run) { addRun('v', x, run); run = null; } };
+    for (let y = 0; y < H; y++) {
+      const a = roomAt(x - 1, y), b = roomAt(x, y);
+      const isDoor = doorAt('v', x, y);
+      const t = a === b || (a === OUT && b === OUT) || isDoor ? 0 : a === OUT || b === OUT ? (x >= 61 ? 4 : 2) : 1;
+      const side = a === OUT ? -1 : b === OUT ? 1 : 0;
+      if (t && run && run.t === t && run.side === side) run.y1 = y;
+      else { flush(); if (t) run = { t, side, y0: y, y1: y }; }
+    }
+    flush();
+  }
+  for (let y = 1; y < H; y++) {
+    let run = null;
+    const flush = () => { if (run) { addRun('h', y, run); run = null; } };
+    for (let x = 0; x < W; x++) {
+      const a = roomAt(x, y - 1), b = roomAt(x, y);
+      const isDoor = doorAt('h', x, y);
+      const t = a === b || (a === OUT && b === OUT) || isDoor ? 0 : a === OUT || b === OUT ? (x >= 61 ? 4 : 2) : 1;
+      const side = a === OUT ? -1 : b === OUT ? 1 : 0;
+      if (t && run && run.t === t && run.side === side) run.x1 = x;
+      else { flush(); if (t) run = { t, side, x0: x, x1: x }; }
+    }
+    flush();
+  }
+  // Door frames: a post at each end, a little thicker than the wall.
+  for (const d of doors) {
+    const g = doorGeom(d);
+    const heavy = d.kind !== 'slide';
+    const s = heavy ? 8 : 6;
+    const ends = d.o === 'v' ? [[g.x, g.y], [g.x, g.y + g.len]] : [[g.x, g.y], [g.x + g.len, g.y]];
+    for (const [ex, ey] of ends) maskRect(ex - s / 2, ey - s / 2, s, s, 3);
+  }
+}
+function addRun(o, at, run) {
+  const hull = run.t !== 1;
+  // Inner walls are 4 points, centred on the edge. The hull is 8 and stands mostly outside the room.
+  const ext = hull ? 6 : 2;
+  let x, y, w, h, seg;
+  if (o === 'v') {
+    const e = at * T;
+    const x0 = hull ? (run.side < 0 ? e - 6 : e - 2) : e - 2;
+    x = x0; w = hull ? 8 : 4; y = run.y0 * T - ext; h = (run.y1 - run.y0 + 1) * T + ext * 2;
+    const sx = hull ? (run.side < 0 ? e - 5 : e + 5) : e;
+    seg = [sx, run.y0 * T - ext, sx, (run.y1 + 1) * T + ext];
+  } else {
+    const e = at * T;
+    const y0 = hull ? (run.side < 0 ? e - 6 : e - 2) : e - 2;
+    y = y0; h = hull ? 8 : 4; x = run.x0 * T - ext; w = (run.x1 - run.x0 + 1) * T + ext * 2;
+    const sy = hull ? (run.side < 0 ? e - 5 : e + 5) : e;
+    seg = [run.x0 * T - ext, sy, (run.x1 + 1) * T + ext, sy];
+  }
+  maskRect(x, y, w, h, run.t);
+  wallRects.push({ x, y, w, h });
+  wallSegs.push(seg);
+}
+buildWalls();
+
+// ------------------------------------------------------------------ props
+// Everything in the rooms. A prop draws itself, and may be solid (cover), tall (stops light) and give light.
+let MODE = 'normal';
+const props = [];
+const solids = [];
+const tallRects = [];
+let lights = [];
+let emitters = []; // little things that blink, drawn each frame
+const P = (o) => props.push(o);
+const solid = (x, y, w, h, tall = false) => { solids.push({ x, y, w, h }); if (tall) tallRects.push({ x, y, w, h }); };
+
+// Light colours.
+const L = {
+  white: [215, 225, 240], warm: [255, 196, 140], amber: [255, 178, 96], sodium: [255, 186, 110],
+  cyan: [110, 205, 255], teal: [90, 220, 200], reactor: [255, 140, 60], cold: [190, 210, 235], red: [255, 50, 40],
+  green: [110, 230, 150], flare: [255, 170, 110],
+};
+// A light, depending on the state of the ship. `on` says in which modes it burns.
+function light(x, y, r, col, i, on = 'n', extra = {}) {
+  const want = { normal: on.includes('n'), lockdown: on.includes('l'), wreck: on.includes('w') }[MODE];
+  if (!want) return;
+  lights.push({ x, y, r, col, i, kind: 'static', ...extra });
+}
+
+// ------------------------------------------------------------------ drawing helpers for the albedo
+let A, E; // albedo and emissive contexts of the static layers
+const box = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x | 0, y | 0, w | 0, h | 0); };
+// A block seen from above: top face, light top-left edge, dark bottom-right edge, and a drop shadow.
+function block(x, y, w, h, c, o = {}) {
+  const base = hex(c);
+  if (!o.noShadow) { A.fillStyle = 'rgba(0,0,0,0.45)'; A.fillRect(x + 2, y + 2, w, h); }
+  box(A, x, y, w, h, rgb(base, 0.55));
+  box(A, x + 1, y + 1, w - 2, h - 2, c);
+  box(A, x + 1, y + 1, w - 2, 1, rgb(base, 1.3));
+  box(A, x + 1, y + 1, 1, h - 2, rgb(base, 1.18));
+  box(A, x + 1, y + h - 2, w - 2, 1, rgb(base, 0.78));
+  box(A, x + w - 2, y + 1, 1, h - 2, rgb(base, 0.82));
+}
+function disc(g, cx, cy, r, c) {
+  g.fillStyle = c;
+  for (let j = -r; j <= r; j++) { const k = Math.floor(Math.sqrt(r * r - j * j + r * 0.6)); g.fillRect(cx - k, cy + j, k * 2 + 1, 1); }
+}
+const glow = (x, y, w, h, c) => { box(E, x, y, w, h, c); };
+// A screen: dark on the albedo, lit on the emissive layer unless the power is off.
+function screen(x, y, w, h, c = '#5fd1e0', on = 'nl') {
+  box(A, x, y, w, h, '#101820');
+  const lit = { normal: on.includes('n'), lockdown: on.includes('l'), wreck: on.includes('w') }[MODE];
+  if (!lit) return;
+  const dim = MODE === 'lockdown' ? 0.45 : 1;
+  box(E, x, y, w, h, shade(c, 0.35 * dim));
+  for (let j = y + 1; j < y + h - 1; j += 2) box(E, x + 1, j, Math.max(1, ((w - 2) * (0.4 + 0.6 * hash(x, j))) | 0), 1, shade(c, 0.9 * dim));
+}
+
+// ------------------------------------------------------------------ floors
+function floorTile(kind, tx, ty) {
+  const x = tx * T, y = ty * T, n = hash(tx, ty);
+  const g = A;
+  const noise = (cols, count) => { for (let k = 0; k < count; k++) { const a = hash(tx, ty, k + 3); box(g, x + ((a * 16) | 0), y + ((hash(tx, ty, k + 40) * 16) | 0), 1, 1, cols[k % cols.length]); } };
+  switch (kind) {
+    case 'corridor': {
+      box(g, x, y, T, T, '#2b2e37');
+      for (let k = 1; k < T; k += 3) box(g, x + k, y + 1, 1, T - 2, '#23252d');
+      box(g, x, y, T, 1, '#202229'); box(g, x, y, 1, T, '#33363f');
+      noise(['#3a3d47', '#1d1f26'], 3);
+      break;
+    }
+    case 'cargo': {
+      const big = ((tx >> 1) + (ty >> 1)) % 2;
+      box(g, x, y, T, T, big ? '#35342f' : '#32312c');
+      if (tx % 2 === 0) box(g, x, y, 1, T, '#24231f');
+      if (ty % 2 === 0) box(g, x, y, T, 1, '#24231f');
+      if (tx % 2 === 1 && ty % 2 === 1) { box(g, x + 14, y + 14, 2, 2, '#47463f'); }
+      noise(['#3e3d37', '#2a2924', '#2a2924'], 5);
+      break;
+    }
+    case 'eng': case 'life': {
+      box(g, x, y, T, T, '#25272c');
+      // pipes under the grating
+      if (ty % 3 === 0) box(g, x, y + 6, T, 3, '#3a2d26');
+      if (tx % 4 === 1) box(g, x + 7, y, 2, T, '#2f3a3a');
+      for (let k = 0; k < T; k += 2) box(g, x, y + k, T, 1, 'rgba(10,10,14,0.55)');
+      for (let k = 0; k < T; k += 4) box(g, x + k, y, 1, T, 'rgba(10,10,14,0.45)');
+      box(g, x, y, T, 1, '#1a1b1f'); box(g, x, y, 1, T, '#1a1b1f');
+      break;
+    }
+    case 'cabin': {
+      box(g, x, y, T, T, '#2c2a34');
+      noise(['#33303d', '#26242d', '#302d39', '#24222b'], 10);
+      break;
+    }
+    case 'mess': {
+      for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) box(g, x + i * 8, y + j * 8, 8, 8, (i + j) % 2 ? '#34363c' : '#2f3136');
+      box(g, x, y, T, 1, '#26282d'); box(g, x, y + 8, T, 1, '#2a2c31'); box(g, x, y, 1, T, '#26282d'); box(g, x + 8, y, 1, T, '#2a2c31');
+      break;
+    }
+    case 'med': {
+      for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) box(g, x + i * 8, y + j * 8, 8, 8, '#3a4045');
+      box(g, x, y, T, 1, '#2d3236'); box(g, x, y + 8, T, 1, '#2d3236'); box(g, x, y, 1, T, '#2d3236'); box(g, x + 8, y, 1, T, '#2d3236');
+      noise(['#434a50'], 2);
+      break;
+    }
+    case 'server': {
+      box(g, x, y, T, T, '#262a30');
+      box(g, x + 1, y + 1, T - 2, T - 2, '#2b3036');
+      for (let j = 3; j < T - 2; j += 3) for (let i = 3; i < T - 2; i += 3) box(g, x + i, y + j, 1, 1, '#1d2025');
+      break;
+    }
+    case 'captain': {
+      box(g, x, y, T, T, '#2c2826');
+      noise(['#332e2b', '#272320'], 6);
+      break;
+    }
+    case 'bridge': {
+      box(g, x, y, T, T, '#262a33');
+      box(g, x, y, T, 1, '#1e2129'); box(g, x, y, 1, T, '#1e2129');
+      box(g, x + 2, y + 2, T - 4, 1, '#2c303a');
+      break;
+    }
+    case 'airlock': case 'store': default: {
+      box(g, x, y, T, T, '#2a2b2f');
+      box(g, x, y, T, 1, '#1e1f23'); box(g, x, y, 1, T, '#1e1f23');
+      box(g, x + 2, y + 2, 2, 2, '#34353a'); box(g, x + 12, y + 12, 2, 2, '#34353a');
+      noise(['#323338', '#24252a'], 3);
+    }
+  }
+}
+// Hazard stripes in a rect.
+function hazard(x, y, w, h, dim = 1) {
+  A.save(); A.beginPath(); A.rect(x, y, w, h); A.clip();
+  box(A, x, y, w, h, shade('#1c1c1e', 1));
+  A.fillStyle = shade('#a8842e', dim);
+  for (let k = -h; k < w + h; k += 6) { A.beginPath(); A.moveTo(x + k, y); A.lineTo(x + k + 3, y); A.lineTo(x + k + 3 - h, y + h); A.lineTo(x + k - h, y + h); A.fill(); }
+  A.restore();
+}
+
+// ------------------------------------------------------------------ furnishing by room
+function furnish() {
+  const n = MODE === 'normal', ld = MODE === 'lockdown', wr = MODE === 'wreck';
+  // --- workshop
+  block(36, 66, 70, 13, '#4b4236'); // workbench
+  for (let k = 0; k < 7; k++) box(A, 40 + k * 9, 69, 4, 2 + (k % 3), ['#7a7f88', '#8a5a3a', '#5a6a7a'][k % 3]);
+  block(150, 66, 50, 11, '#3d4250'); // parts shelf
+  for (let k = 0; k < 5; k++) box(A, 153 + k * 9, 68, 6, 6, ['#6a5040', '#4a5a50', '#5a5a64'][k % 3]);
+  block(176, 112, 15, 15, '#6a4a32'); block(160, 118, 12, 12, '#4b5a4a'); solid(36, 66, 70, 13); solid(150, 66, 50, 11); solid(160, 112, 31, 18);
+  block(40, 112, 22, 16, '#3e4450'); screen(43, 115, 16, 6, '#ffb347', 'n'); solid(40, 112, 22, 16);
+  light(96, 100, 100, L.warm, 0.85, 'n');
+  light(50, 118, 40, L.amber, 0.35, 'n');
+  // --- reactor
+  const rcx = 128, rcy = 224;
+  // coolant pipes from the core to the walls
+  box(A, rcx - 3, 146, 6, rcy - 146, '#4a3b33'); box(A, rcx - 2, 146, 1, rcy - 146, '#6a5446');
+  box(A, rcx - 3, rcy, 6, 302 - rcy, '#4a3b33'); box(A, rcx - 2, rcy, 1, 302 - rcy, '#6a5446');
+  box(A, 34, rcy - 3, rcx - 34, 6, '#3b4650'); box(A, 34, rcy - 2, rcx - 34, 1, '#5a6a78');
+  A.fillStyle = 'rgba(0,0,0,0.45)'; disc(A, rcx + 2, rcy + 2, 25, 'rgba(0,0,0,0.45)');
+  disc(A, rcx, rcy, 25, '#2e3038'); disc(A, rcx, rcy, 24, '#4c5060'); disc(A, rcx, rcy, 20, '#3a3d48'); disc(A, rcx, rcy, 13, '#24262c');
+  for (let k = 0; k < 12; k++) { const a = (k / 12) * Math.PI * 2; box(A, rcx + Math.cos(a) * 22 - 1, rcy + Math.sin(a) * 22 - 1, 2, 2, '#6a7080'); }
+  box(A, rcx - 23, rcy - 23, 6, 2, '#6a7080');
+  disc(A, rcx, rcy, 9, '#5a3a2a');
+  if (!wr) disc(E, rcx, rcy, 9, ld ? '#5a2a14' : '#a85a20');
+  solid(rcx - 24, rcy - 24, 48, 48, true);
+  // engine housings astern
+  for (const yy of [152, 260]) {
+    block(34, yy, 30, 40, '#3e424e');
+    box(A, 38, yy + 6, 22, 4, '#2a2d35'); box(A, 38, yy + 30, 22, 4, '#2a2d35');
+    for (let k = 0; k < 4; k++) box(A, 40 + k * 5, yy + 15, 3, 10, '#4c5262');
+    screen(52, yy + 14, 8, 4, '#ffb347', 'n');
+    solid(34, yy, 30, 40, true);
+  }
+  // control desk
+  block(178, 168, 16, 34, '#3e4450'); screen(181, 171, 10, 12, '#ffb347', 'nl'); screen(181, 186, 10, 6, '#5fd1e0', 'n'); solid(178, 168, 16, 34);
+  // a painted ring round the core: keep out
+  for (let k = 0; k < 40; k++) { const a = (k / 40) * 6.283; if (k % 2) box(A, rcx + Math.cos(a) * 33 - 1, rcy + Math.sin(a) * 33 - 1, 2, 2, '#7a6630'); }
+  // pipe manifolds along the walls, with gauges
+  for (const yy of [148, 290]) { box(A, 150, yy, 52, 4, '#3b4650'); box(A, 150, yy, 52, 1, '#5a6a78'); for (let k = 0; k < 3; k++) { disc(A, 160 + k * 16, yy + 2, 3, '#2a2d34'); box(A, 160 + k * 16, yy + 1, 1, 2, '#c9c2a8'); } }
+  block(70, 150, 22, 10, '#3e4450'); block(70, 290, 22, 10, '#3e4450'); solid(70, 150, 22, 10); solid(70, 290, 22, 10);
+  if (!wr) lights.push({ x: rcx, y: rcy, r: 170, col: L.reactor, i: ld ? 0.45 : 0.95, kind: 'pulse', speed: 0.55 });
+  light(60, 150, 70, L.warm, 0.4, 'n'); light(190, 296, 70, L.warm, 0.4, 'n');
+  // --- life support
+  for (const [tx, ty] of [[46, 330], [70, 330], [46, 360], [70, 360], [94, 360]]) {
+    disc(A, tx + 2, ty + 2, 9, 'rgba(0,0,0,0.45)'); disc(A, tx, ty, 9, '#2e4440'); disc(A, tx, ty, 8, '#4a6a62'); disc(A, tx - 2, ty - 2, 3, '#6a8e84');
+    box(A, tx - 1, ty - 1, 3, 3, '#33403c'); solid(tx - 9, ty - 9, 18, 18, true);
+  }
+  block(126, 310, 44, 24, '#3e4450'); disc(A, 140, 322, 8, '#2a2d34');
+  for (let k = -6; k <= 6; k += 3) box(A, 134, 322 + k, 13, 1, '#4c5262');
+  screen(154, 314, 12, 6, '#62e08a', 'n'); solid(126, 310, 44, 24, true);
+  light(150, 350, 80, L.cold, 0.55, 'n'); light(70, 345, 60, L.teal, 0.3, 'n');
+  // --- service corridor: pipes along the hull, strip lights
+  box(A, 208, 66, 400, 2, '#4a3b33'); box(A, 208, 69, 400, 2, '#3b4650');
+  for (let x = 232; x < 600; x += 64) { glow(x, 65, 6, 1, n ? '#c8d8f0' : wr ? '#000' : '#401010'); light(x + 3, 76, 72, L.white, 0.7, 'n'); }
+  // --- cargo hold
+  // lanes painted on the floor
+  for (let x = 212; x < 604; x += 10) { box(A, x, 203, 6, 2, '#7a6630'); box(A, x, 242, 6, 2, '#7a6630'); }
+  for (const dx of [320, 480]) hazard(dx, 97, 32, 4, 0.8);
+  for (const dx of [256, 368, 528]) hazard(dx, 315, 32, 4, 0.8);
+  const crates = [
+    [224, 112, 48, 30, '#3f5f5a', 'c'], [288, 104, 30, 30, '#6e4630', 'k'], [352, 118, 64, 28, '#5a5d3a', 'c'],
+    [440, 104, 30, 46, '#55586a', 'c'], [520, 108, 48, 30, '#6e4630', 'c'], [572, 150, 28, 28, '#55586a', 'k'],
+    [232, 256, 30, 40, '#5a5d3a', 'c'], [300, 264, 64, 28, '#3f5f5a', 'c'], [404, 252, 30, 30, '#6e4630', 'k'],
+    [452, 270, 48, 30, '#55586a', 'c'], [566, 252, 32, 40, '#3f5f5a', 'c'],
+  ];
+  for (const [x, y, w, h, c, t] of crates) {
+    block(x, y, w, h, c);
+    const base = hex(c);
+    if (t === 'c') { // a container: ribs along it
+      const along = w >= h;
+      for (let k = 4; k < (along ? w : h) - 3; k += 4) along ? box(A, x + k, y + 2, 1, h - 4, rgb(base, 0.8)) : box(A, x + 2, y + k, w - 4, 1, rgb(base, 0.8));
+      box(A, x + 3, y + 3, 4, 2, '#c9c2a8');
+    } else { // stacked crates
+      box(A, x + (w >> 1), y + 1, 1, h - 2, rgb(base, 0.6)); box(A, x + 1, y + (h >> 1), w - 2, 1, rgb(base, 0.6));
+    }
+    solid(x, y, w, h, true);
+  }
+  // a cargo loader, parked
+  block(408, 166, 22, 18, '#8a6a2a'); box(A, 430, 168, 10, 2, '#5a5d64'); box(A, 430, 180, 10, 2, '#5a5d64'); disc(A, 416, 175, 4, '#3a3d44'); solid(408, 166, 22, 18);
+  for (const [x, y] of [[250, 168], [400, 172], [545, 176], [270, 236], [400, 236], [530, 236], [340, 304], [520, 302]]) light(x, y, 130, L.sodium, 0.85, 'n');
+  // --- stores
+  block(212, 364, 136, 14, '#3d4250'); for (let k = 0; k < 14; k++) box(A, 215 + k * 9, 366, 7, 9, ['#6a5040', '#4a5a50', '#5a5a64', '#6e6040'][k % 4]);
+  block(212, 324, 12, 30, '#3d4250'); solid(212, 364, 136, 14, true); solid(212, 324, 12, 30, true);
+  light(300, 345, 70, L.warm, 0.55, 'n');
+  // --- airlock and suits
+  hazard(354, 322, 60, 3); hazard(354, 377, 60, 3); hazard(354, 322, 3, 58); hazard(411, 322, 3, 58);
+  box(A, 362, 336, 44, 30, '#2f3036'); box(A, 364, 338, 40, 26, '#34363c');
+  light(384, 352, 70, MODE === 'normal' ? L.green : L.cold, 0.45, 'nlw');
+  block(420, 362, 72, 16, '#3d4250');
+  for (let k = 0; k < 5; k++) { disc(A, 428 + k * 14, 369, 4, '#c0b8a0'); box(A, 426 + k * 14, 367, 4, 2, '#3a5a70'); }
+  block(426, 330, 40, 8, '#4a4236'); solid(420, 362, 72, 16, true); solid(426, 330, 40, 8);
+  light(456, 340, 70, L.white, 0.5, 'n');
+  // --- drone bay
+  for (const [x, y] of [[520, 350], [552, 350], [584, 350]]) {
+    disc(A, x, y, 10, '#2a2d34'); disc(A, x, y, 9, '#34373f');
+    if (!wr) for (let a = 0; a < 8; a++) box(E, x + Math.cos(a * 0.785) * 9, y + Math.sin(a * 0.785) * 9, 1, 1, ld ? '#103030' : '#2a8a8a');
+    if (x !== 584) { disc(A, x, y, 4, '#50555f'); for (const [ox, oy] of [[-5, -5], [5, -5], [-5, 5], [5, 5]]) disc(A, x + ox, y + oy, 2, '#3a3d44'); }
+  }
+  block(500, 324, 30, 12, '#4a4236'); solid(500, 324, 30, 12);
+  light(552, 345, 80, L.teal, 0.45, 'n');
+  // --- spine
+  for (let x = 610; x < 894; x += 2) { if ((x >> 1) % 3 === 0) { glow(x, 209, 1, 1, n ? '#8fa8c8' : ld ? '#401010' : '#000'); glow(x, 238, 1, 1, n ? '#8fa8c8' : ld ? '#401010' : '#000'); } }
+  box(A, 610, 219, 284, 10, '#30343e'); box(A, 610, 220, 284, 1, '#3a3f4b');
+  for (const x of [640, 704, 768, 832]) light(x, 224, 80, L.white, 0.75, 'n');
+  // --- mess
+  block(612, 66, 120, 14, '#4a4c54');
+  for (const bx of [618, 632]) for (const by of [69, 75]) disc(A, bx, by, 2, '#1e1f24');
+  box(A, 660, 69, 14, 8, '#5a6a78'); box(A, 661, 70, 12, 6, '#3a4650');
+  if (n) { glow(617, 68, 3, 1, '#ff8a40'); }
+  solid(612, 66, 120, 14);
+  for (const [x, y] of [[630, 116], [680, 150]]) {
+    block(x, y + 7, 40, 5, '#3a3d48'); block(x, y - 7, 40, 5, '#3a3d48'); block(x + 2, y, 36, 14, '#5a5650');
+    box(A, x + 8, y + 4, 4, 4, '#c0b8a0'); box(A, x + 26, y + 6, 3, 3, '#7a5a40');
+    solid(x + 2, y, 36, 14);
+  }
+  block(612, 160, 12, 26, '#3a4a5a'); screen(614, 163, 8, 10, '#ffb347', 'n'); solid(612, 160, 12, 26, true);
+  light(672, 132, 130, L.warm, 0.85, 'n'); light(660, 74, 40, L.amber, 0.35, 'n');
+  // --- crew cabins
+  const cabin = (x0, x1, y0, y1, left, flip) => {
+    const bx = left ? x0 + 3 : x1 - 19;
+    const ys = flip ? [y1 - 38, y1 - 80] : [y0 + 4, y0 + 46];
+    for (const by of ys) {
+      block(bx, by, 16, 34, '#3a3d48'); box(A, bx + 2, by + 2, 12, 30, '#5a5a6a'); box(A, bx + 2, by + (flip ? 23 : 2), 12, 7, '#9a96a6'); box(A, bx + 2, by + (flip ? 2 : 12), 12, 12, '#4a4e66');
+      solid(bx, by, 16, 34);
+    }
+    const lx = left ? x1 - 14 : x0 + 3;
+    block(lx, flip ? y1 - 20 : y0 + 6, 11, 14, '#4a4e5a'); solid(lx, flip ? y1 - 20 : y0 + 6, 11, 14, true);
+    const dy = flip ? y0 + 30 : y1 - 30;
+    block(lx - (left ? 4 : 0), dy, 15, 10, '#4b4236'); solid(lx - (left ? 4 : 0), dy, 15, 10);
+    box(A, lx + 4, dy + 2, 3, 3, '#c9b070');
+    light(lx + 4, dy + 4, 54, L.warm, 0.6, 'n');
+  };
+  cabin(736, 783, 64, 207, false, false); cabin(784, 831, 64, 207, true, false);
+  cabin(704, 751, 240, 383, true, true); cabin(752, 799, 240, 383, false, true);
+  // --- medbay
+  block(632, 290, 22, 40, '#5a6068'); box(A, 635, 293, 16, 34, '#9aa4ac'); box(A, 637, 295, 12, 8, '#c8d0d4');
+  box(A, 629, 300, 2, 20, '#3a4048'); screen(656, 296, 8, 10, '#62e08a', 'n'); solid(632, 290, 22, 40);
+  block(612, 362, 40, 16, '#5a6068'); box(A, 618, 366, 6, 6, '#c04a4a'); box(A, 620, 364, 2, 10, '#c04a4a'); box(A, 616, 368, 10, 2, '#c04a4a'); solid(612, 362, 40, 16, true);
+  block(672, 246, 26, 12, '#5a6068'); solid(672, 246, 26, 12);
+  light(656, 300, 110, L.cold, 0.75, 'n');
+  // --- wash
+  block(804, 352, 24, 26, '#4a5056'); box(A, 807, 355, 18, 20, '#5a7078'); disc(A, 816, 365, 2, '#2a3036'); solid(804, 352, 24, 26, true);
+  block(806, 300, 18, 14, '#8a9096'); disc(A, 815, 306, 4, '#5a6066'); solid(806, 300, 18, 14);
+  light(816, 330, 60, L.cold, 0.6, 'n');
+  // --- mainframe room
+  for (const rx of [838, 858]) {
+    block(rx, 104, 14, 62, '#2a2e36');
+    for (let k = 0; k < 9; k++) box(A, rx + 2, 107 + k * 6, 10, 4, '#3a3f48');
+    solid(rx, 104, 14, 62, true);
+    for (let k = 0; k < 9; k++) emitters.push({ x: rx + 3 + (k % 2) * 6, y: 108 + k * 6, c: k % 3 ? '#62e08a' : '#5fd1e0', p: hash(rx, k) * 10, rate: 0.6 + hash(k, rx) });
+  }
+  block(838, 180, 34, 18, '#3e4450'); screen(841, 183, 28, 9, '#5fd1c0', 'nl'); solid(838, 180, 34, 18);
+  light(864, 150, 70, L.teal, 0.5, 'nl'); light(855, 190, 46, L.teal, 0.5, 'nl');
+  // --- captain's room, the vault
+  box(A, 846, 270, 40, 52, '#3a2a28'); box(A, 848, 272, 36, 48, '#4a3430'); box(A, 850, 274, 32, 44, '#3a2a28');
+  block(866, 286, 24, 34, '#3a3d48'); box(A, 868, 288, 20, 30, '#5a4a5a'); box(A, 868, 288, 20, 8, '#a89aa6'); solid(866, 286, 24, 34);
+  block(836, 244, 30, 12, '#4b4236'); box(A, 840, 247, 4, 4, '#c9b070'); solid(836, 244, 30, 12);
+  block(836, 326, 18, 18, '#5a5d64'); disc(A, 845, 335, 4, '#3a3d44'); box(A, 845, 335, 4, 1, '#8a8e96'); solid(836, 326, 18, 18, true);
+  emitters.push({ x: 850, y: 328, c: '#ffb347', p: 0, rate: 0 });
+  light(842, 252, 60, L.warm, 0.6, 'n'); light(845, 335, 30, L.amber, 0.35, 'nlw');
+  // --- bridge
+  // consoles along the bow
+  const fwd = [[990, 150, 14, 22], [1002, 176, 12, 30], [1006, 210, 12, 28], [1002, 242, 12, 30], [990, 276, 14, 22]];
+  for (const [x, y, w, h] of fwd) { block(x, y, w, h, '#3a3f4b'); screen(x + 2, y + 3, w - 5, h - 6, '#6fb8ff', 'nl'); solid(x, y, w, h); }
+  block(920, 104, 46, 12, '#3a3f4b'); screen(923, 106, 40, 6, '#6fb8ff', 'nl'); solid(920, 104, 46, 12);
+  block(920, 332, 46, 12, '#3a3f4b'); screen(923, 336, 40, 6, '#ffb347', 'nl'); solid(920, 332, 46, 12);
+  // seats
+  for (const [x, y] of [[986, 212], [986, 236], [950, 224]]) { disc(A, x + 1, y + 1, 6, 'rgba(0,0,0,0.5)'); disc(A, x, y, 6, '#3a3d48'); disc(A, x, y, 5, '#5a5048'); box(A, x - 6, y - 2, 3, 4, '#2a2d34'); solid(x - 5, y - 5, 10, 10); }
+  // the nav table
+  disc(A, 932, 290, 13, '#2e3038'); disc(A, 932, 290, 12, '#3a3f4b'); disc(A, 932, 290, 9, '#1a2028');
+  if (!wr) { for (let k = 0; k < 18; k++) { const a = hash(k, 3) * 6.28, r = hash(k, 9) * 8; box(E, 932 + Math.cos(a) * r, 290 + Math.sin(a) * r, 1, 1, ld ? '#1a3050' : '#4a8ad0'); } box(E, 931, 289, 2, 2, ld ? '#20406a' : '#8fd0ff'); }
+  solid(919, 277, 26, 26);
+  light(990, 224, 120, L.cyan, 0.75, 'nl'); light(935, 224, 90, L.white, 0.45, 'n'); light(932, 290, 50, L.cyan, 0.5, 'nl'); light(940, 130, 70, L.white, 0.4, 'n');
+
+  // --- emergency lights and red beacons
+  if (ld) {
+    for (const [x, y, a] of [[400, 224, 0], [216, 160, 1], [880, 224, 2], [672, 90, 3], [960, 160, 1.4], [384, 330, 2.2]])
+      lights.push({ x, y, r: 170, col: L.red, i: 1, kind: 'beacon', phase: a });
+    for (const [x, y] of [[300, 80], [520, 80], [760, 224], [128, 120], [600, 330]]) lights.push({ x, y, r: 55, col: [120, 40, 40], i: 0.6, kind: 'static' });
+  }
+  if (wr) {
+    for (const [x, y, f] of [[300, 210, 0], [540, 160, 1], [720, 224, 0], [128, 280, 1], [960, 250, 0], [384, 350, 1]])
+      lights.push({ x, y, r: 80, col: L.cold, i: 0.6, kind: f ? 'flicker' : 'static', phase: hash(x, y) * 10 });
+    // debris on the floor
+    for (let k = 0; k < 260; k++) {
+      const x = 32 + hash(k, 1) * 980, y = 64 + hash(k, 2) * 320;
+      const tx = (x / T) | 0, ty = (y / T) | 0;
+      if (roomAt(tx, ty) === OUT) continue;
+      box(A, x, y, 1 + ((hash(k, 3) * 3) | 0), 1 + ((hash(k, 4) * 2) | 0), ['#4a4a52', '#3a3a40', '#5a5048', '#2a2a2e'][k % 4]);
+    }
+    // scorch marks
+    for (const [x, y, r] of [[470, 200, 22], [300, 300, 16], [780, 222, 14], [980, 260, 18]]) {
+      for (let k = 0; k < 120; k++) { const a = hash(k, x) * 6.28, d = Math.sqrt(hash(k, y)) * r; box(A, x + Math.cos(a) * d, y + Math.sin(a) * d, 2, 2, 'rgba(10,8,8,0.35)'); }
+    }
+    // hanging cables
+    for (const [x, y] of [[620, 214], [350, 70], [930, 210]]) { A.strokeStyle = '#1e1e22'; A.lineWidth = 1; A.beginPath(); A.moveTo(x, y); A.quadraticCurveTo(x + 8, y + 14, x + 3, y + 22); A.stroke(); }
+  }
+}
+
+// ------------------------------------------------------------------ building the static layers
+let alb, albG, emi, emiG, stat, statG;
+const LS = 0.5; // the light map is drawn at half size
+function buildStatic() {
+  props.length = 0; solids.length = 0; tallRects.length = 0; lights = []; emitters = [];
+  [alb, albG] = mk(WW, WH); [emi, emiG] = mk(WW, WH);
+  A = albG; E = emiG;
+  // space
+  box(A, 0, 0, WW, WH, '#06070b');
+  for (let k = 0; k < 500; k++) { const x = (hash(k, 7) * WW) | 0, y = (hash(k, 8) * WH) | 0; if (roomAt((x / T) | 0, (y / T) | 0) !== OUT) continue; const b = hash(k, 9); box(E, x, y, 1, 1, b > 0.9 ? '#9aa4c0' : b > 0.6 ? '#3a4058' : '#22263a'); }
+  // floors
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const r = roomAt(x, y); if (r !== OUT) floorTile(rooms[r].kind, x, y); }
+  // a coloured band on the floor at each door, in the colour of the room it leads to
+  for (const d of doors) {
+    if (d.kind === 'hatch') continue;
+    const g = doorGeom(d);
+    const sides = d.o === 'v' ? [[d.x - 1, d.y, -1], [d.x, d.y, 1]] : [[d.x, d.y - 1, -1], [d.x, d.y, 1]];
+    for (const [tx, ty, s] of sides) {
+      const r = roomAt(tx, ty); if (r === OUT) continue;
+      const other = roomAt(...(d.o === 'v' ? [d.x - (s < 0 ? 0 : 1), d.y] : [d.x, d.y - (s < 0 ? 0 : 1)]));
+      const c = rooms[other]?.tint || '#888';
+      if (d.o === 'v') box(A, s < 0 ? g.x - 5 : g.x + 3, g.y + 3, 2, g.len - 6, shade(c, 0.55));
+      else box(A, g.x + 3, s < 0 ? g.y - 5 : g.y + 3, g.len - 6, 2, shade(c, 0.55));
+    }
+    if (d.kind === 'pressure') {
+      if (d.o === 'v') { hazard(g.x - 12, g.y + 2, 4, g.len - 4, 0.7); hazard(g.x + 8, g.y + 2, 4, g.len - 4, 0.7); }
+      else { hazard(g.x + 2, g.y - 12, g.len - 4, 4, 0.7); hazard(g.x + 2, g.y + 8, g.len - 4, 4, 0.7); }
+    }
+  }
+  furnish();
+  // engines outside the stern
+  for (const yy of [6, 18]) {
+    block(4, yy * T + 4, 26, 56, '#3a3d48', { noShadow: true });
+    for (let k = 0; k < 3; k++) { box(A, 0, yy * T + 10 + k * 16, 8, 10, '#2a2c34'); if (MODE === 'normal') box(E, 0, yy * T + 11 + k * 16, 2, 8, '#2a5a8a'); }
+  }
+  drawWalls();
+}
+function drawWalls() {
+  const img = albG.getImageData(0, 0, WW, WH);
+  const d = img.data;
+  const m = (x, y) => (x < 0 || y < 0 || x >= WW || y >= WH ? 0 : mask[y * WW + x]);
+  const set = (i, c) => { d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; };
+  const dark = (i, k) => { d[i] *= k; d[i + 1] *= k; d[i + 2] *= k; };
+  const C = {
+    1: { top: hex('#4c505e'), hi: hex('#70758a'), lo: hex('#2c2e37') },
+    2: { top: hex('#3e414d'), hi: hex('#62677a'), lo: hex('#1c1d24') },
+    3: { top: hex('#5a5f6e'), hi: hex('#8a90a2'), lo: hex('#30333c') },
+    4: { top: hex('#1b2c3a'), hi: hex('#4a7a98'), lo: hex('#0e1820') },
+  };
+  for (let y = 0; y < WH; y++) for (let x = 0; x < WW; x++) {
+    const i = (y * WW + x) * 4, t = m(x, y);
+    if (t) {
+      const c = C[t];
+      let col = c.top;
+      if (!m(x, y - 1) || !m(x - 1, y)) col = c.hi;
+      else if (!m(x, y + 1) || !m(x + 1, y)) col = c.lo;
+      set(i, col);
+      if (t === 2 && col === c.top) {
+        if (x % 16 === 0 || y % 16 === 0) dark(i, 0.8);
+        else if (x % 8 === 4 && y % 8 === 4) set(i, c.hi);
+      }
+      if (t === 4 && col === c.top && (x + y) % 9 === 0) set(i, hex('#2e4c62'));
+      if (t === 3 && col === c.top && (x + y) % 4 < 2) set(i, hex('#8a7234'));
+    } else {
+      // the shadow a wall throws, down and to the right, and a little darkness right next to it
+      if (m(x - 2, y - 2) || m(x - 1, y - 2) || m(x - 2, y - 1)) dark(i, 0.55);
+      else if (m(x, y - 1) || m(x - 1, y) || m(x + 1, y) || m(x, y + 1)) dark(i, 0.8);
+    }
+  }
+  albG.putImageData(img, 0, 0);
+}
+
+// ------------------------------------------------------------------ light
+// The segments that stop light right now: walls, shut doors and tall things.
+function buildOccluders() {
+  occluders.length = 0;
+  for (const s of wallSegs) occluders.push(s);
+  for (const d of doors) {
+    if (doorOpen(d) > 0.5) continue;
+    const g = doorGeom(d);
+    occluders.push(d.o === 'v' ? [g.x, g.y - 2, g.x, g.y + g.len + 2] : [g.x - 2, g.y, g.x + g.len + 2, g.y]);
+  }
+  for (const r of tallRects) {
+    const x0 = r.x + 3, y0 = r.y + 3, x1 = r.x + r.w - 3, y1 = r.y + r.h - 3;
+    if (x1 <= x0 || y1 <= y0) continue;
+    occluders.push([x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]);
+  }
+}
+// What can be seen from a point within a square of half-size r: a polygon, by rays to every corner nearby.
+function visPoly(px, py, r) {
+  const segs = [];
+  for (const s of occluders) {
+    if (Math.max(s[0], s[2]) < px - r || Math.min(s[0], s[2]) > px + r || Math.max(s[1], s[3]) < py - r || Math.min(s[1], s[3]) > py + r) continue;
+    segs.push(s);
+  }
+  const x0 = px - r, y0 = py - r, x1 = px + r, y1 = py + r;
+  segs.push([x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]);
+  const angles = [];
+  for (const s of segs) for (const [ex, ey] of [[s[0], s[1]], [s[2], s[3]]]) { const a = Math.atan2(ey - py, ex - px); angles.push(a - 0.0002, a, a + 0.0002); }
+  angles.sort((a, b) => a - b);
+  const pts = [];
+  for (const a of angles) {
+    const dx = Math.cos(a), dy = Math.sin(a);
+    let best = Infinity;
+    for (const s of segs) {
+      const sx = s[2] - s[0], sy = s[3] - s[1];
+      const den = dx * sy - dy * sx;
+      if (Math.abs(den) < 1e-9) continue;
+      const qx = s[0] - px, qy = s[1] - py;
+      const t = (qx * sy - qy * sx) / den;
+      const u = (qx * dy - qy * dx) / den;
+      if (t > 0 && u >= -1e-6 && u <= 1 + 1e-6 && t < best) best = t;
+    }
+    if (best < Infinity) pts.push(px + dx * best, py + dy * best);
+  }
+  return pts;
+}
+function drawLight(g, l, i, cone) {
+  if (!l.poly) l.poly = visPoly(l.x, l.y, l.r);
+  const p = l.poly;
+  g.save();
+  g.beginPath(); g.moveTo(p[0], p[1]); for (let k = 2; k < p.length; k += 2) g.lineTo(p[k], p[k + 1]); g.closePath(); g.clip();
+  if (cone) { g.beginPath(); g.moveTo(l.x, l.y); g.arc(l.x, l.y, l.r, cone.a - cone.w, cone.a + cone.w); g.closePath(); g.clip(); }
+  const gr = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
+  gr.addColorStop(0, rgb(l.col, i * 1.1));
+  gr.addColorStop(0.22, rgb(l.col, i * 0.92));
+  gr.addColorStop(0.55, rgb(l.col, i * 0.45));
+  gr.addColorStop(0.82, rgb(l.col, i * 0.14));
+  gr.addColorStop(1, 'rgb(0,0,0)');
+  g.fillStyle = gr;
+  g.fillRect(l.x - l.r, l.y - l.r, l.r * 2, l.r * 2);
+  g.restore();
+}
+const AMBIENT = { normal: [84, 86, 98], lockdown: [38, 28, 36], wreck: [34, 36, 46] };
+function buildStaticLight() {
+  buildOccluders();
+  [stat, statG] = mk(WW * LS, WH * LS);
+  statG.imageSmoothingEnabled = true;
+  statG.fillStyle = rgb(AMBIENT[MODE]); statG.fillRect(0, 0, stat.width, stat.height);
+  statG.save(); statG.scale(LS, LS); statG.globalCompositeOperation = 'lighter';
+  for (const l of lights) { l.poly = null; if (l.kind === 'static') drawLight(statG, l, l.i); }
+  statG.restore();
+  // soften the edges of the shadows a little
+  const [tmp, tg] = mk(stat.width, stat.height);
+  tg.filter = 'blur(1px)'; tg.drawImage(stat, 0, 0); statG.drawImage(tmp, 0, 0);
+}
+
+// ------------------------------------------------------------------ figures
+// Every figure is 24 x 24 pixels, drawn facing right, and turned in the world.
+const KINDS = {
+  captain: { name: 'Captain', suit: '#6b7280', helm: '#7d8696', acc: '#6fb8ff', visor: '#7fe3ff', pack: true, gun: 'rifle', lamp: true },
+  gunner: { name: 'Gunner', suit: '#6b7280', helm: '#7d8696', acc: '#d98a3a', visor: '#7fe3ff', pack: true, gun: 'rifle', lamp: true },
+  engineer: { name: 'Engineer', suit: '#6b7280', helm: '#7d8696', acc: '#9ad04a', visor: '#7fe3ff', pack: true, gun: 'rifle', lamp: true },
+  watch: { name: 'Väktare', suit: '#5d5a44', helm: '#363a44', acc: '#807c5e', visor: '#ff3b30', cap: true, gun: 'pistol', eye: 1 },
+  soldier: { name: 'Soldat', suit: '#4a5248', helm: '#5a6258', acc: '#2f352e', visor: '#ff3b30', pack: true, gun: 'rifle', eye: 2 },
+  tech: { name: 'Tekniker', suit: '#8a6a35', helm: '#5a5f6a', acc: '#5c4622', visor: '#ff3b30', pack: 'big', gun: 'tool', eye: 1 },
+  heavy: { name: 'Tung vakt', suit: '#4e4858', helm: '#625a6e', acc: '#2e2a36', visor: '#ff3b30', pack: true, gun: 'heavy', eye: 3, big: true },
+  drone: { name: 'Drönare', drone: true, visor: '#ff3b30' },
+  crewman: { name: 'Besättning', suit: '#5a6a7a', helm: '#4a5664', acc: '#c9a06a', visor: '#ffd28a', pack: false, gun: 'none' },
+};
+const spriteCache = new Map();
+function sprite(kind, pose) {
+  const key = kind + '|' + JSON.stringify(pose);
+  let s = spriteCache.get(key);
+  if (s) return s;
+  const S = 32;
+  const [a, ag] = mk(S, S), [e, eg] = mk(S, S);
+  drawSprite(ag, eg, KINDS[kind], pose, S / 2);
+  outline(ag, S);
+  if (pose.hit) {
+    ag.globalCompositeOperation = 'source-in'; ag.fillStyle = '#f2f2ff'; ag.fillRect(0, 0, S, S);
+    eg.globalCompositeOperation = 'source-over'; eg.globalAlpha = 0.5; eg.drawImage(a, 0, 0);
+  }
+  s = { a, e, S };
+  spriteCache.set(key, s);
+  return s;
+}
+function drawSprite(g, eg, k, pose, c) {
+  const px = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(c + x, c + y, w, h); };
+  const ex = (x, y, w, h, col) => { eg.fillStyle = col; eg.fillRect(c + x, c + y, w, h); };
+  const stride = pose.walk === undefined ? 0 : [0, 2, 0, -2][pose.walk % 4];
+  const kick = pose.fire ? -1 : 0;
+  const dk = (col, f) => shade(col, f);
+  if (k.drone) {
+    const spin = (pose.walk || 0) % 2;
+    px(-6, -1, 13, 2, '#2a2d34'); px(-1, -6, 2, 13, '#2a2d34');
+    for (const [ox, oy] of [[-7, -7], [4, -7], [-7, 4], [4, 4]]) {
+      px(ox + 1, oy + 1, 2, 2, '#4a4e58');
+      g.fillStyle = 'rgba(170,180,195,0.6)';
+      if (spin) { g.fillRect(c + ox - 1, c + oy + 1, 6, 1); g.fillRect(c + ox + 1, c + oy - 1, 2, 6); }
+      else { g.fillRect(c + ox - 1, c + oy - 1, 1, 1); g.fillRect(c + ox + 4, c + oy + 4, 1, 1); g.fillRect(c + ox, c + oy + 3, 4, 1); g.fillRect(c + ox + 3, c + oy, 1, 3); }
+    }
+    px(-3, -3, 7, 7, '#50555f'); px(-3, -3, 6, 1, '#8a909c'); px(-3, -2, 1, 5, '#727884'); px(-2, 3, 6, 1, '#363a42'); px(3, -2, 1, 5, '#3c4048');
+    px(4, -1, 1, 2, '#5a1a18'); ex(4, -1, 1, 2, k.visor);
+    return;
+  }
+  const b = k.big ? 1 : 0;
+  const suit = k.suit, sd = dk(suit, 0.62), sl = dk(suit, 1.32);
+  // feet, stepping
+  px(-2 + stride, -4 - b, 4, 2, '#1c1d22'); px(-2 - stride, 2 + b, 4, 2, '#1c1d22');
+  // backpack
+  if (k.pack) {
+    const pw = k.pack === 'big' ? 4 : 3, x0 = -5 - pw - b;
+    px(x0, -3, pw, 7, k.pack === 'big' ? '#5c4a34' : '#3a3f48'); px(x0, -3, pw, 1, '#5a626e'); px(x0, 3, pw, 1, '#23262c');
+    if (k.lamp) { px(x0, 0, 1, 1, dk(k.acc, 0.6)); ex(x0, 0, 1, 1, dk(k.acc, 0.8)); }
+  }
+  // the gun, under the arms
+  const len = { rifle: 10, pistol: 5, tool: 8, heavy: 12, none: 0 }[k.gun];
+  if (!pose.carry && len) {
+    const gy = k.gun === 'heavy' ? 0 : 1, gh = k.gun === 'heavy' ? 3 : 2;
+    px(1 + kick, gy, len, gh, '#1f2126'); px(1 + kick, gy, len, 1, '#4a4e58');
+    if (k.gun === 'tool') { px(len + 1 + kick, gy, 1, 2, '#c87a30'); ex(len + 1 + kick, gy, 1, 2, '#7a3a10'); }
+    if (k.lamp) { px(len + kick, gy + 1, 1, 1, '#d8e0e8'); ex(len + kick, gy + 1, 1, 1, '#c0d0e0'); }
+    if (pose.fire) {
+      const mx = 1 + len + kick;
+      ex(mx, gy - 1, 2, gh + 2, '#ffc860'); ex(mx + 2, gy, 2, gh, '#fff4c8'); ex(mx + 1, gy - 2, 1, 1, '#ff9a40'); ex(mx + 1, gy + gh + 1, 1, 1, '#ff9a40'); ex(mx + 4, gy, 1, 1, '#ffd890');
+    }
+  }
+  // shoulders: wide across, shallow front to back
+  const tx = -4 - b + kick, tw = 6 + b, ty = -6 - b, th = 12 + b * 2;
+  px(tx, ty + 1, tw, th - 2, suit); px(tx + 1, ty, tw - 2, th, suit);
+  px(tx + 1, ty, tw - 2, 1, sl); px(tx, ty + 1, 1, th - 3, dk(suit, 1.15));
+  px(tx + 1, ty + th - 1, tw - 2, 1, sd); px(tx + tw - 1, ty + 2, 1, th - 4, dk(suit, 0.8));
+  // pauldrons in the colour of the post
+  const pc = k.cap ? dk(suit, 0.85) : k.acc;
+  px(tx + 1, ty, 3, 2, pc); px(tx + 1, ty + th - 2, 3, 2, dk(pc, 0.8));
+  px(tx + 1, ty, 3, 1, dk(pc, 1.25));
+  if (pose.carry) {
+    px(tx + tw - 1, ty + 1, 3, 2, suit); px(tx + tw - 1, ty + th - 3, 3, 2, suit);
+    px(3 + kick, -4, 7, 8, '#6a4a1a'); px(4 + kick, -3, 5, 6, '#c9902a'); px(4 + kick, -3, 5, 1, '#f0c050'); px(6 + kick, -1, 1, 2, '#6a4a1a');
+    ex(4 + kick, -3, 5, 1, '#4a3608');
+    if (len) { px(-6 - b, -6, 1, 11, '#24262c'); px(-5 - b, -6, 1, 1, '#4a4e58'); }
+  } else if (len) {
+    // the near arm to the grip, the far arm out to the front of the gun
+    px(tx + tw - 1, ty + th - 3, 2, 2, suit); px(tx + tw + 1, 2, 2, 2, dk(suit, 0.9)); px(tx + tw + 2, 2, 2, 1, '#2a2c30');
+    px(tx + tw - 1, ty + 1, 2, 2, suit); px(tx + tw + 1, ty + 3, 2, 2, suit); px(tx + tw + 3, -1, 2, 2, dk(suit, 0.9)); px(tx + tw + 4, 0, 2, 1, '#2a2c30');
+  } else {
+    px(tx + 1 + stride, ty - 1, 3, 2, suit); px(tx + 1 - stride, ty + th - 1, 3, 2, suit);
+  }
+  // the head
+  const hx = -2 - b + kick, hs = 5 + b;
+  if (k.cap) {
+    px(hx, -2, hs, hs - 1, k.helm); px(hx + 1, -3, hs - 2, 1, k.helm); px(hx + hs, -2, 2, hs - 1, dk(k.helm, 0.7));
+    px(hx + 1, -2, 2, 1, dk(k.helm, 1.4)); px(hx + 1, 2, hs - 2, 1, dk(k.helm, 0.75));
+    px(hx + hs - 1, -1, 1, 1, '#4a1210'); ex(hx + hs - 1, -1, 1, 1, k.visor);
+  } else {
+    const hl = dk(k.helm, 1.25);
+    px(hx, -2, hs, hs - 1, hl); px(hx + 1, -3, hs - 2, hs + 1, hl);
+    px(hx + 1, -3, 2, 1, dk(k.helm, 1.6)); px(hx, -2, 1, 2, dk(k.helm, 1.5));
+    px(hx + 1, 1 + b, hs - 2, 1, k.helm); px(hx + hs - 1, -1, 1, 2 + b, k.helm);
+    if (k.eye) {
+      const ey = k.eye === 3 ? -2 : -1, eh = k.eye === 3 ? 4 : k.eye;
+      px(hx + hs - 1, ey, 1, eh, '#2a0808'); ex(hx + hs - 1, ey, 1, eh, k.visor);
+    } else {
+      px(hx + hs - 2, -2, 2, 4, dk(k.visor, 0.3)); ex(hx + hs - 2, -2, 2, 4, dk(k.visor, 0.45)); ex(hx + hs - 1, -1, 1, 2, k.visor);
+    }
+  }
+}
+// A dark rim round the whole figure, so it reads on any floor.
+function outline(g, S) {
+  const img = g.getImageData(0, 0, S, S), d = img.data, out = new Uint8Array(S * S);
+  const on = (x, y) => x >= 0 && y >= 0 && x < S && y < S && d[(y * S + x) * 4 + 3] > 100;
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) out[y * S + x] = 1;
+  for (let i = 0; i < S * S; i++) if (out[i]) { d[i * 4] = 10; d[i * 4 + 1] = 11; d[i * 4 + 2] = 15; d[i * 4 + 3] = 220; }
+  g.putImageData(img, 0, 0);
+}
+// Down: on its back, flat out. Drawn on its own.
+function spriteDown(kind) {
+  const key = kind + '|down';
+  let s = spriteCache.get(key);
+  if (s) return s;
+  const S = 32, c = 16;
+  const [a, g] = mk(S, S), [e] = mk(S, S);
+  const k = KINDS[kind];
+  const px = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(c + x, c + y, w, h); };
+  if (k.drone) {
+    px(-5, -3, 9, 7, '#2a2d34'); px(-4, -2, 7, 5, '#3c4048'); px(-4, -2, 7, 1, '#5a5e68');
+    px(-9, -6, 3, 3, '#3a3d44'); px(6, 4, 3, 3, '#3a3d44'); px(7, -7, 2, 2, '#3a3d44'); px(-1, 6, 4, 1, '#2a2d34');
+  } else {
+    const suit = k.suit;
+    px(-10, -3, 6, 2, '#1c1d22'); px(-9, 1, 6, 2, '#1c1d22');
+    px(-5, -4, 9, 8, suit); px(-5, -4, 9, 1, shade(suit, 1.3)); px(-5, 3, 9, 1, shade(suit, 0.65));
+    px(-4, -6, 3, 2, k.cap ? shade(suit, 0.85) : k.acc); px(-4, 4, 3, 2, shade(k.cap ? suit : k.acc, 0.8));
+    px(-1, -8, 2, 3, suit); px(1, -9, 2, 2, shade(suit, 0.85));
+    px(0, 5, 4, 2, suit);
+    px(4, -3, 5, 5, shade(k.helm, 1.2)); px(5, -4, 3, 7, shade(k.helm, 1.2)); px(8, -2, 1, 3, shade(k.helm, 0.7));
+    if (k.gun !== 'none') { px(1, 9, 10, 2, '#1f2126'); px(1, 9, 10, 1, '#4a4e58'); }
+  }
+  outline(g, S);
+  s = { a, e, S };
+  spriteCache.set(key, s);
+  return s;
+}
+
+// ------------------------------------------------------------------ the people on board
+const me = { kind: 'gunner', x: 384, y: 352, a: -Math.PI / 2, walked: 0, moving: false, lamp: true, fire: 0, r: 5 };
+let npcs = [];
+function buildNpcs() {
+  npcs = [];
+  const add = (kind, path, o = {}) => npcs.push({ kind, path, at: 0, x: path[0][0], y: path[0][1], a: o.a ?? 0, walked: 0, wait: 0, speed: o.speed || 30, look: o.look, r: 5, ...o });
+  if (MODE === 'normal') {
+    add('tech', [[170, 185]], { a: 0, still: true });
+    add('crewman', [[640, 100], [716, 100], [716, 196], [640, 196]], { speed: 22 });
+    add('crewman', [[974, 224]], { a: 0, still: true });
+    add('crewman', [[300, 224], [560, 224], [560, 176], [300, 176]], { speed: 26 });
+  }
+  if (MODE === 'lockdown') {
+    add('soldier', [[260, 224], [560, 224], [560, 176], [260, 176]], { guard: true, speed: 28 });
+    add('watch', [[620, 224], [880, 224]], { guard: true, speed: 24 });
+    add('heavy', [[930, 160], [930, 260]], { guard: true, speed: 18 });
+    add('drone', [[60, 200], [190, 200], [190, 250], [60, 250]], { guard: true, speed: 30, hover: true });
+    add('tech', [[100, 100], [180, 100]], { guard: true, speed: 20 });
+  }
+  if (MODE === 'wreck') {
+    add('soldier', [[470, 206]], { down: true, a: 0.6 });
+    add('drone', [[310, 300]], { down: true });
+  }
+}
+
+// ------------------------------------------------------------------ walking
+function rectHit(x, y, r, b) { const cx = Math.max(b.x, Math.min(x, b.x + b.w)), cy = Math.max(b.y, Math.min(y, b.y + b.h)); return (x - cx) ** 2 + (y - cy) ** 2 < r * r; }
+function blocked(x, y, r) {
+  for (const b of wallRects) if (rectHit(x, y, r, b)) return true;
+  for (const b of solids) if (rectHit(x, y, r, b)) return true;
+  for (const d of doors) {
+    if (doorOpen(d) > 0.6) continue;
+    const g = doorGeom(d);
+    const b = d.o === 'v' ? { x: g.x - 3, y: g.y, w: 6, h: g.len } : { x: g.x, y: g.y - 3, w: g.len, h: 6 };
+    if (rectHit(x, y, r, b)) return true;
+  }
+  return false;
+}
+function moveBy(f, dx, dy) {
+  if (!blocked(f.x + dx, f.y, f.r)) f.x += dx;
+  if (!blocked(f.x, f.y + dy, f.r)) f.y += dy;
+}
+function doorOpen(d) {
+  if (d.kind === 'hatch' || d.kind === 'locked') return 0;
+  if (MODE === 'wreck' && d.jam !== null) return d.jam;
+  return d.open;
+}
+let doorsChanged = false;
+function stepDoors(dt) {
+  for (const d of doors) {
+    if (d.kind === 'hatch' || d.kind === 'locked') continue;
+    const g = doorGeom(d);
+    const near = [me, ...npcs.filter((n) => !n.down)].some((f) => Math.hypot(f.x - g.cx, f.y - g.cy) < 30);
+    const before = doorOpen(d) > 0.5;
+    d.open = Math.max(0, Math.min(1, d.open + (near ? 4 : -2.5) * dt));
+    if ((doorOpen(d) > 0.5) !== before) doorsChanged = true;
+  }
+}
+
+// ------------------------------------------------------------------ input and the tour
+const keys = new Set();
+let pointer = null; // in world points
+let touchGoal = null;
+let tour = true;
+const TOUR = [[384, 352, 1], [384, 300], [384, 224, 1], [186, 224], [186, 262, 1.5], [186, 224], [496, 224], [496, 180], [496, 80, 1], [600, 80], [660, 90], [728, 100], [728, 196], [672, 196], [672, 224], [880, 224, 1], [930, 224, 1.5], [930, 150], [882, 150, 1.5], [930, 150], [930, 224], [700, 224], [384, 224], [384, 352]];
+let tourAt = 0, tourWait = 0;
+const stopTour = () => { if (tour) { tour = false; setOn('#tour', false); } };
+
+// ------------------------------------------------------------------ the view
+const view = document.getElementById('view');
+const vg = view.getContext('2d');
+let VW = 640, VH = 360, overview = false, labels = false, VIEWMODE = 'full';
+let cA, cAG, cE, cEG, cL, cLG, cB, cBG, cB2, cB2G;
+function sizeView() {
+  VW = overview ? WW : 640; VH = overview ? WH : 360;
+  view.width = VW; view.height = VH;
+  vg.imageSmoothingEnabled = false;
+  [cA, cAG] = mk(VW, VH); [cE, cEG] = mk(VW, VH); [cL, cLG] = mk(VW * LS, VH * LS);
+  [cB, cBG] = mk(VW / 4, VH / 4); [cB2, cB2G] = mk(VW / 4, VH / 4);
+  cLG.imageSmoothingEnabled = true; cBG.imageSmoothingEnabled = true; cB2G.imageSmoothingEnabled = true;
+}
+let camX = 0, camY = 0;
+const flares = [];
+
+function drawFigure(f, t) {
+  let s;
+  if (f.down) s = spriteDown(f.kind);
+  else {
+    const pose = {};
+    if (f.moving || f.hover) pose.walk = Math.floor(f.walked / 5) % 4;
+    if (f.kind === 'drone') pose.walk = Math.floor(t * 20) % 2;
+    if (f.fire > 0) pose.fire = 1;
+    if (f.carry) pose.carry = 1;
+    s = sprite(f.kind, pose);
+  }
+  const bob = f.hover && !f.down ? Math.round(Math.sin(t * 3) * 1) : 0;
+  // a soft shadow under it
+  cAG.fillStyle = 'rgba(0,0,0,0.4)';
+  cAG.beginPath(); cAG.ellipse(Math.round(f.x) + 1, Math.round(f.y) + 2 + (f.hover ? 3 : 0), f.kind === 'heavy' ? 8 : 6, f.kind === 'heavy' ? 7 : 5, 0, 0, 7); cAG.fill();
+  for (const [g, img] of [[cAG, s.a], [cEG, s.e]]) {
+    g.save(); g.translate(Math.round(f.x), Math.round(f.y) + bob); g.rotate(f.a); g.drawImage(img, -s.S / 2, -s.S / 2); g.restore();
+  }
+}
+
+function drawDoors(g) {
+  for (const d of doors) {
+    const gm = doorGeom(d);
+    const o = doorOpen(d);
+    const heavy = d.kind !== 'slide';
+    const th = heavy ? 6 : 4;
+    const half = gm.len / 2, leaf = Math.max(0, half * (1 - o));
+    const col = d.kind === 'hatch' ? '#5a5048' : heavy ? '#55596a' : '#4e5262';
+    const draw = (x, y, w, h) => {
+      if (w <= 0 || h <= 0) return;
+      box(g, x, y, w, h, shade(col, 0.6)); box(g, x + (w > h ? 0 : 1), y + (w > h ? 1 : 0), w > h ? w : w - 2, w > h ? h - 2 : h, col);
+      if (heavy && d.kind !== 'locked') { g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip(); g.fillStyle = '#8a7234'; for (let k = -10; k < Math.max(w, h) + 10; k += 5) { if (w > h) g.fillRect(x + k, y + 1, 2, h - 2); else g.fillRect(x + 1, y + k, w - 2, 2); } g.restore(); }
+    };
+    if (d.o === 'v') { draw(gm.x - th / 2, gm.y, th, leaf); draw(gm.x - th / 2, gm.y + gm.len - leaf, th, leaf); }
+    else { draw(gm.x, gm.y - th / 2, leaf, th); draw(gm.x + gm.len - leaf, gm.y - th / 2, leaf, th); }
+    // the lamp on the frame says what the door is
+    const lamp = MODE === 'wreck' ? null : d.kind === 'locked' ? '#ffb347' : MODE === 'lockdown' ? '#ff3b30' : d.kind === 'hatch' ? '#62e08a' : '#62e08a';
+    const lx = d.o === 'v' ? gm.x - 1 : gm.x - 5, ly = d.o === 'v' ? gm.y - 5 : gm.y - 1;
+    box(g, lx, ly, 2, 2, '#202228');
+    if (lamp) box(cEG, lx, ly, 2, 2, lamp);
+  }
+}
+
+function frame(t, dt) {
+  // --- walking
+  let mx = 0, my = 0;
+  if (keys.has('a') || keys.has('arrowleft')) mx -= 1;
+  if (keys.has('d') || keys.has('arrowright')) mx += 1;
+  if (keys.has('w') || keys.has('arrowup')) my -= 1;
+  if (keys.has('s') || keys.has('arrowdown')) my += 1;
+  if (touchGoal) { const dx = touchGoal.x - me.x, dy = touchGoal.y - me.y, d = Math.hypot(dx, dy); if (d > 4) { mx = dx / d; my = dy / d; } }
+  if (tour && !overview) {
+    const wp = TOUR[tourAt];
+    const dx = wp[0] - me.x, dy = wp[1] - me.y, d = Math.hypot(dx, dy);
+    if (tourWait > 0) tourWait -= dt;
+    else if (d < 3) { tourWait = wp[2] || 0; tourAt = (tourAt + 1) % TOUR.length; }
+    else { mx = dx / d; my = dy / d; }
+  }
+  const len = Math.hypot(mx, my);
+  me.moving = len > 0.01;
+  if (me.moving) {
+    const sp = 62 * dt;
+    const bx = me.x, by = me.y;
+    moveBy(me, (mx / len) * sp, (my / len) * sp);
+    me.walked += Math.hypot(me.x - bx, me.y - by);
+    if (!pointer || tour || touchGoal) { const want = Math.atan2(my, mx); me.a = turn(me.a, want, 8 * dt); }
+  }
+  if (pointer && !tour && !touchGoal) me.a = Math.atan2(pointer.y - me.y, pointer.x - me.x);
+  if (me.fire > 0) me.fire -= dt;
+  // --- the others
+  for (const n of npcs) {
+    if (n.down || n.still) { n.moving = false; if (n.still && n.kind === 'crewman' && n.x > 960) n.a = 0; continue; }
+    const wp = n.path[n.at];
+    const dx = wp[0] - n.x, dy = wp[1] - n.y, d = Math.hypot(dx, dy);
+    if (n.wait > 0) { n.wait -= dt; n.moving = false; n.a += Math.sin(t * 1.3 + n.x) * 0.6 * dt; continue; }
+    if (d < 2) { n.at = (n.at + 1) % n.path.length; n.wait = n.guard ? 1.4 : 0.8; continue; }
+    const sp = n.speed * dt;
+    n.x += (dx / d) * Math.min(sp, d); n.y += (dy / d) * Math.min(sp, d); n.walked += Math.min(sp, d); n.moving = true;
+    n.a = turn(n.a, Math.atan2(dy, dx), 6 * dt);
+  }
+  stepDoors(dt);
+  if (doorsChanged) { doorsChanged = false; buildStaticLight(); }
+  // --- flares
+  for (const f of flares) {
+    if (f.v > 0) {
+      const nx = f.x + Math.cos(f.dir) * f.v * dt, ny = f.y + Math.sin(f.dir) * f.v * dt;
+      if (blocked(nx, ny, 2)) { f.dir += Math.PI * (0.7 + Math.random() * 0.6); f.v *= 0.5; } else { f.x = nx; f.y = ny; }
+      f.v = Math.max(0, f.v - 160 * dt);
+    }
+    f.life -= dt;
+  }
+  for (let k = flares.length - 1; k >= 0; k--) if (flares[k].life <= 0) flares.splice(k, 1);
+
+  // --- camera
+  if (overview) { camX = 0; camY = 0; }
+  else {
+    camX = Math.round(Math.max(0, Math.min(WW - VW, me.x - VW / 2)));
+    camY = Math.round(Math.max(0, Math.min(WH - VH, me.y - VH / 2)));
+  }
+  // --- albedo
+  cAG.clearRect(0, 0, VW, VH);
+  cAG.drawImage(alb, camX, camY, VW, VH, 0, 0, VW, VH);
+  cEG.clearRect(0, 0, VW, VH);
+  cEG.drawImage(emi, camX, camY, VW, VH, 0, 0, VW, VH);
+  cAG.save(); cAG.translate(-camX, -camY); cEG.save(); cEG.translate(-camX, -camY);
+  drawDoors(cAG);
+  // blinking lights on the racks: slow, as the rules say
+  if (MODE !== 'wreck') for (const b of emitters) { const on = b.rate === 0 ? 0.5 + 0.5 * Math.sin(t * 1.6) : (Math.sin(t * b.rate + b.p) > -0.2 ? 1 : 0.15); cEG.globalAlpha = MODE === 'lockdown' ? on * 0.5 : on; box(cEG, b.x, b.y, 1, 1, b.c); cEG.globalAlpha = 1; }
+  // the reactor's core breathes
+  if (MODE !== 'wreck') { cEG.globalAlpha = 0.35 + 0.35 * Math.sin(t * 0.55 * 6.28); disc(cEG, 128, 224, 6, '#ffd08a'); cEG.globalAlpha = 1; }
+  // sparks in the wreck
+  if (MODE === 'wreck') for (const [sx, sy, p] of [[612, 212, 0], [356, 66, 3], [934, 210, 6]]) {
+    const ph = (t + p) % 4;
+    if (ph < 0.5) for (let k = 0; k < 6; k++) { const q = hash(k, Math.floor(t * 8)); box(cEG, sx + q * 10 - 3, sy + ph * 30 + hash(k, 5) * 6, 1, 1, k % 2 ? '#fff0b0' : '#ffb050'); }
+  }
+  for (const f of flares) { box(cAG, f.x - 1, f.y - 1, 3, 2, '#5a3a2a'); box(cEG, f.x - 1, f.y - 1, 3, 2, '#ffd0a0'); box(cEG, f.x, f.y - 1, 1, 1, '#ffffff'); }
+  const all = [...npcs, me].sort((p, q) => (p.down ? -1 : 0) - (q.down ? -1 : 0));
+  for (const f of all) drawFigure(f, t);
+  cAG.restore(); cEG.restore();
+
+  // --- light
+  cLG.drawImage(stat, camX * LS, camY * LS, VW * LS, VH * LS, 0, 0, VW * LS, VH * LS);
+  cLG.save(); cLG.scale(LS, LS); cLG.translate(-camX, -camY); cLG.globalCompositeOperation = 'lighter';
+  const inView = (l) => l.x + l.r > camX && l.x - l.r < camX + VW && l.y + l.r > camY && l.y - l.r < camY + VH;
+  for (const l of lights) {
+    if (l.kind === 'static' || !inView(l)) continue;
+    if (l.kind === 'pulse') drawLight(cLG, l, l.i * (0.78 + 0.22 * Math.sin(t * l.speed * 6.28)));
+    if (l.kind === 'flicker') { const ph = (t + l.phase) % 2.5; drawLight(cLG, l, l.i * (ph < 0.08 || (ph > 0.2 && ph < 0.27) ? 0.25 : 1)); }
+    if (l.kind === 'beacon') drawLight(cLG, l, l.i, { a: t * 2.4 + l.phase * 2, w: 0.42 });
+  }
+  // the flashlight, and a little light round the one who holds it
+  const lit = (x, y, r, col, i, cone) => { const l = { x, y, r, col }; if (l.x + r > camX && l.x - r < camX + VW) drawLight(cLG, l, i, cone); };
+  if (me.lamp) {
+    const hx = me.x + Math.cos(me.a) * 8, hy = me.y + Math.sin(me.a) * 8;
+    lit(hx, hy, 170, [235, 238, 225], MODE === 'normal' ? 0.55 : 1, { a: me.a, w: 0.38 });
+    lit(me.x, me.y, 30, [160, 165, 175], 0.35);
+  }
+  for (const n of npcs) if ((n.guard || n.kind === 'drone') && !n.down && MODE === 'lockdown') {
+    // guards carry a dim red lamp too, so you can see where they look
+    lit(n.x + Math.cos(n.a) * 6, n.y + Math.sin(n.a) * 6, 90, [180, 50, 40], 0.4, { a: n.a, w: 0.5 });
+  }
+  for (const f of flares) lit(f.x, f.y, 120, L.flare, Math.min(1, f.life / 4) * (0.92 + 0.08 * Math.sin(t * 9 + f.x)));
+  if (me.fire > 0.05) lit(me.x + Math.cos(me.a) * 14, me.y + Math.sin(me.a) * 14, 80, [255, 210, 140], 0.9);
+  cLG.restore();
+
+  // --- put it together
+  vg.globalCompositeOperation = 'source-over';
+  if (VIEWMODE === 'light') { vg.imageSmoothingEnabled = true; vg.drawImage(cL, 0, 0, VW, VH); vg.imageSmoothingEnabled = false; }
+  else {
+    vg.drawImage(cA, 0, 0);
+    if (VIEWMODE === 'full') {
+      vg.globalCompositeOperation = 'multiply'; vg.imageSmoothingEnabled = true; vg.drawImage(cL, 0, 0, VW, VH); vg.imageSmoothingEnabled = false;
+    }
+    vg.globalCompositeOperation = 'lighter';
+    vg.drawImage(cE, 0, 0);
+    // a soft glow round what shines
+    cBG.clearRect(0, 0, cB.width, cB.height); cBG.drawImage(cE, 0, 0, cB.width, cB.height);
+    cB2G.clearRect(0, 0, cB.width, cB.height); cB2G.filter = 'blur(2px)'; cB2G.drawImage(cB, 0, 0); cB2G.filter = 'none';
+    vg.globalAlpha = 0.9; vg.imageSmoothingEnabled = true; vg.drawImage(cB2, 0, 0, VW, VH); vg.drawImage(cB2, 0, 0, VW, VH); vg.imageSmoothingEnabled = false; vg.globalAlpha = 1;
+  }
+  vg.globalCompositeOperation = 'source-over';
+  if (labels) {
+    vg.font = overview ? 'bold 11px system-ui, sans-serif' : 'bold 9px system-ui, sans-serif'; vg.textAlign = 'center';
+    const seen = new Set();
+    for (const r of rooms) {
+      if (r.name === 'SPINE' || r.name === 'SERVICE') continue;
+      const cx = ((r.x0 + r.x1 + 1) / 2) * T - camX, cy = ((r.y0 + r.y1 + 1) / 2) * T - camY;
+      if (r.name === 'CREW' && seen.has(r.y0)) continue; seen.add(r.name === 'CREW' ? r.y0 : r.id + 1000);
+      const x = r.name === 'CREW' ? (r.y0 < 13 ? 784 : 752) - camX : cx;
+      vg.fillStyle = 'rgba(0,0,0,0.7)'; vg.fillText(r.name, x + 1, cy + 1); vg.fillStyle = r.tint; vg.fillText(r.name, x, cy);
+    }
+  }
+}
+const turn = (a, b, k) => { let d = ((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI; return a + Math.max(-k, Math.min(k, d)); };
+
+// ------------------------------------------------------------------ the mode
+function setMode(m) {
+  MODE = m;
+  for (const d of doors) d.jam = null;
+  if (m === 'wreck') { for (const d of doors) if (hash(d.x, d.y, 5) < 0.3 && d.kind === 'slide') d.jam = 0.7; }
+  buildStatic(); buildNpcs(); buildStaticLight();
+  me.lamp = m !== 'normal';
+}
+function setOn(sel, on) { const b = document.querySelector(sel); if (b) b.classList.toggle('on', on); }
+
+document.getElementById('modes').addEventListener('click', (e) => {
+  const m = e.target.dataset.mode; if (!m) return;
+  document.querySelectorAll('#modes button').forEach((b) => b.classList.toggle('on', b === e.target));
+  setMode(m);
+});
+document.getElementById('views').addEventListener('click', (e) => {
+  const v = e.target.dataset.view; if (!v) return;
+  document.querySelectorAll('#views button').forEach((b) => b.classList.toggle('on', b === e.target));
+  VIEWMODE = v;
+});
+document.getElementById('tour').onclick = () => { tour = !tour; setOn('#tour', tour); if (tour) { tourAt = nearestTour(); } };
+const nearestTour = () => { let best = 0, bd = 1e9; TOUR.forEach((p, i) => { const d = Math.hypot(p[0] - me.x, p[1] - me.y); if (d < bd) { bd = d; best = i; } }); return best; };
+document.getElementById('overview').onclick = () => { overview = !overview; setOn('#overview', overview); sizeView(); };
+document.getElementById('labels').onclick = () => { labels = !labels; setOn('#labels', labels); };
+const throwFlare = () => { flares.push({ x: me.x + Math.cos(me.a) * 8, y: me.y + Math.sin(me.a) * 8, dir: me.a, v: 170, life: 14 }); if (flares.length > 4) flares.shift(); };
+document.getElementById('flare').onclick = throwFlare;
+addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (['w', 'a', 's', 'd', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) { keys.add(k); stopTour(); if (k.startsWith('arrow')) e.preventDefault(); }
+  if (k === 'q') throwFlare();
+  if (k === 'l') me.lamp = !me.lamp;
+  if (k === ' ') { me.fire = 0.12; e.preventDefault(); }
+});
+addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+const toWorld = (e) => { const r = view.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * VW + camX, y: ((e.clientY - r.top) / r.height) * VH + camY }; };
+view.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') pointer = toWorld(e); else if (touchGoal) touchGoal = toWorld(e); });
+view.addEventListener('pointerdown', (e) => {
+  if (overview) return;
+  if (e.pointerType === 'mouse') { pointer = toWorld(e); stopTour(); me.fire = 0.12; return; }
+  stopTour(); touchGoal = toWorld(e); view.setPointerCapture(e.pointerId);
+});
+const endTouch = () => { touchGoal = null; };
+view.addEventListener('pointerup', endTouch); view.addEventListener('pointercancel', endTouch);
+view.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') pointer = null; });
+
+// ------------------------------------------------------------------ the figure sheet
+const sheet = document.getElementById('sheet');
+const sg = sheet.getContext('2d');
+const ROWS = ['captain', 'gunner', 'engineer', 'watch', 'soldier', 'tech', 'heavy', 'drone'];
+const COLS = ['Står', 'Går', 'Skjuter', 'Bär loot', 'Träffad', 'Nere', 'I mörker'];
+function drawSheet(t) {
+  const Z = 3, cell = 30 * Z, left = 92, top = 26;
+  sheet.width = left + COLS.length * cell; sheet.height = top + ROWS.length * cell;
+  sg.imageSmoothingEnabled = false;
+  sg.fillStyle = '#101219'; sg.fillRect(0, 0, sheet.width, sheet.height);
+  sg.font = '600 13px system-ui, sans-serif'; sg.fillStyle = '#8a90a0'; sg.textAlign = 'center';
+  COLS.forEach((c, i) => sg.fillText(c, left + i * cell + cell / 2, 17));
+  sg.textAlign = 'left';
+  const [tmp, tg] = mk(30, 30);
+  ROWS.forEach((kind, r) => {
+    sg.fillStyle = '#c2c6d0'; sg.fillText(KINDS[kind].name, 8, top + r * cell + cell / 2 + 4);
+    COLS.forEach((c, i) => {
+      const x = left + i * cell, y = top + r * cell;
+      // a bit of floor under each
+      tg.clearRect(0, 0, 30, 30);
+      for (let j = 0; j < 30; j += 8) for (let k = 0; k < 30; k += 8) { tg.fillStyle = (j + k) % 16 ? '#2a2c33' : '#2d3037'; tg.fillRect(k, j, 8, 8); }
+      const walkF = Math.floor(t * 7) % 4;
+      let s;
+      if (i === 5) s = spriteDown(kind);
+      else {
+        const pose = {};
+        if (i === 1 || kind === 'drone') pose.walk = kind === 'drone' ? Math.floor(t * 20) % 2 : walkF;
+        if (i === 2 && Math.floor(t * 4) % 3 === 0) pose.fire = 1;
+        if (i === 3 && kind !== 'drone') pose.carry = 1;
+        if (i === 4 && Math.floor(t * 3) % 2 === 0) pose.hit = 1;
+        s = sprite(kind, pose);
+      }
+      const ang = i === 0 ? -Math.PI / 2 + Math.sin(t * 0.8 + r) * 0.6 : i === 1 ? 0 : -Math.PI / 2;
+      tg.fillStyle = 'rgba(0,0,0,0.4)'; tg.beginPath(); tg.ellipse(16, 17, 6, 5, 0, 0, 7); tg.fill();
+      tg.save(); tg.translate(15, 15); tg.rotate(i === 5 ? 0 : ang); tg.drawImage(s.a, -16, -16); tg.restore();
+      if (i === 6) { tg.globalCompositeOperation = 'multiply'; tg.fillStyle = '#1a1c26'; tg.fillRect(0, 0, 30, 30); tg.globalCompositeOperation = 'source-over'; }
+      tg.globalCompositeOperation = 'lighter'; tg.save(); tg.translate(15, 15); tg.rotate(i === 5 ? 0 : ang); tg.drawImage(s.e, -16, -16); tg.restore(); tg.globalCompositeOperation = 'source-over';
+      sg.drawImage(tmp, x, y, cell - 4, cell - 4);
+    });
+  });
+}
+
+// ------------------------------------------------------------------ go
+sizeView();
+setMode('normal');
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const t = now / 1000;
+  frame(t, dt);
+  if (Math.floor(t * 10) !== Math.floor((t - dt) * 10)) drawSheet(t);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+window.__design = { setMode, me, get tour() { return tour; }, set tour(v) { tour = v; }, flares, throwFlare, setOverview: (v) => { overview = v; sizeView(); }, setLabels: (v) => { labels = v; }, setView: (v) => { VIEWMODE = v; } };
+</script>
+</body>
+</html>

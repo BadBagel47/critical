@@ -20,7 +20,7 @@ Engineer ser rymden som de andra, med en remsa för energi och skador. Stationer
 
 Vrak är mörka inuti (2026-11-15): man letar sig fram med ficklampa (L) och flares som kastas (Q), och väggar kastar skuggor. Det är första steget i ljussättningen. Ljus i rymden (D-147) är godkänt och påslaget för alla: stationernas ljus faller på stationen, motorer och skott lyser upp skrov, och skepp kastar skugga på stationer och vrak.
 
-Världen görs om i fyra steg enligt docs/proposal-world.md (2026-11-15). Steg 2 är byggt 2026-11-16: en speed boost som en träff nollställer, hopp som börjar om vid träff, malm från asteroider som blir bränsle eller säljs, solceller, och bränsle som bara är gratis hemma. Steg 1 är byggt: asteroider man krockar med och skjuter sönder, en karta utan fog of war, system i tre storlekar, en stjärna i mitten som bränner, ett dis vid kanten och ankomst vid en bas. Allt är påslaget i alla spel. Fientliga stationer börjar i lockdown där man kan smyga (2026-11-15): vakter går rundor och ser åt ett håll, turrets och kameror vaktar en kon, tre dörrar är larmade, och vem som går in spelar roll. Engineer hackar fram stationens kod. Vakterna slåss från skydd och går runt, posterna har egna instrument (mållista, kurs, bordningsradar), och de kan märka saker åt varandra och ladda upp en överladdning (2026-11-15). Förslag som väntar på användaren: docs/proposal-world.md (genererad värld, röd tråd, uppdrag), docs/proposal-economy.md (ekonomi, loot och vad ett misslyckat lås kostar), docs/proposal-messages.md (meddelanden och sensordata), docs/proposal-items.md (permanenta prylar och förbrukningsvaror) och docs/proposal-computer.md (skeppets dator).
+Världen görs om i fyra steg enligt docs/proposal-world.md (2026-11-15). Steg 2 är byggt 2026-11-16: en speed boost som en träff nollställer, hopp som börjar om vid träff, malm från asteroider som blir bränsle eller säljs, solceller, och bränsle som bara är gratis hemma. Steg 1 är byggt: asteroider man krockar med och skjuter sönder, en karta utan fog of war, system i tre storlekar, en stjärna i mitten som bränner, ett dis vid kanten och ankomst vid en bas. Allt är påslaget i alla spel. Fientliga stationer börjar i lockdown där man kan smyga (2026-11-15): vakter går rundor och ser åt ett håll, turrets och kameror vaktar en kon, tre dörrar är larmade, och vem som går in spelar roll. Engineer hackar fram stationens kod. Vakterna slåss från skydd och går runt, posterna har egna instrument (mållista, kurs, bordningsradar), och de kan märka saker åt varandra och ladda upp en överladdning (2026-11-15). Förslag som väntar på användaren: docs/proposal-world.md (genererad värld, röd tråd, uppdrag), docs/proposal-economy.md (ekonomi, loot och vad ett misslyckat lås kostar), docs/proposal-messages.md (meddelanden och sensordata), docs/proposal-items.md (permanenta prylar och förbrukningsvaror) och docs/proposal-computer.md (skeppets dator). Planen för standardbaser, fristaden och varvet ligger i docs/proposal-bases.md (2026-11-16), mest beslutad, inte byggd.
 
 Stationerna har en mainframe (2026-11-15, F-109, F-110, F-114, F-121, F-123, F-173 och första omgången av F-122). Hos en fiende hackar man den i tre nivåer med en spårningsmätare: planritning, kameror och turrets av, övertagande. Den gamla terminalen i valvet är borta. En station som handlar med besättningen kan tas inifrån till ett högt pris: larm, vakter, hjälp utifrån och en prissumma med bounty hunters från fria stationer. Egna stationer lagas och får försvar köpt i mainframen, och de anfalls av pirater och fientliga faktioner, även när besättningen är någon annanstans, med varningar LOW, MEDIUM och HIGH. Siffrorna är startvärden i balance.js och är inte provspelade. Går besättningen in i en egen station som bordas möter den bordarna och kan slå tillbaka anfallet (F-122).
 
@@ -33,7 +33,7 @@ Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra för
 1. Fortsätt enligt "Proposed runs" i BACKLOG.md. Den tekniska översynen är gjord, så nya saker kan byggas direkt.
    - Starta gärna en ny session för varje körning. Allt som behövs står i repot.
 2. Användaren fortsätter provspela och ger synpunkter.
-3. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073), två våningar på baser (D-072) och eskortskepp (D-071).
+3. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073) och eskortskepp (D-071). Baserna (D-072) har en plan i docs/proposal-bases.md, med designuppgifter som görs före bygge.
 4. Onlineläget (F-040) väntar på användarens motor.
 
 ## Mål
@@ -72,6 +72,8 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - `docs/proposal-messages.md`: förslag (inte godkänt) om hur meddelanden och sensordata visas (D-187), med fem frågor.
 - `docs/proposal-items.md`: analys och förslag (inte godkänt) om vilka prylar som är permanenta och vilka som förbrukas (D-193), med fem frågor.
 - `docs/proposal-computer.md`: genomgång (inte godkänd) av hur skeppets dator skulle sköta lediga poster (D-186, F-034), med sju frågor.
+- [docs/proposal-bases.md](docs/proposal-bases.md): plan (mest beslutad 2026-11-16, inte byggd) för standardbasen i tre våningar, tryck under bordning, skeppet medan man bordar, fristaden som startsystem, startkanonen, varvet som köps, en större utsida och dockningsringen. Säger vad som är bestämt och vad som är förslag, och slutar med öppna frågor.
+- [docs/design/prototypes/](docs/design/prototypes/): fristående designtester. `interior-ship.html`, `interior-station.html` och `interior-pirate-base.html` hör till docs/proposal-bases.md (tunna väggar, figurer, ljussättning, en genererad piratbas med boss). De används inte av spelet.
 
 ## Kod
 
@@ -197,7 +199,7 @@ Stationer, vapen och sektorer, agentens val som användaren inte har sett än (2
 - Fem fasta sektorer: Kestrel Drift, Ash Belt, Hollow Reach, The Narrows och The Maw. Stationer säljer kartan till nästa sektor, och kartor kan ligga i valv.
 - En station som besättningen skjuter på i lugn och ro varnar vid första träffen och slår tillbaka från nästa, se reglerna för F-129 nedan. Anseendet sjunker för varje träff: avvaktande efter två, stängd efter fem och fientlig för gott efter åtta.
 - En fientlig station tas över från en terminal i dess valv. Misslyckas inbrottet slår stationen tillbaka med två Fighters, och låset får ett nytt pussel.
-- En övertagen station får shipyard.
+- (Ersatt 2026-11-16, se Baser, fristad och varv nedan.) En övertagen station får shipyard.
 - Stationerna är dubbelt så stora som förut, 192 punkter tvärs över mot fregattens 108 på längden. Storleken är agentens val (F-065, 2026-11-14).
 - Den tunga lasern skjuter rakt fram längs skeppet, så Captain siktar med skeppet och Gunner laddar och avfyrar.
 - Pirater ger en liten belöning i krediter. En nedskjuten Gunboat blir ett vrak som går att borda.
@@ -252,7 +254,7 @@ Faktioner, stationsförsvar och trafik, agentens val som användaren inte har se
 - Bara besättningens egna nedskjutningar ger belöning, räknas som kills och höjer anseendet.
 - Stationer: fyra kanontorn, sköld 200 som börjar laddas efter fem sekunder utan träffar, skrov 1500 som lagas efter tjugo. En träff på ett kanontorn slår ut tornet. En piratstations kanoner gör dubbel skada, så att de fortfarande är farliga för fregatten.
 - Piratanfall: fyra skepp, fler i senare sektorer, och från andra sektorn är ett av dem en Gunboat. Provat i simulering utan hjälp från besättningen: i första sektorn håller stationen nästan alltid, i andra faller den i ungefär fyra fall av tio, och i fjärde faller den nästan alltid. Tacken (rabatt eller krediter) kommer bara om besättningen själv träffat någon av angriparna.
-- Besättningens egen varvsstation anfalls aldrig, så att det alltid finns någonstans att tanka och laga. En station som fallit till piraterna tas över som andra piratstationer och blir då besättningens.
+- (Ersatt 2026-11-16, se Baser, fristad och varv nedan.) Besättningens egen varvsstation anfalls aldrig, så att det alltid finns någonstans att tanka och laga. En station som fallit till piraterna tas över som andra piratstationer och blir då besättningens.
 - En station som besättningen själv skjutit ner till noll tystnar bara. Den byter inte ägare.
 - Dockningsskölden är 40, och 90 med uppgraderingen Docking Field (150 krediter, en system slot). Den laddas på fyra sekunder och försvinner när skeppet lägger ut.
 - Trafik: ett nytt skepp eller en patrull var tjugonde till fyrtiofemte sekund, högst fem samtidigt, två av tre är fraktskepp. Fraktskepp besöker en eller två stationer i 12 till 25 sekunder var. Patruller är två skepp som går en runda förbi stationerna. Ingen trafik kommer till en sektor där piraterna har alla stationer.
@@ -336,7 +338,7 @@ Sparande, uppdrag och omgångar (2026-11-14)
 - Varje omgång ska vara genererad: systemen, en röd tråd av berättelse och frivilliga sidouppdrag. Kartans storlek väljs vid start. Ingen färdigskriven story från början till slut.
 - Uppdrag: alla sorter, högst fem samtidigt för stunden. Vissa har tidsgräns och betalar mer. Ett misslyckat uppdrag kostar lönen och lite anseende hos stationens faktion, eller hos just den stationen om den är neutral.
 - Det får aldrig gå att låsa sig, till exempel utan pengar eller bränsle (D-100).
-- Små stationer har en våning, större har två. Samma gäller för fientliga.
+- (Ersatt 2026-11-16, se Baser, fristad och varv nedan.) Små stationer har en våning, större har två. Samma gäller för fientliga.
 - Mobil är viktigt (F-090).
 - Onlineläget: spelare ansluter med rumskod eller länk. Motorns gränser är inte kända än. Att hoppa in mitt i ett spel (F-038) görs i samband med nätverkskoden.
 
@@ -347,8 +349,22 @@ Skepp och uppgraderingar
 - Skeppsklasser: Dart, Fighter, Interceptor, Gunboat, Frigate, Cruiser.
 - Två nya skeppsklasser ska in: Freighter, lite större och långsam (F-069), och Juggernaut, ett ovanligt krigsskepp som är långsamt och tungt bestyckat (F-070). Juggernaut patrullerar hos faktioner och dyker i mycket sällsynta fall upp som pirat (2026-11-14).
 - Designen är vald för båda de nya skeppen: Freighter är en ryggrad med containrar (förslag A), och Juggernaut är ett kantigt ägg med smala änden fram, pansarplåtar och monterade kanontorn, mindre än Cruisern (förslag E). Båda finns i `docs/design/tools/ships2.py` (D-094, 2026-11-14).
-- Stationernas storlek är godkänd. Stora baser med två våningar blir 1,5 gånger större, med annan design, mer vapen och starkare sköld (F-103, 2026-11-14).
+- (Delvis ersatt 2026-11-16, se Baser, fristad och varv nedan.) Stationernas storlek är godkänd. Stora baser med två våningar blir 1,5 gånger större, med annan design, mer vapen och starkare sköld (F-103, 2026-11-14).
 - Nya skepp designas och visas för användaren innan de läggs in i spelet (2026-11-14). Förslagen ritas av `docs/design/tools/ships2.py`.
+
+Baser, fristad och varv (användaren, 2026-11-16). Detaljer och vad som är förslag: docs/proposal-bases.md. Inget av det är byggt, och ett ja här är inte klartecken att bygga.
+- Spelet ska vara roligt att spela, inte ett ständigt underhåll. En omgång med en kompis på några timmar ska gå att klara, med en till tre spelare.
+- Tills vidare finns en vanlig bastyp, standardbasen, plus piraternas slutbas. Standardbasen genereras varje gång och har tre våningar: entré i den ljusa, rena mitten där det lagliga finns, smutsig industri med last och vakter i källaren, och kommandodelen med mainframen överst. Föremål har samma form inne som i rymden. Ersätter "små stationer en våning, större två" (D-072) och de 1,5 gånger större baserna (F-103).
+- Entrén är en luftsluss där båda dörrarna aldrig är öppna samtidigt, med knappar. Övertagandet kräver något i källaren först och sedan mainframen överst. Efter källaren går det inte på tid: läget skärps steg för steg.
+- Drönare kan fyllas på vid larm och vakter kan komma med ett skepp som dockar. Det skeppet anfaller inte ett dockat skepp som ingen sitter i.
+- Vapen riktade rakt fram kan inte skjuta medan skeppet ligger dockat. Försvar dockad kräver kanontorn, som köps.
+- Skeppet får lämna dockan men inte hoppa från systemet så länge någon är kvar i basen. Ingen flyttas tillbaka till skeppet av sig själv, och flykten ut ska inte gå att hoppa över. Ersätter D-043. När skrovet nästan är slut backar skeppet ut om en spelare i skeppet väljer det, eller av sig självt om datorn sköter Captain, och kommer tillbaka när någon kallar från luftslussen. Annars ligger det kvar under dockningsskölden.
+- Baserna anpassas efter antalet spelare, så att det inte blir för svårt ensam.
+- Startsystemet är en fristad nära kartans mitt, utan pirater och faktioner som bråkar, med en neutral bas som inte kan tas över. Inga anfall sker där. Där finns inget varv, man får ge sig ut. Kartan ska inte vara symmetrisk. Ersätter att den egna varvsstationen i första sektorn aldrig anfalls.
+- Skeppet börjar med en enkel fast kanon rakt fram som alltid sitter kvar och går att uppgradera billigt. Den används mest för att bryta malm. Kanontorn köps.
+- En övertagen bas får inget varv. Varvet köps som en permanent uppgradering, och alla standardbaser kan köpa det. På eget varv får man tillbaka tre fjärdedelar när man byter bort en del, annars hälften. Inget förråd. Försvaret köps i mainframen som i dag, och fullt utbyggt gör det risken för övertagande mycket låg. Ersätter "en övertagen station får shipyard".
+- Utsidan av baserna ska bli större (inte 1:1) och hänga ihop med våningarna. Den gamla designen behöver inte följas men ska passa in i världen. Design av varv och utsida görs före bygge.
+- Dockningsringen vrids i fasta lägen och får en demo med full design före bygge. Vägen ut provas i ett designtest före bygge.
 
 Grafik
 - En pixelstil för hela spelet, alltid uppifrån, med dämpade färger. Stark färg används bara för ljus, skott och loot.
