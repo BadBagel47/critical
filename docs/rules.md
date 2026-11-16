@@ -856,6 +856,13 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 
 | Nr | Regel | Status | Källa | Test |
 |---|---|---|---|---|
+| R-1108 | Varje spelare har sina primära roller från start. | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1109 | När en spelare lämnar skeppet blir hens roller tillfälligt lediga, och de som är kvar kan ta över en ledig roll tills den som har den på riktigt kommer tillbaka. | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1110 | Bara en spelare åt gången har en roll. Den som tillfälligt tar en ledig roll håller också kvar sin egen, så ingen annan kan ta någon av dem. | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1111 | Med två spelare tas den tredje rollen över på samma sätt, eller sköts av datorn. | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1112 | Om datorn får sköta roller, och vilka, bestäms när omgången startar och gäller hela omgången. Datorn slås på i vyn för en roll där det är tillåtet. | bestämd | Användaren 2026-11-16 (D-189, D-186) | – |
+| R-1113 | Varje roll köper utrustningen till sin egen bordare ur sin egen kassa. | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1114 | Engineer köper det som rör skeppets skydd och energi, Gunner vapnen, och Captain motorer, bränsle och sensorer. | bestämd | Användaren 2026-11-16 (F-188, agentens förslag godkänt) | – |
 | R-753 | Uppgraderingar går inte sönder var för sig tills vidare, och frågan tas upp igen med värmen. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-754 | Engineer ser rymden som de andra, med energi och skadevarningar i en smal remsa, och börjar i det läget. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-755 | V eller en knapp öppnar Engineers panel och fäller undan den. | byggd | HANDOFF beslut 2026-11-14 | saknas |
@@ -867,7 +874,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-761 | Engineer fördelar energi mellan vapen, sköld, motorer och reparation. | byggd | HANDOFF beslut | saknas |
 | R-762 | Engineer flyttar en reparationssymbol mellan skadepunkter på en bild av skeppet. | byggd | HANDOFF beslut | saknas |
 | R-763 | Den som går in för att loota lämnar sin post ledig för någon annan och får tillbaka den när hen är ombord igen. | byggd | HANDOFF beslut | saknas |
-| R-764 | Alla tre posterna finns från första versionen, och man byter fritt mellan dem. | byggd | HANDOFF beslut | saknas |
+| R-764 | Alla tre posterna finns från första versionen, och man byter fritt mellan dem. | ersatt av: R-1108, R-1109 och R-1110; fortfarande byggt | HANDOFF beslut | – |
 | R-765 | En post som lämnas fortsätter som den ställdes in. | byggd | HANDOFF beslut | saknas |
 | R-766 | Gasen ligger kvar när Captain lämnar sin post, så att en ensam spelare kan flyga och skjuta. | byggd | HANDOFF beslut | saknas |
 | R-767 | En post kan bara hållas av en spelare i taget. | byggd | HANDOFF beslut 2026-11-14 | saknas |
