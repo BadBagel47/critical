@@ -102,7 +102,11 @@ Alla är besvarade. Bilderna på stjärnan, bältet och diset visas innan de lä
 - Ett hopp till ett outforskat system kostar lika mycket bränsle som andra hopp.
 - Bebodda och tomma system (användarens idé): 8, 12 eller 18 är antalet bebodda system, med stationer, vrak och uppdrag. Lika många tomma system, utan stationer, binder ihop dem: 16, 24 eller 36 system totalt. Det finns fler tomma system ju längre ut man kommer. Då får också korta omgångar fler hopp, och en karta med 3 system blir inte för stor.
 - Ett tomt system har asteroider, ibland ett vrak eller en pod, och ibland pirater. Asteroider finns alltid, i varje system, så att man kan skaffa bränsle om det tar slut.
-- Kvar att svara på: systemradarns räckvidd och pris, systemens storlek, hur farligheten ökar, var Cruisern finns och om tomma system kan ha något eget.
+- Systemens storlek: tre storlekar blandade, med flest små. De tomma kan vara mindre.
+- Farligheten ökar ett steg för varje två hopp från startsystemet, upp till steg 3.
+- Slutet ligger slumpat i ett av de tre bebodda system som ligger längst bort. Enligt docs/proposal-bases.md (2026-11-16) är slutet piraternas slutbas, och startsystemet är en fristad nära mitten av kartan.
+- Tomma system kan ibland ha något eget: ett tätt asteroidfält eller ett vrakfält, och senare anomalier (F-053).
+- Kvar att svara på: systemradarns räckvidd och pris.
 
 ## Steg 4 – Uppdrag och story
 
