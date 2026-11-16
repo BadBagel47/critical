@@ -23,7 +23,7 @@ Varje regel är en rad: `| Nr | Regel | Status | Källa | Test |`
 Funna när boken sattes ihop. Varje punkt har en rekommendation. Tills ett beslut finns gäller det som är byggt.
 
 1. ~~**Bränsle i fristaden.**~~ Avgjort 2026-11-16: fristadens bas säljer billigt bränsle, och bränslet blir gratis först på ett eget köpt varv. Det ersätter gratis bränsle på den egna varvsstationen.
-2. ~~**Neutrala varv.**~~ Avgjort 2026-11-16: ungefär en fjärdedel av baserna har varv, räknat för varje sida för sig, och varv på neutrala baser är öppna mot betalning. En egen bas kan köpa ett varv (R-1194). Öppet: om piraternas baser räknas med, och om varje sida får minst ett varv på en liten karta.
+2. ~~**Neutrala varv.**~~ Avgjort 2026-11-16: ungefär en fjärdedel av baserna har varv, räknat för varje sida för sig, och varv på neutrala baser är öppna mot betalning. En egen bas kan köpa ett varv (R-1194). Piraternas baser räknas med (K5). Antalet system ses över (K6), så att fjärdedelen ger varv åt varje sida.
 3. ~~**Ett anseende som aldrig går att höja.**~~ Avgjort 2026-11-16: inget är för gott. Ett anseende som har gått till fientligt kan återtas, med uppdrag när de finns (R-1190).
 4. ~~**Gunnerns sprängladdning.**~~ Avgjort 2026-11-16: Gunner har inte alltid en laddning. Den köps och förbrukas, som byggt (R-529, R-847).
 5. ~~**Engineers hackfart.**~~ Avgjort 2026-11-16: en och en halv gång så snabbt, som byggt (R-526, R-788).
@@ -32,7 +32,7 @@ Funna när boken sattes ihop. Varje punkt har en rekommendation. Tills ett beslu
 8. ~~**Hur fort larmet blinkar.**~~ Avgjort 2026-11-16: larmet blinkar högst en gång i sekunden (R-1193).
 9. ~~**Återvändsgränder på kartan.**~~ Avgjort 2026-11-16: de flesta system har 2–3 hoppvägar, och några tomma system längst ut får vara återvändsgränder.
 10. ~~**Datorn och ett dockat skepp.**~~ Avgjort 2026-11-16: planen för baser gäller (R-813, R-731). Förslaget om datorn skrivs om efter den när det besvaras.
-11. **Tangenten L.** Förslaget om meddelanden lägger loggen på L, som tänder lampan vid bordning. Rekommendation: loggen får en annan tangent.
+11. ~~**Tangenten L.**~~ Flyttad 2026-11-16: loggen och dess tangent avgörs i D-187 (meddelanden från skeppet), där användaren vill ha ett gränssnitt för skeppets meddelanden.
 12. ~~**Sprängladdningens pris.**~~ Avgjort 2026-11-16: 50 krediter, som byggt, tills ekonomin ses över (R-529).
 13. ~~**Bränslet i fristaden.**~~ Avgjort 2026-11-16: alla priser i fristaden är som hos en neutral bas, också bränslet (R-1091). Gratis bränsle på ett eget köpt varv gäller som förut (R-1092).
 14. ~~**Pengarna i fristaden.**~~ Avgjort 2026-11-16: vrak är en bonus, och fristaden har inga (R-1097, R-1100). Där ger malmen och poddarna nog för att komma igång.
@@ -362,7 +362,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-275 | Basen i fristaden kan inte tas över och är alltid en trygg plats att komma tillbaka till. | byggd | proposal-bases.md §5 | tests/world.test.js |
 | R-276 | En övertagen bas får inget varv, utan varvet är en permanent uppgradering som köps till basen. | bestämd | proposal-bases.md §1, §7 | – |
 | R-277 | Alla standardbaser kan köpa varv. | bestämd | proposal-bases.md §7 | – |
-| R-1194 | Ungefär en fjärdedel av baserna har varv, räknat för varje sida för sig: en fjärdedel av de neutrala baserna, en fjärdedel av THE DRIFTERS baser och så vidare. Varv på neutrala baser är öppna mot betalning. | bestämd | Användaren 2026-11-16 (krock 2, K1) | – |
+| R-1194 | Ungefär en fjärdedel av baserna har varv, räknat för varje sida för sig: en fjärdedel av de neutrala baserna, en fjärdedel av THE DRIFTERS baser och så vidare, också piraternas. Varv på neutrala baser är öppna mot betalning. | bestämd | Användaren 2026-11-16 (krock 2, K1, K5) | – |
 | R-278 | Försvaret köps i mainframen (sköld, kanontorn och inre säkerhet), och fullt utbyggt ska risken att basen tas över vara mycket låg. | bestämd | proposal-bases.md §7 | – |
 | R-279 | Basens utsida i rymden ska bli större än i dag, men inte i skala 1:1. | bestämd | proposal-bases.md §8 | – |
 | R-280 | Utsidan ska hänga ihop med hur basen är byggd med våningar. | bestämd | proposal-bases.md §8 | – |
@@ -847,7 +847,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-708 | Engineer kan vända en turret till besättningens sida en stund (F-183). | byggd | station-boarding.md §6 | saknas |
 | R-709 | Spelarnas egna turrets är engångssaker som försvinner när striden är över. | byggd | station-boarding.md §6, §13 | saknas |
 | R-710 | Efter ungefär en minut hoppar en grupp bounty hunters in och anfaller det dockade skeppet. | ersatt av: R-1191 | station-boarding.md §9 (ersatt av krock 7) | saknas |
-| R-1191 | Medan besättningen är inne anfalls det dockade skeppet aldrig när en spelar, med mycket låg risk när två spelar och låg risk när tre spelar. Det gäller alla fiender: bounty hunters, förstärkningsskeppet och andra. Bounty hunters hoppar in efter ungefär en minut som förut. | bestämd | Användaren 2026-11-16 (krock 7) | – |
+| R-1191 | Medan besättningen är inne anfalls det dockade skeppet aldrig när en spelar, med mycket låg risk när två spelar och låg risk när tre spelar. Det gäller alla fiender: bounty hunters, förstärkningsskeppet och andra. Det räknas på hur många spelare som är anslutna till omgången, oavsett vem som sitter i skeppet. Bounty hunters hoppar in efter ungefär en minut som förut. | bestämd | Användaren 2026-11-16 (krock 7, K3) | – |
 | R-711 | En grupp bounty hunters är två Fighters och en Gunboat, och de slåss bara mot besättningen. | byggd | station-boarding.md §9 | saknas |
 | R-712 | Det kommer aldrig mer än en grupp bounty hunters åt gången, med tre till fyra minuter mellan grupperna. | byggd | station-boarding.md §9 | saknas |
 | R-713 | Pirater anfaller som en lös grupp på fyra till sex skepp med en Gunboat som bordningsskepp. | byggd | station-boarding.md §14 | saknas |
