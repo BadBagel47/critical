@@ -34,7 +34,7 @@ Funna när boken sattes ihop. Varje punkt har en rekommendation. Tills ett beslu
 10. **Datorn och ett dockat skepp.** Förslaget om datorn säger att den aldrig gör något stort själv och att den som Gunner försvarar skeppet under bordning. Planen för baser säger att datorn som Captain backar ut skeppet när skrovet nästan är slut, och att vapen rakt fram inte skjuter dockat. Rekommendation: planen för baser gäller, och förslaget om datorn skrivs om efter den när det besvaras.
 11. **Tangenten L.** Förslaget om meddelanden lägger loggen på L, som tänder lampan vid bordning. Rekommendation: loggen får en annan tangent.
 12. **Sprängladdningens pris.** 130 krediter i förslaget om ekonomi mot 50 i det byggda. Rekommendation: 50, som byggt, tills ekonomin ses över.
-13. **Bränslet i fristaden.** "Fristadens butik har samma priser som en neutral bas, annars kan man åka dit och köpa billigare" (2026-11-16) mot "fristadens bas säljer billigt bränsle" (R-1090, byggt till halva priset). Rekommendation: bränslet kostar också som hos en neutral bas, så att inget är billigare där. Fristaden förblir trygg, och tomt på pengar räddar malmen.
+13. ~~**Bränslet i fristaden.**~~ Avgjort 2026-11-16: alla priser i fristaden är som hos en neutral bas, också bränslet (R-1091). Gratis bränsle på ett eget köpt varv gäller som förut (R-1092).
 
 ## Beslut som inte är byggda än
 
@@ -51,8 +51,9 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 
 | Nr | Regel | Status | Källa | Test |
 |---|---|---|---|---|
-| R-1090 | Fristadens bas säljer billigt bränsle. Bränslet är gratis först på ett eget köpt varv. | byggd | Användaren 2026-11-16 (krock 1) | tests/world.test.js |
-| R-1091 | Fristadens butik har samma priser som en neutral bas, så att man inte vinner på att åka dit och handla. Uppgraderingar, lagning, raketer och kartor kostar redan så; bränslet krockar med R-1090 (krock 13). | bestämd | Användaren 2026-11-16 | – |
+| R-1090 | Fristadens bas säljer billigt bränsle. Bränslet är gratis först på ett eget köpt varv. | ersatt av: R-1091 och R-1092 | Användaren 2026-11-16 (krock 1) | tests/world.test.js |
+| R-1091 | Alla priser i fristadens butik är som hos en neutral bas, också bränslet, så att man inte vinner på att åka dit och handla. Bränslet kostar i dag hälften där och ska ändras. | bestämd | Användaren 2026-11-16 (krock 13) | – |
+| R-1092 | Bränslet är gratis först på ett eget köpt varv. | bestämd | Användaren 2026-11-16 (krock 1) | – |
 | R-1086 | Ett vrak har 0 eller 1 bränslecell, och en cell räcker till ett hopp. En station har en cell i valvet. | byggd | Användaren 2026-11-16 | tests/world.test.js |
 | R-1087 | Bränslemätaren visar med markeringar hur många hopp skeppet kan göra, utan siffror. | byggd | Användaren 2026-11-16 | tests/world.test.js |
 | R-1088 | Krediterna från alla belöningar räknas om efter antalet spelare, gånger 1, 0,75 och 0,6 för en, två och tre, så att en besättning på tre tjänar ungefär en femtedel mer än en ensam spelare totalt. | förslag | Agenten 2026-11-16, utifrån docs/economy.md | – |
@@ -978,7 +979,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-879 | Startkanonen går att uppgradera och är billig. | bestämd | proposal-bases.md §6 | – |
 | R-880 | Handel finns bara för att tjäna pengar, inte för att använda varorna själv. | bestämd | BACKLOG F-068 | – |
 | R-881 | Början ska kännas svår, och uppgraderingar ska vara värda pengarna. | bestämd | BACKLOG F-050 | – |
-| R-882 | Basen i fristaden har bara grunderna: sälja malm, billigt bränsle, lagning, enklaste uppgraderingarna och enkla jobb. | byggd | proposal-bases.md §5 Byggt som agentens förslag, inte godkänt än: basen säljer uppgraderingar som kostar högst 150. | tests/world.test.js |
+| R-882 | Basen i fristaden har bara grunderna: sälja malm, bränsle, lagning, enklaste uppgraderingarna och enkla jobb. | byggd | proposal-bases.md §5 Byggt som agentens förslag, inte godkänt än: basen säljer uppgraderingar som kostar högst 150. | tests/world.test.js |
 | R-883 | Bättre saker finns i andra system, och varje faktion säljer sina egna. | förslag | proposal-bases.md §5 | – |
 | R-884 | Asteroiderna i fristaden räcker för att komma igång, men de större pengarna finns längre ut. | förslag | proposal-bases.md §5 | – |
 | R-885 | Startkanonen uppgraderas i några billiga steg: mer skada, långsammare uppvärmning och mer malm per asteroid. | förslag | proposal-bases.md §6 | – |
