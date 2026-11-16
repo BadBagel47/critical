@@ -5,27 +5,27 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat 2026-11-16: uppdragen (A) före butiken (E), eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
+Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först (A och B), sedan uppdragen (C). Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
 
-**A** – strong model, high level – Världen steg 4: uppdrag och story
+**A** – strong model, high level – Uppgraderingar och ekonomi per roll
+- F-188 – Uppgraderingarna sorteras efter kategori och roll
+- D-189 – Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar
+
+**B** – strong model, medium level – Butik med bilder
+- F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
+
+**C** – strong model, high level – Världen steg 4: uppdrag och story
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 
-**B** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
+**D** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
 - D-217 – Designskiss av varvet utifrån och inifrån, och en större utsida som hänger ihop med basens tre våningar (ersätter designen i F-103)
 - D-216 – Designtest av markeringar som visar snabbaste vägen ut genom de dörrar man har öppnat
 - D-218 – Demo med full design av dockningsringen som vrids i fasta lägen
 
-**C** – strong model, medium level – Provspelslista med testlägen
+**E** – strong model, medium level – Provspelslista med testlägen
 - F-222 – En lista över det som väntar på provspel, med länkar som startar rätt situation direkt, så att varje sak går att prova på några minuter
-
-**D** – strong model, medium level – Butik med bilder
-- F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
-
-**E** – strong model, high level – Uppgraderingar och ekonomi per roll
-- F-188 – Uppgraderingarna sorteras efter kategori och roll
-- D-189 – Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar
 
 **F** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
