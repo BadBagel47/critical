@@ -1080,7 +1080,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-879 | Startkanonen går att uppgradera och är billig. | bestämd | proposal-bases.md §6 | – |
 | R-880 | Handel finns bara för att tjäna pengar, inte för att använda varorna själv. | bestämd | BACKLOG F-068 | – |
 | R-881 | Början ska kännas svår, och uppgraderingar ska vara värda pengarna. | bestämd | BACKLOG F-050 | – |
-| R-882 | Basen i fristaden har bara grunderna: sälja malm, bränsle, lagning, enklaste uppgraderingarna och enkla jobb. | byggd | proposal-bases.md §5 Byggt som agentens förslag, inte godkänt än: basen säljer uppgraderingar som kostar högst 150. | tests/world.test.js |
+| R-882 | Basen i fristaden har bara grunderna: sälja malm, bränsle, lagning, de billigaste uppgraderingarna (högst 150) och enkla jobb. Fristaden är bara en startpunkt för att ta sig vidare. | byggd | proposal-bases.md §5; godkänt av användaren 2026-11-16 (F1) | tests/world.test.js |
 | R-883 | Bättre saker finns i andra system, och varje faktion säljer sina egna. | förslag | proposal-bases.md §5 | – |
 | R-884 | Asteroiderna i fristaden räcker för att komma igång, men de större pengarna finns längre ut. | förslag | proposal-bases.md §5 | – |
 | R-885 | Startkanonen uppgraderas i några billiga steg: mer skada, långsammare uppvärmning och mer malm per asteroid. | förslag | proposal-bases.md §6 | – |

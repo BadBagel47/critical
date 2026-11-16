@@ -21,77 +21,83 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
+- D-257 – Smuggeluppdrag från skumt folk på baser, som man pratar med
+
+**C** – strong model, medium level – Meddelanden från skeppet
+- D-256 – Inventera alla meddelanden som kan dyka upp, när, för vem och var
+- D-187 – Se över hur spelet och skeppet visar meddelanden, så att det viktiga syns först
+- F-255 – Visa Gunner när dartsen är hela igen, genom skeppets meddelanden
 
 
-**C** – strong model, medium level – Provspelslista med testlägen
+**D** – strong model, medium level – Provspelslista med testlägen
 - F-222 – En lista över det som väntar på provspel, med länkar som startar rätt situation direkt, så att varje sak går att prova på några minuter
 
-**D** – strong model, medium level – Förfina rollerna
+**E** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 - F-236 – Primära roller och tillfälligt övertagande: den som lämnar skeppet lämnar sina roller lediga, de kvar kan ta en av dem, och ägaren får tillbaka den direkt
 - F-235 – Bordarnas utrustning per roll, så att varje roll köper och har sin egen
 
-**E** – strong model, medium level – Innehållskatalog
+**F** – strong model, medium level – Innehållskatalog
 - D-223 – En lista ur koden över allt som finns i spelet med sina siffror, så att överblicken alltid stämmer
 
-**F** – strong model, medium level – Verktyg för backloggen
+**G** – strong model, medium level – Verktyg för backloggen
 - F-228 – Markera, flytta till klart och ge nya bokstäver med ett verktyg, så att agenterna gör färre misstag
 
-**G** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
+**H** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
 - D-227 – Dela upp de två stora filerna efter ämne, så att två agenter krockar mer sällan
 
-**H** – strong model, high level – Pekskärm
+**I** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**I** – strong model, high level – Viewer på en extra skärm
+**J** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 
-**J** – strong model, high level – Sällsynta skepp
+**K** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**K** – strong model, high level – Värme
+**L** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**L** – strong model, high level – Slå ut och borda
+**M** – strong model, high level – Slå ut och borda
 - D-248 – Se över hur man slår ut ett skepp för att borda det, så att Gunner har ett tydligt sätt att göra det i stället för att skeppet exploderar
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**M** – strong model, high level – Missiler och raketer
+**N** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**N** – strong model, high level – Kontakt med andra skepp
+**O** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**O** – strong model, high level – Anomalier
+**P** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**P** – strong model, high level – En värld som förändras
+**Q** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**Q** – strong model, high level – Ljudeffekter
+**R** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**R** – strong model, high level – Visuella effekter och feedback
+**S** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 
-**S** – strong model, high level – Förslag: ekonomi och belöningar
+**T** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**T** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**U** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**U** – strong model, high level – Handel
+**V** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
 
-Väntar på användaren: elva krockar i regelboken (docs/rules.md, överst), fristadens butik som bara säljer de billigaste uppgraderingarna (R-882, byggd som förslag), förslagen D-187 (meddelanden), D-193 (permanenta prylar), D-186 (skeppets dator) och de kvarvarande frågorna i D-172 (straff i låsspel). F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
+Väntar på användaren: elva krockar i regelboken (docs/rules.md, överst), förslagen D-187 (meddelanden), D-193 (permanenta prylar), D-186 (skeppets dator) och de kvarvarande frågorna i D-172 (straff i låsspel). F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
 
 ## Hög
 
@@ -107,6 +113,9 @@ Väntar på användaren: elva krockar i regelboken (docs/rules.md, överst), fri
 
 | ID | Vad | Status |
 |---|---|---|
+| F-255 | Visa Gunner när dartsen är hela igen. Användaren 2026-11-16: en dart som kommer hem lagas, och en som skjutits ner byggs upp igen efter en stund, och det behöver synas för Gunner. Det ska gå genom hur skeppet meddelar status (D-187, docs/proposal-messages.md) | Ej påbörjad |
+| D-256 | Inventera alla meddelanden som kan dyka upp i spelet: vad som visas, när, för vem och var, så att D-187 har en fullständig lista att utgå från. Användaren 2026-11-16 | Ej påbörjad |
+| D-257 | Smuggeluppdrag från skumt folk på baser. Användaren 2026-11-16: det ska gå att prata med skumma personer på baser för att få smuggeluppdrag. Hör ihop med uppdragen (D-073) och handeln (F-068) | Ej påbörjad |
 | F-252 | Uppgraderingar som loot (R-1141, R-1145). Delar ska kunna hittas i vrak och valv, och hamna i förrådet hos den roll som äger dem, men bara sådant rollen inte har max av (R-1175). I dag hittas bara extra platser | Ej påbörjad |
 | F-253 | Förrådet på handkontroll och pekskärm. I dag öppnas förrådet bara med I på tangentbordet | Ej påbörjad |
 | F-235 | Bordarnas utrustning per roll (R-1113). I dag betalar den som köper ur sin kassa, men utrustningen gäller alla bordare. Varje roll ska köpa och ha sin egen. Rör bordningsfilerna, så den görs när insidorna är klara (D-227) | Ej påbörjad |

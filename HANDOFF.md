@@ -32,7 +32,7 @@ Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra för
 
 ## Nästa steg
 
-1. Fortsätt enligt "Proposed runs" i BACKLOG.md. Den tekniska översynen är gjord, så nya saker kan byggas direkt.
+1. Nästa körning är grupp A i BACKLOG.md: att bygga in standardbasen och fraktskeppet efter designtesterna (D-217, D-249). Användaren vill köra den i en ny session, eftersom den är stor. Läs designtesterna i docs/design/prototypes/ och reglerna R-1149 till R-1188 först. Fortsätt sedan enligt "Proposed runs". Den tekniska översynen är gjord, så nya saker kan byggas direkt.
    - Starta gärna en ny session för varje körning. Allt som behövs står i repot.
 2. Användaren fortsätter provspela och ger synpunkter.
 3. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073) och eskortskepp (D-071). Baserna (D-072) har en plan i docs/proposal-bases.md, med designuppgifter som görs före bygge.
