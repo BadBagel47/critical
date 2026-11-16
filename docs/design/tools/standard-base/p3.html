@@ -32,6 +32,8 @@ const STYLE = [
   { amb: { normal: [150, 148, 142], lockdown: [92, 36, 38], alarm: [70, 62, 64], power: [20, 19, 24] }, room: { concourse: [L.warm, 0.85, 6], corridor: [L.white, 0.85, 5], service: [L.white, 0.45, 6], security: [L.cold, 0.75, 5], bar: [L.warm, 0.7, 5], services: [L.white, 0.85, 5], armory: [L.white, 0.75, 5], market: [L.warm, 0.8, 5], med: [L.cold, 0.95, 5], cabin: [L.warm, 0.7, 5], garden: [L.plant, 0.55, 5], wc: [L.cold, 0.8, 4], lounge: [L.warm, 0.8, 5], view: [L.cyan, 0.45, 6], yard: [L.sodium, 0.65, 6], lockers: [L.white, 0.6, 5], chief: [L.warm, 0.7, 5], messd: [L.warm, 0.7, 5], store: [L.warm, 0.55, 5], kitchen: [L.white, 0.9, 5], laundry: [L.white, 0.7, 5], workshop: [L.white, 0.7, 5], gangway: [L.cold, 0.5, 4], gantry: [L.cold, 0.5, 4], ringport: [L.white, 0.6, 4], collar: [L.white, 0.6, 3], airlock: [L.white, 0.7, 4], lift: [L.white, 0.8, 4], stairs: [L.white, 0.6, 4], ladder: [L.amber, 0.5, 3] } },
   { amb: { normal: [62, 68, 86], lockdown: [58, 24, 32], alarm: [46, 42, 52], power: [15, 16, 22] }, room: { command: [L.cyan, 0.4, 7], security: [L.cold, 0.7, 5], server: [L.teal, 0.55, 5], comms: [L.cyan, 0.55, 5], sensors: [L.cyan, 0.5, 5], arms: [L.cold, 0.6, 5], barracks: [L.cold, 0.55, 5], chief: [L.warm, 0.6, 5], tanks: [L.teal, 0.5, 5], store: [L.cold, 0.5, 5], control: [L.cyan, 0.6, 5], gun: [L.amber, 0.4, 4], lift: [L.white, 0.7, 4], stairs: [L.white, 0.6, 4], ladder: [L.amber, 0.5, 3] } },
 ];
+// At an alarm every lamp is on, full: the place is awake and looking. The ambient light is as when all is calm.
+for (const st of STYLE) st.amb.alarm = st.amb.normal.slice();
 function roomLights(r) {
   if (MODE === 'power') return;
   const spec = STYLE[D.i].room[r.kind]; if (!spec) return;
@@ -44,7 +46,7 @@ function roomLights(r) {
     spots.push([px, py]);
   }
   if (!spots.length && r.n) spots.push([r.cx * T + 8, r.cy * T + 8]);
-  const k = MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? (D.i === 1 && !r.staff ? 0.5 : 0.7) : 1;
+  const k = MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? 1.15 : 1;
   for (const [px, py] of spots) lights.push({ x: px, y: py, r: 30 + step * 14, col: MODE === 'lockdown' ? tintLock(col) : col, i: i * k, kind: 'static' });
 }
 function buildStaticLight(near) {
@@ -589,6 +591,7 @@ function findPathNear(x0, y0, x1, y1) {
   return null;
 }
 
+function trailReset() {}
 // ================================================================== every frame
 const keys = new Set();
 let pointer = null, touchGoal = null;

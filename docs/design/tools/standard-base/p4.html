@@ -485,9 +485,10 @@ function setDeck(i) {
 const markDeck = (i) => document.querySelectorAll('#decks button').forEach((b) => b.classList.toggle('on', +b.dataset.deck === i));
 const setOn = (sel, on) => document.querySelector(sel).classList.toggle('on', on);
 const stopTour = () => { if (tour) { tour = false; setOn('#tour', false); } };
-function startTour() { tour = true; setOn('#tour', true); tourAt = 0; tourPath = null; tourWait = 0; setDeck(1); const s = startOf(1); me.x = s[0]; me.y = s[1]; const [dx, dy] = rd(0, 1); me.a = Math.atan2(dy, dx); }
+function startTour() { trailReset(); tour = true; setOn('#tour', true); tourAt = 0; tourPath = null; tourWait = 0; setDeck(1); const s = startOf(1); me.x = s[0]; me.y = s[1]; const [dx, dy] = rd(0, 1); me.a = Math.atan2(dy, dx); }
 function newBase(seed) {
   makeBase(seed);
+  trailReset();
   TURN = OPT.spin === 'free' ? hash(SEED, 77) * Math.PI * 0.5 : 0;
   outsideImg = null;
   buildTour();

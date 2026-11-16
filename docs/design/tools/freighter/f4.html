@@ -16,9 +16,10 @@ function setDeck(i) {
 }
 const setOn = (sel, on) => document.querySelector(sel).classList.toggle('on', on);
 const stopTour = () => { if (tour) { tour = false; setOn('#tour', false); } };
-function startTour() { tour = true; setOn('#tour', true); tourAt = 0; tourPath = null; tourWait = 0; setDeck(0); const s = startOf(0); me.x = s[0]; me.y = s[1]; me.a = -Math.PI / 2; }
+function startTour() { trailReset(); tour = true; setOn('#tour', true); tourAt = 0; tourPath = null; tourWait = 0; setDeck(0); const s = startOf(0); me.x = s[0]; me.y = s[1]; me.a = -Math.PI / 2; }
 function newBase(seed) {
   makeBase(seed);
+  trailReset();
   buildTour();
   document.getElementById('seed').textContent = `(skepp nr ${SEED})`;
 }

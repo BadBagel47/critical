@@ -2,7 +2,7 @@
 // ================================================================== drawing helpers
 let A, E, MODE = 'normal';
 // how bright screens and lamps are: dim when the power is out
-const EDIM = () => (MODE === 'power' ? 0.3 : MODE === 'wreck' ? 0.12 : MODE === 'lockdown' || MODE === 'alarm' ? 0.75 : 1);
+const EDIM = () => (MODE === 'power' ? 0.3 : MODE === 'wreck' ? 0.12 : MODE === 'lockdown' ? 0.75 : 1);
 //@@ 731-739
 function screen(x, y, w, h, c = '#5fd1e0', dim = 1) {
   dim *= EDIM();
@@ -124,7 +124,7 @@ Object.assign(P, {
   kiosk(x, y, w, h, c = '#6fb8ff') { block(x, y, w, h, '#4a5260'); screen(x + 2, y + 2, w - 4, h - 4, c); },
 });
 // A light from a room's furniture: weaker in lockdown, mostly out when the power is.
-const lightIn = (x, y, r, col, i, kind = 'static', extra = {}) => lights.push({ x, y, r, i: i * (MODE === 'power' ? 0.2 : MODE === 'wreck' ? 0 : MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? 0.7 : 1), col: MODE === 'lockdown' ? tintLock(col) : col, kind, ...extra });
+const lightIn = (x, y, r, col, i, kind = 'static', extra = {}) => lights.push({ x, y, r, i: i * (MODE === 'power' ? 0.2 : MODE === 'wreck' ? 0 : MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? 1.1 : 1), col: MODE === 'lockdown' ? tintLock(col) : col, kind, ...extra });
 // Is this gun bought at the defence level chosen?
 function gunArmed(g) {
   const list = (decks[g.deck] && decks[g.deck].guns) || D.guns, k = list.indexOf(g);

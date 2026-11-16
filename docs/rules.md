@@ -49,6 +49,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 - Kanontorn köps, och skeppet börjar med en fast kanon rakt fram. I dag har skeppet ett torn i nosen och torn på vingarna.
 - Standardbasens utsida är bestämd efter designtestet D-217: kupoler, en ring som vrids till bron, lampor som visar hållningen, ST8 på en egen bas och tio tornplatser. I dag har stationerna sin gamla utsida.
 - Lockdown är ett stilla rött filter utan roterande ljus. I dag är lockdown mörkt med roterande röda ljus.
+- Fraktskeppets insida genereras med samma form som skeppet, ett stort lastrum och tre vägar längs skeppet (R-1183 till R-1186). I dag är den en ryggrad med rum på båda sidor, 80 gånger 21 rutor.
 
 ## Bränsle och färd
 
@@ -714,10 +715,12 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1150 | Rött ljus betyder alltid att stället räknar besättningen som fiende: stilla i lockdown, roterande och blinkande vid larm. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
 | R-1151 | Fönstren utanpå lyser stilla rött i lockdown och pulserar långsamt rött vid larm. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
 | R-1182 | Antalet vakter och roterande larmljus följer hur stor ytan är, så att det känns lika tätt överallt, och larmljusen sprids jämnt i gångar och lastrum. Utgångsläge: ett larmljus per 300 rutor golv och en vakt per 500 rutor i lockdown och larm (en per 1200 i lugnt läge), justeras vid provspel. | bestämd | Användaren 2026-11-16 (designtest D-249) | – |
-| R-1183 | Ett fraktskepps insida genereras varje gång och följer skeppets form: aktern med motorerna, fyra rader containrar på båda sidor om en ryggrad och fören med bryggan. | förslag | BACKLOG D-249 | – |
-| R-1184 | Varje fraktskepp har minst ett stort lastrum för eldstrider, och tre vägar längs skeppet: ryggraden, lastrummen och servicegångar längs skrovet, med tvärgångar emellan och inga återvändsgränder utom rummen. | förslag | BACKLOG D-249 | – |
-| R-1185 | Ett fraktskeppsvrak är samma skepp med en eller två containrar bortslitna. | förslag | BACKLOG D-249 | – |
-| R-1186 | Fraktskeppets insida blir ungefär 92 gånger 31 rutor, större än i dag (R-485). | förslag | BACKLOG D-249 | – |
+| R-1183 | Ett fraktskepps insida genereras varje gång och följer skeppets form: aktern med motorerna, fyra rader containrar på båda sidor om en ryggrad och fören med bryggan. | bestämd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | – |
+| R-1184 | Varje fraktskepp har minst ett stort lastrum för eldstrider, och tre vägar längs skeppet: ryggraden, lastrummen och servicegångar längs skrovet, med tvärgångar emellan och inga återvändsgränder utom rummen. | bestämd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | – |
+| R-1185 | Ett fraktskeppsvrak är samma skepp med en eller två containrar bortslitna. | bestämd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | – |
+| R-1186 | Fraktskeppets insida blir ungefär 92 gånger 31 rutor, större än i dag (R-485). | bestämd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | – |
+| R-1188 | Vid larm tänds alla lampor fullt, som om stället vaknar och letar. Det röda filtret finns bara i lockdown. | bestämd | Användaren 2026-11-16 (designtest D-217 och D-249) | – |
+| R-1189 | Ingen markering visar vägen ut, varken spår i golvet eller pilar. | bestämd | Användaren 2026-11-16 (D-216 skippad) | – |
 
 ## Lås och inbrott
 

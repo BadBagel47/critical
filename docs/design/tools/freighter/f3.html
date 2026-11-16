@@ -34,6 +34,8 @@ const STYLE = [
 ];
 STYLE[0].amb.wreck = [16, 16, 22];
 for (const [k, v] of Object.entries({ service: [L.sodium, 0.35, 5], command: [L.cyan, 0.5, 6], chief: [L.warm, 0.6, 5], comms: [L.teal, 0.5, 5], med: [L.white, 0.7, 5], messd: [L.warm, 0.7, 5], kitchen: [L.white, 0.65, 5], cabin: [L.warm, 0.5, 5], barracks: [L.warm, 0.5, 5], lockers: [L.white, 0.5, 5], vault: [L.amber, 0.45, 5], airlock: [L.amber, 0.6, 3], store: [L.sodium, 0.45, 5], workshop: [L.sodium, 0.6, 5], tanks: [L.teal, 0.45, 5], fuel: [L.amber, 0.45, 5], power: [L.reactor, 0.55, 6], engines: [L.reactor, 0.5, 6], control: [L.cyan, 0.5, 5] })) if (!STYLE[0].room[k]) STYLE[0].room[k] = v;
+// At an alarm every lamp is on, full: the place is awake and looking. The ambient light is as when all is calm.
+for (const st of STYLE) st.amb.alarm = st.amb.normal.slice();
 function roomLights(r) {
   if (MODE === 'power' || MODE === 'wreck') return;
   const spec = STYLE[D.i].room[r.kind]; if (!spec) return;
@@ -46,7 +48,7 @@ function roomLights(r) {
     spots.push([px, py]);
   }
   if (!spots.length && r.n) spots.push([r.cx * T + 8, r.cy * T + 8]);
-  const k = MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? (D.i === 1 && !r.staff ? 0.5 : 0.7) : 1;
+  const k = MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? 1.15 : 1;
   for (const [px, py] of spots) lights.push({ x: px, y: py, r: 30 + step * 14, col: MODE === 'lockdown' ? tintLock(col) : col, i: i * k, kind: 'static' });
 }
 function buildStaticLight(near) {
@@ -427,6 +429,7 @@ function findPathNear(x0, y0, x1, y1) {
   return null;
 }
 
+function trailReset() {}
 // ================================================================== every frame
 const keys = new Set();
 let pointer = null, touchGoal = null;

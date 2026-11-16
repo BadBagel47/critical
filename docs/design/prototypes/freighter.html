@@ -69,6 +69,9 @@
 
   <h2>Planen</h2>
   <div class="cards">
+    <div class="card"><h3>Larm</h3><ul>
+      <li><b>Larm:</b> alla lampor tänds fullt, som om stället vaknar och letar. Det röda filtret finns bara i lockdown. Vid larm finns de roterande ljusen, blinkande dörrlampor och en röd ram runt bilden.</li>
+    </ul></div>
     <div class="card"><h3>Samma form som i rymden</h3><ul>
       <li>Aktern är bred med motorerna längst bak. Mitten är fyra rader containrar på var sida om ryggraden, som på skeppet utifrån. Fören smalnar av mot bryggan.</li>
       <li>Containrarna syns också utanpå skrovet i sidans färger.</li>
@@ -471,7 +474,7 @@ function genF() {
 // ================================================================== drawing helpers
 let A, E, MODE = 'normal';
 // how bright screens and lamps are: dim when the power is out
-const EDIM = () => (MODE === 'power' ? 0.3 : MODE === 'wreck' ? 0.12 : MODE === 'lockdown' || MODE === 'alarm' ? 0.75 : 1);
+const EDIM = () => (MODE === 'power' ? 0.3 : MODE === 'wreck' ? 0.12 : MODE === 'lockdown' ? 0.75 : 1);
 const box = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x | 0, y | 0, w | 0, h | 0); };
 function block(x, y, w, h, c, o = {}) {
   const base = hex(c);
@@ -696,7 +699,7 @@ Object.assign(P, {
   kiosk(x, y, w, h, c = '#6fb8ff') { block(x, y, w, h, '#4a5260'); screen(x + 2, y + 2, w - 4, h - 4, c); },
 });
 // A light from a room's furniture: weaker in lockdown, mostly out when the power is.
-const lightIn = (x, y, r, col, i, kind = 'static', extra = {}) => lights.push({ x, y, r, i: i * (MODE === 'power' ? 0.2 : MODE === 'wreck' ? 0 : MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? 0.7 : 1), col: MODE === 'lockdown' ? tintLock(col) : col, kind, ...extra });
+const lightIn = (x, y, r, col, i, kind = 'static', extra = {}) => lights.push({ x, y, r, i: i * (MODE === 'power' ? 0.2 : MODE === 'wreck' ? 0 : MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? 1.1 : 1), col: MODE === 'lockdown' ? tintLock(col) : col, kind, ...extra });
 // Is this gun bought at the defence level chosen?
 function gunArmed(g) {
   const list = (decks[g.deck] && decks[g.deck].guns) || D.guns, k = list.indexOf(g);
@@ -1222,6 +1225,8 @@ const STYLE = [
 ];
 STYLE[0].amb.wreck = [16, 16, 22];
 for (const [k, v] of Object.entries({ service: [L.sodium, 0.35, 5], command: [L.cyan, 0.5, 6], chief: [L.warm, 0.6, 5], comms: [L.teal, 0.5, 5], med: [L.white, 0.7, 5], messd: [L.warm, 0.7, 5], kitchen: [L.white, 0.65, 5], cabin: [L.warm, 0.5, 5], barracks: [L.warm, 0.5, 5], lockers: [L.white, 0.5, 5], vault: [L.amber, 0.45, 5], airlock: [L.amber, 0.6, 3], store: [L.sodium, 0.45, 5], workshop: [L.sodium, 0.6, 5], tanks: [L.teal, 0.45, 5], fuel: [L.amber, 0.45, 5], power: [L.reactor, 0.55, 6], engines: [L.reactor, 0.5, 6], control: [L.cyan, 0.5, 5] })) if (!STYLE[0].room[k]) STYLE[0].room[k] = v;
+// At an alarm every lamp is on, full: the place is awake and looking. The ambient light is as when all is calm.
+for (const st of STYLE) st.amb.alarm = st.amb.normal.slice();
 function roomLights(r) {
   if (MODE === 'power' || MODE === 'wreck') return;
   const spec = STYLE[D.i].room[r.kind]; if (!spec) return;
@@ -1234,7 +1239,7 @@ function roomLights(r) {
     spots.push([px, py]);
   }
   if (!spots.length && r.n) spots.push([r.cx * T + 8, r.cy * T + 8]);
-  const k = MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? (D.i === 1 && !r.staff ? 0.5 : 0.7) : 1;
+  const k = MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? 1.15 : 1;
   for (const [px, py] of spots) lights.push({ x: px, y: py, r: 30 + step * 14, col: MODE === 'lockdown' ? tintLock(col) : col, i: i * k, kind: 'static' });
 }
 function buildStaticLight(near) {
@@ -1932,6 +1937,7 @@ function findPathNear(x0, y0, x1, y1) {
   return null;
 }
 
+function trailReset() {}
 // ================================================================== every frame
 const keys = new Set();
 let pointer = null, touchGoal = null;
@@ -2085,9 +2091,10 @@ function setDeck(i) {
 }
 const setOn = (sel, on) => document.querySelector(sel).classList.toggle('on', on);
 const stopTour = () => { if (tour) { tour = false; setOn('#tour', false); } };
-function startTour() { tour = true; setOn('#tour', true); tourAt = 0; tourPath = null; tourWait = 0; setDeck(0); const s = startOf(0); me.x = s[0]; me.y = s[1]; me.a = -Math.PI / 2; }
+function startTour() { trailReset(); tour = true; setOn('#tour', true); tourAt = 0; tourPath = null; tourWait = 0; setDeck(0); const s = startOf(0); me.x = s[0]; me.y = s[1]; me.a = -Math.PI / 2; }
 function newBase(seed) {
   makeBase(seed);
+  trailReset();
   buildTour();
   document.getElementById('seed').textContent = `(skepp nr ${SEED})`;
 }
