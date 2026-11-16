@@ -11,6 +11,7 @@ import { PIRATE, CREW } from './sides.js';
 import { playerById, leavePost, returnToPost } from './players.js';
 import { isTrading } from './stations.js';
 import { stepHack, stepMainframe, turnOnCrew, MAINFRAME_REACH } from './mainframe.js';
+import { usesOf, furnish, doorsOf, stepDoors } from './furnish.js';
 import { has, level, fuelMax, crewHpMax, carryMax, rifleDmg, teleCooldown, breakinBonus } from './upgrades.js';
 import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
@@ -145,6 +146,10 @@ export function createInterior(state, wreck) {
     plan: false,
     // Whether the crew is taking a station that traded with them, from the inside.
     seize: false,
+    // What each room is for, the doors of the rooms, and the tiles of those that are shut. See furnish.js.
+    uses: [],
+    doors: [],
+    shut: [],
     trade: false,
     // The rooms of a trading station that are for its staff only, by number. See makeTrade.
     staff: [],
@@ -173,6 +178,14 @@ export function createInterior(state, wreck) {
     const far = [...rest].sort((a, b) => away(b) - away(a))[0] || rooms[vault];
     it.mainframe = { ...far.mid };
   }
+  // What the rooms are for, and the things in them. The engines of a wreck are in the room furthest in, where
+  // its reactor stands.
+  const away = (r) => dist(r.mid.x, r.mid.y, it.entry.x, it.entry.y);
+  const rest = rooms.filter((_, i) => i !== vault);
+  const deep = wreck.kind === 'wreck' ? [...rest].sort((a, b) => away(b) - away(a))[0] : null;
+  it.uses = usesOf(it, wreck, deep);
+  furnish(it);
+  it.doors = doorsOf(it);
   // A friendly or neutral station is a place to walk around and trade in, with nothing to fight.
   if (isTrading(wreck)) {
     makeTrade(state, it, wreck);
@@ -1036,6 +1049,7 @@ function clearFallen(state, it) {
 
 function stepInterior(state, wreck, cmds, dt) {
   const it = wreck.interior;
+  stepDoors(it);
   it.cutting = false;
   it.hacking = false;
   // Work on a turret that is let go of is lost.

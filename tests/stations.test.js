@@ -5,7 +5,10 @@ import assert from 'node:assert/strict';
 import { createState } from '../src/sim/state.js';
 import { step } from '../src/sim/step.js';
 import { thingsOf } from '../src/sim/things.js';
-import { tryBoard } from '../src/sim/boarding.js';
+import { tryBoard, createInterior } from '../src/sim/boarding.js';
+import { createWreck } from '../src/sim/sectors.js';
+import { USES } from '../src/sim/furnish.js';
+import { waysFrom, solidAt, solidTile, TILE } from '../src/sim/floor.js';
 import { takeOver, stationShieldMax, gunHpMax, allStations, servicePrices } from '../src/sim/stations.js';
 import { moodOf, enemies, HUNTER } from '../src/sim/sides.js';
 import { startSiege, attackChoices, riskOf } from '../src/sim/siege.js';
@@ -488,4 +491,64 @@ test('the boarding ship lies under the station’s docking shield', () => {
   const hp = boat.hp;
   hurtVessel(s, boat, 10);
   assert.equal(boat.hp, hp, 'the shield takes the hit');
+});
+
+// ---------- rooms with things in them, and doors (F-152) ----------
+test('every room has a use, the things in it never close a way, and most rooms have cover', () => {
+  let rooms = 0,
+    furnished = 0;
+  for (let seed = 1; seed <= 12; seed++) {
+    const s = createState(seed, { test: true });
+    const places = [
+      ...thingsOf(s, 'station'),
+      ...['gunboat', 'hull', 'freighter'].map((h) => createWreck(s, 0, 0, 2, h)),
+    ];
+    for (const p of places) {
+      const it = createInterior(s, p);
+      assert.equal(it.uses.length, it.rooms.length);
+      assert.ok(it.uses.every((u) => USES.includes(u)));
+      assert.equal(it.uses[it.vault], 'VAULT');
+      // Every bit of floor can still be walked to from the way in, with the vault door counted as open.
+      const open = { ...it, tiles: it.tiles.map((c) => (c === 'L' ? '.' : c)), shut: [] };
+      const a = it.airlocks[0];
+      const ways = waysFrom(open, Math.floor(a.x / TILE), Math.floor(a.y / TILE));
+      open.tiles.forEach((c, i) => {
+        if (c === '.' || c === ',') assert.notEqual(ways.steps[i], Infinity, `a cut-off tile in a ${p.kind}`);
+      });
+      rooms += it.rooms.length;
+      furnished += it.rooms.filter((r) => {
+        for (let ty = r.r0; ty <= r.r1; ty++)
+          for (let tx = r.c0; tx <= r.c1; tx++) if (it.tiles[ty * it.w + tx] === 'K') return true;
+        return false;
+      }).length;
+    }
+  }
+  assert.ok(furnished / rooms > 0.6, 'most rooms have something to hide behind');
+});
+
+test('a door is shut when nobody is near it, and a shut door blocks a look but not a step', () => {
+  const s = quiet();
+  const st = hostile(s);
+  const { it, av } = inside(s, st);
+  assert.ok(it.doors.length > 0);
+  av.x = it.entry.x;
+  av.y = it.entry.y;
+  it.guards = [];
+  // The door furthest from the boarder.
+  const d = [...it.doors].sort((a, b) => dist(b.x, b.y, av.x, av.y) - dist(a.x, a.y, av.x, av.y))[0];
+  assert.ok(dist(av.x, av.y, d.x, d.y) > 40);
+  step(s, { away: { 0: {} } }, DT);
+  assert.ok(
+    d.tiles.every((i) => it.shut.includes(i)),
+    'shut with nobody near',
+  );
+  const tx = d.tiles[0] % it.w,
+    ty = (d.tiles[0] - tx) / it.w;
+  const mid = { x: (tx + 0.5) * TILE, y: (ty + 0.5) * TILE };
+  assert.equal(solidAt(it, mid.x, mid.y), true, 'a shut door blocks a look');
+  assert.equal(solidTile(it, tx, ty), false, 'but not the way');
+  av.x = d.x;
+  av.y = d.y + 1;
+  step(s, { away: { 0: {} } }, DT);
+  assert.ok(!d.tiles.some((i) => it.shut.includes(i)), 'it opens for whoever comes up to it');
 });

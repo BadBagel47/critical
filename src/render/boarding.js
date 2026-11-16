@@ -13,6 +13,7 @@ import { shade, litArea, flareLevel, lampLevel } from './light.js';
 import { forward, dist } from '../sim/util.js';
 import { hunters, roomName } from './radar.js';
 import { awake } from '../sim/guards.js';
+import { drawFigure } from './figures.js';
 
 // Where on the screen the inside of a place is drawn. The camera follows the player's own figure. A place
 // that is smaller than the screen is kept still in the middle of it, and at the edges of a larger one the
@@ -145,7 +146,7 @@ function drawTiles(ctx, it, origin, style) {
         if ((tx * 3 + ty * 5) % 4 === 0) rect(ctx, x + 2, y + 3, TILE - 5, TILE - 6, '#14141c', '#22232d');
         continue;
       }
-      if (!FLOOR.has(c)) continue;
+      if (!FLOOR.has(c) && c !== 'K') continue;
       rect(ctx, x, y, TILE, TILE, style.floor[(c === ',' ? 2 : 0) + ((tx + ty) % 2)]);
       ctx.fillStyle = style.floor[4];
       ctx.fillRect(x, y + TILE - 1, TILE, 1);
@@ -209,6 +210,104 @@ function drawTiles(ctx, it, origin, style) {
       if (open(-1, 0)) ctx.fillRect(x, y, 1, TILE);
       if (open(1, 0)) ctx.fillRect(x + TILE - 1, y, 1, TILE);
     }
+  drawThings(ctx, it, tx0, ty0, tx1, ty1);
+  drawDoors(ctx, it);
+}
+
+// What each tile of furniture belongs to: the use of the room it stands in. Worked out once for each place.
+const thingUses = new WeakMap();
+function useAt(it, tx, ty) {
+  let map = thingUses.get(it);
+  if (!map) {
+    map = new Map();
+    it.rooms.forEach((r, i) => {
+      for (let y = r.r0; y <= r.r1; y++) for (let x = r.c0; x <= r.c1; x++) map.set(y * it.w + x, it.uses[i]);
+    });
+    thingUses.set(it, map);
+  }
+  return map.get(ty * it.w + tx);
+}
+// The things that stand in the rooms (F-152): crates in a cargo hold, bunks and lockers for the crew, tables in a
+// mess, consoles on a bridge and at the mainframe, shelves in the stores and machines in the engine room.
+function drawThings(ctx, it, tx0, ty0, tx1, ty1) {
+  for (let ty = ty0; ty < ty1; ty++)
+    for (let tx = tx0; tx < tx1; tx++) {
+      if (tileAt(it, tx, ty) !== 'K') continue;
+      const x = tx * TILE,
+        y = ty * TILE;
+      const use = useAt(it, tx, ty);
+      const same = (dx, dy) => tileAt(it, tx + dx, ty + dy) === 'K';
+      // A shadow on the floor, so that it stands up from it.
+      ctx.fillStyle = COL.out;
+      ctx.globalAlpha = 0.35;
+      ctx.fillRect(x + 1, y + 3, TILE - 1, TILE - 2);
+      ctx.globalAlpha = 1;
+      const l = same(-1, 0) ? 0 : 1,
+        r = same(1, 0) ? TILE : TILE - 1;
+      if (use === 'CARGO') {
+        rect(ctx, x + 1, y + 1, TILE - 2, TILE - 3, COL.ochre[1], COL.out);
+        rect(ctx, x + 1, y + 1, TILE - 2, 2, COL.ochre[2]);
+        ctx.fillStyle = COL.ochre[0];
+        ctx.fillRect(x + 7, y + 1, 2, TILE - 3);
+        ctx.fillRect(x + 1, y + 7, TILE - 2, 1);
+      } else if (use === 'CREW') {
+        rect(ctx, x + l, y + 2, r - l, TILE - 5, COL.steel[1], COL.out);
+        if (!same(-1, 0)) rect(ctx, x + 3, y + 4, 5, 5, '#d2cbb0');
+        ctx.fillStyle = COL.steel[3];
+        ctx.fillRect(x + l + 1, y + 3, r - l - 2, 1);
+      } else if (use === 'MESS') {
+        rect(ctx, x + l, y + 3, r - l, TILE - 7, '#a39c84', COL.out);
+        ctx.fillStyle = '#d2cbb0';
+        ctx.fillRect(x + l + 1, y + 4, r - l - 2, 1);
+      } else if (use === 'BRIDGE' || use === 'CONTROL') {
+        const screen = use === 'BRIDGE' ? COL.ion : COL.acid;
+        rect(ctx, x + 2, y + 2, TILE - 4, TILE - 5, '#2a2c3a', COL.out);
+        rect(ctx, x + 4, y + 4, TILE - 8, 4, screen[1]);
+        ctx.fillStyle = screen[3];
+        ctx.fillRect(x + 5, y + 5, 2, 1);
+      } else if (use === 'STORES') {
+        rect(ctx, x + 2, y + 1, TILE - 4, TILE - 3, COL.steel[0], COL.out);
+        for (let k = 3; k < TILE - 4; k += 4) rect(ctx, x + 4, y + k, TILE - 8, 2, COL.ochre[1]);
+      } else {
+        // An engine room's machines, and anything else: a housing with a warm light.
+        rect(ctx, x + 1, y + 1, TILE - 2, TILE - 3, '#2a2c3a', COL.out);
+        ctx.fillStyle = '#44475a';
+        ctx.fillRect(x + 3, y + 3, TILE - 6, 2);
+        ctx.fillStyle = COL.ember[1];
+        ctx.fillRect(x + 6, y + 8, 3, 2);
+      }
+    }
+}
+
+// The doors of the rooms: shut, a slab with a green lamp, and open, two halves slid into the frame.
+function drawDoors(ctx, it) {
+  const shut = new Set(it.shut || []);
+  for (const d of it.doors || []) {
+    const closed = d.tiles.some((i) => shut.has(i));
+    for (const i of d.tiles) {
+      const tx = i % it.w,
+        ty = (i - tx) / it.w;
+      const x = tx * TILE,
+        y = ty * TILE;
+      // Which way the doorway runs: across a wall above and below it, or one to its left and right.
+      const across = solid(tileAt(it, tx - 1, ty)) || solid(tileAt(it, tx + 1, ty));
+      if (closed) {
+        if (across) rect(ctx, x, y + 5, TILE, 6, '#2c2d3b', COL.out);
+        else rect(ctx, x + 5, y, 6, TILE, '#2c2d3b', COL.out);
+        ctx.fillStyle = COL.acid[2];
+        ctx.fillRect(x + 7, y + 7, 2, 2);
+      } else {
+        ctx.fillStyle = '#434557';
+        if (across) {
+          ctx.fillRect(x, y + 5, 2, 6);
+          ctx.fillRect(x + TILE - 2, y + 5, 2, 6);
+        } else {
+          ctx.fillRect(x + 5, y, 6, 2);
+          ctx.fillRect(x + 5, y + TILE - 2, 6, 2);
+        }
+      }
+    }
+  }
 }
 
 // A small plan of the whole place in the corner, since it no longer fits on the screen. It is drawn once and
@@ -234,7 +333,9 @@ function drawPlan(ctx, it, me, x, y, radar = []) {
                 ? COL.acid[2]
                 : c === 'X'
                   ? '#0d0d14'
-                  : '#1d1f2b';
+                  : c === 'K'
+                    ? '#2c2d3b'
+                    : '#1d1f2b';
         g.fillRect(tx, ty, 1, 1);
       }
     kept = { canvas, tiles: it.tiles };
@@ -339,6 +440,11 @@ function effect(ctx, f) {
     ctx.beginPath();
     ctx.arc(f.x, f.y, 4 + u * 14, 0, 7);
     ctx.stroke();
+    // The figure comes apart in sparks that rise up the beam (F-151).
+    for (let i = 0; i < 12; i++) {
+      ctx.fillStyle = i % 3 ? COL.ion[2] : COL.ion[3];
+      ctx.fillRect(f.x + ((i * 7) % 11) - 5, f.y + 6 - u * 30 - (i % 4) * 4, 1, 1);
+    }
     ctx.globalAlpha = 1;
   } else {
     ctx.globalAlpha = 1 - u;
@@ -684,15 +790,19 @@ function drawGuard(ctx, img, g, time) {
     ctx.restore();
     return;
   }
-  ctx.save();
-  ctx.translate(g.x, g.y);
-  ctx.rotate(g.heading);
-  if (g.kind === 'heavy') ctx.scale(1.35, 1.35);
-  ctx.drawImage(img.guard, -img.guard.width / 2, -img.guard.height / 2);
   const mark = { heavy: COL.steel[0], watchman: COL.ochre[2], tech: COL.ion[2] }[g.kind];
-  if (mark) rect(ctx, -1, -1, 2, 2, mark);
-  if (g.boarder) rect(ctx, -3, 1, 6, 1, COL.ember[2]);
-  ctx.restore();
+  // A guard has just fired when its weapon has only just begun to cool.
+  const firing = g.mode === 'alert' && g.cool > B.GUARD_COOLDOWN * 0.85 - 0.08;
+  drawFigure(ctx, img.guard, g, time, {
+    hp: g.hp,
+    firing,
+    down: g.down,
+    size: g.kind === 'heavy' ? 1.35 : 0,
+    mark: (c) => {
+      if (mark) rect(c, -1, -1, 2, 2, mark);
+      if (g.boarder) rect(c, -3, 1, 6, 1, COL.ember[2]);
+    },
+  });
 }
 
 // On a trading station the doors to the staff rooms are marked, so that a visitor knows where not to go.
@@ -716,7 +826,7 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
   if (it.trade) drawStaffDoors(ctx, font, it);
   for (const c of it.civilians) {
     shadow(ctx, c.x, c.y, 5);
-    sprite(ctx, img.boarder, c.x, c.y, c.heading);
+    drawFigure(ctx, img.boarder, c, state.time);
   }
   for (const l of it.loot) {
     shadow(ctx, l.x, l.y, 5);
@@ -746,14 +856,19 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
   }
   for (const g of it.guards) {
     shadow(ctx, g.x, g.y, g.kind === 'heavy' ? 7 : 5);
-    // One that is taken down lies still, and is drawn fainter.
-    ctx.globalAlpha = g.down ? 0.45 : 1;
+    // One that is taken down lies on the floor, and is drawn fainter.
+    ctx.globalAlpha = g.down ? 0.6 : 1;
     drawGuard(ctx, img, g, state.time);
     ctx.globalAlpha = 1;
   }
   for (const a of it.avatars) {
     shadow(ctx, a.x, a.y, 5);
-    sprite(ctx, img.boarder, a.x, a.y, a.heading);
+    const interval = a.weapon === 'tranq' ? B.TRANQ_INTERVAL : B.RIFLE_INTERVAL;
+    drawFigure(ctx, img.boarder, a, state.time, {
+      hp: playerById(state, a.player).hp,
+      firing: a.cool > interval - 0.08,
+      carrying: a.carry.length > 0,
+    });
   }
   if (it.dark) {
     const off = fx ? fx.offset : { x: 0, y: 0 };
@@ -783,10 +898,14 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
       rect(ctx, a.x - 5 + i * 4, a.y - 13, 3, 3, c.type === 'crate' ? COL.ochre[2] : COL.ion[2], COL.out);
     });
   }
-  // The names of the rooms stand at their doors, the same as on the Captain's radar.
+  // The names of the rooms stand on signs at their doors, the same as on the Captain's radar.
   if (!it.trade) {
     it.rooms.forEach((r, i) => {
-      if (r.door) font.draw(ctx, roomName(i), r.door.x, r.door.y - 3, COL.faint, { align: 'c' });
+      if (!r.door) return;
+      const text = roomName(i) + (it.uses[i] ? '  ' + it.uses[i] : '');
+      const w = font.width(text);
+      rect(ctx, Math.round(r.door.x - w / 2 - 3), r.door.y - 14, w + 6, 9, '#14141c', COL.line);
+      font.draw(ctx, text, r.door.x, r.door.y - 12, COL.dim, { align: 'c' });
     });
   }
   if (it.pin) {

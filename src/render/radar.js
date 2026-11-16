@@ -59,12 +59,14 @@ export function drawRadar(ctx, state, view, assets) {
     for (let tx = 0; tx < it.w; tx++) {
       const c = tileAt(it, tx, ty);
       if (c === ' ' || c === 'X') continue;
-      ctx.fillStyle = c === '#' ? GREEN[1] : c === 'L' ? GREEN[3] : c === 'A' ? GREEN[2] : GREEN[0];
+      ctx.fillStyle = c === '#' || c === 'K' ? GREEN[1] : c === 'L' ? GREEN[3] : c === 'A' ? GREEN[2] : GREEN[0];
       ctx.fillRect(f.x + tx * f.k, f.y + ty * f.k, f.k, f.k);
     }
   it.rooms.forEach((r, i) => {
     const p = at(r.mid);
     font.draw(ctx, roomName(i), p.x, p.y - 3, GREEN[2], { align: 'c' });
+    // What the room is for, under its letter, where there is room for it.
+    if (it.uses && it.uses[i] && f.k >= 3) font.draw(ctx, it.uses[i], p.x, p.y + 5, GREEN[1], { align: 'c' });
   });
   const dot = (p, r, color) => {
     ctx.fillStyle = color;

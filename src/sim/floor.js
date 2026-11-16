@@ -3,11 +3,18 @@ import { TILE } from './layout.js';
 import { clamp, dist } from './util.js';
 
 export { TILE };
-// Walls, the locked vault door, space outside the hull and rooms that are torn open to it.
-const SOLID = new Set(['#', 'L', ' ', 'X']);
+// Walls, the locked vault door, space outside the hull, rooms that are torn open to it, and the things that stand
+// in the rooms (see furnish.js).
+const SOLID = new Set(['#', 'L', ' ', 'X', 'K']);
 export const tileAt = (it, tx, ty) => (tx < 0 || ty < 0 || tx >= it.w || ty >= it.h ? ' ' : it.tiles[ty * it.w + tx]);
 export const solidTile = (it, tx, ty) => SOLID.has(tileAt(it, tx, ty));
-export const solidAt = (it, x, y) => solidTile(it, Math.floor(x / TILE), Math.floor(y / TILE));
+// What a look or a shot cannot pass: what is solid, and a door that is shut. A shut door is no wall to walk
+// into or to find a way round, since it opens for whoever comes up to it.
+export function solidAt(it, x, y) {
+  const tx = Math.floor(x / TILE),
+    ty = Math.floor(y / TILE);
+  return solidTile(it, tx, ty) || (!!it.shut && it.shut.length > 0 && it.shut.includes(ty * it.w + tx));
+}
 
 export function blocked(it, x, y, r) {
   const x0 = Math.floor((x - r) / TILE),
