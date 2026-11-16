@@ -5,51 +5,54 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-**A** – strong model, medium level – Provspelslista med testlägen
-- F-222 – En lista över det som väntar på provspel, med länkar som startar rätt situation direkt, så att varje sak går att prova på några minuter
+Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa.
 
-**B** – strong model, medium level – Innehållskatalog
-- D-223 – En lista ur koden över allt som finns i spelet med sina siffror, så att överblicken alltid stämmer
-
-**C** – strong model, medium level – Verktyg för backloggen
-- F-228 – Markera, flytta till klart och ge nya bokstäver med ett verktyg, så att agenterna gör färre misstag
-
-**D** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
-- D-227 – Dela upp de två stora filerna efter ämne, så att två agenter krockar mer sällan
-
-**E** – strong model, high level – Pekskärm
-- F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
-
-**F** – strong model, high level – Viewer på en extra skärm
-- F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
-
-**G** – strong model, high level – Världen steg 3: många system
+**A** – strong model, high level – Världen steg 3: många system
 - D-089 – Ta fram ett förslag på hur systemen genereras och hur man väljer kartans storlek vid start, så att varje omgång blir ny
 - F-195 – En systemradar som man köper och som visar om närliggande system är vänliga och vems de är
+- F-229 – Högst en bränslecell per vrak och en bränslemätare som visar antalet hopp, så att bränslet betyder något när det finns många system
 
-**H** – strong model, high level – Världen steg 4: uppdrag och story (efter steg 3)
+**B** – strong model, high level – Världen steg 4: uppdrag och story (efter steg 3)
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 
-**I** – strong model, high level – Förslag: ekonomi och belöningar
-- D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
-- D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
-
-**J** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
+**C** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
 - D-217 – Designskiss av varvet utifrån och inifrån, och en större utsida som hänger ihop med basens tre våningar (ersätter designen i F-103)
 - D-216 – Designtest av markeringar som visar snabbaste vägen ut genom de dörrar man har öppnat
 - D-218 – Demo med full design av dockningsringen som vrids i fasta lägen
 
-**K** – strong model, high level – Sällsynta skepp
+**D** – strong model, medium level – Provspelslista med testlägen
+- F-222 – En lista över det som väntar på provspel, med länkar som startar rätt situation direkt, så att varje sak går att prova på några minuter
+
+**E** – strong model, medium level – Butik med bilder
+- F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
+
+**F** – strong model, high level – Uppgraderingar och ekonomi per roll
+- F-188 – Uppgraderingarna sorteras efter kategori och roll
+- D-189 – Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar
+
+**G** – strong model, medium level – Förfina rollerna
+- F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
+
+**H** – strong model, medium level – Innehållskatalog
+- D-223 – En lista ur koden över allt som finns i spelet med sina siffror, så att överblicken alltid stämmer
+
+**I** – strong model, medium level – Verktyg för backloggen
+- F-228 – Markera, flytta till klart och ge nya bokstäver med ett verktyg, så att agenterna gör färre misstag
+
+**J** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
+- D-227 – Dela upp de två stora filerna efter ämne, så att två agenter krockar mer sällan
+
+**K** – strong model, high level – Pekskärm
+- F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
+
+**L** – strong model, high level – Viewer på en extra skärm
+- F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
+
+**M** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
-
-**L** – strong model, high level – Handel
-- F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
-
-**M** – strong model, medium level – Butik med bilder
-- F-080 – Rita en bild för varje uppgradering, utrustning och vara och visa dem i butiken, så att det blir roligare att handla
 
 **N** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
@@ -73,21 +76,21 @@ Prioritet: Hög, Medel, Låg.
 - F-088 – Övertagna stationer betalar inkomst över tid, så att det lönar sig att ta över dem
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**T** – strong model, high level – Svårare start och uppgraderingar som lönar sig
-- F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
-
-**U** – strong model, high level – Ljudeffekter
+**T** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**V** – strong model, high level – Visuella effekter och feedback
+**U** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 
-**W** – strong model, high level – Uppgraderingar och ekonomi per roll
-- F-188 – Uppgraderingarna sorteras efter kategori och roll
-- D-189 – Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar
+**V** – strong model, high level – Förslag: ekonomi och belöningar
+- D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
+- D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**X** – strong model, medium level – Förfina rollerna
-- F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
+**W** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+- F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
+
+**X** – strong model, high level – Handel
+- F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
 
