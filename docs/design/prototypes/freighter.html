@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Critical – designtest: fraktskeppets insida (D-249)</title>
+<style>
+  :root { --bg:#0b0c11; --panel:#14161e; --line:#262a36; --text:#d6d9e2; --dim:#8a90a0; --acc:#d9a441; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px 14px 60px; }
+  h1 { font-size: 20px; margin: 4px 0 2px; }
+  h2 { font-size: 17px; margin: 28px 0 8px; }
+  p.lead { color: var(--dim); margin: 0 0 12px; }
+  .stage { position: relative; background:#000; border:1px solid var(--line); border-radius:6px; overflow:hidden; touch-action:none; }
+  canvas.view { display:block; width:100%; height:auto; image-rendering: pixelated; }
+  .tag { position:absolute; left:8px; top:8px; background:rgba(10,11,16,.82); border:1px solid #333848; border-radius:4px; padding:2px 8px; font-size:13px; pointer-events:none; }
+  .float { position:absolute; right:8px; bottom:8px; display:flex; gap:6px; }
+  .float button { border:1px solid #6a5a2a; border-radius:6px; background:rgba(40,32,14,.9); color:var(--acc); padding:8px 14px; font-weight:600; }
+  .float button[hidden] { display:none; }
+  .bar { display:flex; flex-wrap:wrap; gap:6px; margin: 10px 0 4px; }
+  .grp { display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .grp .lbl { padding:8px 8px; font-size:12px; color:var(--dim); background:#0f1117; border-right:1px solid var(--line); }
+  button { background:var(--panel); color:var(--text); border:0; border-right:1px solid var(--line); padding:8px 11px; font:inherit; font-size:14px; cursor:pointer; }
+  .grp button:last-child { border-right:0; }
+  button.on { background:#2a2414; color:var(--acc); }
+  .hint { color: var(--dim); font-size: 13px; margin: 2px 0 0; }
+  .legend { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:13px; color:#c2c6d0; margin-top:6px; }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:2px; vertical-align:-2px; margin-right:5px; }
+  .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:10px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 12px; }
+  .card h3 { margin:0 0 4px; font-size:15px; color:var(--acc); }
+  .card p, .card li { margin:0; color:#c2c6d0; font-size:14px; }
+  .card ul { margin:0; padding-left:18px; }
+  details { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px 12px; margin-top:10px; }
+  summary { cursor:pointer; color:var(--acc); }
+  details li, details p { font-size:14px; color:#c2c6d0; }
+  #seed { color: var(--dim); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Designtest: fraktskeppets insida (D-249)</h1>
+  <p class="lead">Ett fraktskepp inuti, genererat varje gång och med samma form som i rymden: aktern med motorerna till vänster, en ryggrad med containrar på båda sidor och fören med bryggan till höger. Fregatten dockar vid en luftsluss i den nedre flanken. <span id="seed"></span></p>
+
+  <div class="stage" id="stage">
+    <canvas class="view" id="view" width="640" height="360"></canvas>
+    <div class="tag" id="tag">Fraktskeppet</div>
+    <div class="float"><button id="fire">Skjut</button></div>
+  </div>
+  <div class="bar">
+    <div class="grp" id="modes"><span class="lbl">Läge</span><button data-mode="normal" class="on">Normal</button><button data-mode="lockdown">Lockdown</button><button data-mode="alarm">Larm</button><button data-mode="wreck">Vrak</button></div>
+    <div class="grp" id="hulls"><span class="lbl">Sida</span><button data-hull="charter" class="on">Charter</button><button data-hull="wardens">Wardens</button><button data-hull="drifters">Drifters</button></div>
+  </div>
+  <div class="bar">
+    <div class="grp">
+      <button id="newbase">Nytt skepp</button><button id="tour" class="on">Rundtur</button><button id="overview">Hela skeppet</button><button id="plan">Spelplan</button>
+    </div>
+  </div>
+  <p class="hint">Dator: WASD för att gå, musen siktar, klick eller mellanslag skjuter, L tänder lampan. Mobil: dra för att gå. Rundturen går in genom luftslussen, genom det stora lastrummet, akterut till motorerna och fram till bryggan längs en servicegång.</p>
+  <div class="legend">
+    <span><i style="border:2px solid #e8c050"></i>Lågt skydd: stoppar skott, inte blickar</span>
+    <span><i style="border:2px solid #60d0ff"></i>Högt skydd: stoppar skott, blickar och ljus</span>
+    <span><i style="background:#c0402a"></i>Tunna som exploderar</span>
+    <span><i style="background:#e0b040"></i>Larmad dörr</span>
+    <span><i style="background:rgba(240,200,80,.55)"></i>Kamera</span>
+    <span><i style="background:#9ad0ff"></i>Vakternas rundor</span>
+  </div>
+
+  <h2>Planen</h2>
+  <div class="cards">
+    <div class="card"><h3>Samma form som i rymden</h3><ul>
+      <li>Aktern är bred med motorerna längst bak. Mitten är fyra rader containrar på var sida om ryggraden, som på skeppet utifrån. Fören smalnar av mot bryggan.</li>
+      <li>Containrarna syns också utanpå skrovet i sidans färger.</li>
+    </ul></div>
+    <div class="card"><h3>Tre vägar längs skeppet</h3><ul>
+      <li><b>Ryggraden:</b> den snabba vägen rakt igenom, men öppen. Lågt skydd här och där.</li>
+      <li><b>Lastrummen:</b> containrar och lådor i grupper med gångar emellan. Gott om skydd och plats att röra sig och skjuta.</li>
+      <li><b>Servicegångarna</b> längs skrovet: smala och skyddade bakom väggar, med öppningar in mot lastrummen. Där kan man ta sig runt en eldstrid och komma från sidan.</li>
+      <li>Tvärgångar mellan containrarna binder ihop de tre. Det finns inga återvändsgränder utom rummen.</li>
+    </ul></div>
+    <div class="card"><h3>Den stora öppna ytan</h3><ul>
+      <li>Varje skepp har minst ett stort lastrum som är två containrar långt, för eldstrider. Fler containrar kan vara lastrum eller rum.</li>
+      <li>Ett stort lastrum har dörrar mot ryggraden, mot tvärgångarna i ändarna och ibland mot servicegången, så man kan komma in från flera håll.</li>
+    </ul></div>
+    <div class="card"><h3>Det som slumpas</h3><ul>
+      <li>Vilka containrar som är lastrum och vilka som är rum (kojer, mässen, köket, sjukrummet, verkstaden, förråd), var tvärgångarna finns, vilka bitar av servicegångarna som finns och var dörrarna sitter.</li>
+      <li>Aktern har motorerna och rum för bränsle, luft och reservdelar. Fören har bryggan, kaptenens hytt, radion och valvet.</li>
+    </ul></div>
+    <div class="card"><h3>Lägena</h3><ul>
+      <li><b>Normal:</b> besättningen arbetar, vakterna är få.</li>
+      <li><b>Lockdown:</b> ett utslaget skepp med folk och ström kvar (F-081): det stilla röda filtret och vakter på rundor.</li>
+      <li><b>Larm:</b> roterande ljus och blink, och fler vakter.</li>
+      <li><b>Vrak:</b> dött och mörkt, bara ficklampan och några gnistor. En eller två containrar är bortslitna, och där syns rymden genom hålet.</li>
+    </ul></div>
+  </div>
+
+  <details>
+    <summary>För agenten: hur generatorn fungerar</summary>
+    <ul>
+      <li><b>Rutnät</b> 100 × 40 rutor, skeppet ligger längs x med fören åt höger. Aktern x 2–15, containrarna x 16–72 (fyra kolumner om 12 rutor med tvärgångar om 3 emellan), fören x 73–92. Ryggraden är y 19–21, containrarna y 7–18 och 22–33, servicegångarna y 5–6 och 34–35.</li>
+      <li><b>Fast skelett först:</b> ryggraden, tvärgångarna, servicegångarna och luftslussen. Ett stort lastrum väljs först: på en sida tas tvärgången mellan två kolumner bort. Containrar utan tvärgång emellan blir ett rum.</li>
+      <li><b>Containrar:</b> lastrum eller rum (BSP-delning), sedan dörrar mot ryggraden, tvärgångar och servicegångar. Gångar mot gångar har ingen vägg alls.</li>
+      <li><b>Vrak</b> görs av samma plan: en eller två containrar slits bort sist, och dörrarna dit försvinner.</li>
+      <li><b>Kontroll:</b> allt ska gå att nå från luftslussen, annars görs ett nytt.</li>
+    </ul>
+  </details>
+</main>
+<script>
+'use strict';
+// ================================================================== basics
+const T = 16, W = 100, H = 40, WW = W * T, WH = H * T, OUT = -1, ROCK = -2, FREE = -3;
+const C = 50, CY = 20;
+const hash = (x, y, s = 0) => {
+  let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+};
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, w | 0); c.height = Math.max(1, h | 0); const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
+const rgb = (c, k = 1) => `rgb(${Math.max(0, Math.min(255, c[0] * k)) | 0},${Math.max(0, Math.min(255, c[1] * k)) | 0},${Math.max(0, Math.min(255, c[2] * k)) | 0})`;
+const hex = (s) => [parseInt(s.slice(1, 3), 16), parseInt(s.slice(3, 5), 16), parseInt(s.slice(5, 7), 16)];
+const shade = (s, k) => rgb(hex(s), k);
+const overlaps = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+let R = Math.random;
+function seeded(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const ri = (a, b) => a + Math.floor(R() * (b - a + 1));
+const pick = (l) => l[Math.floor(R() * l.length)];
+function shuffle(l) { for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; } return l; }
+
+// ================================================================== turning the whole base a quarter at a time
+let K = 0;
+const rp = (x, y) => { for (let k = 0; k < K; k++) [x, y] = [W - 1 - y, x]; return [x, y]; };
+const rr = (x0, y0, x1, y1) => { const [a, b] = rp(x0, y0), [c, d] = rp(x1, y1); return [Math.min(a, c), Math.min(b, d), Math.max(a, c), Math.max(b, d)]; };
+const rd = (dx, dy) => { for (let k = 0; k < K; k++) [dx, dy] = [-dy, dx]; return [dx, dy]; };
+
+function cham(x, y, x0, y0, x1, y1, c) {
+  if (x < x0 || x > x1 || y < y0 || y > y1) return false;
+  return Math.min(x - x0, x1 - x) + Math.min(y - y0, y1 - y) >= c;
+}
+// The freighter's shape, bow to the right: the stern with the engines, the containers in four columns on both sides of
+// the spine, and the bow narrowing to the bridge.
+const SX0 = 2, SX1 = 15, CX0 = 16, CX1 = 72, BX0 = 73, BX1 = 92;
+const COLS = [0, 1, 2, 3].map((k) => [CX0 + k * 15, CX0 + k * 15 + 11]);
+const SEAMS = [0, 1, 2].map((k) => [CX0 + k * 15 + 12, CX0 + k * 15 + 14]);
+const bowHalf = (x) => Math.round(12 - ((x - BX0) * 7) / (BX1 - BX0));
+function inShip(x, y) {
+  const d = Math.abs(y - CY);
+  if (x >= SX0 && x <= SX1) return d <= 15 && (x - SX0) + (15 - d) >= 3;
+  if (x >= CX0 && x <= CX1) return d <= 15;
+  if (x >= BX0 && x <= BX1) return d <= bowHalf(x);
+  return false;
+}
+// What the generic pieces expect of the base, kept empty for a ship.
+const LINK_BASE = [];
+let LINKS = [];
+const OPT = { own: false, side: 'hostile', attack: false, def: 1, yard: false, wreck: false, hull: 'charter' };
+const ATT = { hostile: [255, 70, 55], neutral: [215, 225, 240], friendly: [92, 224, 32], own: [32, 212, 240] };
+const attCol = () => ATT[OPT.side], attHex = () => rgb(ATT[OPT.side]);
+const CREW = [88, 176, 160], CREW_HEX = '#58b0a0';
+// The containers' colours on the outside, per side, as on the ships in space.
+const HULLS = {
+  charter: { plate: '#5a5e68', cont: ['#7a4a30', '#3a3e4a', '#7a4a30', '#3a8a74'], stripe: '#d9a441' },
+  wardens: { plate: '#4e5a6a', cont: ['#3a4a6a', '#5a6a7a', '#3a4a6a', '#6a7a8a'], stripe: '#6fb8ff' },
+  drifters: { plate: '#5a5248', cont: ['#6a5a3a', '#5a3a3a', '#7a6a4a', '#4a5a3a'], stripe: '#c96a3a' },
+};
+
+// ================================================================== a floor
+let D, decks = [];
+function newDeck(i) {
+  return { i, grid: new Int16Array(W * H).fill(OUT), rooms: [], doors: [], mask: new Uint8Array(WW * WH), wallRects: [], wallSegs: [], built: {} };
+}
+const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? OUT : D.grid[y * W + x]);
+const setT = (x, y, v) => { if (x >= 0 && y >= 0 && x < W && y < H) D.grid[y * W + x] = v; };
+function addRoom(name, kind, o = {}) {
+  const id = D.rooms.length;
+  D.rooms.push({ id, name, kind, open: !!o.open, glass: !!o.glass, staff: !!o.staff, tint: o.tint || '#9aa0b0', label: o.label !== false, dark: !!o.dark, x0: 99, y0: 99, x1: -1, y1: -1, n: 0 });
+  return id;
+}
+// Put a rectangle of tiles into a room. `only` says which tiles may be taken.
+function carve(id, x0, y0, x1, y1, only) {
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const v = at(x, y); if (only === undefined || only.includes(v)) setT(x, y, id); }
+}
+function bounds() {
+  for (const r of D.rooms) { r.x0 = 99; r.y0 = 99; r.x1 = -1; r.y1 = -1; r.n = 0; r.cx = 0; r.cy = 0; }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const v = at(x, y); if (v < 0) continue;
+    const r = D.rooms[v]; r.x0 = Math.min(r.x0, x); r.y0 = Math.min(r.y0, y); r.x1 = Math.max(r.x1, x); r.y1 = Math.max(r.y1, y); r.n++; r.cx += x; r.cy += y;
+  }
+  for (const r of D.rooms) if (r.n) { r.cx /= r.n; r.cy /= r.n; }
+}
+const door = (o, x, y, kind = 'slide') => { if (!D.doors.some((d) => d.o === o && Math.abs(d.x - x) + Math.abs(d.y - y) < 2)) D.doors.push({ o, x, y, kind, open: kind === 'arch' ? 1 : 0 }); };
+const doorAt = (o, x, y) => D.doors.find((d) => d.o === o && (o === 'v' ? d.x === x && (d.y === y || d.y === y - 1) : d.y === y && (d.x === x || d.x === x - 1)));
+const doorGeom = (d) => (d.o === 'v' ? { x: d.x * T, y: d.y * T, len: 2 * T, cx: d.x * T, cy: d.y * T + T } : { x: d.x * T, y: d.y * T, len: 2 * T, cx: d.x * T + T, cy: d.y * T });
+
+// The edges between two rooms, as runs of tiles. Returns [{o, at, from, to}] for edges where a is on one side
+// and b on the other.
+function contacts(a, b) {
+  const runs = [];
+  for (let x = 1; x < W; x++) {
+    let run = null;
+    for (let y = 0; y < H; y++) {
+      const p = at(x - 1, y), q = at(x, y);
+      const hit = (p === a && q === b) || (p === b && q === a);
+      if (hit) { if (run) run.to = y; else run = { o: 'v', at: x, from: y, to: y }; }
+      else if (run) { runs.push(run); run = null; }
+    }
+    if (run) runs.push(run);
+  }
+  for (let y = 1; y < H; y++) {
+    let run = null;
+    for (let x = 0; x < W; x++) {
+      const p = at(x, y - 1), q = at(x, y);
+      const hit = (p === a && q === b) || (p === b && q === a);
+      if (hit) { if (run) run.to = x; else run = { o: 'h', at: y, from: x, to: x }; }
+      else if (run) { runs.push(run); run = null; }
+    }
+    if (run) runs.push(run);
+  }
+  return runs;
+}
+// Make sure every room can be reached on the plan: a room that cannot gets a door to a neighbour that can.
+function repairDoors(startId) {
+  for (let pass = 0; pass < 40; pass++) {
+    const pairs = neighbours();
+    const linked = (a, b) => {
+      if (edgeType(a, b) === 0) return true;
+      return D.doors.some((d) => d.kind !== 'hatch' && touches(d, a, b));
+    };
+    const seen = new Set([startId]), q = [startId];
+    for (let k = 0; k < q.length; k++) for (const p of pairs) {
+      if (p.a !== q[k] && p.b !== q[k]) continue;
+      const o = p.a === q[k] ? p.b : p.a;
+      if (!seen.has(o) && linked(p.a, p.b)) { seen.add(o); q.push(o); }
+    }
+    const lost = D.rooms.filter((r) => r.n && !seen.has(r.id));
+    if (!lost.length) return;
+    let fixed = false;
+    for (const r of lost) {
+      const cand = pairs.filter((p) => (p.a === r.id || p.b === r.id) && seen.has(p.a === r.id ? p.b : p.a) && p.n >= 2).sort((x, y) => y.n - x.n);
+      for (const p of cand) {
+        const o = p.a === r.id ? p.b : p.a, O = D.rooms[o];
+        const kind = r.kind === 'treasury' || O.kind === 'treasury' || r.kind === 'ladder' ? 'alarm' : r.kind === 'lift' ? 'lift' : 'slide';
+        if (['lift', 'stairs', 'ladder'].includes(r.kind) ? linkDoor(r.id, o, kind) || doorBetween(r.id, o, kind) : doorBetween(r.id, o, kind)) { fixed = true; break; }
+      }
+      if (fixed) break;
+    }
+    if (!fixed) return;
+  }
+}
+// Every pair of rooms that touch.
+function neighbours() {
+  const pairs = new Map();
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const a = at(x, y); if (a < 0) continue;
+    for (const [dx, dy] of [[1, 0], [0, 1]]) { const b = at(x + dx, y + dy); if (b >= 0 && b !== a) { const k = Math.min(a, b) + ',' + Math.max(a, b); pairs.set(k, (pairs.get(k) || 0) + 1); } }
+  }
+  return [...pairs.entries()].map(([k, n]) => { const [a, b] = k.split(',').map(Number); return { a, b, n }; });
+}
+
+function touches(d, a, b) {
+  const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]];
+  const ids = g.map(([x, y]) => at(x, y));
+  return ids.includes(a) && ids.includes(b);
+}
+function bsp(x0, y0, x1, y1, out, min = 5, max = 11) {
+  const w = x1 - x0 + 1, h = y1 - y0 + 1;
+  if (w <= max && h <= max) { out.push([x0, y0, x1, y1]); return; }
+  if (w >= h) { const s = x0 + ri(min, w - min); bsp(x0, y0, s - 1, y1, out, min, max); bsp(s, y0, x1, y1, out, min, max); }
+  else { const s = y0 + ri(min, h - min); bsp(x0, y0, x1, s - 1, out, min, max); bsp(x0, s, x1, y1, out, min, max); }
+}
+const FIXED = ['corridor', 'service', 'airlock', 'hold', 'command', 'engines'];
+function fillLeftovers() {
+  for (let pass = 0; pass < 8; pass++) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (at(x, y) !== FREE) continue;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const v = at(x + dx, y + dy); if (v >= 0 && !FIXED.includes(D.rooms[v].kind)) { setT(x, y, v); break; } }
+  }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (at(x, y) === FREE) setT(x, y, D.fillId);
+}
+const own = (r) => rr(...r);
+const carveR = (id, r, only) => carve(id, ...own(r), only);
+function leafRooms(regions, staff, min = 5, max = 11) {
+  const out = [];
+  for (const reg of regions) {
+    const leaves = [];
+    bsp(...own(reg), leaves, min, max);
+    for (const [x0, y0, x1, y1] of leaves) {
+      let n = 0; for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (at(x, y) === FREE) n++;
+      if (n < 12) continue;
+      const id = addRoom('ROOM', 'store', { staff });
+      carve(id, x0, y0, x1, y1, [FREE]);
+      out.push(id);
+    }
+  }
+  return out;
+}
+const nameRoom = (id, name, kind, tint, o = {}) => Object.assign(D.rooms[id], { name, kind, tint, ...o });
+function doorSpots(a, b) {
+  const deep = (o, at0, s, id, dir) => { for (const t of [s, s + 1]) for (let k = 0; k < 2; k++) { const [x, y] = o === 'v' ? [dir > 0 ? at0 + k : at0 - 1 - k, t] : [t, dir > 0 ? at0 + k : at0 - 1 - k]; if (at(x, y) !== id) return false; } return true; };
+  const out = [];
+  for (const run of contacts(a, b)) {
+    if (run.to - run.from < 1) continue;
+    const spots = [];
+    for (let s = run.from; s < run.to; s++) {
+      const [ax, ay] = run.o === 'v' ? [run.at - 1, s] : [s, run.at - 1];
+      const side = at(ax, ay) === a ? -1 : 1;
+      if (deep(run.o, run.at, s, a, side) && deep(run.o, run.at, s, b, -side)) spots.push(s);
+    }
+    if (spots.length) out.push({ run, spots });
+  }
+  return out.sort((p, q) => q.spots.length - p.spots.length);
+}
+function linkDoor(id, o, kind) { const l = doorSpots(id, o); if (!l.length) return false; const { run, spots } = l[0]; putDoor(run, spots[Math.floor(spots.length / 2)], kind); return true; }
+const putDoor = (run, s, kind) => (run.o === 'v' ? door('v', run.at, s, kind) : door('h', s, run.at, kind));
+function doorBetween(a, b, kind = 'slide', where = 0.5) {
+  const list = doorSpots(a, b);
+  if (!list.length) {
+    const runs = contacts(a, b).filter((r) => r.to - r.from >= 1);
+    if (!runs.length) return false;
+    const run = runs.reduce((p, q) => (q.to - q.from > p.to - p.from ? q : p));
+    const len = run.to - run.from + 1;
+    putDoor(run, run.from + Math.max(0, Math.min(len - 2, Math.floor((len - 2) * where))), kind);
+    return true;
+  }
+  const { run, spots } = list[0];
+  const want = spots[0] + (spots[spots.length - 1] - spots[0]) * where;
+  putDoor(run, spots.reduce((p, q) => (Math.abs(q - want) < Math.abs(p - want) ? q : p)), kind);
+  return true;
+}
+function hallDoors(room, hall, kind = 'slide') {
+  const list = doorSpots(room, hall);
+  if (!list.length) return false;
+  const { run, spots } = list[0];
+  const span = spots[spots.length - 1] - spots[0];
+  const at2 = span > 11 ? [0.15, 0.85] : [0.3 + R() * 0.4];
+  for (const f of at2) { const want = spots[0] + span * f; putDoor(run, spots.reduce((p, q) => (Math.abs(q - want) < Math.abs(p - want) ? q : p)), kind); }
+  return true;
+}
+const touching = (a, b) => contacts(a, b).some((r) => r.to - r.from >= 1);
+
+// ================================================================== the freighter
+function genF() {
+  D = newDeck(0); D.guns = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (inShip(x, y)) setT(x, y, FREE);
+  const UP = { wy: [5, 6], cy: [7, 18], seamY: [5, 18] }, DN = { wy: [34, 35], cy: [22, 33], seamY: [22, 35] };
+  // the big hold first: on one side the crossway between two columns goes, and the two containers are one hold
+  const bigSide = R() < 0.5 ? 'up' : 'dn', bigK = ri(0, 2);
+  const seamOn = { up: SEAMS.map((_, k) => !(bigSide === 'up' && k === bigK) && R() < 0.85), dn: SEAMS.map((_, k) => !(bigSide === 'dn' && k === bigK) && R() < 0.85) };
+  // the airlock: in the lower flank, at a crossway that is there, as near the middle as can be
+  const lockK = [1, 0, 2].find((k) => seamOn.dn[k]) ?? (seamOn.dn[1] = true, 1);
+  const lock = addRoom('AIRLOCK', 'airlock', { tint: '#d9a441', label: false });
+  carve(lock, SEAMS[lockK][0], 33, SEAMS[lockK][1], 35, [FREE]);
+  D.entryLock = lock;
+  // the spine, all along the ship
+  const spine = addRoom('SPINE', 'corridor', { tint: '#8a90a0', label: false });
+  carve(spine, 9, 19, 82, 21, [FREE]);
+  // crossways from the spine to the hull, between the containers
+  const seams = [];
+  for (const side of ['up', 'dn']) SEAMS.forEach(([x0, x1], k) => {
+    if (!seamOn[side][k]) return;
+    const id = addRoom('CROSSWAY', 'corridor', { tint: '#8a90a0', label: false });
+    const [y0, y1] = (side === 'up' ? UP : DN).seamY;
+    carve(id, x0, y0, x1, y1, [FREE]);
+    seams.push({ id, side, k });
+  });
+  // service ways along the hull, in pieces between the crossways; some pieces are not there
+  const ways = [];
+  for (const side of ['up', 'dn']) {
+    const [y0, y1] = (side === 'up' ? UP : DN).wy;
+    const cuts = [CX0 - 1, ...SEAMS.filter((_, k) => seamOn[side][k]).map((s) => s), CX1 + 1];
+    for (let k = 0; k + 1 < cuts.length; k++) {
+      const a = Array.isArray(cuts[k]) ? cuts[k][1] + 1 : cuts[k] + 1, b = Array.isArray(cuts[k + 1]) ? cuts[k + 1][0] - 1 : cuts[k + 1] - 1;
+      if (b - a < 3 || R() < 0.3) continue;
+      const id = addRoom('SERVICE WAY', 'service', { tint: '#8a90a0', label: false });
+      carve(id, a, y0, b, y1, [FREE]);
+      ways.push({ id, side, a, b });
+    }
+  }
+  // the containers: columns without a crossway between them are one container
+  const conts = [];
+  for (const side of ['up', 'dn']) {
+    const s = side === 'up' ? UP : DN;
+    let start = 0;
+    for (let k = 0; k < 4; k++) {
+      if (k < 3 && !seamOn[side][k]) continue;
+      const x0 = COLS[start][0], x1 = COLS[k][1];
+      conts.push({ side, x0, x1, y0: side === 'up' ? 5 : s.cy[0], y1: side === 'up' ? s.cy[1] : 35, cols: k - start + 1, big: side === bigSide && start <= bigK && k >= bigK + 1 });
+      start = k + 1;
+    }
+  }
+  const holds = [], modules = [];
+  // a container of rooms: strips across it, five to seven tiles wide, now and then one cut in two
+  const strips = (c) => {
+    const ids = [];
+    let x = c.x0;
+    while (x <= c.x1) {
+      let w = ri(5, 7); if (c.x1 - (x + w - 1) < 5) w = c.x1 - x + 1;
+      const cut = R() < 0.3 ? ri(c.y0 + 4, c.y1 - 4) : null;
+      for (const [y0, y1] of cut ? [[c.y0, cut], [cut + 1, c.y1]] : [[c.y0, c.y1]]) { const id = addRoom('ROOM', 'store'); carve(id, x, y0, x + w - 1, y1, [FREE]); ids.push(id); }
+      x += w;
+    }
+    return ids;
+  };
+  for (const c of conts) {
+    const hold = c.big || (c.cols >= 2 ? R() < 0.4 : R() < 0.3);
+    if (hold) { const id = addRoom('CARGO HOLD', 'hold', { tint: '#c9a24a' }); carve(id, c.x0, c.y0, c.x1, c.y1, [FREE]); holds.push(id); c.room = id; }
+    else { c.rooms = strips(c); modules.push(...c.rooms); }
+  }
+  // the stern: the engines across the back, rooms on both sides of the spine
+  const eng = addRoom('ENGINES', 'engines', { tint: '#d98a3a' });
+  carve(eng, SX0, 5, 8, 35, [FREE]);
+  const stern = leafRooms([[9, 5, 15, 18], [9, 22, 15, 35]], false, 5, 9);
+  // the bow: the bridge in the nose, rooms behind it
+  const bridge = addRoom('BRIDGE', 'command', { tint: '#5fd1c0' });
+  carve(bridge, 83, 5, BX1, 35, [FREE]);
+  const bow = leafRooms([[73, 5, 82, 18], [73, 22, 82, 35]], false, 5, 9);
+  D.fillId = spine;
+  fillLeftovers();
+  bounds();
+  // what the rooms are for
+  const byX = (a, b) => D.rooms[a].cx - D.rooms[b].cx;
+  const sternNames = [['REACTOR', 'tanks', '#d98a3a'], ['FUEL', 'fuel', '#d98a3a'], ['AIR PLANT', 'tanks', '#5fae9a'], ['SPARES', 'store', '#9a8a6a']];
+  shuffle(stern.slice()).forEach((id, k) => nameRoom(id, ...sternNames[k % sternNames.length]));
+  const bowNames = [['VAULT', 'vault', '#e0b040'], ['CAPTAIN', 'chief', '#c9a06a'], ['COMMS', 'comms', '#62e08a'], ['NAVIGATION', 'control', '#6fb8ff'], ['OFFICE', 'chief', '#c9a06a'], ['STORES', 'store', '#9a8a6a']];
+  bow.sort((a, b) => D.rooms[b].n - D.rooms[a].n).forEach((id, k) => nameRoom(id, ...bowNames[Math.min(k, bowNames.length - 1)]));
+  const POOL = [['CREW BUNKS', 'barracks', '#b0b8c8'], ['MESS', 'messd', '#c9a06a'], ['GALLEY', 'kitchen', '#c98a3a'], ['WORKSHOP', 'workshop', '#c98a3a'], ['STORES', 'store', '#9a8a6a'], ['LOCKERS', 'lockers', '#b0b8c8'], ['WATER', 'tanks', '#5fae9a'], ['CABINS', 'cabin', '#9a8aaa'], ['MED BAY', 'med', '#e07070'], ['SPARES', 'store', '#9a8a6a']];
+  shuffle(modules.slice()).forEach((id, k) => nameRoom(id, ...POOL[k % POOL.length]));
+  // doors: holds open onto the spine, the crossways at their ends, and sometimes the service way
+  const seamIds = seams.map((s) => s.id), wayIds = ways.map((w) => w.id);
+  for (const h of holds) {
+    hallDoors(h, spine);
+    for (const s of seamIds) if (touching(h, s)) doorBetween(h, s, 'slide', 0.5);
+    for (const w of wayIds) if (touching(h, w) && R() < 0.6) doorBetween(h, w, 'slide', 0.3 + R() * 0.4);
+  }
+  for (const id of modules) {
+    if (touching(id, spine)) doorBetween(id, spine, 'slide', 0.3 + R() * 0.4);
+    else { const s = seamIds.find((q) => touching(id, q)) ?? wayIds.find((q) => touching(id, q)); if (s !== undefined) doorBetween(id, s); }
+    for (const w of wayIds) if (touching(id, w) && R() < 0.35) doorBetween(id, w);
+  }
+  for (const p of shuffle(neighbours().filter((q) => modules.includes(q.a) && modules.includes(q.b) && q.n >= 3))) if (R() < 0.45) doorBetween(p.a, p.b);
+  doorBetween(eng, spine, 'pressure');
+  for (const id of stern) { if (touching(id, spine)) doorBetween(id, spine); if (R() < 0.6) doorBetween(id, eng); for (const w of wayIds) if (touching(id, w) && R() < 0.6) doorBetween(id, w); }
+  doorBetween(bridge, spine, 'pressure');
+  for (const id of bow) {
+    const kind = D.rooms[id].kind === 'vault' ? 'alarm' : 'slide';
+    if (touching(id, spine)) doorBetween(id, spine, kind);
+    else if (touching(id, bridge)) doorBetween(id, bridge, kind);
+    for (const w of wayIds) if (kind === 'slide' && touching(id, w) && R() < 0.6) doorBetween(id, w);
+  }
+  // the airlock: the crossway inside, the hatch in the hull
+  const lockSeam = seams.find((s) => s.side === 'dn' && s.k === lockK);
+  doorBetween(lock, lockSeam.id, 'lockB'); door('h', SEAMS[lockK][0], 36, 'hatch');
+  for (const d of D.doors) if (d.kind === 'lockB' || d.kind === 'hatch') d.pair = 'main';
+  // a wreck: one or two containers torn away at the end, with their doors
+  if (OPT.wreck) {
+    const cand = conts.filter((c) => !c.big && !(c.side === 'dn' && c.x0 <= SEAMS[lockK][1] + 1 && c.x1 >= SEAMS[lockK][0] - 1));
+    D.torn = [];
+    for (const c of shuffle(cand).slice(0, R() < 0.5 ? 1 : 2)) {
+      const mine = c.room !== undefined ? [c.room] : c.rooms;
+      for (let y = c.y0; y <= c.y1; y++) for (let x = c.x0; x <= c.x1; x++) if (mine.includes(at(x, y))) setT(x, y, OUT);
+      D.torn.push(c);
+    }
+    D.doors = D.doors.filter((d) => { const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]]; return d.kind === 'hatch' || g.every(([x, y]) => at(x, y) >= 0); });
+    bounds();
+  }
+  D.conts = conts; D.seams = seams; D.ways = ways; D.holds = holds; D.spine = spine; D.lockK = lockK;
+  repairDoors(spine);
+  return D;
+}
+
+
+// ================================================================== drawing helpers
+let A, E, MODE = 'normal';
+// how bright screens and lamps are: dim when the power is out
+const EDIM = () => (MODE === 'power' ? 0.3 : MODE === 'wreck' ? 0.12 : MODE === 'lockdown' || MODE === 'alarm' ? 0.75 : 1);
+const box = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x | 0, y | 0, w | 0, h | 0); };
+function block(x, y, w, h, c, o = {}) {
+  const base = hex(c);
+  if (!o.noShadow) { A.fillStyle = 'rgba(0,0,0,0.45)'; A.fillRect(x + 2, y + 2, w, h); }
+  box(A, x, y, w, h, rgb(base, 0.55)); box(A, x + 1, y + 1, w - 2, h - 2, c);
+  box(A, x + 1, y + 1, w - 2, 1, rgb(base, 1.3)); box(A, x + 1, y + 1, 1, h - 2, rgb(base, 1.18));
+  box(A, x + 1, y + h - 2, w - 2, 1, rgb(base, 0.78)); box(A, x + w - 2, y + 1, 1, h - 2, rgb(base, 0.82));
+}
+function disc(g, cx, cy, r, c) { g.fillStyle = c; for (let j = -r; j <= r; j++) { const k = Math.floor(Math.sqrt(r * r - j * j + r * 0.6)); g.fillRect((cx - k) | 0, (cy + j) | 0, k * 2 + 1, 1); } }
+function screen(x, y, w, h, c = '#5fd1e0', dim = 1) {
+  dim *= EDIM();
+  box(A, x, y, w, h, '#101820');
+  box(E, x, y, w, h, shade(c, 0.3 * dim));
+  for (let j = y + 1; j < y + h - 1; j += 2) box(E, x + 1, j, Math.max(1, ((w - 2) * (0.35 + 0.65 * hash(x, j))) | 0), 1, shade(c, 0.85 * dim));
+}
+function hazard(x, y, w, h, dim = 1) {
+  A.save(); A.beginPath(); A.rect(x, y, w, h); A.clip();
+  box(A, x, y, w, h, '#1c1c1e'); A.fillStyle = shade('#a8842e', dim);
+  for (let k = -h; k < w + h; k += 6) { A.beginPath(); A.moveTo(x + k, y); A.lineTo(x + k + 3, y); A.lineTo(x + k + 3 - h, y + h); A.lineTo(x + k - h, y + h); A.fill(); }
+  A.restore();
+}
+const GLYPH = {
+  A: '010101111101101', B: '110101110101110', C: '011100100100011', D: '110101101101110', E: '111100110100111', F: '111100110100100', G: '011100101101011', H: '101101111101101', I: '111010010010111',
+  J: '001001001101010', K: '101101110101101', L: '100100100100111', M: '101111111101101', N: '110101101101101', O: '010101101101010', P: '110101110100100', Q: '010101101110011', R: '110101110101101',
+  S: '011100010001110', T: '111010010010010', U: '101101101101111', V: '101101101101010', W: '101101111111101', X: '101101010101101', Y: '101101010010010', Z: '111001010100111', ' ': '000000000000000', "'": '010010000000000',
+};
+function paint(g, text, cx, cy, col, plate) {
+  const w = text.length * 4 - 1, x0 = Math.round(cx - w / 2), y0 = Math.round(cy - 2);
+  if (plate) box(g, x0 - 2, y0 - 2, w + 4, 9, plate);
+  g.fillStyle = col;
+  [...text].forEach((ch, i) => { const b = GLYPH[ch] || GLYPH[' ']; for (let k = 0; k < 15; k++) if (b[k] === '1') g.fillRect(x0 + i * 4 + (k % 3), y0 + ((k / 3) | 0), 1, 1); });
+}
+
+// ================================================================== floors, by deck style
+function floorTile(r, tx, ty) {
+  const x = tx * T, y = ty * T, g = A, kind = r.kind;
+  const noise = (cols, count) => { for (let k = 0; k < count; k++) box(g, x + ((hash(tx, ty, k + 3) * 16) | 0), y + ((hash(tx, ty, k + 40) * 16) | 0), 1 + (k % 2), 1, cols[k % cols.length]); };
+  const grate = (base, line, edge) => { box(g, x, y, T, T, base); for (let k = 1; k < T; k += 3) box(g, x + k, y + 1, 1, T - 2, line); box(g, x, y, T, 1, edge); box(g, x, y, 1, T, shade(base, 1.2)); };
+  if (['gangway', 'gantry', 'ringport', 'collar', 'airlock', 'dock'].includes(kind)) {
+    grate(D.i === 1 ? '#3a3d42' : '#2c2b29', D.i === 1 ? '#2e3136' : '#242321', '#1d1c1a');
+    return;
+  }
+  if (D.i === 0) {
+    switch (kind) {
+      case 'corridor': {
+        grate('#2c2b29', '#242321', '#1d1c1a');
+        noise(['#3a352c', '#1e1c1a'], 4);
+        if (hash(tx, ty, 9) < 0.08) disc(g, x + 8, y + 8, 4, 'rgba(10,8,6,0.35)');
+        break;
+      }
+      case 'hold': {
+        // big worn plates, oil, scuffs
+        const px = tx % 3, py = ty % 3;
+        box(g, x, y, T, T, (Math.floor(tx / 3) + Math.floor(ty / 3)) % 2 ? '#34312c' : '#2f2c28');
+        if (px === 0) box(g, x, y, 1, T, '#24221f'); if (py === 0) box(g, x, y, T, 1, '#24221f');
+        if (px === 0 && py === 0) { box(g, x + 2, y + 2, 2, 2, '#45413a'); }
+        noise(['#3d3830', '#27241f', '#3a3024'], 6);
+        if (hash(tx, ty, 21) < 0.06) disc(g, x + 6 + hash(tx, ty, 2) * 4, y + 6 + hash(ty, tx, 2) * 4, 3 + ((hash(tx, ty, 5) * 3) | 0), 'rgba(8,6,4,0.4)');
+        break;
+      }
+      case 'power': case 'tanks': case 'refinery': case 'breaker': case 'drones': {
+        box(g, x, y, T, T, '#262624');
+        if (ty % 3 === 0) box(g, x, y + 6, T, 3, '#3a2d26');
+        for (let k = 0; k < T; k += 2) box(g, x, y + k, T, 1, 'rgba(10,10,8,0.5)');
+        for (let k = 0; k < T; k += 4) box(g, x + k, y, 1, T, 'rgba(10,10,8,0.4)');
+        noise(['#3a3024'], 2);
+        break;
+      }
+      default: {
+        box(g, x, y, T, T, '#2e2c2a'); box(g, x, y, T, 1, '#222120'); box(g, x, y, 1, T, '#222120');
+        box(g, x + 2, y + 2, 2, 2, '#383532'); box(g, x + 12, y + 12, 2, 2, '#383532');
+        noise(['#36332e', '#262420', '#3a3024'], 5);
+      }
+    }
+    return;
+  }
+  if (D.i === 1) {
+    switch (kind) {
+      case 'concourse': case 'corridor': case 'view': {
+        const c = kind === 'concourse' ? ['#606164', '#5a5b5e'] : ['#545659', '#4f5154'];
+        box(g, x, y, T, T, c[(tx + ty) % 2]); box(g, x, y, T, 1, '#47494d'); box(g, x, y, 1, T, '#47494d'); box(g, x + 1, y + 1, T - 2, 1, '#68696d');
+        break;
+      }
+      case 'service': case 'store': case 'lockers': case 'security': case 'workshop': {
+        box(g, x, y, T, T, '#3a3c3e'); box(g, x, y, T, 1, '#2e3032'); box(g, x, y, 1, T, '#2e3032'); noise(['#424446'], 2);
+        break;
+      }
+      case 'bar': case 'lounge': case 'chief': case 'messd': {
+        box(g, x, y, T, T, kind === 'bar' ? '#4a3a2e' : '#4e3e30');
+        for (let k = 0; k < T; k += 4) box(g, x, y + k, T, 1, kind === 'bar' ? '#3e3026' : '#423428');
+        box(g, x + ((ty * 7) % 16), y, 1, T, '#3e3026');
+        break;
+      }
+      case 'cabin': { box(g, x, y, T, T, '#4a4a58'); noise(['#52525f', '#44444f'], 8); break; }
+      case 'med': case 'wc': case 'kitchen': case 'laundry': {
+        for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) box(g, x + i * 8, y + j * 8, 8, 8, (i + j) % 2 ? '#64686c' : '#5e6266');
+        box(g, x, y, T, 1, '#4e5256'); box(g, x, y, 1, T, '#4e5256');
+        break;
+      }
+      case 'garden': { box(g, x, y, T, T, '#3e4a3c'); box(g, x, y, T, 1, '#344032'); noise(['#46523f', '#384534'], 5); break; }
+      case 'yard': {
+        box(g, x, y, T, T, '#3a3a3c'); box(g, x, y, T, 1, '#2c2c2e'); box(g, x, y, 1, T, '#2c2c2e');
+        if ((tx + ty) % 4 === 0) box(g, x + 6, y + 6, 4, 4, '#323234');
+        noise(['#45443e', '#2e2d2a'], 3);
+        break;
+      }
+      case 'services': case 'armory': case 'market': {
+        box(g, x, y, T, T, (tx + ty) % 2 ? '#585a5e' : '#535559'); box(g, x, y, T, 1, '#46484c'); box(g, x, y, 1, T, '#46484c');
+        break;
+      }
+      default: { box(g, x, y, T, T, '#56585c'); box(g, x, y, T, 1, '#46484c'); box(g, x, y, 1, T, '#46484c'); }
+    }
+    return;
+  }
+  switch (kind) {
+    case 'command': {
+      const rx = tx - r.x0, ry = ty - r.y0, ex = Math.min(rx, ry, r.x1 - tx, r.y1 - ty);
+      if (ex <= 1) { box(g, x, y, T, T, '#2a3240'); for (let k = 1; k < T; k += 3) box(g, x + k, y + 1, 1, T - 2, '#222a36'); box(g, x, y, T, 1, '#3a4456'); }
+      else { box(g, x, y, T, T, (tx + ty) % 2 ? '#22262e' : '#20242b'); box(g, x, y, T, 1, '#1a1d23'); box(g, x, y, 1, T, '#1a1d23'); box(g, x + 7, y + 7, 2, 2, '#2c323c'); }
+      break;
+    }
+    case 'server': case 'security': case 'control': case 'comms': case 'sensors': {
+      box(g, x, y, T, T, '#232830'); box(g, x + 1, y + 1, T - 2, T - 2, '#272d36');
+      for (let j = 3; j < T - 2; j += 3) for (let i = 3; i < T - 2; i += 3) box(g, x + i, y + j, 1, 1, '#1c2027');
+      break;
+    }
+    case 'chief': { box(g, x, y, T, T, '#3a3430'); for (let k = 0; k < T; k += 4) box(g, x, y + k, T, 1, '#332d29'); break; }
+    default: { box(g, x, y, T, T, '#262b33'); box(g, x, y, T, 1, '#1e222a'); box(g, x, y, 1, T, '#1e222a'); box(g, x + 2, y + 2, T - 4, 1, '#2c323c'); }
+  }
+}
+
+// ================================================================== furnishing
+let solids, lights, emitters, cams, turrets, zones, barrels, pylons;
+// low cover stops shots, not sight; high cover stops both, and light
+const solid = (x, y, w, h, high = false, extra = {}) => { const s = { x, y, w, h, high, ...extra }; solids.push(s); return s; };
+const L = { white: [215, 225, 240], warm: [255, 200, 150], amber: [255, 178, 96], sodium: [255, 180, 100], cyan: [120, 200, 255], teal: [90, 220, 200], reactor: [255, 140, 60], cold: [180, 205, 235], red: [255, 50, 40], plant: [200, 255, 180] };
+const B = (r) => ({ X0: r.x0 * T, Y0: r.y0 * T, X1: (r.x1 + 1) * T, Y1: (r.y1 + 1) * T });
+function fits(r, x, y, w, h, gap = 2) {
+  const q = { x, y, w, h };
+  for (const [px, py] of [[x, y], [x + w - 1, y], [x, y + h - 1], [x + w - 1, y + h - 1], [x + w / 2, y], [x + w / 2, y + h - 1], [x, y + h / 2], [x + w - 1, y + h / 2]]) {
+    for (const [dx, dy] of [[0, 0], [-4, 0], [4, 0], [0, -4], [0, 4]]) if (at(Math.floor((px + dx) / T), Math.floor((py + dy) / T)) !== r.id) return false;
+  }
+  if (zones.some((z) => overlaps(q, z))) return false;
+  if (solids.some((s) => overlaps(q, { x: s.x - gap, y: s.y - gap, w: s.w + gap * 2, h: s.h + gap * 2 }))) return false;
+  return true;
+}
+function put(r, x, y, w, h, draw, high = false, isSolid = true, extra) {
+  x = Math.round(x); y = Math.round(y);
+  if (!fits(r, x, y, w, h)) return null;
+  draw(x, y, w, h);
+  return isSolid ? solid(x, y, w, h, high, extra) : {};
+}
+function row(r, side, along, deep, step, draw, high = false) {
+  const b = B(r); let n = 0;
+  const horiz = side === 'n' || side === 's';
+  const a0 = (horiz ? b.X0 : b.Y0) + 5, a1 = (horiz ? b.X1 : b.Y1) - 5;
+  for (let a = a0; a + along <= a1; a += 2) {
+    // a row along a wall: find where that wall actually is at this point
+    let x, y;
+    if (horiz) { x = a; y = side === 'n' ? edgeAt(r, a + along / 2, 'n') + 5 : edgeAt(r, a + along / 2, 's') - 5 - deep; }
+    else { y = a; x = side === 'w' ? edgeAt(r, a + along / 2, 'w') + 5 : edgeAt(r, a + along / 2, 'e') - 5 - deep; }
+    if (x === null || y === null || isNaN(x) || isNaN(y)) continue;
+    const w = horiz ? along : deep, h = horiz ? deep : along;
+    if (put(r, x, y, w, h, (X, Y, Wd, Ht) => draw(X, Y, Wd, Ht, n), high)) { n++; a += along + step - 2; }
+  }
+  return n;
+}
+// Where the wall of a room is, along a line through px.
+function edgeAt(r, p, side) {
+  const t = Math.floor(p / T);
+  if (side === 'n' || side === 's') { for (let y = side === 'n' ? r.y0 : r.y1; side === 'n' ? y <= r.y1 : y >= r.y0; y += side === 'n' ? 1 : -1) if (at(t, y) === r.id) return side === 'n' ? y * T : (y + 1) * T; }
+  else { for (let x = side === 'w' ? r.x0 : r.x1; side === 'w' ? x <= r.x1 : x >= r.x0; x += side === 'w' ? 1 : -1) if (at(x, t) === r.id) return side === 'w' ? x * T : (x + 1) * T; }
+  return NaN;
+}
+// Random spots in a room for loose things.
+function scatter(r, n, w, h, draw, high, tries = 120) {
+  let k = 0;
+  for (let i = 0; i < tries && k < n; i++) {
+    const tx = r.x0 + Math.floor(R() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R() * (r.y1 - r.y0 + 1));
+    if (at(tx, ty) !== r.id) continue;
+    const [ww, hh] = R() < 0.5 ? [w, h] : [h, w];
+    if (put(r, tx * T + R() * 8, ty * T + R() * 8, ww, hh, (X, Y, Wd, Ht) => draw(X, Y, Wd, Ht, k), high)) k++;
+  }
+  return k;
+}
+const P = {
+  crate(x, y, w, h, n = 0) { const c = ['#6e4630', '#3f5f5a', '#5a5d3a', '#55586a'][n % 4]; block(x, y, w, h, c); box(A, x + (w >> 1), y + 1, 1, h - 2, shade(c, 0.65)); box(A, x + 1, y + (h >> 1), w - 2, 1, shade(c, 0.65)); },
+  container(x, y, w, h, n = 0) { const c = ['#3f5f5a', '#6e4630', '#5a5d3a', '#55586a', '#5a3a4a'][n % 5]; block(x, y, w, h, c); const al = w >= h; for (let k = 4; k < (al ? w : h) - 3; k += 4) al ? box(A, x + k, y + 2, 1, h - 4, shade(c, 0.8)) : box(A, x + 2, y + k, w - 4, 1, shade(c, 0.8)); box(A, x + 3, y + 3, 4, 2, '#c9c2a8'); },
+  shelf(x, y, w, h, n = 0) { block(x, y, w, h, '#3d4250'); const hz = w >= h; for (let k = 2; k < (hz ? w : h) - 4; k += 6) { const c = ['#6a5040', '#4a5a50', '#5a5a64', '#6e6040', '#7a6a50'][(k + n) % 5]; hz ? box(A, x + k, y + 2, 4, h - 4, c) : box(A, x + 2, y + k, w - 4, 4, c); } },
+  locker(x, y, w, h, c = '#4a4e5a') { block(x, y, w, h, c); const hz = w >= h; for (let k = 6; k < (hz ? w : h) - 2; k += 6) hz ? box(A, x + k, y + 1, 1, h - 2, shade(c, 0.65)) : box(A, x + 1, y + k, w - 2, 1, shade(c, 0.65)); },
+  console(x, y, w, h, c = '#6fb8ff') { block(x, y, w, h, '#3a3f4b'); const hz = w >= h; hz ? screen(x + 2, y + 2, w - 4, h - 5, c) : screen(x + 2, y + 2, w - 5, h - 4, c); },
+  rack(x, y, w, h) { block(x, y, w, h, '#2a2e36'); const hz = w >= h; for (let k = 3; k < (hz ? w : h) - 3; k += 5) { hz ? box(A, x + k, y + 2, 3, h - 4, '#3a3f48') : box(A, x + 2, y + k, w - 4, 3, '#3a3f48'); emitters.push({ x: hz ? x + k + 1 : x + 3, y: hz ? y + 3 : y + k + 1, c: k % 10 ? '#62e08a' : '#5fd1e0', p: hash(x, k) * 10, rate: 0.5 + hash(k, y) }); } },
+  bed(x, y, w, h, top = '#5a5a6a', pillow = '#9a96a6', blanket = '#4a4e66') { block(x, y, w, h, '#3a3d48'); const hz = w > h; box(A, x + 2, y + 2, w - 4, h - 4, top); hz ? box(A, x + 2, y + 2, 7, h - 4, pillow) : box(A, x + 2, y + 2, w - 4, 7, pillow); hz ? box(A, x + 11, y + 2, w - 13, h - 4, blanket) : box(A, x + 2, y + 11, w - 4, h - 13, blanket); },
+  table(x, y, w, h, top = '#5a5650') { block(x, y, w, h, top); box(A, x + 4, y + 3, 3, 3, '#c0b8a0'); },
+  seat(x, y, r = 4, c = '#5a5048') { disc(A, x + 1, y + 1, r, 'rgba(0,0,0,0.5)'); disc(A, x, y, r, shade(c, 0.6)); disc(A, x, y, r - 1, c); },
+  tank(x, y, r, c = '#4a6a62') { disc(A, x + 2, y + 2, r, 'rgba(0,0,0,0.45)'); disc(A, x, y, r, shade(c, 0.6)); disc(A, x, y, r - 1, c); disc(A, x - 2, y - 2, Math.max(1, (r / 3) | 0), shade(c, 1.35)); box(A, x - 1, y - 1, 3, 3, shade(c, 0.7)); },
+  plant(x, y, r = 5, pot = '#4a3e30') { disc(A, x + 1, y + 2, r, 'rgba(0,0,0,0.4)'); disc(A, x, y, r, pot); for (let k = 0; k < r * 5; k++) { const a = hash(x, y, k) * 6.28, d = Math.sqrt(hash(y, x, k)) * r; box(A, x + Math.cos(a) * d, y + Math.sin(a) * d, 2, 2, ['#3e6a34', '#4e8040', '#2e5228', '#5a9048'][k % 4]); } },
+  sofa(x, y, w, h, c = '#7a5a4a') { block(x, y, w, h, shade(c, 0.8)); const hz = w >= h; hz ? box(A, x + 2, y + 2, w - 4, 3, shade(c, 1.15)) : box(A, x + 2, y + 2, 3, h - 4, shade(c, 1.15)); hz ? box(A, x + 2, y + 6, w - 4, h - 8, c) : box(A, x + 6, y + 2, w - 8, h - 4, c); },
+  barrel(x, y) { disc(A, x + 6, y + 7, 5, 'rgba(0,0,0,0.45)'); disc(A, x + 5, y + 5, 5, '#5a1e14'); disc(A, x + 5, y + 5, 4, '#a8361e'); box(A, x + 2, y + 4, 7, 1, '#d8b040'); box(A, x + 3, y + 2, 2, 2, '#d06a4a'); disc(A, x + 5, y + 5, 1, '#3a1a10'); },
+  rocks(x, y, n) { for (let k = 0; k < n; k++) { const s = 2 + ((hash(x, y, k) * 4) | 0); box(A, x + hash(k, x) * 14, y + hash(k, y) * 14, s, s - 1, ['#3e3730', '#4a4238', '#2e2a25'][k % 3]); } },
+};
+// A barrel that blows up when shot.
+function barrelAt(r, x, y) { const s = put(r, x, y, 11, 11, (X, Y) => P.barrel(X, Y), false, true, { barrel: true }); if (s) barrels.push(s); return s; }
+function barrelCluster(r, n) {
+  for (let i = 0; i < 40 && n > 0; i++) {
+    const tx = r.x0 + Math.floor(R() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R() * (r.y1 - r.y0 + 1));
+    if (at(tx, ty) !== r.id) continue;
+    const bx = tx * T, by = ty * T;
+    let k = 0; for (const [ox, oy] of [[0, 0], [12, 1], [5, 11], [-7, 8]]) if (k < Math.min(n, ri(2, 4)) && barrelAt(r, bx + ox, by + oy)) k++;
+    n -= k;
+  }
+}
+Object.assign(P, {
+  counter(x, y, w, h, c = '#4a4c54') { block(x, y, w, h, c); box(A, x + 2, y + 2, w - 4, 1, shade(c, 1.4)); },
+  bunk(x, y, w, h) { block(x, y, w, h, '#3a3d48'); const horiz = w > h; box(A, x + 2, y + 2, w - 4, h - 4, '#5a5a6a'); horiz ? box(A, x + 2, y + 2, 7, h - 4, '#9a96a6') : box(A, x + 2, y + 2, w - 4, 7, '#9a96a6'); horiz ? box(A, x + 12, y + 2, w - 14, h - 4, '#4a4e66') : box(A, x + 2, y + 12, w - 4, h - 14, '#4a4e66'); },
+  pipeH(x, y, w, c = '#3b4650') { box(A, x, y, w, 3, c); box(A, x, y, w, 1, shade(c, 1.4)); },
+  pipeV(x, y, h, c = '#3b4650') { box(A, x, y, 3, h, c); box(A, x, y, 1, h, shade(c, 1.4)); },
+  cabinet(x, y, w, h) { block(x, y, w, h, '#4a4c54'); const hz = w >= h; for (let k = 4; k < (hz ? w : h) - 4; k += 6) { hz ? box(A, x + k, y + 2, 3, 6, '#2a2d34') : box(A, x + 2, y + k, 6, 3, '#2a2d34'); hz ? box(A, x + k + 1, y + 3, 1, 2, '#c9a441') : box(A, x + 3, y + k + 1, 2, 1, '#c9a441'); } },
+  barricade(x, y, w, h) { block(x, y, w, h, '#4a4440'); for (let k = 3; k < Math.max(w, h) - 2; k += 7) w > h ? box(A, x + k, y + 2, 1, h - 4, '#2e2a26') : box(A, x + 2, y + k, w - 4, 1, '#2e2a26'); hazard(x + 1, y + 1, w > h ? w - 2 : 2, w > h ? 2 : h - 2, 0.6); },
+  rackGuns(x, y, w, h) { block(x, y, w, h, '#3a3d44'); const hz = w >= h; for (let k = 3; k < (hz ? w : h) - 3; k += 5) hz ? box(A, x + k, y + 1, 2, h - 2, '#1f2126') : box(A, x + 1, y + k, w - 2, 2, '#1f2126'); },
+  bench(x, y, w, h, c = '#6a5a48') { block(x, y, w, h, c); const hz = w >= h; for (let k = 3; k < (hz ? w : h) - 2; k += 4) hz ? box(A, x + k, y + 2, 1, h - 4, shade(c, 0.75)) : box(A, x + 2, y + k, w - 4, 1, shade(c, 0.75)); },
+  kiosk(x, y, w, h, c = '#6fb8ff') { block(x, y, w, h, '#4a5260'); screen(x + 2, y + 2, w - 4, h - 4, c); },
+});
+// A light from a room's furniture: weaker in lockdown, mostly out when the power is.
+const lightIn = (x, y, r, col, i, kind = 'static', extra = {}) => lights.push({ x, y, r, i: i * (MODE === 'power' ? 0.2 : MODE === 'wreck' ? 0 : MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? 0.7 : 1), col: MODE === 'lockdown' ? tintLock(col) : col, kind, ...extra });
+// Is this gun bought at the defence level chosen?
+function gunArmed(g) {
+  const list = (decks[g.deck] && decks[g.deck].guns) || D.guns, k = list.indexOf(g);
+  if (g.deck === 2) return OPT.def >= 3;
+  if (g.deck === 1) return OPT.def >= 3 || (OPT.def === 2 && k % 2 === 0);
+  return OPT.def >= 2 || (OPT.def === 1 && k % 2 === 0);
+}
+// Lockdown is a red filter over the light (amber on the crew's own base), steady, with no rotating lights.
+const tintLock = (col) => { const to = OPT.own ? [255, 170, 80] : [255, 70, 60]; return col.map((c, k) => Math.round(c * 0.35 + to[k] * 0.65)); };
+
+// The guns' mounts, in the rooms under them: the turret's base and its console if bought, a closed roof hatch if not.
+function furnishGuns() {
+  for (const g of D.guns || []) {
+    const r = D.rooms[g.room ?? g.id]; if (!r || !r.n) continue;
+    const cx = g.x * T, cy = g.y * T;
+    if (gunArmed(g)) {
+      const s0 = put(r, cx - 12, cy - 12, 24, 24, () => { disc(A, cx + 2, cy + 2, 11, 'rgba(0,0,0,0.45)'); disc(A, cx, cy, 11, '#2a2d34'); disc(A, cx, cy, 9, g.big ? '#5a4a3a' : '#4a4458'); disc(A, cx, cy, 4, '#24262c'); hazard(cx - 11, cy + 12, 22, 2, 0.7); box(E, cx - 1, cy - 1, 2, 2, attHex()); }, true);
+      if (s0) put(r, cx + 14, cy - 5, 10, 10, (X, Y) => P.console(X, Y, 10, 10, '#ffb347'), false);
+    } else {
+      const s = 22; put(r, cx - s / 2, cy - s / 2, s, s, () => { box(A, cx - s / 2, cy - s / 2, s, s, '#26272b'); hazard(cx - s / 2, cy - s / 2, s, 3, 0.6); hazard(cx - s / 2, cy + s / 2 - 3, s, 3, 0.6); box(A, cx - 4, cy - 1, 8, 2, '#3a3d44'); }, false, false);
+    }
+  }
+}
+function furnish(r) {
+  const b = B(r), cx = (b.X0 + b.X1) / 2, cy = (b.Y0 + b.Y1) / 2, w = b.X1 - b.X0, h = b.Y1 - b.Y0;
+  const wide = w >= h;
+  const calm = MODE === 'normal';
+  switch (r.kind) {
+    // ------------------------------------------------------------ the basement
+    case 'hold': {
+      // rows of containers with lanes between, crates as low cover, barrels near one end
+      let n = 0;
+      for (let ty = r.y0 + 2; ty <= r.y1 - 3; ty += 5) for (let tx = r.x0 + 2; tx <= r.x1 - 3; tx += 7) {
+        if (R() < 0.25) continue;
+        const bigOne = R() < 0.6, [ww, hh] = bigOne ? (wide ? [52, 20] : [20, 52]) : [16, 16];
+        put(r, tx * T + ri(-4, 4), ty * T + ri(-3, 3), ww, hh, (X, Y, Wd, Ht) => (bigOne ? P.container(X, Y, Wd, Ht, n) : P.crate(X, Y, Wd, Ht, n)), bigOne);
+        n++;
+      }
+      scatter(r, 16, 12, 10, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k + 2), false);
+      barrelCluster(r, 6);
+      put(r, cx - 10, cy + 20, 22, 16, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#8a6a2a'); box(A, X + Wd, Y + 3, 6, 2, '#5a5d64'); box(A, X + Wd, Y + 11, 6, 2, '#5a5d64'); disc(A, X + 8, Y + 8, 4, '#3a3d44'); });
+      // painted lanes and the crane rail
+      for (let p = (wide ? b.X0 : b.Y0) + 8; p < (wide ? b.X1 : b.Y1) - 8; p += 10) { if (wide) { box(A, p, cy - 1, 6, 2, '#7a6630'); } else box(A, cx - 1, p, 2, 6, '#7a6630'); }
+      for (let k = 0; k < 7; k++) { const tx = r.x0 + 2 + Math.floor(R() * (r.x1 - r.x0 - 3)), ty = r.y0 + 2 + Math.floor(R() * (r.y1 - r.y0 - 3)); if (at(tx, ty) === r.id) lightIn(tx * T + 8, ty * T + 8, 140, L.sodium, 0.85); }
+      break;
+    }
+    case 'engines': {
+      // the three engines across the stern, tall blocks to hide behind, with pipes and crates between
+      for (const dy of [-10, 9]) put(r, b.X0 + 8, (CY + dy) * T - 12, 44, 40, (X, Y, Wd, Ht) => {
+        block(X, Y, Wd, Ht, '#4a4c54'); box(A, X + 4, Y + 4, Wd - 8, Ht - 8, '#3a3c44'); disc(A, X + Wd / 2, Y + Ht / 2, 12, '#2a2c32'); disc(A, X + Wd / 2, Y + Ht / 2, 7, '#5a3a2a');
+        box(E, X + Wd / 2 - 3, Y + Ht / 2 - 3, 6, 6, MODE === 'wreck' ? '#1a0a06' : '#a85a20');
+        for (let k = 6; k < Wd - 6; k += 8) box(A, X + k, Y + 2, 2, 3, '#6a6e78');
+      }, true);
+      scatter(r, 4, 14, 12, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k), false);
+      barrelCluster(r, 3);
+      lightIn(b.X0 + 40, (CY - 4) * T, 120, L.reactor, 0.5, 'pulse', { speed: 0.3 });
+      break;
+    }
+    case 'vault': {
+      row(r, 'n', 30, 10, 6, (X, Y, Wd, Ht) => P.locker(X, Y, Wd, Ht), true);
+      scatter(r, 4, 14, 12, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k + 4), false);
+      lightIn(cx, cy, 60, L.amber, 0.4);
+      break;
+    }
+    case 'post': {
+      scatter(r, 3, 26, 8, (X, Y, Wd, Ht) => P.barricade(X, Y, Wd, Ht), false);
+      row(r, 'n', 30, 10, 10, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#5fd1c0'), false);
+      row(r, 's', 26, 9, 10, (X, Y, Wd, Ht) => P.locker(X, Y, Wd, Ht), true);
+      break;
+    }
+    case 'breaker': {
+      // the switchgear: tall cabinets in rows, the main breaker on its own
+      for (const side of shuffle(['w', 'e', 'n', 's']).slice(0, 2)) row(r, side, 34, 10, 6, (X, Y, Wd, Ht) => P.cabinet(X, Y, Wd, Ht), true);
+      put(r, cx - 14, cy - 8, 28, 16, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#5a5c64'); box(A, X + 3, Y + 3, Wd - 6, 4, '#2a2d34'); box(A, X + 4, Y + 9, 6, 4, '#c94030'); box(E, X + 4, Y + 9, 2, 2, MODE === 'power' ? '#401010' : '#ff3b30'); box(A, X + Wd - 8, Y + 9, 4, 4, '#c9a441'); }, true);
+      scatter(r, 2, 30, 8, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#3a3d44'); for (let k = 2; k < Math.max(Wd, Ht) - 2; k += 3) Wd > Ht ? box(A, X + k, Y + 2, 1, Ht - 4, '#c9a441') : box(A, X + 2, Y + k, Wd - 4, 1, '#c9a441'); }, false);
+      lightIn(cx, cy, 90, L.amber, 0.5, 'pulse', { speed: 0.4 });
+      break;
+    }
+    case 'drones': {
+      for (let k = 0; k < 4; k++) put(r, b.X0 + 14 + (k % 2) * (w - 52), b.Y0 + 14 + Math.floor(k / 2) * (h - 52), 24, 24, (X, Y) => { disc(A, X + 12, Y + 12, 11, '#2a2a2c'); hazard(X + 4, Y + 11, 16, 2, 0.6); disc(A, X + 12, Y + 12, 5, '#3a3d44'); box(E, X + 11, Y + 11, 2, 2, shade('#62e08a', EDIM())); }, false, false);
+      row(r, wide ? 's' : 'e', 30, 10, 8, (X, Y, Wd, Ht) => { P.rack(X, Y, Wd, Ht); }, true);
+      scatter(r, 2, 14, 12, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k), false);
+      break;
+    }
+    case 'power': {
+      const rad = Math.min(25, Math.floor(Math.min(w, h) / 2 - 12));
+      put(r, cx - rad - 1, cy - rad - 1, rad * 2 + 2, rad * 2 + 2, () => {
+        disc(A, cx + 2, cy + 2, rad, 'rgba(0,0,0,0.45)'); disc(A, cx, cy, rad, '#2e3038'); disc(A, cx, cy, rad - 2, '#4c5060'); disc(A, cx, cy, rad - 7, '#3a3d48'); disc(A, cx, cy, rad - 14, '#24262c');
+        for (let k = 0; k < 12; k++) { const a = (k / 12) * 6.283; box(A, cx + Math.cos(a) * (rad - 4) - 1, cy + Math.sin(a) * (rad - 4) - 1, 2, 2, '#6a7080'); }
+        disc(A, cx, cy, 7, '#5a3a2a'); disc(E, cx, cy, 7, MODE === 'power' ? '#6a3014' : '#a85a20');
+      }, true);
+      for (let k = 0; k < 40; k++) { const a = (k / 40) * 6.283; if (k % 2) box(A, cx + Math.cos(a) * (rad + 8) - 1, cy + Math.sin(a) * (rad + 8) - 1, 2, 2, '#7a6630'); }
+      lights.push({ x: cx, y: cy, r: 170, col: L.reactor, i: MODE === 'power' ? 0.5 : 0.9, kind: 'pulse', speed: 0.5 });
+      row(r, 'n', 26, 9, 20, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#ffb347'));
+      break;
+    }
+    case 'refinery': {
+      scatter(r, 2, 30, 26, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#4a4238'); box(A, X + 4, Y + 4, Wd - 8, Ht - 8, '#2a2620'); P.rocks(X + 6, Y + 6, 8); hazard(X + 1, Y + 1, Wd - 2, 2, 0.6); }, true);
+      scatter(r, 2, 46, 8, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#3a3a3e'); const hz = Wd > Ht; for (let k = 2; k < (hz ? Wd : Ht) - 2; k += 4) hz ? box(A, X + k, Y + 2, 2, Ht - 4, '#2a2a2e') : box(A, X + 2, Y + k, Wd - 4, 2, '#2a2a2e'); }, false);
+      scatter(r, 3, 14, 10, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#5a4a3a'); P.rocks(X + 2, Y + 1, 4); }, false);
+      break;
+    }
+    case 'fuel': {
+      scatter(r, 4, 22, 22, (X, Y) => P.tank(X + 11, Y + 11, 11, '#6a4a3a'), true);
+      barrelCluster(r, 8);
+      break;
+    }
+    case 'barracks': {
+      row(r, 'n', 16, 30, 6, (X, Y, Wd, Ht) => P.bed(X, Y, Wd, Ht, '#4a4a42', '#7a786a', '#3e4a3a'));
+      row(r, 's', 30, 9, 8, (X, Y, Wd, Ht) => P.locker(X, Y, Wd, Ht), true);
+      scatter(r, 1, 30, 16, (X, Y, Wd, Ht) => P.table(X, Y, Wd, Ht, '#4a4236'), false);
+      break;
+    }
+    case 'workshop': {
+      row(r, 'n', 36, 12, 8, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#4b4236'); for (let k = 0; k < 4; k++) box(A, X + 4 + k * 8, Y + 3, 4, 2 + (k % 3), ['#7a7f88', '#8a5a3a', '#5a6a7a'][k % 3]); }, false);
+      row(r, 'w', 30, 10, 10, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      scatter(r, 3, 14, 14, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k), false);
+      if (D.i === 0) barrelCluster(r, 2);
+      break;
+    }
+    case 'store': {
+      row(r, 'w', 30, 10, 4, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      row(r, 'e', 30, 10, 4, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n + 2), true);
+      scatter(r, 2, 14, 14, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k), false);
+      break;
+    }
+    case 'tanks': {
+      scatter(r, 6, 20, 20, (X, Y) => P.tank(X + 10, Y + 10, 10, D.i === 2 ? '#3a5a6a' : '#4a6a62'), true);
+      P.pipeH(b.X0 + 4, b.Y0 + 4, w - 8, D.i === 2 ? '#3b4650' : '#4a3b33');
+      break;
+    }
+    case 'lockers': {
+      row(r, 'w', 30, 9, 4, (X, Y, Wd, Ht) => P.locker(X, Y, Wd, Ht), true);
+      row(r, 'e', 30, 9, 4, (X, Y, Wd, Ht) => P.locker(X, Y, Wd, Ht), true);
+      put(r, cx - 4, cy - 20, 8, 40, (X, Y, Wd, Ht) => P.bench(X, Y, Wd, Ht, '#4a4236'));
+      break;
+    }
+    case 'dock': case 'airlock': case 'ringport': case 'collar': {
+      const L0 = B(r), hz = L0.X1 - L0.X0 > L0.Y1 - L0.Y0;
+      if (hz) { hazard(L0.X0 + 2, L0.Y0 + 2, 3, L0.Y1 - L0.Y0 - 4); hazard(L0.X1 - 5, L0.Y0 + 2, 3, L0.Y1 - L0.Y0 - 4); }
+      else { hazard(L0.X0 + 2, L0.Y0 + 2, L0.X1 - L0.X0 - 4, 3); hazard(L0.X0 + 2, L0.Y1 - 5, L0.X1 - L0.X0 - 4, 3); }
+      if (r.kind === 'airlock') lightIn(cx, cy, 60, L.white, 0.6);
+      break;
+    }
+    case 'gangway': case 'gantry': {
+      // rails along a glass tube, small lamps in the floor
+      const L0 = B(r), hz = L0.X1 - L0.X0 > L0.Y1 - L0.Y0;
+      if (r.kind === 'gantry') {
+        // the bridge to the build dock lies higher than the ring: steps up at the end nearest the base
+        const near0 = hz ? Math.abs(L0.X0 - C * T) < Math.abs(L0.X1 - C * T) : Math.abs(L0.Y0 - C * T) < Math.abs(L0.Y1 - C * T);
+        for (let k = 0; k < 6; k++) {
+          const p = near0 ? (hz ? L0.X0 : L0.Y0) + 4 + k * 5 : (hz ? L0.X1 : L0.Y1) - 9 - k * 5;
+          const c1 = shade('#3a3d46', 0.8 + k * 0.06);
+          if (hz) { box(A, p, L0.Y0 + 3, 4, L0.Y1 - L0.Y0 - 6, c1); box(A, near0 ? p + 4 : p - 1, L0.Y0 + 3, 1, L0.Y1 - L0.Y0 - 6, '#1e1f24'); }
+          else { box(A, L0.X0 + 3, p, L0.X1 - L0.X0 - 6, 4, c1); box(A, L0.X0 + 3, near0 ? p + 4 : p - 1, L0.X1 - L0.X0 - 6, 1, '#1e1f24'); }
+        }
+      }
+      if (hz) { box(A, L0.X0, L0.Y0 + 6, L0.X1 - L0.X0, 2, '#7a8090'); box(A, L0.X0, L0.Y1 - 8, L0.X1 - L0.X0, 2, '#7a8090'); for (let p = L0.X0 + 8; p < L0.X1; p += 24) { box(E, p, L0.Y0 + 4, 2, 1, shade('#9ad0ff', EDIM())); box(E, p, L0.Y1 - 5, 2, 1, shade('#9ad0ff', EDIM())); } }
+      else { box(A, L0.X0 + 6, L0.Y0, 2, L0.Y1 - L0.Y0, '#7a8090'); box(A, L0.X1 - 8, L0.Y0, 2, L0.Y1 - L0.Y0, '#7a8090'); for (let p = L0.Y0 + 8; p < L0.Y1; p += 24) { box(E, L0.X0 + 4, p, 1, 2, shade('#9ad0ff', EDIM())); box(E, L0.X1 - 5, p, 1, 2, shade('#9ad0ff', EDIM())); } }
+      break;
+    }
+    // ------------------------------------------------------------ the middle
+    case 'concourse': {
+      put(r, cx - 30, cy - 12, 60, 30, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#6a6258'); box(A, X + 3, Y + 3, Wd - 6, Ht - 6, '#3a4a30'); for (let k = 0; k < 6; k++) P.plant(X + 9 + (k % 3) * 20, Y + 9 + Math.floor(k / 3) * 12, 6, '#3a4a30'); }, true);
+      for (const [dx, dy] of [[-110, -40], [110, -40], [-110, 50], [110, 50], [-60, 60], [60, 60]]) put(r, cx + dx - 7, cy + dy - 7, 14, 14, (X, Y) => P.plant(X + 7, Y + 7, 7, '#7a6a58'), true);
+      for (const [dx, dy] of [[-60, -38], [60, -38], [-75, 30], [75, 30]]) put(r, cx + dx - 15, cy + dy - 4, 30, 8, (X, Y, Wd, Ht) => P.bench(X, Y, Wd, Ht), false);
+      for (const [dx, dy] of [[-30, 50], [30, 50]]) put(r, cx + dx - 5, cy + dy - 10, 10, 20, (X, Y, Wd, Ht) => P.kiosk(X, Y, Wd, Ht, '#ffb347'), true);
+      scatter(r, 3, 14, 14, (X, Y, Wd, Ht) => P.table(X, Y, Wd, Ht, '#8a7a68'), false);
+      if (OPT.own) put(r, cx - 20, cy + 26, 40, 6, (X, Y, Wd, Ht) => { box(A, X, Y, Wd, Ht, '#3a3020'); box(E, X + 1, Y + 1, Wd - 2, 1, shade(CREW_HEX, EDIM())); paint(A, 'HOME', X + Wd / 2, Y + 3, CREW_HEX); }, false, false);
+      break;
+    }
+    case 'corridor': {
+      // the freighter's spine and crossways: low cover now and then, pipes along the walls, nothing that blocks the way
+      if (r.name === 'SPINE' || r.name === 'CROSSWAY') {
+        scatter(r, Math.max(1, Math.floor(r.n / 34)), 14, 10, (X, Y, Wd, Ht, k) => (k % 3 === 2 ? P.barricade(X, Y, Wd, Ht) : P.crate(X, Y, Wd, Ht, k)), false, 120);
+        if (r.name === 'SPINE') for (let tx = r.x0 + 3; tx < r.x1 - 2; tx += 9) lightIn(tx * T + 8, (CY + 0.5) * T, 70, L.sodium, 0.4);
+        break;
+      }
+      if (D.i !== 1) break;
+      scatter(r, Math.floor(r.n / 40), 8, 22, (X, Y, Wd, Ht, k) => (k % 2 ? P.plant(X + 4, Y + 11, 5, '#7a6a58') : P.bench(X, Y, Wd, Ht)), false, 200);
+      break;
+    }
+    case 'security': {
+      row(r, 'n', Math.min(48, w - 16), 10, 8, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#5fd1c0'));
+      scatter(r, 2, 28, 8, (X, Y, Wd, Ht) => P.barricade(X, Y, Wd, Ht), false);
+      row(r, 'w', 30, 8, 8, (X, Y, Wd, Ht) => P.rackGuns(X, Y, Wd, Ht), true);
+      row(r, 'e', 30, 9, 8, (X, Y, Wd, Ht) => P.locker(X, Y, Wd, Ht), true);
+      break;
+    }
+    case 'services': {
+      put(r, b.X0 + 10, cy - 5, w - 20, 10, (X, Y, Wd, Ht) => { P.counter(X, Y, Wd, Ht); for (let k = 6; k < Wd - 10; k += 30) screen(X + k, Y + 2, 12, 5, '#6fb8ff'); });
+      row(r, 'n', 30, 8, 10, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      put(r, b.X1 - 18, b.Y1 - 34, 10, 26, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#4a5056'); for (let k = 4; k < Ht - 4; k += 8) box(A, X + 3, Y + k, 4, 4, '#2a2d34'); box(E, X + 3, Y + 4, 4, 1, shade('#62e08a', EDIM())); }, true);
+      lightIn(cx, cy, 70, L.white, 0.4);
+      break;
+    }
+    case 'armory': {
+      put(r, b.X0 + 10, cy, w - 20, 10, (X, Y, Wd, Ht) => { P.counter(X, Y, Wd, Ht, '#4a4c54'); screen(X + 4, Y + 2, 10, 5, '#d98a3a'); });
+      row(r, 'n', 30, 8, 6, (X, Y, Wd, Ht) => P.rackGuns(X, Y, Wd, Ht), true);
+      for (let k = 0; k < 3; k++) put(r, b.X0 + 14 + k * 22, b.Y1 - 26, 12, 12, (X, Y) => { disc(A, X + 6, Y + 6, 5, '#2a2d34'); disc(A, X + 6, Y + 6, 4, ['#6b7280', '#4a5248', '#8a6a35'][k]); disc(A, X + 6, Y + 5, 2, '#9aa3b2'); }, true);
+      break;
+    }
+    case 'market': {
+      for (let k = 0; k < 6; k++) scatter(r, 1, 24, 12, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#6a5a48'); for (let q = 2; q < Wd - 3; q += 4) box(A, X + q, Y + 3, 3, 3, ['#c06a3a', '#d0b040', '#7ab060', '#c04a5a', '#6a9ad0'][(q + k) % 5]); }, false);
+      row(r, 'n', 24, 10, 8, (X, Y, Wd, Ht, n) => P.crate(X, Y, Wd, Ht, n), true);
+      break;
+    }
+    case 'bar': {
+      row(r, 'n', Math.min(70, w - 20), 12, 10, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#6a4a36'); box(A, X + 2, Y + 2, Wd - 4, 2, '#8a6a4a'); for (let k = 3; k < Wd - 3; k += 3) { box(A, X + k, Y - 4, 2, 3, ['#5a8a6a', '#8a5a3a', '#6a7aa0', '#a08a4a'][k % 4]); box(E, X + k, Y - 4, 1, 1, shade(['#305a40', '#5a3018', '#30406a', '#5a4a18'][k % 4], EDIM())); } }, false);
+      scatter(r, 6, 18, 16, (X, Y, Wd, Ht) => { P.table(X, Y, Wd, Ht, '#7a5a40'); P.seat(X - 4, Y + 8, 3); P.seat(X + Wd + 3, Y + 8, 3); }, false);
+      scatter(r, 2, 12, 12, (X, Y) => P.plant(X + 6, Y + 6, 6, '#7a6a58'), true);
+      put(r, b.X1 - 14, cy - 12, 8, 24, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#3a4a5a'); screen(X + 2, Y + 2, 4, 20, '#62e08a'); }, true);
+      lightIn(cx, b.Y0 + 26, 90, L.amber, 0.7); lightIn(cx + 20, cy + 20, 60, [200, 120, 220], 0.45);
+      break;
+    }
+    case 'med': {
+      row(r, 'n', 18, 34, 12, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#8a9096'); box(A, X + 3, Y + 3, Wd - 6, Ht - 6, '#c8d0d4'); box(A, X + 4, Y + 4, Wd - 8, 7, '#e8eef0'); screen(X + Wd - 6, Y + Ht - 10, 4, 6, '#62e08a'); }, false);
+      row(r, 's', 34, 12, 10, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#9aa0a6'); box(A, X + 6, Y + 3, 6, 6, '#c04a4a'); }, true);
+      break;
+    }
+    case 'cabin': {
+      row(r, 'n', 16, 30, 8, (X, Y, Wd, Ht) => P.bed(X, Y, Wd, Ht, '#8a8a96', '#d8d4dc', '#5a6a8a'));
+      row(r, 's', 16, 30, 8, (X, Y, Wd, Ht) => P.bed(X, Y, Wd, Ht, '#8a8a96', '#d8d4dc', '#7a5a6a'));
+      scatter(r, 1, 12, 12, (X, Y) => P.plant(X + 6, Y + 6, 6, '#7a6a58'), true);
+      break;
+    }
+    case 'garden': {
+      for (let k = 0; k < 4; k++) scatter(r, 1, 30, 18, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#4a3e30'); for (let q = 0; q < 4; q++) P.plant(X + 6 + q * 6, Y + Ht / 2, 5); box(E, X + 2, Y + 2, Wd - 4, 1, shade('#3a6a2a', EDIM())); lightIn(X + Wd / 2, Y + Ht / 2, 50, L.plant, 0.5); }, true);
+      scatter(r, 2, 26, 6, (X, Y, Wd, Ht) => P.bench(X, Y, Wd, Ht), false);
+      break;
+    }
+    case 'wc': {
+      row(r, 'w', 12, 14, 2, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#5a6066'); disc(A, X + 7, Y + 6, 3, '#8a9096'); });
+      row(r, 'e', 10, 8, 4, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#7a8086'); disc(A, X + 4, Y + 5, 2, '#4a5056'); });
+      break;
+    }
+    case 'lounge': {
+      scatter(r, 3, 32, 12, (X, Y, Wd, Ht, k) => P.sofa(X, Y, Wd, Ht, ['#7a5a4a', '#4a6a7a', '#6a7a5a'][k % 3]), false);
+      scatter(r, 2, 16, 16, (X, Y, Wd, Ht) => P.table(X, Y, Wd, Ht, '#8a7a68'), false);
+      scatter(r, 3, 12, 12, (X, Y) => P.plant(X + 6, Y + 6, 6, '#7a6a58'), true);
+      break;
+    }
+    case 'view': {
+      scatter(r, 3, 8, 26, (X, Y, Wd, Ht) => P.sofa(X, Y, Wd, Ht, '#4a6a7a'), false);
+      scatter(r, 3, 12, 12, (X, Y) => P.plant(X + 6, Y + 6, 6, '#7a6a58'), true);
+      put(r, cx - 6, cy - 6, 12, 12, (X, Y) => { disc(A, X + 6, Y + 6, 5, '#3a3d48'); box(A, X + 6, Y + 2, 8, 3, '#8a90a0'); }, false);
+      break;
+    }
+    case 'yard': {
+      // the shipyard room: a hangar with an engine on a cradle, benches, parts on shelves and the mechanic's counter
+      const hz = w >= h;
+      const cradle = (X, Y, Wd, Ht) => {
+        A.fillStyle = 'rgba(0,0,0,0.45)'; A.fillRect(X + 3, Y + 3, Wd, Ht);
+        block(X, Y, Wd, Ht, '#4a4e5c'); block(X + (hz ? 6 : 3), Y + (hz ? 3 : 6), Wd - (hz ? 12 : 6), Ht - (hz ? 6 : 12), '#5a5f70');
+        for (let k = 8; k < (hz ? Wd : Ht) - 6; k += 7) hz ? box(A, X + k, Y + 4, 1, Ht - 8, '#3a3d48') : box(A, X + 4, Y + k, Wd - 8, 1, '#3a3d48');
+        hz ? box(A, X + 10, Y + 9, 12, 10, '#2a2d34') : box(A, X + 9, Y + 10, 10, 12, '#2a2d34');
+        hazard(hz ? X : X - 4, hz ? Y - 4 : Y, hz ? Wd : 3, hz ? 3 : Ht, 0.7);
+        if (MODE !== 'power') box(E, hz ? X + 14 : X + 12, hz ? Y + 12 : Y + 14, 2, 2, '#ffd27a');
+      };
+      // off the middle if the way through the room needs it
+      placed: for (const off of [0, -36, 36, -24, 24, -48, 48]) for (const len of [68, 52, 40]) {
+        const X = cx - (hz ? len / 2 : 14) + (hz ? 0 : off), Y = cy - (hz ? 14 : len / 2) + (hz ? off : 0);
+        if (put(r, X, Y, hz ? len : 28, hz ? 28 : len, cradle, true)) break placed;
+      }
+      for (const side of hz ? ['n'] : ['w']) row(r, side, 30, 11, 8, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#4b4236'); for (let k = 0; k < 3; k++) (Wd > Ht ? box(A, X + 4 + k * 8, Y + 3, 4, 3, ['#7a7f88', '#8a5a3a', '#5a6a7a'][k]) : box(A, X + 3, Y + 4 + k * 8, 3, 4, ['#7a7f88', '#8a5a3a', '#5a6a7a'][k])); }, false);
+      for (const side of hz ? ['s'] : ['e']) row(r, side, 30, 9, 6, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      placed2: for (const off of [0, 30, -30, 50, -50]) { const X = hz ? b.X0 + 8 : cx - 22 + off, Y = hz ? cy - 22 + off : b.Y0 + 8; if (put(r, X, Y, hz ? 10 : 44, hz ? 44 : 10, (X2, Y2, Wd, Ht) => { P.counter(X2, Y2, Wd, Ht, '#5a5048'); screen(X2 + 2, Y2 + 2, Wd > Ht ? 10 : 6, Wd > Ht ? 5 : 10, '#ffb347'); }, false)) break placed2; }
+      scatter(r, 2, 14, 12, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k), false);
+      if (OPT.own) {
+        // what the crew has done: the map of the bases taken, a trophy, a cot for each player
+        scatter(r, 1, hz ? 32 : 6, hz ? 6 : 32, (X, Y, Wd, Ht) => { box(A, X, Y, Wd, Ht, '#1a2028'); box(E, X + 1, Y + 1, Wd - 2, Ht - 2, shade('#203040', EDIM())); for (let k = 0; k < 6; k++) { const along = 3 + k * 5; box(E, Wd > Ht ? X + along : X + 2, Wd > Ht ? Y + 2 : Y + along, 1, 1, shade(k < 3 ? CREW_HEX : '#6a7080', EDIM())); } }, true);
+        scatter(r, 1, 10, 10, (X, Y) => { block(X, Y, 10, 10, '#5a5048'); disc(A, X + 5, Y + 5, 3, '#c9902a'); box(A, X + 4, Y + 3, 3, 1, '#f0c050'); }, true);
+        scatter(r, 3, 12, 26, (X, Y, Wd, Ht) => P.bunk(X, Y, Wd, Ht), false);
+      }
+      lightIn(cx, cy, 120, L.sodium, 0.6);
+      break;
+    }
+    case 'chief': {
+      put(r, cx - 20, cy - 6, 30, 14, (X, Y, Wd, Ht) => { P.table(X, Y, Wd, Ht, '#4b4236'); box(A, X + 20, Y + 3, 5, 5, '#c9b070'); });
+      row(r, 'w', 30, 9, 6, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      scatter(r, 1, 12, 12, (X, Y) => P.plant(X + 6, Y + 6, 6, '#7a6a58'), true);
+      break;
+    }
+    case 'messd': {
+      for (let k = 0; k < 2; k++) scatter(r, 1, 34, 12, (X, Y, Wd, Ht) => P.table(X, Y, Wd, Ht, '#4a4236'), false);
+      row(r, 'e', 26, 8, 20, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#3a4a5a'); screen(X + 2, Y + 3, 4, 10, '#ffb347'); }, true);
+      break;
+    }
+    case 'kitchen': {
+      row(r, 'n', 40, 12, 4, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#8a8c90'); for (let k = 6; k < Wd - 4; k += 10) disc(A, X + k, Y + 6, 2, '#2e2f34'); box(E, X + 3, Y + 2, 2, 1, shade('#ff8a40', EDIM())); }, false);
+      row(r, 's', 40, 12, 4, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#9a9ca0'); box(A, X + 3, Y + 3, Wd - 6, 6, '#7a7c80'); }, false);
+      scatter(r, 1, 14, 20, (X, Y, Wd, Ht) => block(X, Y, Wd, Ht, '#b0b4b8'), true);
+      break;
+    }
+    case 'laundry': {
+      row(r, 'n', 12, 12, 2, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#a0a4a8'); disc(A, X + 6, Y + 6, 4, '#4a5058'); disc(A, X + 6, Y + 6, 2, '#6a8090'); }, false);
+      row(r, 's', 30, 9, 6, (X, Y, Wd, Ht, n) => P.shelf(X, Y, Wd, Ht, n), true);
+      break;
+    }
+    // ------------------------------------------------------------ the top
+    case 'command': {
+      // the mainframe in the middle, a ring of consoles as low cover, four pillars
+      put(r, cx - 26, cy - 26, 52, 52, () => {
+        A.fillStyle = 'rgba(0,0,0,0.5)'; A.fillRect(cx - 22, cy - 22, 52, 52);
+        block(cx - 26, cy - 26, 52, 52, '#2a2e36'); block(cx - 19, cy - 19, 38, 38, '#3a3f4b');
+        disc(A, cx, cy, 13, '#1a2028'); disc(A, cx, cy, 10, '#24303a');
+        disc(E, cx, cy, 10, shade('#1a4a50', EDIM())); disc(E, cx, cy, 5, shade('#4ad0c0', EDIM()));
+        for (let k = 0; k < 6; k++) emitters.push({ x: cx - 22 + k * 9, y: cy - 23, c: '#5fd1c0', p: k, rate: 0.7 });
+      }, true);
+      lights.push({ x: cx, y: cy, r: 150, col: L.teal, i: MODE === 'power' ? 0.25 : 0.6, kind: 'pulse', speed: 0.35 });
+      for (let k = 0; k < 6; k++) { const a = (k / 6) * 6.283 + 0.52; const x = cx + Math.cos(a) * 56, y = cy + Math.sin(a) * 56; put(r, x - 12, y - 5, 24, 10, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#5fd1c0'), false); }
+      for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) put(r, cx + sx * 60 - 8, cy + sy * 60 - 8, 16, 16, (X, Y, Wd, Ht) => { block(X, Y, Wd, Ht, '#3e4452'); box(A, X + 3, Y + 3, Wd - 6, Ht - 6, '#4a5262'); }, true);
+      break;
+    }
+    case 'server': { row(r, 'w', 36, 12, 8, (X, Y, Wd, Ht) => P.rack(X, Y, Wd, Ht), true); row(r, 'e', 36, 12, 8, (X, Y, Wd, Ht) => P.rack(X, Y, Wd, Ht), true); break; }
+    case 'comms': { row(r, 'n', 28, 10, 6, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#62e08a'), false); row(r, 'w', 30, 12, 8, (X, Y, Wd, Ht) => P.rack(X, Y, Wd, Ht), true); scatter(r, 1, 18, 18, (X, Y) => { disc(A, X + 9, Y + 9, 9, '#3a3d48'); disc(A, X + 9, Y + 9, 7, '#5a5f6e'); disc(A, X + 9, Y + 9, 2, '#2a2d34'); }, true); break; }
+    case 'sensors': { row(r, 'n', 28, 10, 6, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#6fb8ff'), false); put(r, cx - 10, cy - 10, 20, 20, (X, Y) => { disc(A, X + 10, Y + 10, 10, '#2a2d34'); disc(A, X + 10, Y + 10, 8, '#3a4a5a'); disc(E, X + 10, Y + 10, 6, shade('#183048', EDIM())); box(E, X + 10, Y + 5, 1, 5, shade('#6fb8ff', EDIM())); }, true); break; }
+    case 'arms': { row(r, 'n', 30, 8, 6, (X, Y, Wd, Ht) => P.rackGuns(X, Y, Wd, Ht), true); row(r, 's', 30, 8, 6, (X, Y, Wd, Ht) => P.rackGuns(X, Y, Wd, Ht), true); scatter(r, 3, 14, 14, (X, Y, Wd, Ht, k) => P.crate(X, Y, Wd, Ht, k + 1), false); break; }
+    case 'control': { row(r, 'n', 30, 10, 6, (X, Y, Wd, Ht) => P.console(X, Y, Wd, Ht, '#6fb8ff'), false); scatter(r, 2, 8, 8, (X, Y) => P.seat(X + 4, Y + 4), false); break; }
+    case 'lift': {
+      const L0 = B(r);
+      box(A, L0.X0 + 2, L0.Y0 + 2, L0.X1 - L0.X0 - 4, L0.Y1 - L0.Y0 - 4, '#2a2b30');
+      hazard(L0.X0 + 2, L0.Y0 + 2, L0.X1 - L0.X0 - 4, 3); hazard(L0.X0 + 2, L0.Y1 - 5, L0.X1 - L0.X0 - 4, 3);
+      for (let k = L0.X0 + 6; k < L0.X1 - 6; k += 4) box(A, k, L0.Y0 + 8, 2, L0.Y1 - L0.Y0 - 16, '#33353c');
+      break;
+    }
+    case 'stairs': {
+      const L0 = B(r), hz = L0.X1 - L0.X0 > L0.Y1 - L0.Y0;
+      if (hz) for (let k = L0.X0 + 4; k < L0.X1 - 4; k += 5) { box(A, k, L0.Y0 + 4, 4, L0.Y1 - L0.Y0 - 8, '#3a3d46'); box(A, k + 4, L0.Y0 + 4, 1, L0.Y1 - L0.Y0 - 8, '#1e1f24'); box(A, k, L0.Y0 + 4, 1, L0.Y1 - L0.Y0 - 8, '#4a4e58'); }
+      else for (let k = L0.Y0 + 4; k < L0.Y1 - 4; k += 5) { box(A, L0.X0 + 4, k, L0.X1 - L0.X0 - 8, 4, '#3a3d46'); box(A, L0.X0 + 4, k + 4, L0.X1 - L0.X0 - 8, 1, '#1e1f24'); box(A, L0.X0 + 4, k, L0.X1 - L0.X0 - 8, 1, '#4a4e58'); }
+      break;
+    }
+    case 'ladder': {
+      const L0 = B(r);
+      hazard(L0.X0 + 3, L0.Y0 + 3, L0.X1 - L0.X0 - 6, L0.Y1 - L0.Y0 - 6, 0.7);
+      box(A, L0.X0 + 8, L0.Y0 + 8, L0.X1 - L0.X0 - 16, L0.Y1 - L0.Y0 - 16, '#151619');
+      for (let k = L0.Y0 + 10; k < L0.Y1 - 10; k += 4) box(A, L0.X0 + 10, k, L0.X1 - L0.X0 - 20, 1, '#7a7f88');
+      break;
+    }
+  }
+}
+// Keep a way clear through every room: from each way in to every other, and to the middle. Nothing is put there.
+function reservePaths() {
+  for (const r of D.rooms) {
+    if (!r.n || ['boss', 'lift', 'stairs', 'ladder', 'command'].includes(r.kind)) continue;
+    const entries = [];
+    for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) {
+      if (at(x, y) !== r.id) continue;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const v = at(x + dx, y + dy); if (v < 0 || v === r.id) continue;
+        const o = dx ? 'v' : 'h', ex = dx > 0 ? x + 1 : x, ey = dy > 0 ? y + 1 : y;
+        if (edgeType(r.id, v) === 0 || doorAt(o, ex, ey)) { entries.push([x, y]); break; }
+      }
+    }
+    if (!entries.length) continue;
+    const idx = (x, y) => y * W + x;
+    const prev = new Map([[idx(...entries[0]), -1]]);
+    const q = [entries[0]];
+    for (let k = 0; k < q.length; k++) {
+      const [x, y] = q[k];
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (at(nx, ny) !== r.id || prev.has(idx(nx, ny))) continue; prev.set(idx(nx, ny), idx(x, y)); q.push([nx, ny]); }
+    }
+    const goals = entries.filter((_, i) => i % 2 === 0);
+    if (!['concourse', 'hold', 'command', 'power', 'drones', 'yard', 'breaker'].includes(r.kind)) goals.push([Math.round(r.cx), Math.round(r.cy)]);
+    for (const [gx, gy] of goals) {
+      let c = idx(gx, gy);
+      if (!prev.has(c)) continue;
+      for (let guard = 0; c !== -1 && guard < 400; guard++) { const x = c % W, y = (c / W) | 0; zones.push({ x: x * T + 3, y: y * T + 3, w: 10, h: 10 }); c = prev.get(c); }
+    }
+  }
+}
+
+
+// ================================================================== walls
+// ================================================================== walls
+function maskRect(x, y, w, h, t) {
+  for (let j = Math.max(0, y | 0); j < Math.min(WH, (y + h) | 0); j++)
+    for (let i = Math.max(0, x | 0); i < Math.min(WW, (x + w) | 0); i++) if (t > D.mask[j * WW + i] || t === 3) D.mask[j * WW + i] = t;
+}
+// 0 none, 1 inner wall, 2 hull, 4 glass, 5 rock edge
+// 0 none, 1 inner wall, 2 hull, 4 glass
+function edgeType(a, b) {
+  if (a === b) return 0;
+  if (a < 0 && b < 0) return 0;
+  if (a < 0 || b < 0) { const r = D.rooms[a < 0 ? b : a]; return r.glass ? 4 : 2; }
+  const A2 = D.rooms[a], B2 = D.rooms[b];
+  if (A2.open || B2.open) return 0;
+  // halls of the same zone run into each other without a wall
+  const flow = (k) => k === 'corridor' || k === 'service';
+  if (flow(A2.kind) && flow(B2.kind) && A2.staff === B2.staff) return 0;
+  return 1;
+}
+function buildWalls() {
+  for (let x = 1; x < W; x++) {
+    let run = null;
+    const flush = () => { if (run) addRun('v', x, run); run = null; };
+    for (let y = 0; y < H; y++) {
+      const a = at(x - 1, y), b = at(x, y);
+      const t = doorAt('v', x, y) ? 0 : edgeType(a, b);
+      const side = a < 0 ? -1 : b < 0 ? 1 : 0;
+      if (t && run && run.t === t && run.side === side) run.y1 = y; else { flush(); if (t) run = { t, side, y0: y, y1: y }; }
+    }
+    flush();
+  }
+  for (let y = 1; y < H; y++) {
+    let run = null;
+    const flush = () => { if (run) addRun('h', y, run); run = null; };
+    for (let x = 0; x < W; x++) {
+      const a = at(x, y - 1), b = at(x, y);
+      const t = doorAt('h', x, y) ? 0 : edgeType(a, b);
+      const side = a < 0 ? -1 : b < 0 ? 1 : 0;
+      if (t && run && run.t === t && run.side === side) run.x1 = x; else { flush(); if (t) run = { t, side, x0: x, x1: x }; }
+    }
+    flush();
+  }
+  for (const d of D.doors) {
+    const g = doorGeom(d);
+    const ends = d.o === 'v' ? [[g.x, g.y], [g.x, g.y + g.len]] : [[g.x, g.y], [g.x + g.len, g.y]];
+    const s = d.kind === 'arch' ? 4 : ['slide', 'alarm', 'staff'].includes(d.kind) ? 6 : 8;
+    for (const [ex, ey] of ends) maskRect(ex - s / 2, ey - s / 2, s, s, d.kind === 'arch' ? 1 : 3);
+  }
+}
+function addRun(o, at0, run) {
+  const outer = run.t !== 1;
+  const rock = run.t === 5;
+  const e = at0 * T;
+  const thick = rock ? 4 : outer ? 8 : 4, ext = rock ? 1 : outer ? 6 : 2;
+  let x, y, w, h, seg;
+  if (o === 'v') {
+    x = outer ? (run.side < 0 ? e - (thick - 2) : e - 2) : e - 2; w = thick;
+    if (rock) x = run.side < 0 ? e - 4 : e;
+    y = run.y0 * T - ext; h = (run.y1 - run.y0 + 1) * T + ext * 2;
+    const sx = rock ? e : outer ? (run.side < 0 ? e - 5 : e + 5) : e;
+    seg = [sx, run.y0 * T - ext, sx, (run.y1 + 1) * T + ext];
+  } else {
+    y = outer ? (run.side < 0 ? e - (thick - 2) : e - 2) : e - 2; h = thick;
+    if (rock) y = run.side < 0 ? e - 4 : e;
+    x = run.x0 * T - ext; w = (run.x1 - run.x0 + 1) * T + ext * 2;
+    const sy = rock ? e : outer ? (run.side < 0 ? e - 5 : e + 5) : e;
+    seg = [run.x0 * T - ext, sy, (run.x1 + 1) * T + ext, sy];
+  }
+  maskRect(x, y, w, h, run.t);
+  D.wallRects.push({ x, y, w, h });
+  D.wallSegs.push(seg);
+}
+// After a floor is planned: a plain door between visitors and staff becomes a STAFF door.
+function finalizeDeck() {
+  for (const d of D.doors) {
+    const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]];
+    const rs = g.map(([x, y]) => at(x, y)).filter((v) => v >= 0).map((v) => D.rooms[v]);
+    if (d.kind === 'slide' && rs.length === 2 && rs[0].staff !== rs[1].staff) d.kind = 'staff';
+    d.base = d.kind;
+  }
+}
+
+// ================================================================== light
+let occluders = [];
+function buildOccluders() {
+  occluders = (D.visSegs || D.wallSegs).slice();
+  for (const d of D.doors) {
+    if (doorOpen(d) > 0.5) continue;
+    const g = doorGeom(d);
+    occluders.push(d.o === 'v' ? [g.x, g.y - 2, g.x, g.y + g.len + 2] : [g.x - 2, g.y, g.x + g.len + 2, g.y]);
+  }
+  for (const r of D.solids) {
+    if (!r.high || r.dead) continue;
+    const x0 = r.x + 3, y0 = r.y + 3, x1 = r.x + r.w - 3, y1 = r.y + r.h - 3;
+    if (x1 <= x0 || y1 <= y0) continue;
+    occluders.push([x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]);
+  }
+}
+// What can be seen from a point within a square of half-size r: a polygon, by rays to every corner nearby.
+function visPoly(px, py, r) {
+  const segs = [];
+  for (const s of occluders) {
+    if (Math.max(s[0], s[2]) < px - r || Math.min(s[0], s[2]) > px + r || Math.max(s[1], s[3]) < py - r || Math.min(s[1], s[3]) > py + r) continue;
+    segs.push(s);
+  }
+  const x0 = px - r, y0 = py - r, x1 = px + r, y1 = py + r;
+  segs.push([x0, y0, x1, y0], [x1, y0, x1, y1], [x1, y1, x0, y1], [x0, y1, x0, y0]);
+  const angles = [];
+  for (const s of segs) for (const [ex, ey] of [[s[0], s[1]], [s[2], s[3]]]) { const a = Math.atan2(ey - py, ex - px); angles.push(a - 0.0002, a, a + 0.0002); }
+  angles.sort((a, b) => a - b);
+  const pts = [];
+  for (const a of angles) {
+    const dx = Math.cos(a), dy = Math.sin(a);
+    let best = Infinity;
+    for (const s of segs) {
+      const sx = s[2] - s[0], sy = s[3] - s[1];
+      const den = dx * sy - dy * sx;
+      if (Math.abs(den) < 1e-9) continue;
+      const qx = s[0] - px, qy = s[1] - py;
+      const t = (qx * sy - qy * sx) / den;
+      const u = (qx * dy - qy * dx) / den;
+      if (t > 0 && u >= -1e-6 && u <= 1 + 1e-6 && t < best) best = t;
+    }
+    if (best < Infinity) pts.push(px + dx * best, py + dy * best);
+  }
+  return pts;
+}
+function drawLight(g, l, i, cone) {
+  if (!l.poly) l.poly = visPoly(l.x, l.y, l.r);
+  const p = l.poly;
+  g.save();
+  g.beginPath(); g.moveTo(p[0], p[1]); for (let k = 2; k < p.length; k += 2) g.lineTo(p[k], p[k + 1]); g.closePath(); g.clip();
+  if (cone) { g.beginPath(); g.moveTo(l.x, l.y); g.arc(l.x, l.y, l.r, cone.a - cone.w, cone.a + cone.w); g.closePath(); g.clip(); }
+  const gr = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
+  gr.addColorStop(0, rgb(l.col, i * 1.1));
+  gr.addColorStop(0.22, rgb(l.col, i * 0.92));
+  gr.addColorStop(0.55, rgb(l.col, i * 0.45));
+  gr.addColorStop(0.82, rgb(l.col, i * 0.14));
+  gr.addColorStop(1, 'rgb(0,0,0)');
+  g.fillStyle = gr;
+  g.fillRect(l.x - l.r, l.y - l.r, l.r * 2, l.r * 2);
+  g.restore();
+}
+
+const LS = 0.5;
+const STYLE = [
+  { amb: { normal: [66, 60, 56], lockdown: [58, 24, 24], alarm: [40, 34, 36], power: [16, 14, 16] }, room: { corridor: [L.sodium, 0.55, 6], dock: [L.white, 0.6, 4], hold: [L.sodium, 0.45, 7], post: [L.amber, 0.7, 5], power: [L.warm, 0.3, 7], refinery: [L.sodium, 0.7, 6], breaker: [L.amber, 0.45, 5], fuel: [L.amber, 0.6, 5], drones: [L.white, 0.55, 5], barracks: [L.warm, 0.6, 5], workshop: [L.warm, 0.7, 5], store: [L.warm, 0.5, 5], tanks: [L.teal, 0.45, 6], lockers: [L.warm, 0.55, 5], gun: [L.amber, 0.5, 4], airlock: [L.white, 0.6, 4], lift: [L.white, 0.7, 4], stairs: [L.white, 0.5, 4], ladder: [L.amber, 0.5, 3] } },
+  { amb: { normal: [150, 148, 142], lockdown: [92, 36, 38], alarm: [70, 62, 64], power: [20, 19, 24] }, room: { concourse: [L.warm, 0.85, 6], corridor: [L.white, 0.85, 5], service: [L.white, 0.45, 6], security: [L.cold, 0.75, 5], bar: [L.warm, 0.7, 5], services: [L.white, 0.85, 5], armory: [L.white, 0.75, 5], market: [L.warm, 0.8, 5], med: [L.cold, 0.95, 5], cabin: [L.warm, 0.7, 5], garden: [L.plant, 0.55, 5], wc: [L.cold, 0.8, 4], lounge: [L.warm, 0.8, 5], view: [L.cyan, 0.45, 6], yard: [L.sodium, 0.65, 6], lockers: [L.white, 0.6, 5], chief: [L.warm, 0.7, 5], messd: [L.warm, 0.7, 5], store: [L.warm, 0.55, 5], kitchen: [L.white, 0.9, 5], laundry: [L.white, 0.7, 5], workshop: [L.white, 0.7, 5], gangway: [L.cold, 0.5, 4], gantry: [L.cold, 0.5, 4], ringport: [L.white, 0.6, 4], collar: [L.white, 0.6, 3], airlock: [L.white, 0.7, 4], lift: [L.white, 0.8, 4], stairs: [L.white, 0.6, 4], ladder: [L.amber, 0.5, 3] } },
+  { amb: { normal: [62, 68, 86], lockdown: [58, 24, 32], alarm: [46, 42, 52], power: [15, 16, 22] }, room: { command: [L.cyan, 0.4, 7], security: [L.cold, 0.7, 5], server: [L.teal, 0.55, 5], comms: [L.cyan, 0.55, 5], sensors: [L.cyan, 0.5, 5], arms: [L.cold, 0.6, 5], barracks: [L.cold, 0.55, 5], chief: [L.warm, 0.6, 5], tanks: [L.teal, 0.5, 5], store: [L.cold, 0.5, 5], control: [L.cyan, 0.6, 5], gun: [L.amber, 0.4, 4], lift: [L.white, 0.7, 4], stairs: [L.white, 0.6, 4], ladder: [L.amber, 0.5, 3] } },
+];
+STYLE[0].amb.wreck = [16, 16, 22];
+for (const [k, v] of Object.entries({ service: [L.sodium, 0.35, 5], command: [L.cyan, 0.5, 6], chief: [L.warm, 0.6, 5], comms: [L.teal, 0.5, 5], med: [L.white, 0.7, 5], messd: [L.warm, 0.7, 5], kitchen: [L.white, 0.65, 5], cabin: [L.warm, 0.5, 5], barracks: [L.warm, 0.5, 5], lockers: [L.white, 0.5, 5], vault: [L.amber, 0.45, 5], airlock: [L.amber, 0.6, 3], store: [L.sodium, 0.45, 5], workshop: [L.sodium, 0.6, 5], tanks: [L.teal, 0.45, 5], fuel: [L.amber, 0.45, 5], power: [L.reactor, 0.55, 6], engines: [L.reactor, 0.5, 6], control: [L.cyan, 0.5, 5] })) if (!STYLE[0].room[k]) STYLE[0].room[k] = v;
+function roomLights(r) {
+  if (MODE === 'power' || MODE === 'wreck') return;
+  const spec = STYLE[D.i].room[r.kind]; if (!spec) return;
+  const [col, i, step] = spec;
+  const spots = [];
+  for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) {
+    if (at(x, y) !== r.id || x % step !== Math.floor(step / 2) || y % step !== Math.floor(step / 2)) continue;
+    const px = x * T + 8, py = y * T + 8;
+    if (D.solids.some((t) => t.high && px > t.x && px < t.x + t.w && py > t.y && py < t.y + t.h)) continue;
+    spots.push([px, py]);
+  }
+  if (!spots.length && r.n) spots.push([r.cx * T + 8, r.cy * T + 8]);
+  const k = MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? (D.i === 1 && !r.staff ? 0.5 : 0.7) : 1;
+  for (const [px, py] of spots) lights.push({ x: px, y: py, r: 30 + step * 14, col: MODE === 'lockdown' ? tintLock(col) : col, i: i * k, kind: 'static' });
+}
+function buildStaticLight(near) {
+  buildOccluders();
+  for (const l of D.lights) if (!near || Math.hypot(l.x - near.x, l.y - near.y) < l.r + 40) l.poly = null;
+  const [c, g] = mk(WW * LS, WH * LS);
+  g.imageSmoothingEnabled = true;
+  g.fillStyle = rgb(STYLE[D.i].amb[MODE]); g.fillRect(0, 0, c.width, c.height);
+  g.save(); g.scale(LS, LS); g.globalCompositeOperation = 'lighter';
+  for (const l of D.lights) if (l.kind === 'static') drawLight(g, l, l.i);
+  g.restore();
+  const [tmp, tg] = mk(c.width, c.height);
+  tg.filter = 'blur(1px)'; tg.drawImage(c, 0, 0); g.drawImage(tmp, 0, 0);
+  D.stat = c;
+}
+
+// ================================================================== what is seen below and beside a floor
+const IMG = {};
+// A tile of a roof seen from the floor above: the basement's is dirty, the middle's clean.
+// The ships beside the base, drawn at twice their size in space, which is about the size of the inside.
+function shipInside(img, cx, cy, dx, dy) {
+  if (!img || !img.width) return;
+  A.save(); A.imageSmoothingEnabled = false; A.translate(cx, cy); A.rotate(Math.atan2(-dy, -dx) + Math.PI / 2); A.scale(2, 2);
+  A.fillStyle = 'rgba(0,0,0,0.35)'; A.fillRect(-img.width / 2 + 6, -img.height / 2 + 6, img.width - 4, img.height - 4);
+  A.drawImage(img, -img.width / 2, -img.height / 2); A.restore();
+}
+// The ship from outside, round the inside: its hull plates, the containers in the side's colours, the engines astern,
+// the cockpit glass in the bow and the frigate at the airlock. In a wreck, torn edges where containers were.
+function drawShipOutside() {
+  const HL = HULLS[OPT.hull], plate = hex(HL.plate);
+  const near = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (inShip(x + i, y + j)) return true; return false; };
+  // the hull: a band of plating round the ship, one tile wide
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (inShip(x, y) || !near(x, y)) continue;
+    const X = x * T, Y = y * T;
+    box(A, X, Y, T, T, rgb(plate, 0.75)); box(A, X, Y, T, 1, rgb(plate, 0.95)); box(A, X, Y + T - 1, T, 1, rgb(plate, 0.5));
+    if ((x + y) % 3 === 0) box(A, X + 6, Y + 6, 2, 2, rgb(plate, 0.45));
+  }
+  // the containers' outsides along the flanks, in the side's colours
+  COLS.forEach(([x0, x1], k) => {
+    const c = hex(HL.cont[k]);
+    for (const y of [4, 36]) {
+      box(A, x0 * T + 2, y * T + 2, (x1 - x0 + 1) * T - 4, T - 4, rgb(c, 0.9));
+      for (let X = x0 * T + 8; X < (x1 + 1) * T - 6; X += 12) box(A, X, y * T + 3, 2, T - 6, rgb(c, 0.6));
+      box(A, x0 * T + 4, y * T + (y === 4 ? 3 : T - 5), 3, 2, '#c8ccd2');
+    }
+  });
+  // the engines: three bells behind the stern, with their glow
+  for (const dy of [-9, 0, 9]) {
+    const X = (SX0 - 1) * T - 6, Y = (CY + dy) * T + 8;
+    A.fillStyle = '#3a3d44'; A.beginPath(); A.moveTo(X + 14, Y - 9); A.lineTo(X - 8, Y - 14); A.lineTo(X - 8, Y + 14); A.lineTo(X + 14, Y + 9); A.closePath(); A.fill();
+    box(A, X - 9, Y - 13, 3, 26, '#24262c');
+    if (MODE === 'normal' || MODE === 'lockdown' || MODE === 'alarm') { box(E, X - 10, Y - 11, 2, 22, MODE === 'normal' ? '#3a6aa0' : '#2a3a5a'); }
+  }
+  // the cockpit glass in the bow
+  { const X = (BX1 + 1) * T, Y = CY * T + 8; A.fillStyle = '#24323e'; A.beginPath(); A.moveTo(X - 2, Y - 34); A.lineTo(X + 12, Y - 18); A.lineTo(X + 12, Y + 18); A.lineTo(X - 2, Y + 34); A.closePath(); A.fill(); box(E, X + 2, Y - 20, 2, 40, MODE === 'wreck' ? '#0a1018' : '#2a4a6a'); }
+  // a wreck: the floor torn off where containers were, with ragged edges and bent girders over space
+  if (D.torn) for (const c of D.torn) {
+    for (let y = c.y0; y <= c.y1; y++) for (let x = c.x0; x <= c.x1; x++) {
+      if (at(x, y) !== OUT) continue;
+      const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(x + dx, y + dy) >= 0);
+      const X = x * T, Y = y * T, n = hash(x, y, 5);
+      if (edge || n < 0.18) { for (let k = 0; k < 5; k++) box(A, X + hash(x, y, k) * 14, Y + hash(y, x, k) * 14, 2 + hash(k, x) * 4, 2 + hash(k, y) * 3, k % 2 ? '#3a3632' : '#2a2724'); }
+      if ((x - c.x0) % 4 === 0 && n < 0.7) box(A, X + 6, Y, 3, T, '#4a4640');
+    }
+  }
+  // the frigate at the airlock, below the ship
+  if (D.lockK !== undefined) { const lx = (SEAMS[D.lockK][0] + 1.5) * T; shipInside(IMG.frigate, lx, 37 * T + 108, 0, -1); }
+}
+let alb, emi;
+function buildDeck(cheap = false) {
+  solids = []; lights = []; emitters = []; cams = []; turrets = []; zones = []; barrels = []; pylons = [];
+  D.solids = solids;
+  // doors that the defence level alarms
+  for (const d of D.doors) {
+    d.kind = d.base;
+    if (d.base !== 'slide' && d.base !== 'staff') continue;
+    const ks = sidesOf(d).map((r) => r.kind);
+    if ((OPT.def >= 2 && ks.some((k) => ['breaker', 'command'].includes(k))) || (OPT.def >= 3 && ks.some((k) => ['server', 'arms', 'comms'].includes(k)))) d.kind = 'alarm';
+  }
+  for (const d of D.doors) { const g = doorGeom(d); zones.push(d.o === 'v' ? { x: g.x - 26, y: g.y - 4, w: 52, h: g.len + 8 } : { x: g.x - 4, y: g.y - 26, w: g.len + 8, h: 52 }); }
+  for (const l of LINKS) if (l.decks.includes(D.i)) { const [x0, y0, x1, y1] = l.r; zones.push({ x: x0 * T - 4, y: y0 * T - 4, w: (x1 - x0 + 1) * T + 8, h: (y1 - y0 + 1) * T + 8 }); }
+  let ag, eg;
+  [alb, ag] = mk(WW, WH); [emi, eg] = mk(WW, WH);
+  A = ag; E = eg;
+  box(A, 0, 0, WW, WH, '#06070b');
+  // stars only where there is nothing between this floor and space
+  const space = (x, y) => { const tx = Math.floor(x / T), ty = Math.floor(y / T); if (at(tx, ty) !== OUT) return false; if (!inShip(tx, ty)) { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (inShip(tx + i, ty + j)) return false; } for (let k = 0; k < D.i; k++) if (decks[k].grid[ty * W + tx] !== OUT) return false; return true; };
+  for (let k = 0; k < 1600; k++) { const x = (hash(k, 7) * WW) | 0, y = (hash(k, 8) * WH) | 0; if (!space(x, y)) continue; const b = hash(k, 9); box(E, x, y, 1, 1, b > 0.9 ? '#9aa4c0' : b > 0.6 ? '#3a4058' : '#22263a'); }
+  if (!cheap) drawShipOutside();
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const v = at(x, y); if (v >= 0) floorTile(D.rooms[v], x, y); }
+  // painted names at the doors, and STAFF on the visitors' side
+  const painted = [];
+  for (const d of D.doors) {
+    if (d.kind === 'hatch' || d.kind === 'arch') continue;
+    const g = doorGeom(d);
+    const sides = d.o === 'v' ? [[d.x - 1, d.y, -1], [d.x, d.y, 1]] : [[d.x, d.y - 1, -1], [d.x, d.y, 1]];
+    for (const [tx, ty, s] of sides) {
+      const here = at(tx, ty), otherT = d.o === 'v' ? [s < 0 ? d.x : d.x - 1, d.y] : [d.x, s < 0 ? d.y : d.y - 1];
+      const other = D.rooms[at(...otherT)];
+      if (here < 0 || !other) continue;
+      const hr = D.rooms[here];
+      const staffSign = d.base === 'staff' && !hr.staff;
+      const c = staffSign ? '#c8b040' : other.tint;
+      if (d.o === 'v') box(A, s < 0 ? g.x - 6 : g.x + 4, g.y + 3, 2, g.len - 6, shade(c, 0.6)); else box(A, g.x + 3, s < 0 ? g.y - 6 : g.y + 4, g.len - 6, 2, shade(c, 0.6));
+      if (staffSign) { if (d.o === 'v') hazard(s < 0 ? g.x - 10 : g.x + 7, g.y + 3, 3, g.len - 6, 0.9); else hazard(g.x + 3, s < 0 ? g.y - 10 : g.y + 7, g.len - 6, 3, 0.9); }
+      if (!['corridor', 'service', 'concourse', 'hold'].includes(hr.kind) || (!other.label && !staffSign)) continue;
+      const text = staffSign ? 'STAFF' : other.name, off = 16;
+      const px = d.o === 'v' ? g.x + (s < 0 ? -off - text.length * 2 : off + text.length * 2) : g.cx;
+      const py = d.o === 'v' ? g.cy : g.y + (s < 0 ? -off : off);
+      const rect = { x: px - text.length * 2 - 4, y: py - 5, w: text.length * 4 + 8, h: 10 };
+      if (painted.some((q) => overlaps(q, rect))) continue;
+      painted.push(rect);
+      paint(A, text, px, py, staffSign ? '#c8b040' : shade(c, D.i === 1 ? 0.55 : 0.85));
+    }
+    if (['pressure', 'lockA', 'lockB'].includes(d.kind)) { if (d.o === 'v') { hazard(g.x - 12, g.y + 2, 4, g.len - 4, 0.7); hazard(g.x + 8, g.y + 2, 4, g.len - 4, 0.7); } else { hazard(g.x + 2, g.y - 12, g.len - 4, 4, 0.7); hazard(g.x + 2, g.y + 8, g.len - 4, 4, 0.7); } }
+  }
+  // furnishing: each room with its own luck, so a change in one room moves nothing in the others
+  reservePaths();
+  R = seeded(SEED * 977 + D.i * 131); furnishGuns();
+  for (const r of D.rooms) if (r.n) { R = seeded(SEED * 977 + D.i * 131 + r.id * 7 + 1); furnish(r); }
+  for (const r of D.rooms) if (r.n) roomLights(r);
+  R = seeded(SEED * 31 + D.i);
+  SPECIAL();
+  // rotating lights only at an alarm: red where the base is an enemy, amber on the crew's own base
+  // rotating lights at an alarm, by the floor's size: one for every 300 tiles of the floor, put in halls and holds,
+  // each as far from the others as it can be, so a big place gets more and none bunch together
+  if (MODE === 'alarm') {
+    const kinds = ['corridor', 'concourse', 'hold', 'security', 'command', 'service'], cand = [];
+    for (const r of D.rooms) if (kinds.includes(r.kind)) for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (at(x, y) === r.id && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => at(x + dx, y + dy) === r.id)) cand.push([x, y]);
+    const area = D.rooms.reduce((q, r) => q + r.n, 0), n = cand.length ? Math.max(1, Math.round(area / 300)) : 0, chosen = [];
+    const far = cand.map(() => Infinity);
+    for (let k = 0; k < n; k++) {
+      let best = k === 0 ? (SEED * 7) % cand.length : 0;
+      if (k > 0) for (let q = 1; q < cand.length; q++) if (far[q] > far[best]) best = q;
+      const [bx, by] = cand[best]; chosen.push(cand[best]);
+      for (let q = 0; q < cand.length; q++) far[q] = Math.min(far[q], Math.hypot(cand[q][0] - bx, cand[q][1] - by));
+    }
+    for (const [x, y] of chosen) lights.push({ x: x * T + 8, y: y * T + 8, r: 160, col: OPT.own ? [255, 170, 60] : L.red, i: 0.7, kind: 'beacon', phase: hash(x, y) * 6 });
+  }
+  // the emergency lamps when the power is out: orange, low, at every door and along the halls
+  if (MODE === 'power') {
+    for (const d of D.doors) { if (d.kind === 'arch') continue; const g = doorGeom(d); lights.push({ x: g.cx, y: g.cy, r: 46, col: [255, 120, 50], i: 0.55, kind: 'static' }); }
+    for (const r of D.rooms) if (['corridor', 'service', 'concourse', 'hold'].includes(r.kind)) for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (at(x, y) === r.id && (x * 5 + y * 11) % 41 === 0) { lights.push({ x: x * T + 8, y: y * T + 8, r: 60, col: [255, 110, 50], i: 0.4, kind: 'static' }); box(E, x * T + 7, y * T + 7, 2, 2, '#ff7a30'); }
+  }
+  // a wreck: sparks and lights that flicker by the torn edges
+  if (MODE === 'wreck' && D.torn) for (const c of D.torn) for (let k = 0; k < 3; k++) {
+    const x = (c.x0 + R() * (c.x1 - c.x0 + 1)) * T, y = (c.side === 'up' ? c.y1 + 1 : c.y0) * T + (c.side === 'up' ? 6 : -6);
+    lights.push({ x, y, r: 70, col: L.amber, i: 0.6, kind: 'pulse', speed: 2 + R() * 3 });
+    emitters.push({ x: x | 0, y: y | 0, c: '#ffd080', rate: 9 + R() * 6, p: R() * 6 });
+  }
+  if (!cheap) drawWalls();
+  Object.assign(D, { alb, emi, solids, lights, emitters, cams, turrets, barrels });
+  bucket();
+  computeWalk();
+}
+const sidesOf = (d) => { const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]]; return g.map(([x, y]) => at(x, y)).filter((v) => v >= 0).map((v) => D.rooms[v]); };
+// Cameras and turrets, by the defence bought.
+function SPECIAL() {
+  if (MODE === 'wreck') return;
+  const def = OPT.def;
+  const camN = [1, 2, 3, 4][def];
+  const halls = D.rooms.filter((r) => ['corridor', 'concourse', 'hold', 'security', 'command', 'post', 'service'].includes(r.kind) && r.n > 12);
+  shuffle(halls);
+  for (const r of halls.slice(0, camN)) {
+    for (let k = 0; k < 60; k++) {
+      const tx = r.x0 + Math.floor(R() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R() * (r.y1 - r.y0 + 1));
+      if (at(tx, ty) !== r.id) continue;
+      // on a real wall: not in a doorway, not on an opening into the next hall, not behind a tall cabinet
+      const out = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dx, dy]) => at(tx + dx, ty + dy) !== r.id && edgeType(r.id, at(tx + dx, ty + dy)) > 0 && !doorAt(dx ? 'v' : 'h', dx > 0 ? tx + 1 : tx, dy > 0 ? ty + 1 : ty));
+      if (!out) continue;
+      const cxp = tx * T + 8 + out[0] * 6, cyp = ty * T + 8 + out[1] * 6;
+      if (D.solids.some((s2) => s2.high && cxp > s2.x - 4 && cxp < s2.x + s2.w + 4 && cyp > s2.y - 4 && cyp < s2.y + s2.h + 4)) continue;
+      cams.push({ x: tx * T + 8 + out[0] * 6, y: ty * T + 8 + out[1] * 6, a: Math.atan2(-out[1], -out[0]), sweep: 0.6, r: 150 });
+      break;
+    }
+  }
+  // a turret behind a checkpoint, aimed at the door one comes in by
+  const guard = (roomKind, doorTest) => {
+    const r = D.rooms.find((q) => q.kind === roomKind && q.n); if (!r) return;
+    const d = D.doors.find((q) => sidesOf(q).includes(r) && doorTest(q));
+    if (!d) return;
+    const g = doorGeom(d), fx = r.cx * T + 8, fy = r.cy * T + 8;
+    turrets.push({ x: fx + (fx - g.cx) * 0.25, y: fy + (fy - g.cy) * 0.25, a: Math.atan2(g.cy - fy, g.cx - fx), w: 0.3, r: 200 });
+  };
+  if (def >= 2) {
+    if (D.i === 1) guard('security', (d) => sidesOf(d).some((q) => q.kind === 'concourse'));
+    if (D.i === 2) guard('security', (d) => sidesOf(d).some((q) => q.kind === 'lift'));
+    if (D.i === 0) guard('post', (d) => sidesOf(d).some((q) => q.kind === 'lift' || q.kind === 'corridor'));
+  }
+  if (def >= 3 && D.i === 2) { const r = D.rooms.find((q) => q.kind === 'command'); for (const d of D.doors.filter((q) => sidesOf(q).includes(r)).slice(0, 2)) { const g = doorGeom(d), fx = r.cx * T + 8, fy = r.cy * T + 8; turrets.push({ x: g.cx + (fx - g.cx) * 0.35, y: g.cy + (fy - g.cy) * 0.35, a: Math.atan2(g.cy - fy, g.cx - fx), w: 0.3, r: 180 }); } }
+}
+function drawWalls() {
+  const g = alb.getContext('2d');
+  const img = g.getImageData(0, 0, WW, WH);
+  const d = img.data, M = D.mask;
+  const m = (x, y) => (x < 0 || y < 0 || x >= WW || y >= WH ? 0 : M[y * WW + x]);
+  const set = (i, c) => { d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; };
+  const dark = (i, k) => { d[i] *= k; d[i + 1] *= k; d[i + 2] *= k; };
+  const style = [
+    { 1: ['#4e4a46', '#6e6860', '#2c2a28'], 2: ['#3e3a36', '#5e5850', '#1c1a18'], 3: ['#5a5650', '#8a847a', '#30302c'], 4: ['#1b2c3a', '#4a7a98', '#0e1820'], 5: ['#3a342e', '#5a5048', '#1a1714'] },
+    { 1: ['#8a8c92', '#b4b6bc', '#5a5c62'], 2: ['#6a6c74', '#9a9ca4', '#3a3c42'], 3: ['#9a9ca2', '#c4c6cc', '#5a5c62'], 4: ['#2a4a5e', '#6aaacc', '#14283a'], 5: ['#3a342e', '#5a5048', '#1a1714'] },
+    { 1: ['#3e4656', '#5e6a80', '#222834'], 2: ['#323a48', '#525e74', '#181c24'], 3: ['#4a5262', '#7a86a0', '#262c36'], 4: ['#1b2c3a', '#4a7a98', '#0e1820'], 5: ['#3a342e', '#5a5048', '#1a1714'] },
+  ][D.i];
+  const C3 = {}; for (const k in style) C3[k] = style[k].map(hex);
+  for (let y = 0; y < WH; y++) for (let x = 0; x < WW; x++) {
+    const i = (y * WW + x) * 4, t = M[y * WW + x];
+    if (t) {
+      const [top, hi, lo] = C3[t];
+      let col = top;
+      if (!m(x, y - 1) || !m(x - 1, y)) col = hi; else if (!m(x, y + 1) || !m(x + 1, y)) col = lo;
+      set(i, col);
+      if (t === 5) { const n = hash(x >> 1, y >> 1, 4); if (n < 0.3) dark(i, 0.75); else if (n > 0.85) dark(i, 1.2); }
+      if (t === 2 && col === top) { if (x % 16 === 0 || y % 16 === 0) dark(i, 0.8); else if (x % 8 === 4 && y % 8 === 4) set(i, hi); }
+      if (t === 4 && col === top && (x + y) % 9 === 0) set(i, hex('#3a6a88'));
+      if (t === 3 && col === top && (x + y) % 4 < 2) set(i, hex('#8a7234'));
+    } else if (m(x - 2, y - 2) || m(x - 1, y - 2) || m(x - 2, y - 1)) dark(i, 0.6);
+    else if (m(x, y - 1) || m(x - 1, y) || m(x + 1, y) || m(x, y + 1)) dark(i, 0.82);
+  }
+  g.putImageData(img, 0, 0);
+}
+
+// ================================================================== collision and finding the way
+// ================================================================== collision, quickly: rects in buckets of 64 points
+const BK = 64, BN = WW / BK;
+function bucket() {
+  D.bk = Array.from({ length: BN * BN }, () => []);
+  const add = (r) => { for (let j = Math.floor(r.y / BK); j <= Math.floor((r.y + r.h) / BK); j++) for (let i = Math.floor(r.x / BK); i <= Math.floor((r.x + r.w) / BK); i++) if (i >= 0 && j >= 0 && i < BN && j < BN) D.bk[j * BN + i].push(r); };
+  D.wallRects.forEach(add); D.solids.forEach(add);
+}
+function rectHit(x, y, r, b) { const cx = Math.max(b.x, Math.min(x, b.x + b.w)), cy = Math.max(b.y, Math.min(y, b.y + b.h)); return (x - cx) ** 2 + (y - cy) ** 2 < r * r; }
+function blocked(x, y, r, planning = false) {
+  for (let ty = Math.floor((y - r) / T); ty <= Math.floor((y + r) / T); ty++) for (let tx = Math.floor((x - r) / T); tx <= Math.floor((x + r) / T); tx++) if (at(tx, ty) < 0 && rectHit(x, y, r, { x: tx * T, y: ty * T, w: T, h: T })) return true;
+  const list = D.bk[Math.floor(y / BK) * BN + Math.floor(x / BK)] || [];
+  for (const b of list) if (!b.dead && rectHit(x, y, r, b)) return true;
+  if (Math.floor(y / BK) !== Math.floor((y + r) / BK) || Math.floor(x / BK) !== Math.floor((x + r) / BK) || Math.floor((y - r) / BK) !== Math.floor(y / BK) || Math.floor((x - r) / BK) !== Math.floor(x / BK)) {
+    for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r]]) for (const b of D.bk[Math.floor((y + dy) / BK) * BN + Math.floor((x + dx) / BK)] || []) if (!b.dead && rectHit(x, y, r, b)) return true;
+  }
+  for (const d of D.doors) {
+    const shut = d.kind === 'hatch' || d.kind === 'locked' || (!planning && doorOpen(d) < 0.6);
+    if (!shut) continue;
+    const g = doorGeom(d);
+    if (Math.abs(g.cx - x) > 40 || Math.abs(g.cy - y) > 40) continue;
+    const b = d.o === 'v' ? { x: g.x - 3, y: g.y, w: 6, h: g.len } : { x: g.x, y: g.y - 3, w: g.len, h: 6 };
+    if (rectHit(x, y, r, b)) return true;
+  }
+  return false;
+}
+const doorOpen = (d) => (d.kind === 'hatch' || d.kind === 'locked' ? 0 : d.open);
+
+// ================================================================== finding the way
+const CW = 8, CN = WW / CW;
+function computeWalk() {
+  const walk = new Uint8Array(CN * CN);
+  for (let j = 0; j < CN; j++) for (let i = 0; i < CN; i++) walk[j * CN + i] = blocked(i * CW + 4, j * CW + 4, 5, true) ? 0 : 1;
+  D.walk = walk;
+}
+function nearestWalk(x, y) {
+  const i0 = Math.floor(x / CW), j0 = Math.floor(y / CW);
+  for (let r = 0; r < 14; r++) for (let j = j0 - r; j <= j0 + r; j++) for (let i = i0 - r; i <= i0 + r; i++) { if (i < 0 || j < 0 || i >= CN || j >= CN) continue; if (D.walk[j * CN + i]) return j * CN + i; }
+  return -1;
+}
+function flood(s) {
+  const seen = new Uint8Array(CN * CN); if (s < 0) return seen;
+  seen[s] = 1; const q = [s];
+  for (let k = 0; k < q.length; k++) { const c = q[k], ci = c % CN, cj = (c / CN) | 0; for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ni = ci + di, nj = cj + dj; if (ni < 0 || nj < 0 || ni >= CN || nj >= CN) continue; const n = nj * CN + ni; if (!seen[n] && D.walk[n]) { seen[n] = 1; q.push(n); } } }
+  return seen;
+}
+function findPath(x0, y0, x1, y1) {
+  const s = nearestWalk(x0, y0), t = nearestWalk(x1, y1);
+  if (s < 0 || t < 0) return null;
+  const prev = new Int32Array(CN * CN).fill(-1); prev[s] = s;
+  const q = [s];
+  const N8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+  for (let k = 0; k < q.length; k++) {
+    const c = q[k]; if (c === t) break;
+    const ci = c % CN, cj = (c / CN) | 0;
+    for (const [di, dj] of N8) {
+      const ni = ci + di, nj = cj + dj; if (ni < 0 || nj < 0 || ni >= CN || nj >= CN) continue;
+      const n = nj * CN + ni;
+      if (prev[n] >= 0 || !D.walk[n]) continue;
+      if (di && dj && (!D.walk[cj * CN + ni] || !D.walk[nj * CN + ci])) continue;
+      prev[n] = c; q.push(n);
+    }
+  }
+  if (prev[t] < 0) return null;
+  const pts = [];
+  for (let c = t; c !== s; c = prev[c]) pts.push([(c % CN) * CW + 4, ((c / CN) | 0) * CW + 4]);
+  pts.reverse();
+  const out = [];
+  for (let k = 0; k < pts.length; k++) {
+    if (k > 0 && k < pts.length - 1) { const a = pts[k - 1], b = pts[k], c = pts[k + 1]; if (b[0] - a[0] === c[0] - b[0] && b[1] - a[1] === c[1] - b[1]) continue; }
+    out.push(pts[k]);
+  }
+  return out.length ? out : [[x1, y1]];
+}
+
+
+// ================================================================== making a whole base, and checking it
+let SEED = 0;
+function tryOnce(seed) {
+  SEED = seed;
+  R = seeded(SEED);
+  K = 0; R();
+  LINKS = LINK_BASE.map((l) => ({ ...l, r: rr(...l.r) }));
+  decks = [genF()]; finalize();
+  for (const d of decks) { D = d; bounds(); buildWalls(); }
+  let problems = check();
+  // A room that cannot be reached gets a door to a neighbour that can, where both sides are clear; then again.
+  for (let round = 0; round < 4 && problems.length; round++) {
+    let changed = false;
+    decks.forEach((d, i) => {
+      D = d;
+      const seen = flood(nearestWalk(...startOf(i)));
+      const reach = (tx, ty) => { for (let jj = 0; jj < 2; jj++) for (let ii = 0; ii < 2; ii++) if (seen[(ty * 2 + jj) * CN + tx * 2 + ii]) return true; return false; };
+      const open = (tx, ty) => { for (let jj = 0; jj < 2; jj++) for (let ii = 0; ii < 2; ii++) if (D.walk[(ty * 2 + jj) * CN + tx * 2 + ii]) return true; return false; };
+      const roomReached = (r) => { for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (at(x, y) === r.id && reach(x, y)) return true; return false; };
+      for (const r of d.rooms) {
+        if (!r.n || roomReached(r) || r.kind === 'vault') continue;
+        let done = false;
+        for (const p of neighbours().filter((q) => q.a === r.id || q.b === r.id)) {
+          const o = p.a === r.id ? p.b : p.a;
+          for (const run of contacts(r.id, o)) {
+            if (run.to - run.from < 1) continue;
+            for (let st = run.from; st < run.to && !done; st++) {
+              const cells = run.o === 'v' ? [[run.at - 1, st], [run.at, st], [run.at - 1, st + 1], [run.at, st + 1]] : [[st, run.at - 1], [st, run.at], [st + 1, run.at - 1], [st + 1, run.at]];
+              const mine = cells.filter(([x, y]) => at(x, y) === r.id), theirs = cells.filter(([x, y]) => at(x, y) === o);
+              if (mine.every(([x, y]) => open(x, y)) && theirs.every(([x, y]) => reach(x, y))) {
+                const kind = r.kind === 'treasury' || r.kind === 'ladder' ? 'alarm' : r.kind === 'lift' ? 'lift' : 'slide';
+                run.o === 'v' ? door('v', run.at, st, kind) : door('h', st, run.at, kind);
+                done = true;
+              }
+            }
+            if (done) break;
+          }
+          if (done) break;
+        }
+        if (done) changed = true;
+      }
+    });
+    if (!changed) break;
+    for (const d of decks) { D = d; d.mask.fill(0); d.wallRects = []; d.wallSegs = []; finalizeDeck(); buildWalls(); d.built = {}; }
+    problems = check();
+  }
+  return problems;
+}
+function startOf(i) { const p = decks[0].rooms[decks[0].entryLock]; return [(p.cx + 0.5) * T, (p.cy + 0.5) * T]; }
+function finalize() { for (const d of decks) { D = d; finalizeDeck(); } }
+// A ship must work both whole and as a wreck, from the same number.
+function makeBase(seed) {
+  const keep = OPT.wreck;
+  for (let attempt = 0; attempt < 40; attempt++) {
+    OPT.wreck = !keep; let p = tryOnce(seed + attempt);
+    OPT.wreck = keep; if (!p.length) p = tryOnce(seed + attempt);
+    window.__problems = p;
+    if (!p.length) return true;
+  }
+  return false;
+}
+// Everything must be reachable from where one comes onto the floor, and each floor must have its ways up.
+function check() {
+  const problems = [], keep = MODE;
+  decks.forEach((d, i) => {
+    D = d; MODE = 'lockdown';
+    buildDeck(true); d.built = {};
+    const seen = flood(nearestWalk(...startOf(i)));
+    for (const r of d.rooms) {
+      if (!r.n) continue;
+      let ok = false;
+      for (let y = r.y0; y <= r.y1 && !ok; y++) for (let x = r.x0; x <= r.x1 && !ok; x++) {
+        if (at(x, y) !== r.id) continue;
+        for (let jj = 0; jj < 2; jj++) for (let ii = 0; ii < 2; ii++) { const c = (y * 2 + jj) * CN + x * 2 + ii; if (D.walk[c] && seen[c]) ok = true; }
+      }
+      if (!ok) problems.push(`floor ${i + 1}: ${r.name} (${r.kind})`);
+    }
+  });
+  MODE = keep;
+  return problems;
+}
+const snapshot = () => ({ alb: D.alb, emi: D.emi, solids: D.solids, lights: D.lights, emitters: D.emitters, cams: D.cams, turrets: D.turrets, barrels: D.barrels, walk: D.walk, bk: D.bk, stat: D.stat });
+
+// ================================================================== figures
+// ================================================================== figures
+const KINDS = {
+  captain: { name: 'Captain', suit: '#6b7280', helm: '#7d8696', acc: '#6fb8ff', visor: '#7fe3ff', pack: true, gun: 'rifle', lamp: true },
+  gunner: { name: 'Gunner', suit: '#6b7280', helm: '#7d8696', acc: '#d98a3a', visor: '#7fe3ff', pack: true, gun: 'rifle', lamp: true },
+  engineer: { name: 'Engineer', suit: '#6b7280', helm: '#7d8696', acc: '#9ad04a', visor: '#7fe3ff', pack: true, gun: 'rifle', lamp: true },
+  watch: { name: 'Väktare', suit: '#5d5a44', helm: '#363a44', acc: '#807c5e', visor: '#ff3b30', cap: true, gun: 'pistol', eye: 1 },
+  soldier: { name: 'Soldat', suit: '#4a5248', helm: '#5a6258', acc: '#2f352e', visor: '#ff3b30', pack: true, gun: 'rifle', eye: 2 },
+  tech: { name: 'Tekniker', suit: '#8a6a35', helm: '#5a5f6a', acc: '#5c4622', visor: '#ff3b30', pack: 'big', gun: 'tool', eye: 1 },
+  heavy: { name: 'Tung vakt', suit: '#4e4858', helm: '#625a6e', acc: '#2e2a36', visor: '#ff3b30', pack: true, gun: 'heavy', eye: 3, big: true },
+  drone: { name: 'Drönare', drone: true, visor: '#ff3b30' },
+  crewman: { name: 'Besättning', suit: '#5a6a7a', helm: '#4a5664', acc: '#c9a06a', visor: '#ffd28a', pack: false, gun: 'none' },
+};
+const spriteCache = new Map();
+function sprite(kind, pose) {
+  const key = kind + '|' + JSON.stringify(pose);
+  let s = spriteCache.get(key);
+  if (s) return s;
+  const S = 32;
+  const [a, ag] = mk(S, S), [e, eg] = mk(S, S);
+  drawSprite(ag, eg, KINDS[kind], pose, S / 2);
+  outline(ag, S);
+  if (pose.hit) {
+    ag.globalCompositeOperation = 'source-in'; ag.fillStyle = '#f2f2ff'; ag.fillRect(0, 0, S, S);
+    eg.globalCompositeOperation = 'source-over'; eg.globalAlpha = 0.5; eg.drawImage(a, 0, 0);
+  }
+  s = { a, e, S };
+  spriteCache.set(key, s);
+  return s;
+}
+function drawSprite(g, eg, k, pose, c) {
+  const px = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(c + x, c + y, w, h); };
+  const ex = (x, y, w, h, col) => { eg.fillStyle = col; eg.fillRect(c + x, c + y, w, h); };
+  const stride = pose.walk === undefined ? 0 : [0, 2, 0, -2][pose.walk % 4];
+  const kick = pose.fire ? -1 : 0;
+  const dk = (col, f) => shade(col, f);
+  if (k.drone) {
+    const spin = (pose.walk || 0) % 2;
+    px(-6, -1, 13, 2, '#2a2d34'); px(-1, -6, 2, 13, '#2a2d34');
+    for (const [ox, oy] of [[-7, -7], [4, -7], [-7, 4], [4, 4]]) {
+      px(ox + 1, oy + 1, 2, 2, '#4a4e58');
+      g.fillStyle = 'rgba(170,180,195,0.6)';
+      if (spin) { g.fillRect(c + ox - 1, c + oy + 1, 6, 1); g.fillRect(c + ox + 1, c + oy - 1, 2, 6); }
+      else { g.fillRect(c + ox - 1, c + oy - 1, 1, 1); g.fillRect(c + ox + 4, c + oy + 4, 1, 1); g.fillRect(c + ox, c + oy + 3, 4, 1); g.fillRect(c + ox + 3, c + oy, 1, 3); }
+    }
+    px(-3, -3, 7, 7, '#50555f'); px(-3, -3, 6, 1, '#8a909c'); px(-3, -2, 1, 5, '#727884'); px(-2, 3, 6, 1, '#363a42'); px(3, -2, 1, 5, '#3c4048');
+    px(4, -1, 1, 2, '#5a1a18'); ex(4, -1, 1, 2, k.visor);
+    return;
+  }
+  const b = k.big ? 1 : 0;
+  const suit = k.suit, sd = dk(suit, 0.62), sl = dk(suit, 1.32);
+  // feet, stepping
+  px(-2 + stride, -4 - b, 4, 2, '#1c1d22'); px(-2 - stride, 2 + b, 4, 2, '#1c1d22');
+  // backpack
+  if (k.pack) {
+    const pw = k.pack === 'big' ? 4 : 3, x0 = -5 - pw - b;
+    px(x0, -3, pw, 7, k.pack === 'big' ? '#5c4a34' : '#3a3f48'); px(x0, -3, pw, 1, '#5a626e'); px(x0, 3, pw, 1, '#23262c');
+    if (k.lamp) { px(x0, 0, 1, 1, dk(k.acc, 0.6)); ex(x0, 0, 1, 1, dk(k.acc, 0.8)); }
+  }
+  // the gun, under the arms
+  const len = { rifle: 10, pistol: 5, tool: 8, heavy: 12, none: 0 }[k.gun];
+  if (!pose.carry && len) {
+    const gy = k.gun === 'heavy' ? 0 : 1, gh = k.gun === 'heavy' ? 3 : 2;
+    px(1 + kick, gy, len, gh, '#1f2126'); px(1 + kick, gy, len, 1, '#4a4e58');
+    if (k.gun === 'tool') { px(len + 1 + kick, gy, 1, 2, '#c87a30'); ex(len + 1 + kick, gy, 1, 2, '#7a3a10'); }
+    if (k.lamp) { px(len + kick, gy + 1, 1, 1, '#d8e0e8'); ex(len + kick, gy + 1, 1, 1, '#c0d0e0'); }
+    if (pose.fire) {
+      const mx = 1 + len + kick;
+      ex(mx, gy - 1, 2, gh + 2, '#ffc860'); ex(mx + 2, gy, 2, gh, '#fff4c8'); ex(mx + 1, gy - 2, 1, 1, '#ff9a40'); ex(mx + 1, gy + gh + 1, 1, 1, '#ff9a40'); ex(mx + 4, gy, 1, 1, '#ffd890');
+    }
+  }
+  // shoulders: wide across, shallow front to back
+  const tx = -4 - b + kick, tw = 6 + b, ty = -6 - b, th = 12 + b * 2;
+  px(tx, ty + 1, tw, th - 2, suit); px(tx + 1, ty, tw - 2, th, suit);
+  px(tx + 1, ty, tw - 2, 1, sl); px(tx, ty + 1, 1, th - 3, dk(suit, 1.15));
+  px(tx + 1, ty + th - 1, tw - 2, 1, sd); px(tx + tw - 1, ty + 2, 1, th - 4, dk(suit, 0.8));
+  // pauldrons in the colour of the post
+  const pc = k.cap ? dk(suit, 0.85) : k.acc;
+  px(tx + 1, ty, 3, 2, pc); px(tx + 1, ty + th - 2, 3, 2, dk(pc, 0.8));
+  px(tx + 1, ty, 3, 1, dk(pc, 1.25));
+  if (pose.carry) {
+    px(tx + tw - 1, ty + 1, 3, 2, suit); px(tx + tw - 1, ty + th - 3, 3, 2, suit);
+    px(3 + kick, -4, 7, 8, '#6a4a1a'); px(4 + kick, -3, 5, 6, '#c9902a'); px(4 + kick, -3, 5, 1, '#f0c050'); px(6 + kick, -1, 1, 2, '#6a4a1a');
+    ex(4 + kick, -3, 5, 1, '#4a3608');
+    if (len) { px(-6 - b, -6, 1, 11, '#24262c'); px(-5 - b, -6, 1, 1, '#4a4e58'); }
+  } else if (len) {
+    // the near arm to the grip, the far arm out to the front of the gun
+    px(tx + tw - 1, ty + th - 3, 2, 2, suit); px(tx + tw + 1, 2, 2, 2, dk(suit, 0.9)); px(tx + tw + 2, 2, 2, 1, '#2a2c30');
+    px(tx + tw - 1, ty + 1, 2, 2, suit); px(tx + tw + 1, ty + 3, 2, 2, suit); px(tx + tw + 3, -1, 2, 2, dk(suit, 0.9)); px(tx + tw + 4, 0, 2, 1, '#2a2c30');
+  } else {
+    px(tx + 1 + stride, ty - 1, 3, 2, suit); px(tx + 1 - stride, ty + th - 1, 3, 2, suit);
+  }
+  // the head
+  const hx = -2 - b + kick, hs = 5 + b;
+  if (k.cap) {
+    px(hx, -2, hs, hs - 1, k.helm); px(hx + 1, -3, hs - 2, 1, k.helm); px(hx + hs, -2, 2, hs - 1, dk(k.helm, 0.7));
+    px(hx + 1, -2, 2, 1, dk(k.helm, 1.4)); px(hx + 1, 2, hs - 2, 1, dk(k.helm, 0.75));
+    if (!k.eyeless) { px(hx + hs - 1, -1, 1, 1, '#4a1210'); ex(hx + hs - 1, -1, 1, 1, k.visor); } else px(hx + hs - 1, -1, 1, 2, k.visor);
+  } else {
+    const hl = dk(k.helm, 1.25);
+    px(hx, -2, hs, hs - 1, hl); px(hx + 1, -3, hs - 2, hs + 1, hl);
+    px(hx + 1, -3, 2, 1, dk(k.helm, 1.6)); px(hx, -2, 1, 2, dk(k.helm, 1.5));
+    px(hx + 1, 1 + b, hs - 2, 1, k.helm); px(hx + hs - 1, -1, 1, 2 + b, k.helm);
+    if (k.eye) {
+      const ey = k.eye === 3 ? -2 : -1, eh = k.eye === 3 ? 4 : k.eye;
+      px(hx + hs - 1, ey, 1, eh, '#2a0808'); ex(hx + hs - 1, ey, 1, eh, k.visor);
+    } else {
+      px(hx + hs - 2, -2, 2, 4, dk(k.visor, 0.3)); ex(hx + hs - 2, -2, 2, 4, dk(k.visor, 0.45)); ex(hx + hs - 1, -1, 1, 2, k.visor);
+    }
+  }
+}
+// A dark rim round the whole figure, so it reads on any floor.
+function outline(g, S) {
+  const img = g.getImageData(0, 0, S, S), d = img.data, out = new Uint8Array(S * S);
+  const on = (x, y) => x >= 0 && y >= 0 && x < S && y < S && d[(y * S + x) * 4 + 3] > 100;
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) out[y * S + x] = 1;
+  for (let i = 0; i < S * S; i++) if (out[i]) { d[i * 4] = 10; d[i * 4 + 1] = 11; d[i * 4 + 2] = 15; d[i * 4 + 3] = 220; }
+  g.putImageData(img, 0, 0);
+}
+// Down: on its back, flat out. Drawn on its own.
+function spriteDown(kind) {
+  const key = kind + '|down';
+  let s = spriteCache.get(key);
+  if (s) return s;
+  const S = 32, c = 16;
+  const [a, g] = mk(S, S), [e] = mk(S, S);
+  const k = KINDS[kind];
+  const px = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(c + x, c + y, w, h); };
+  if (k.drone) {
+    px(-5, -3, 9, 7, '#2a2d34'); px(-4, -2, 7, 5, '#3c4048'); px(-4, -2, 7, 1, '#5a5e68');
+    px(-9, -6, 3, 3, '#3a3d44'); px(6, 4, 3, 3, '#3a3d44'); px(7, -7, 2, 2, '#3a3d44'); px(-1, 6, 4, 1, '#2a2d34');
+  } else {
+    const suit = k.suit;
+    px(-10, -3, 6, 2, '#1c1d22'); px(-9, 1, 6, 2, '#1c1d22');
+    px(-5, -4, 9, 8, suit); px(-5, -4, 9, 1, shade(suit, 1.3)); px(-5, 3, 9, 1, shade(suit, 0.65));
+    px(-4, -6, 3, 2, k.cap ? shade(suit, 0.85) : k.acc); px(-4, 4, 3, 2, shade(k.cap ? suit : k.acc, 0.8));
+    px(-1, -8, 2, 3, suit); px(1, -9, 2, 2, shade(suit, 0.85));
+    px(0, 5, 4, 2, suit);
+    px(4, -3, 5, 5, shade(k.helm, 1.2)); px(5, -4, 3, 7, shade(k.helm, 1.2)); px(8, -2, 1, 3, shade(k.helm, 0.7));
+    if (k.gun !== 'none') { px(1, 9, 10, 2, '#1f2126'); px(1, 9, 10, 1, '#4a4e58'); }
+  }
+  outline(g, S);
+  s = { a, e, S };
+  spriteCache.set(key, s);
+  return s;
+}
+Object.assign(KINDS, {
+  visitor: { name: 'Besökare', suit: '#6a5a7a', helm: '#4a3020', acc: '#9a8aaa', visor: '#d0a888', cap: true, gun: 'none', eyeless: true },
+  trader: { name: 'Handlare', suit: '#4a6a7a', helm: '#3a2a20', acc: '#7a9aaa', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  mechanic: { name: 'Mekaniker', suit: '#8a6a35', helm: '#2a2420', acc: '#5c4622', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  medic: { name: 'Läkare', suit: '#c8ccd0', helm: '#3a2a20', acc: '#c04a4a', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  barkeep: { name: 'Bartender', suit: '#7a3a3a', helm: '#2a1e1a', acc: '#c9a06a', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  officer: { name: 'Befäl', suit: '#3a4a6a', helm: '#2a2420', acc: '#6fb8ff', visor: '#c8a080', cap: true, gun: 'pistol', eyeless: true },
+});
+
+// ================================================================== the people
+const me = { kind: 'gunner', x: 0, y: 0, a: 0, walked: 0, moving: false, lamp: false, fire: 0, r: 5, deck: 1 };
+let npcs = [];
+function castFor(deck) {
+  const d = decks[deck], out = [];
+  if (MODE === 'wreck') return out;
+  const open = MODE === 'normal';
+  const R2 = seeded(SEED * 31 + deck * 7);
+  const roomsOf = (kinds) => d.rooms.filter((r) => kinds.includes(r.kind) && r.n);
+  const spot = (r) => { if (!r) return null; for (let k = 0; k < 40; k++) { const tx = r.x0 + Math.floor(R2() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R2() * (r.y1 - r.y0 + 1)); if (d.grid[ty * W + tx] === r.id) { const px = tx * T + 8, py = ty * T + 8; const c = nearestWalk(px, py); if (c >= 0) return [(c % CN) * CW + 4, ((c / CN) | 0) * CW + 4]; } } return null; };
+  const civ = ['mechanic', 'medic', 'barkeep', 'officer', 'crewman', 'tech'];
+  const add = (kind, route, o = {}) => { route = route.filter(Boolean); if (!route.length) return; out.push({ kind, x: route[0][0], y: route[0][1], a: R2() * 6.28, route, at: 0, path: null, walked: 0, wait: R2() * 2, post: route.length === 1, guard: !civ.includes(kind), speed: kind === 'heavy' ? 18 : open ? 22 : 28, r: 5, ...o }); };
+  D = d;
+  const spine = d.rooms[d.spine], holds = d.holds.map((id) => d.rooms[id]).filter((r) => r.n), ways = d.ways.map((w) => d.rooms[w.id]).filter((r) => r.n);
+  const one = (k) => roomsOf(k)[0];
+  const area = d.rooms.reduce((a, r) => a + r.n, 0);
+  if (open) {
+    for (const h of holds) { add('mechanic', [spot(h), spot(h)]); add('crewman', [spot(h), spot(spine), spot(h)]); }
+    for (const r of roomsOf(['messd'])) { add('crewman', [spot(r)]); add('crewman', [spot(r)]); }
+    for (const r of roomsOf(['kitchen'])) add('barkeep', [spot(r), spot(r)]);
+    for (const r of roomsOf(['med'])) add('medic', [spot(r)]);
+    for (const r of roomsOf(['workshop', 'power', 'tanks', 'fuel'])) add('tech', [spot(r), spot(r)]);
+    const br = one(['command']); if (br) { add('officer', [spot(br)]); add('tech', [spot(br), spot(br)]); }
+    // guards by the ship's size: one for every 1200 tiles while all is calm
+    for (let k = 0; k < Math.max(1, Math.round(area / 1200)); k++) add('watch', [spot(spine), spot(holds[k % holds.length]), spot(spine), spot(spine)]);
+  } else {
+    // guards by the ship's size: one for every 500 tiles. The alarm brings no new guards; the same ones hunt, faster.
+    const n = Math.max(2, Math.round(area / 500));
+    for (let k = 0; k < n; k++) add(k === n - 1 && n >= 4 ? 'heavy' : k % 2 ? 'soldier' : 'watch', [spot(holds[k % holds.length]), spot(spine), spot(ways[k % Math.max(1, ways.length)]), spot(holds[(k + 1) % holds.length])], MODE === 'alarm' ? { speed: 36 } : {});
+    const br = one(['command']); if (br) { add('officer', [spot(br)]); add('soldier', [spot(br)]); }
+    for (const r of roomsOf(['power'])) add('tech', [spot(r)]);
+    for (const r of roomsOf(['vault'])) add('watch', [spot(r)]);
+  }
+  return out;
+}
+
+// ================================================================== view
+const view = document.getElementById('view');
+const vg = view.getContext('2d');
+let VW = 640, VH = 360, overview = false, planView = false, outside = true, approach = false;
+let cA, cAG, cE, cEG, cL, cLG, cB, cBG, cB2, cB2G;
+function sizeView() {
+  VW = approach ? 640 : outside ? 1200 : overview ? WW : 640; VH = approach ? 360 : outside ? 900 : overview ? WH : 360;
+  view.width = VW; view.height = VH; vg.imageSmoothingEnabled = false;
+  [cA, cAG] = mk(VW, VH); [cE, cEG] = mk(VW, VH); [cL, cLG] = mk(VW * LS, VH * LS);
+  [cB, cBG] = mk(VW / 4, VH / 4); [cB2, cB2G] = mk(VW / 4, VH / 4);
+  cLG.imageSmoothingEnabled = true; cBG.imageSmoothingEnabled = true; cB2G.imageSmoothingEnabled = true;
+}
+let camX = 0, camY = 0;
+const shots = [], blasts = [], decals = [];
+function drawFigure(f, t) {
+  let s;
+  if (f.down) s = spriteDown(f.kind);
+  else { const pose = {}; if (f.moving) pose.walk = Math.floor(f.walked / 5) % 4; if (f.kind === 'drone') pose.walk = Math.floor(t * 20) % 2; if (f.fire > 0) pose.fire = 1; if (f.docker && f.at === 1 && f.moving) pose.carry = 1; s = sprite(f.kind, pose); }
+  const bob = f.hover ? Math.round(Math.sin(t * 3)) : 0;
+  cAG.fillStyle = 'rgba(0,0,0,0.4)'; cAG.beginPath(); cAG.ellipse(Math.round(f.x) + 1, Math.round(f.y) + 2 + (f.hover ? 3 : 0), f.kind === 'heavy' ? 8 : 6, f.kind === 'heavy' ? 7 : 5, 0, 0, 7); cAG.fill();
+  for (const [g, img] of [[cAG, s.a], [cEG, s.e]]) { g.save(); g.translate(Math.round(f.x), Math.round(f.y) + bob); g.rotate(f.a); g.drawImage(img, -s.S / 2, -s.S / 2); g.restore(); }
+}
+// Door lamps: the crew's turquoise on its own base, green where visitors may go, yellow at staff doors, red only when the
+// base is an enemy, orange blinking when the power is out.
+function doorLamp(d, t) {
+  if (MODE === 'wreck') return d.kind === 'hatch' ? '#3a1a08' : '#140806';
+  if (MODE === 'power') return Math.sin(t * 3 + d.x) > 0.6 ? '#ff7a30' : '#3a1a08';
+  if (MODE === 'lockdown') return OPT.own ? '#e0b040' : '#c0302a';
+  if (MODE === 'alarm') return Math.sin(t * Math.PI * 3) > 0 ? (OPT.own ? '#ffc040' : '#ff3b30') : '#3a0a08';
+  if (OPT.own) return '#96d66e';
+  return d.base === 'staff' || d.kind === 'alarm' ? '#e0b040' : '#62e08a';
+}
+const partnerOf = (d) => D.doors.find((q) => q !== d && q.pair && q.pair === d.pair);
+function drawDoors(t) {
+  for (const d of D.doors) {
+    if (d.kind === 'arch') continue;
+    const gm = doorGeom(d), o = doorOpen(d);
+    const heavy = ['pressure', 'hatch', 'locked', 'lift', 'lockA', 'lockB', 'staff'].includes(d.kind);
+    const th = heavy ? 6 : 4, half = gm.len / 2, leaf = Math.max(0, half * (1 - o));
+    const col = D.i === 1 ? (heavy ? '#8a8c94' : '#a4a6ac') : D.i === 2 ? '#4a5262' : heavy ? '#5a5650' : '#4e4c48';
+    const draw = (x, y, w, h) => {
+      if (w <= 0 || h <= 0) return;
+      box(cAG, x, y, w, h, shade(col, 0.6)); box(cAG, x + (w > h ? 0 : 1), y + (w > h ? 1 : 0), w > h ? w : w - 2, w > h ? h - 2 : h, col);
+      const stripe = ['pressure', 'hatch', 'lockA', 'lockB'].includes(d.kind) ? '#8a7234' : d.kind === 'staff' ? '#a89030' : null;
+      if (stripe) { cAG.save(); cAG.beginPath(); cAG.rect(x, y, w, h); cAG.clip(); cAG.fillStyle = stripe; for (let k = -10; k < Math.max(w, h) + 10; k += 5) { if (w > h) cAG.fillRect(x + k, y + 1, 2, h - 2); else cAG.fillRect(x + 1, y + k, w - 2, 2); } cAG.restore(); }
+    };
+    if (d.o === 'v') { draw(gm.x - th / 2, gm.y, th, leaf); draw(gm.x - th / 2, gm.y + gm.len - leaf, th, leaf); }
+    else { draw(gm.x, gm.y - th / 2, leaf, th); draw(gm.x + gm.len - leaf, gm.y - th / 2, leaf, th); }
+    const lx = d.o === 'v' ? gm.x - 1 : gm.x - 6, ly = d.o === 'v' ? gm.y - 6 : gm.y - 1;
+    box(cAG, lx, ly, 2, 2, '#202228'); box(cEG, lx, ly, 2, 2, d.kind === 'hatch' ? '#3a3020' : doorLamp(d, t));
+    // the airlock's buttons: green when this door may open, yellow while the other one is still open
+    if (d.pair) {
+      const p = partnerOf(d), ok = !p || p.open === 0;
+      for (const s of [-1, 1]) {
+        const bx = d.o === 'v' ? gm.x + s * 9 - 2 : gm.x + gm.len + 3, by = d.o === 'v' ? gm.y + gm.len + 3 : gm.y + s * 9 - 2;
+        box(cAG, bx - 1, by - 1, 6, 6, '#2a2c32'); box(cAG, bx, by, 4, 4, '#4a4e58'); box(cEG, bx + 1, by + 1, 2, 2, ok ? '#62e08a' : Math.sin(t * 5) > 0 ? '#e0b040' : '#3a2a08');
+      }
+    }
+    if (d.kind === 'alarm' && Math.hypot(me.x - gm.cx, me.y - gm.cy) < 70) { const ex = d.o === 'v' ? gm.x - 1 : gm.x + gm.len + 4, ey = d.o === 'v' ? gm.y + gm.len + 4 : gm.y - 1; box(cEG, ex, ey, 2, 2, '#ffd040'); }
+  }
+}
+const linkHere = () => (outside ? null : LINKS.find((l) => l.decks.includes(me.deck) && me.x >= l.r[0] * T && me.x < (l.r[2] + 1) * T && me.y >= l.r[1] * T && me.y < (l.r[3] + 1) * T));
+function changeDeck(dir) {
+  const l = linkHere(); if (!l) return false;
+  const k = l.decks.indexOf(me.deck) + dir;
+  if (k < 0 || k >= l.decks.length) return false;
+  setDeck(l.decks[k]); return true;
+}
+
+function fire() {
+  if (outside) return;
+  me.fire = 0.12;
+  const ax = Math.cos(me.a), ay = Math.sin(me.a);
+  let x = me.x + ax * 10, y = me.y + ay * 10, hit = null;
+  for (let s = 0; s < 360; s += 2) {
+    x += ax * 2; y += ay * 2;
+    if (at(Math.floor(x / T), Math.floor(y / T)) < 0) break;
+    const list = D.bk[Math.floor(y / BK) * BN + Math.floor(x / BK)] || [];
+    const b = list.find((q) => !q.dead && x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    if (b) { hit = b; break; }
+    if (D.doors.some((d) => { if (doorOpen(d) > 0.5) return false; const g = doorGeom(d); return d.o === 'v' ? Math.abs(x - g.x) < 3 && y > g.y && y < g.y + g.len : Math.abs(y - g.y) < 3 && x > g.x && x < g.x + g.len; })) break;
+  }
+  shots.push({ x0: me.x + ax * 10, y0: me.y + ay * 10, x1: x, y1: y, life: 0.08 });
+  if (hit && hit.barrel) explode(hit);
+}
+function explode(b) {
+  if (b.dead) return;
+  b.dead = true;
+  const x = b.x + 5, y = b.y + 5;
+  blasts.push({ x, y, life: 0.5, r: 140 });
+  for (let k = 0; k < 40; k++) { const a = hash(k, x | 0) * 6.28, d = Math.sqrt(hash(y | 0, k)) * 26; decals.push([x + Math.cos(a) * d, y + Math.sin(a) * d]); }
+  // the barrels near it go too, a moment later
+  for (const o of D.barrels) if (!o.dead && Math.hypot(o.x - b.x, o.y - b.y) < 44) setTimeout(() => explode(o), 160);
+  // low cover close by is blown away
+  for (const s of D.solids) if (!s.high && !s.barrel && !s.pylon && !s.dead && Math.hypot(s.x + s.w / 2 - x, s.y + s.h / 2 - y) < 30) { s.dead = true; s.burnt = true; }
+  buildStaticLight({ x, y });
+}
+
+// ---------------------------------------------------------------- the boss
+
+// ================================================================== the tour
+let tour = true, tourAt = 0, tourWait = 0, tourPath = null, TOUR = [];
+function buildTour() {
+  TOUR = [];
+  const d = decks[0]; D = d;
+  const c = (r, w = 1.2) => (r && r.n ? [0, r.cx * T + 8, r.cy * T + 8, w] : null);
+  const s = startOf(0);
+  TOUR.push([0, s[0], s[1], 1.6]);
+  const lockSeam = d.seams.find((q) => q.side === 'dn' && q.k === d.lockK);
+  const big = d.holds.map((id) => d.rooms[id]).sort((a, b) => b.n - a.n)[0];
+  for (const p of [c(d.rooms[lockSeam.id], 0.3), c(big, 1.5), [0, (big.x0 + 2) * T, (big.cy + 0.5) * T, 0.6], [0, (big.x1 - 1) * T, (big.cy + 0.5) * T, 0.6], c(d.rooms.find((r) => r.kind === 'power'), 1.4), c(d.rooms.find((r) => r.kind === 'fuel' || r.kind === 'tanks'), 0.8)]) if (p) TOUR.push(p);
+  const way = d.ways.map((w) => d.rooms[w.id]).filter((r) => r.n).sort((a, b) => b.n - a.n)[0];
+  if (way) { TOUR.push([0, (way.x0 + 1) * T, (way.cy + 0.5) * T, 0.2], [0, (way.x1) * T, (way.cy + 0.5) * T, 0.6]); }
+  for (const k of ['messd', 'command', 'chief', 'vault']) { const p = c(d.rooms.find((r) => r.kind === k)); if (p) TOUR.push(p); }
+  TOUR.push(['restart']);
+}
+
+// A way to a point, or to somewhere near it when the point itself is shut in by furniture.
+function findPathNear(x0, y0, x1, y1) {
+  for (const [dx, dy] of [[0, 0], [32, 0], [-32, 0], [0, 32], [0, -32], [48, 48], [-48, 48], [48, -48], [-48, -48], [72, 0], [-72, 0], [0, 72], [0, -72]]) {
+    const p = findPath(x0, y0, x1 + dx, y1 + dy); if (p) return p;
+  }
+  return null;
+}
+
+// ================================================================== every frame
+const keys = new Set();
+let pointer = null, touchGoal = null;
+const turn = (a, b, k) => { const d = ((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI; return a + Math.max(-k, Math.min(k, d)); };
+function frame(t, dt) {
+  let mx = 0, my = 0;
+  if (keys.has('a') || keys.has('arrowleft')) mx -= 1;
+  if (keys.has('d') || keys.has('arrowright')) mx += 1;
+  if (keys.has('w') || keys.has('arrowup')) my -= 1;
+  if (keys.has('s') || keys.has('arrowdown')) my += 1;
+  if (touchGoal) { const dx = touchGoal.x - me.x, dy = touchGoal.y - me.y, d = Math.hypot(dx, dy); if (d > 4) { mx = dx / d; my = dy / d; } }
+  if (tour && !overview) {
+    const step = TOUR[tourAt];
+    me.moving = false;
+    if (tourWait > 0) tourWait -= dt;
+    else if (step[0] === 'up' || step[0] === 'down') { changeDeck(step[0] === 'up' ? 1 : -1); tourAt++; tourPath = null; tourWait = 0.6; }
+    else if (step[0] === 'restart') startTour();
+    else if (step[0] !== me.deck) tourAt++;
+    else {
+      if (!tourPath) tourPath = findPathNear(me.x, me.y, step[1], step[2]);
+      if (!tourPath) { tourAt++; return frame(t, 0); }
+      const p = tourPath[0], dx = p[0] - me.x, dy = p[1] - me.y, d = Math.hypot(dx, dy);
+      // wait at an airlock door that may not open yet
+      const held = D.doors.some((q) => q.pair && doorOpen(q) < 0.6 && Math.hypot(doorGeom(q).cx - (me.x + (dx / (d || 1)) * 10), doorGeom(q).cy - (me.y + (dy / (d || 1)) * 10)) < 14);
+      if (d < 2) { tourPath.shift(); if (!tourPath.length) { tourPath = null; tourWait = step[3] || 0; tourAt++; } }
+      else if (!held) { const sp = Math.min(d, 84 * dt); me.x += (dx / d) * sp; me.y += (dy / d) * sp; me.walked += sp; me.moving = true; me.a = turn(me.a, Math.atan2(dy, dx), 8 * dt); }
+    }
+  } else {
+    const len = Math.hypot(mx, my);
+    me.moving = len > 0.01;
+    if (me.moving) {
+      const sp = 64 * dt, bx = me.x, by = me.y;
+      if (!blocked(me.x + (mx / len) * sp, me.y, me.r)) me.x += (mx / len) * sp;
+      if (!blocked(me.x, me.y + (my / len) * sp, me.r)) me.y += (my / len) * sp;
+      me.walked += Math.hypot(me.x - bx, me.y - by);
+      if (!pointer || touchGoal) me.a = turn(me.a, Math.atan2(my, mx), 8 * dt);
+    }
+    if (pointer && !touchGoal) me.a = Math.atan2(pointer.y - me.y, pointer.x - me.x);
+  }
+  if (me.fire > 0) me.fire -= dt;
+  const l = linkHere(), k = l ? l.decks.indexOf(me.deck) : -1;
+  upBtn.hidden = !(l && k < l.decks.length - 1); downBtn.hidden = !(l && k > 0);
+  if (l) { upBtn.textContent = '▲ ' + NAMES[l.decks[k + 1]] ; downBtn.textContent = '▼ ' + (k > 0 ? NAMES[l.decks[k - 1]] : ''); }
+  for (const n of npcs) {
+    if (n.wait > 0) { n.wait -= dt; n.moving = false; if (n.post) n.a += Math.sin(t * 0.9 + n.x) * 0.5 * dt; continue; }
+    if (n.post) { n.moving = false; n.wait = 2; continue; }
+    if (!n.path) { const g = n.route[n.at]; n.path = findPath(n.x, n.y, g[0], g[1]) || [[g[0], g[1]]]; }
+    const p = n.path[0], dx = p[0] - n.x, dy = p[1] - n.y, d = Math.hypot(dx, dy);
+    if (d < 2) { n.path.shift(); if (!n.path.length) { n.path = null; n.at = (n.at + 1) % n.route.length; n.wait = n.guard ? 1.4 : 2 + hash(n.at, n.x | 0) * 3; } continue; }
+    const sp = Math.min(d, n.speed * dt);
+    n.x += (dx / d) * sp; n.y += (dy / d) * sp; n.walked += sp; n.moving = true; n.a = turn(n.a, Math.atan2(dy, dx), 6 * dt);
+  }
+  stepDoors(dt, [me, ...npcs]);
+  if (doorsChanged) { buildStaticLight(doorsChanged); doorsChanged = null; }
+  if (overview) { camX = 0; camY = 0; } else { camX = Math.round(Math.max(0, Math.min(WW - VW, me.x - VW / 2))); camY = Math.round(Math.max(0, Math.min(WH - VH, me.y - VH / 2))); }
+  cAG.clearRect(0, 0, VW, VH); cAG.drawImage(D.alb, camX, camY, VW, VH, 0, 0, VW, VH);
+  cEG.clearRect(0, 0, VW, VH); cEG.drawImage(D.emi, camX, camY, VW, VH, 0, 0, VW, VH);
+  cAG.save(); cAG.translate(-camX, -camY); cEG.save(); cEG.translate(-camX, -camY);
+  for (const [x, y] of decals) box(cAG, x, y, 2, 2, 'rgba(12,10,8,0.6)');
+  for (const s of D.solids) if (s.dead) { box(cAG, s.x, s.y, s.w, s.h, 'rgba(16,14,12,0.75)'); if (s.burnt) for (let q = 0; q < 4; q++) box(cAG, s.x + hash(q, s.x) * s.w, s.y + hash(s.y, q) * s.h, 2, 2, '#4a4038'); }
+  drawDoors(t);
+  const ed = EDIM();
+  for (const b of D.emitters) { const on = b.rate === 0 ? 0.55 + 0.45 * Math.sin(t * 1.6) : Math.sin(t * b.rate + b.p) > -0.2 ? 1 : 0.15; cEG.globalAlpha = on * ed; box(cEG, b.x, b.y, 1, 1, b.c); cEG.globalAlpha = 1; }
+  for (const c of D.cams) { const a = c.a + Math.sin(t * 0.5) * c.sweep; c.now = a; box(cAG, c.x - 2, c.y - 2, 5, 5, '#2a2d34'); box(cAG, c.x - 1 + Math.cos(a) * 2, c.y - 1 + Math.sin(a) * 2, 3, 3, '#4a4e58'); box(cEG, Math.round(c.x + Math.cos(a) * 3), Math.round(c.y + Math.sin(a) * 3), 1, 1, OPT.side === 'hostile' || (!OPT.own && MODE !== 'normal') ? '#ff3b30' : OPT.own ? '#96d66e' : '#e0b040'); }
+  for (const u of D.turrets) { disc(cAG, u.x, u.y, 6, '#2a2d34'); disc(cAG, u.x, u.y, 5, '#4a4e58'); box(cAG, u.x + Math.cos(u.a) * 7 - 1, u.y + Math.sin(u.a) * 7 - 1, 3, 3, '#24262c'); box(cEG, u.x - 1, u.y - 1, 2, 2, OPT.side === 'hostile' || (!OPT.own && MODE !== 'normal') ? '#ff3b30' : OPT.own ? '#96d66e' : '#e0b040'); }
+  for (const f of npcs) drawFigure(f, t);
+  drawFigure(me, t);
+  for (const s of shots) { cEG.strokeStyle = 'rgba(255,230,160,0.9)'; cEG.lineWidth = 1; cEG.beginPath(); cEG.moveTo(s.x0, s.y0); cEG.lineTo(s.x1, s.y1); cEG.stroke(); s.life -= dt; }
+  for (let q = shots.length - 1; q >= 0; q--) if (shots[q].life <= 0) shots.splice(q, 1);
+  for (const b of blasts) { const kk = b.life / 0.5; disc(cEG, b.x, b.y, Math.max(1, (1 - kk) * 18 + 4) | 0, `rgba(255,${160 + 80 * kk | 0},80,${kk})`); }
+  cAG.restore(); cEG.restore();
+  // light
+  cLG.drawImage(D.stat, camX * LS, camY * LS, VW * LS, VH * LS, 0, 0, VW * LS, VH * LS);
+  cLG.save(); cLG.scale(LS, LS); cLG.translate(-camX, -camY); cLG.globalCompositeOperation = 'lighter';
+  const inView = (q) => q.x + q.r > camX && q.x - q.r < camX + VW && q.y + q.r > camY && q.y - q.r < camY + VH;
+  for (const q of D.lights) {
+    if (q.kind === 'static' || !inView(q)) continue;
+    if (q.kind === 'pulse') drawLight(cLG, q, q.i * (0.8 + 0.2 * Math.sin(t * q.speed * 6.28)));
+    if (q.kind === 'beacon') drawLight(cLG, q, q.i, { a: t * 2.2 + q.phase * 2, w: 0.42 });
+  }
+  const lit = (x, y, r, col, i, cone) => { const q = { x, y, r, col }; if (inView(q)) drawLight(cLG, q, i, cone); };
+  if (me.lamp) { lit(me.x + Math.cos(me.a) * 8, me.y + Math.sin(me.a) * 8, 170, [235, 238, 225], MODE === 'power' ? 0.95 : 0.6, { a: me.a, w: 0.38 }); lit(me.x, me.y, 30, [160, 165, 175], 0.35); }
+  const hostile = !OPT.own && (MODE !== 'normal' || OPT.side === 'hostile');
+  for (const n of npcs) if (n.guard && MODE !== 'normal') lit(n.x + Math.cos(n.a) * 6, n.y + Math.sin(n.a) * 6, 90, hostile ? [180, 50, 40] : [200, 170, 110], 0.4, { a: n.a, w: 0.5 });
+  for (const b of blasts) { lit(b.x, b.y, b.r, [255, 170, 90], b.life * 2.4); b.life -= dt; }
+  for (let q = blasts.length - 1; q >= 0; q--) if (blasts[q].life <= 0) blasts.splice(q, 1);
+  if (me.fire > 0.05) lit(me.x + Math.cos(me.a) * 14, me.y + Math.sin(me.a) * 14, 70, [255, 210, 140], 0.8);
+  cLG.restore();
+  vg.globalCompositeOperation = 'source-over';
+  vg.drawImage(cA, 0, 0);
+  vg.globalCompositeOperation = 'multiply'; vg.imageSmoothingEnabled = true; vg.drawImage(cL, 0, 0, VW, VH); vg.imageSmoothingEnabled = false;
+  vg.globalCompositeOperation = 'lighter'; vg.drawImage(cE, 0, 0);
+  cBG.clearRect(0, 0, cB.width, cB.height); cBG.drawImage(cE, 0, 0, cB.width, cB.height);
+  cB2G.clearRect(0, 0, cB.width, cB.height); cB2G.filter = 'blur(2px)'; cB2G.drawImage(cB, 0, 0); cB2G.filter = 'none';
+  vg.globalAlpha = 0.9; vg.imageSmoothingEnabled = true; vg.drawImage(cB2, 0, 0, VW, VH); vg.drawImage(cB2, 0, 0, VW, VH); vg.imageSmoothingEnabled = false; vg.globalAlpha = 1;
+  vg.globalCompositeOperation = 'source-over';
+  // an alarm puts a red frame round the picture, as in the game: it swells and fades slowly and does not flash
+  if (MODE === 'alarm') { vg.globalAlpha = 0.35 + 0.25 * Math.sin(t * 2.6); vg.strokeStyle = OPT.own ? '#e0a040' : '#e8503a'; vg.lineWidth = 3; vg.strokeRect(1.5, 1.5, VW - 3, VH - 3); vg.globalAlpha = 1; }
+  if (planView) drawPlan();
+}
+let doorsChanged = null;
+function stepDoors(dt, people) {
+  for (const d of D.doors) {
+    if (d.kind === 'hatch' || d.kind === 'locked' || d.kind === 'arch') continue;
+    const g = doorGeom(d);
+    let near = people.some((f) => Math.abs(f.x - g.cx) < 30 && Math.abs(f.y - g.cy) < 30);
+    // an airlock door stays shut until the other one has closed
+    if (d.pair) { const p = partnerOf(d); if (p && p.open > 0) near = false; }
+    const before = doorOpen(d) > 0.5;
+    d.open = Math.max(0, Math.min(1, d.open + (near ? 4 : -2.5) * dt));
+    if ((doorOpen(d) > 0.5) !== before) doorsChanged = { x: g.cx, y: g.cy };
+  }
+}
+function drawPlan() {
+  vg.save(); vg.translate(-camX, -camY);
+  for (const s of D.solids) {
+    if (s.dead || s.pylon) continue;
+    if (s.x + s.w < camX || s.x > camX + VW || s.y + s.h < camY || s.y > camY + VH) continue;
+    vg.strokeStyle = s.barrel ? '#ff6040' : s.high ? 'rgba(96,208,255,0.9)' : 'rgba(232,192,80,0.9)';
+    vg.lineWidth = 1; vg.strokeRect(s.x + 0.5, s.y + 0.5, s.w - 1, s.h - 1);
+  }
+  buildOccluders(); const cone = (x, y, a, w, r, fill) => { const p = visPoly(x, y, r); vg.save(); vg.beginPath(); vg.moveTo(p[0], p[1]); for (let k = 2; k < p.length; k += 2) vg.lineTo(p[k], p[k + 1]); vg.closePath(); vg.clip(); vg.fillStyle = fill; vg.beginPath(); vg.moveTo(x, y); vg.arc(x, y, r, a - w, a + w); vg.closePath(); vg.fill(); vg.restore(); };
+  for (const c of D.cams) cone(c.x, c.y, c.now ?? c.a, 0.35, c.r, 'rgba(240,200,80,0.22)');
+  for (const u of D.turrets) cone(u.x, u.y, u.a, u.w, u.r, 'rgba(255,70,50,0.3)');
+  vg.setLineDash([3, 3]); vg.strokeStyle = 'rgba(154,208,255,0.75)'; vg.lineWidth = 1;
+  for (const n of npcs) if (n.guard && n.route.length > 1) { vg.beginPath(); n.route.forEach((p, i) => (i ? vg.lineTo(p[0], p[1]) : vg.moveTo(p[0], p[1]))); vg.closePath(); vg.stroke(); }
+  vg.setLineDash([]);
+  for (const d of D.doors) { const g = doorGeom(d); const c = d.kind === 'alarm' ? '#e0b040' : d.base === 'staff' ? '#c8b040' : null; if (!c) continue; vg.strokeStyle = c; vg.lineWidth = 3; vg.beginPath(); if (d.o === 'v') { vg.moveTo(g.x, g.y + 2); vg.lineTo(g.x, g.y + g.len - 2); } else { vg.moveTo(g.x + 2, g.y); vg.lineTo(g.x + g.len - 2, g.y); } vg.stroke(); }
+  vg.font = 'bold ' + (overview ? 13 : 9) + 'px system-ui, sans-serif'; vg.textAlign = 'center';
+  for (const r of D.rooms) { if (!r.label || !r.n || r.n < 6) continue; const x = r.cx * T + 8, y = r.cy * T + 8; vg.fillStyle = 'rgba(0,0,0,0.8)'; vg.fillText(r.name, x + 1, y + 1); vg.fillStyle = r.tint; vg.fillText(r.name, x, y); }
+  for (const l of LINKS) { if (!l.decks.includes(me.deck)) continue; const x = ((l.r[0] + l.r[2] + 1) / 2) * T, y = ((l.r[1] + l.r[3] + 1) / 2) * T; const txt = `${l.name} ${l.decks.map((k) => k + 1).join('-')}${l.way === 'alarm' ? ' (LARM)' : l.way === 'quiet' ? ' (TYST)' : ''}`; vg.fillStyle = 'rgba(0,0,0,0.85)'; vg.fillText(txt, x + 1, y + 1); vg.fillStyle = l.way === 'alarm' ? '#ffd040' : l.way === 'quiet' ? '#9ad0ff' : '#ffd27a'; vg.fillText(txt, x, y); }
+  vg.restore();
+}
+
+
+
+// ================================================================== switching
+const upBtn = { hidden: true }, downBtn = { hidden: true };
+const tag = document.getElementById('tag');
+const NAMES = ['Fraktskeppet'];
+const MODENAMES = { normal: 'normal', lockdown: 'lockdown', alarm: 'larm', wreck: 'vrak' };
+function setDeck(i) {
+  outside = false; approach = false; sizeView();
+  me.deck = 0; D = decks[0];
+  if (!D.built[MODE]) { buildDeck(); buildStaticLight(); D.built[MODE] = snapshot(); }
+  else Object.assign(D, D.built[MODE]);
+  for (const d of D.doors) if (d.kind !== 'arch') d.open = 0;
+  buildStaticLight();
+  npcs = castFor(0);
+  tag.textContent = `Fraktskeppet · ${MODENAMES[MODE]}`;
+}
+const setOn = (sel, on) => document.querySelector(sel).classList.toggle('on', on);
+const stopTour = () => { if (tour) { tour = false; setOn('#tour', false); } };
+function startTour() { tour = true; setOn('#tour', true); tourAt = 0; tourPath = null; tourWait = 0; setDeck(0); const s = startOf(0); me.x = s[0]; me.y = s[1]; me.a = -Math.PI / 2; }
+function newBase(seed) {
+  makeBase(seed);
+  buildTour();
+  document.getElementById('seed').textContent = `(skepp nr ${SEED})`;
+}
+// A wreck is the same ship with containers torn away, so the plan is made again from the same number.
+function setMode(m) {
+  const wasWreck = OPT.wreck;
+  MODE = m; OPT.wreck = m === 'wreck'; me.lamp = m !== 'normal';
+  if (OPT.wreck !== wasWreck) { tryOnce(SEED); buildTour(); }
+  decks[0].built = {};
+  const keep = { x: me.x, y: me.y };
+  setDeck(0);
+  if (blocked(keep.x, keep.y, 5, true)) { const s = startOf(0); me.x = s[0]; me.y = s[1]; }
+  if (tour) startTour();
+}
+const pickIn = (sel, attr, f) => document.getElementById(sel).addEventListener('click', (e) => {
+  const v = e.target.dataset[attr]; if (v === undefined) return;
+  document.querySelectorAll('#' + sel + ' button').forEach((b) => b.classList.toggle('on', b === e.target));
+  f(v);
+});
+document.getElementById('fire').onclick = () => { stopTour(); fire(); };
+pickIn('modes', 'mode', setMode);
+pickIn('hulls', 'hull', (v) => { OPT.hull = v; decks[0].built = {}; setDeck(0); });
+document.getElementById('newbase').onclick = () => { newBase((Math.random() * 1e6) | 0); if (tour) startTour(); else { setDeck(0); const s = startOf(0); me.x = s[0]; me.y = s[1]; } };
+document.getElementById('tour').onclick = () => { if (tour) stopTour(); else startTour(); };
+document.getElementById('overview').onclick = () => { overview = !overview; setOn('#overview', overview); sizeView(); };
+document.getElementById('plan').onclick = () => { planView = !planView; setOn('#plan', planView); };
+addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (['w', 'a', 's', 'd', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) { keys.add(k); stopTour(); if (k.startsWith('arrow')) e.preventDefault(); }
+  if (k === ' ') { stopTour(); fire(); e.preventDefault(); }
+  if (k === 'l') me.lamp = !me.lamp;
+});
+addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+const toWorld = (e) => { const r = view.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * VW + camX, y: ((e.clientY - r.top) / r.height) * VH + camY }; };
+view.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') pointer = toWorld(e); else if (touchGoal) touchGoal = toWorld(e); });
+view.addEventListener('pointerdown', (e) => { if (overview) return; if (e.pointerType === 'mouse') { pointer = toWorld(e); stopTour(); fire(); return; } stopTour(); touchGoal = toWorld(e); view.setPointerCapture(e.pointerId); });
+view.addEventListener('pointerup', () => (touchGoal = null)); view.addEventListener('pointercancel', () => (touchGoal = null));
+view.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') pointer = null; });
+
+// ================================================================== go
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  frame(now / 1000, dt);
+  requestAnimationFrame(loop);
+}
+function go() {
+  outside = false;
+  sizeView();
+  newBase(1 + ((Math.random() * 1e6) | 0));
+  startTour();
+  requestAnimationFrame(loop);
+}
+{
+  const SRC = { frigate: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAABsCAYAAADJ0PRnAAAHYklEQVR42u1dXWgUVxT+dhBxUy2RLKVJaLNkly21iWlshBpUlIotfbBJHiqCkNQHfRAEW7SRgGIhtE2phUJA8KHmpUWQaKAP1lparNiH/sSYqLjspKtmNypJDNbuSh86fUjvcvfunf+5d3aT+WBhd+7Mved+c86555w7kwABAgQIECBAgAABAgSocERqGrRITYMWMKFDzsCJ09rAidNlRVKoHIgBgMN9x4uOD/QfAwDMzN4JLVmCIjUNGksMi4H+Y76SpPhNzvj4BMbHJ0rayfHDfcfhp8kpfmrQ+XPDnpyz6Agi2hOLJ0zPjcUTvmqRUs7aUw5aJJ2g9k07ND+urUgfVAnwhSCr/of1Q0uGICc+xS8/FJhYORFElmo75kWbGd1HoEFL2UlXEpaViyCsE3ZihouWIDWVREdnVwlh5UCStDICnb3TxABAR2dXSUbf3NxU0CqaqObmJqklkJAscrp2dmNi/FrJZElpgwdeu5pKoqn5VQyfGZJCUkgWOZNqCrnckyKC1FSy5DerMbxzqqpWojEWl0KSIoscMx+kppIYPDuCwbMjhd9GmFRT6NrZLTwuEu6kr1y+hLr6qOE5g2dHuL9P9B4y7bti4yCiPWbkuEFdfVS4FoVkmVY2k0b16kjBn9D+ZvTfdqzduK6oj+tX/kCrcrXEL6mpJOYfzRQRL9IfKbL8Ts+evUXOtqOzC7F4wtDXEAdNx0ixeAI9e/ZK80eKSHKGP4vqRsrk9+PGnhLtAYC1G9fhcWOP4bX0GKJI8txJ006561Da9Pz5mxdw3aANTc8aXk+PIcJpC3PStPaIhsixhBFkRXsqYSzhcVA2syB89eoIt/3ArnZ8+c0F3Ta9NIT0KzKMEEYQER4AHk5nDAnSI8CsjfRbkeUOWviZ2TshUYHc/3FPoe/nauvLP1CM1DRodMDGK3PQ5YxYPFHI2nkaRGpFvOvZsgc7dsVk84k1LdziF5upGwWLvOPJm2OVnc0vBvhecjUrayxpgtg6tJPVTDSE2q9eqZUH1lGbkSKr9Cq8HmRWTXQDGVVFIcs8ABBySB1IBEhdiNSDqNioPAkiWkPuLgBsf3O7JR9i18TINRe/uwhgoWgGwHOTU0SYFG1Weo+t7HlvV9Hv9W3N3O+8c3l9k3G9NrmQaH/DbvW4Wdp5/VRVrSw5z8sSbMhLf8MDj6BwuMrRePl8zhJBNElu/VLIS39jlaDff71aKFNkM2ndkgXdls2k8dr6dssEeeWXFC/9jRkGDy53bc52+vDCLzl20k7qv/u/+Mc1QU76cFOrXuZGe4jq60F0tY82RSMZ6uqj2Lh5G4bPDNkuhyhutYcIQH+nj9GrlpcmRq+EvHFZGZxqkeJEe1jNyGbSGOl9RvdODu3LQ00lPTMxNZXE0L68rjbxZHG6Ta2YEUJ/eHeCCKSOTev289XXqudmZdSnOjbNJYnIzpuXbYIiNQ1ay7rXQX/07hZNTl/fB5ZWoGwmXZgA+c5+2PPMzJQeW48kAGDnZURSyIigFeEwqlfXFI61b3qjyDnT5Fy+kcP5u8+XmF8u9wRbVk3gp7+aCvGQ2zhITSULfbJxUDaTRseL97H5lYVgNNZSi3c++bvQT2Msjqs//0AlvLN4ms/rxkmKU+fMkjMT3S1t1TJCXX0UM9HduHwjV6RJTp214tYHEHKsBIyyAsVJNVVEkhsfaEpQa9sG3TY75MgOFFmS7M7NMkGjv/2i22aHHD9ASHIyN8cmRlYFJ+TIzsVYkowibs99kBPN8SsXc6Plnm37GC3XZvmT0Z11ctftyiKFIDtgnzG0Cj/2x0wJam3bYMmZWQFJMMtlN7W1bQN+/P5bdwQ5JYf34JTR5qGdXQ2aYDcPUlmZmzATq619QbgGhFeEERY8jrCd1du3xnCyew4P7k8JE/7B/Smc7J7D7Vtj5UmQUeYOAJ2f5oTHQewYdmUUSlB//+eG7ec+rBIeB7Fj2JVRaC5mhq299zD/aFaY+s8/msXW3nuuVjHXTtrpKvb2jncBAPF4I+YvfVQwD7daNHhwOd7av/D9wPu9SKUmHUfLvq5iROCJ8WvYskqMiZ0/N2y4cVjWq9higVSC/MjmpRPkJGKt3nYUsXjCMxOLxROo3nYUMmSXokEikkxZiWtgYm5XMTqOeZrPO1ZVUYGi3QT64XQGK8Jh9wSRl1A+HhsFABxpaS16eYQlqRy2fIxkIeQYzMubOMiIJLYEwZY7RIAey0geQo6nJjYzeyd0pKVVo4jhksSWRenXoUQTZPTeGJGNJUdvXo40SK8DmiRWyKJrbsLS0xROqoyct300HoG8OVjVJlepBiHJymAiXkWwMGnX74+5XuadCuDFc9KiZKMh7e8HJda0eNqnjJfphGbzLO7+mcRLL3tDksgSq28EARBanw7KHUuFIF6Z080x0ZDmpNnH+dzA7LG5wMQCHxQQVDGQusyL3COreJCn2k9NzWkPNU07NTWnscfoD6+dPrboTMzLFUfmv7IJ+aFJ7ET1NILX7vc/QwoQwB7+A+dv0qgYBAbmAAAAAElFTkSuQmCC' };
+  let n = 0;
+  for (const k in SRC) { const im = new Image(); im.onload = im.onerror = () => { if (++n === 1) go(); }; im.src = SRC[k]; IMG[k] = im; }
+}
+window.__design = { blocked: (...a) => blocked(...a), tryOnce, newBase, setDeck, me, get decks() { return decks; }, setTour: (v) => { tour = v; }, setOverview: (v) => { overview = v; sizeView(); }, setPlan: (v) => (planView = v), setMode, OPT, fire, get D() { return D; }, check, get SEED() { return SEED; }, startOf: (i) => startOf(i), makeBase, get TOUR() { return TOUR; }, findPath: (...a) => findPathNear(...a), startTour, get tourAt() { return tourAt; } };
+</script>
+</body>
+</html>

@@ -1,0 +1,543 @@
+
+// ================================================================== walls
+//@@ 660-665
+// 0 none, 1 inner wall, 2 hull, 4 glass
+function edgeType(a, b) {
+  if (a === b) return 0;
+  if (a < 0 && b < 0) return 0;
+  if (a < 0 || b < 0) { const r = D.rooms[a < 0 ? b : a]; return r.glass ? 4 : 2; }
+  const A2 = D.rooms[a], B2 = D.rooms[b];
+  if (A2.open || B2.open) return 0;
+  // halls of the same zone run into each other without a wall
+  const flow = (k) => k === 'corridor' || k === 'service';
+  if (flow(A2.kind) && flow(B2.kind) && A2.staff === B2.staff) return 0;
+  return 1;
+}
+//@@ 675-727
+// After a floor is planned: a plain door between visitors and staff becomes a STAFF door.
+function finalizeDeck() {
+  for (const d of D.doors) {
+    const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]];
+    const rs = g.map(([x, y]) => at(x, y)).filter((v) => v >= 0).map((v) => D.rooms[v]);
+    if (d.kind === 'slide' && rs.length === 2 && rs[0].staff !== rs[1].staff) d.kind = 'staff';
+    d.base = d.kind;
+  }
+}
+
+// ================================================================== light
+//@@ 1236-1296
+const LS = 0.5;
+const STYLE = [
+  { amb: { normal: [66, 60, 56], lockdown: [58, 24, 24], alarm: [40, 34, 36], power: [16, 14, 16] }, room: { corridor: [L.sodium, 0.55, 6], dock: [L.white, 0.6, 4], hold: [L.sodium, 0.45, 7], post: [L.amber, 0.7, 5], power: [L.warm, 0.3, 7], refinery: [L.sodium, 0.7, 6], breaker: [L.amber, 0.45, 5], fuel: [L.amber, 0.6, 5], drones: [L.white, 0.55, 5], barracks: [L.warm, 0.6, 5], workshop: [L.warm, 0.7, 5], store: [L.warm, 0.5, 5], tanks: [L.teal, 0.45, 6], lockers: [L.warm, 0.55, 5], gun: [L.amber, 0.5, 4], airlock: [L.white, 0.6, 4], lift: [L.white, 0.7, 4], stairs: [L.white, 0.5, 4], ladder: [L.amber, 0.5, 3] } },
+  { amb: { normal: [150, 148, 142], lockdown: [92, 36, 38], alarm: [70, 62, 64], power: [20, 19, 24] }, room: { concourse: [L.warm, 0.85, 6], corridor: [L.white, 0.85, 5], service: [L.white, 0.45, 6], security: [L.cold, 0.75, 5], bar: [L.warm, 0.7, 5], services: [L.white, 0.85, 5], armory: [L.white, 0.75, 5], market: [L.warm, 0.8, 5], med: [L.cold, 0.95, 5], cabin: [L.warm, 0.7, 5], garden: [L.plant, 0.55, 5], wc: [L.cold, 0.8, 4], lounge: [L.warm, 0.8, 5], view: [L.cyan, 0.45, 6], yard: [L.sodium, 0.65, 6], lockers: [L.white, 0.6, 5], chief: [L.warm, 0.7, 5], messd: [L.warm, 0.7, 5], store: [L.warm, 0.55, 5], kitchen: [L.white, 0.9, 5], laundry: [L.white, 0.7, 5], workshop: [L.white, 0.7, 5], gangway: [L.cold, 0.5, 4], gantry: [L.cold, 0.5, 4], ringport: [L.white, 0.6, 4], collar: [L.white, 0.6, 3], airlock: [L.white, 0.7, 4], lift: [L.white, 0.8, 4], stairs: [L.white, 0.6, 4], ladder: [L.amber, 0.5, 3] } },
+  { amb: { normal: [62, 68, 86], lockdown: [58, 24, 32], alarm: [46, 42, 52], power: [15, 16, 22] }, room: { command: [L.cyan, 0.4, 7], security: [L.cold, 0.7, 5], server: [L.teal, 0.55, 5], comms: [L.cyan, 0.55, 5], sensors: [L.cyan, 0.5, 5], arms: [L.cold, 0.6, 5], barracks: [L.cold, 0.55, 5], chief: [L.warm, 0.6, 5], tanks: [L.teal, 0.5, 5], store: [L.cold, 0.5, 5], control: [L.cyan, 0.6, 5], gun: [L.amber, 0.4, 4], lift: [L.white, 0.7, 4], stairs: [L.white, 0.6, 4], ladder: [L.amber, 0.5, 3] } },
+];
+STYLE[0].amb.wreck = [16, 16, 22];
+for (const [k, v] of Object.entries({ service: [L.sodium, 0.35, 5], command: [L.cyan, 0.5, 6], chief: [L.warm, 0.6, 5], comms: [L.teal, 0.5, 5], med: [L.white, 0.7, 5], messd: [L.warm, 0.7, 5], kitchen: [L.white, 0.65, 5], cabin: [L.warm, 0.5, 5], barracks: [L.warm, 0.5, 5], lockers: [L.white, 0.5, 5], vault: [L.amber, 0.45, 5], airlock: [L.amber, 0.6, 3], store: [L.sodium, 0.45, 5], workshop: [L.sodium, 0.6, 5], tanks: [L.teal, 0.45, 5], fuel: [L.amber, 0.45, 5], power: [L.reactor, 0.55, 6], engines: [L.reactor, 0.5, 6], control: [L.cyan, 0.5, 5] })) if (!STYLE[0].room[k]) STYLE[0].room[k] = v;
+function roomLights(r) {
+  if (MODE === 'power' || MODE === 'wreck') return;
+  const spec = STYLE[D.i].room[r.kind]; if (!spec) return;
+  const [col, i, step] = spec;
+  const spots = [];
+  for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) {
+    if (at(x, y) !== r.id || x % step !== Math.floor(step / 2) || y % step !== Math.floor(step / 2)) continue;
+    const px = x * T + 8, py = y * T + 8;
+    if (D.solids.some((t) => t.high && px > t.x && px < t.x + t.w && py > t.y && py < t.y + t.h)) continue;
+    spots.push([px, py]);
+  }
+  if (!spots.length && r.n) spots.push([r.cx * T + 8, r.cy * T + 8]);
+  const k = MODE === 'lockdown' ? 0.55 : MODE === 'alarm' ? (D.i === 1 && !r.staff ? 0.5 : 0.7) : 1;
+  for (const [px, py] of spots) lights.push({ x: px, y: py, r: 30 + step * 14, col: MODE === 'lockdown' ? tintLock(col) : col, i: i * k, kind: 'static' });
+}
+function buildStaticLight(near) {
+  buildOccluders();
+  for (const l of D.lights) if (!near || Math.hypot(l.x - near.x, l.y - near.y) < l.r + 40) l.poly = null;
+  const [c, g] = mk(WW * LS, WH * LS);
+  g.imageSmoothingEnabled = true;
+  g.fillStyle = rgb(STYLE[D.i].amb[MODE]); g.fillRect(0, 0, c.width, c.height);
+  g.save(); g.scale(LS, LS); g.globalCompositeOperation = 'lighter';
+  for (const l of D.lights) if (l.kind === 'static') drawLight(g, l, l.i);
+  g.restore();
+  const [tmp, tg] = mk(c.width, c.height);
+  tg.filter = 'blur(1px)'; tg.drawImage(c, 0, 0); g.drawImage(tmp, 0, 0);
+  D.stat = c;
+}
+
+// ================================================================== what is seen below and beside a floor
+const IMG = {};
+// A tile of a roof seen from the floor above: the basement's is dirty, the middle's clean.
+// The ships beside the base, drawn at twice their size in space, which is about the size of the inside.
+function shipInside(img, cx, cy, dx, dy) {
+  if (!img || !img.width) return;
+  A.save(); A.imageSmoothingEnabled = false; A.translate(cx, cy); A.rotate(Math.atan2(-dy, -dx) + Math.PI / 2); A.scale(2, 2);
+  A.fillStyle = 'rgba(0,0,0,0.35)'; A.fillRect(-img.width / 2 + 6, -img.height / 2 + 6, img.width - 4, img.height - 4);
+  A.drawImage(img, -img.width / 2, -img.height / 2); A.restore();
+}
+// The ship from outside, round the inside: its hull plates, the containers in the side's colours, the engines astern,
+// the cockpit glass in the bow and the frigate at the airlock. In a wreck, torn edges where containers were.
+function drawShipOutside() {
+  const HL = HULLS[OPT.hull], plate = hex(HL.plate);
+  const near = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (inShip(x + i, y + j)) return true; return false; };
+  // the hull: a band of plating round the ship, one tile wide
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (inShip(x, y) || !near(x, y)) continue;
+    const X = x * T, Y = y * T;
+    box(A, X, Y, T, T, rgb(plate, 0.75)); box(A, X, Y, T, 1, rgb(plate, 0.95)); box(A, X, Y + T - 1, T, 1, rgb(plate, 0.5));
+    if ((x + y) % 3 === 0) box(A, X + 6, Y + 6, 2, 2, rgb(plate, 0.45));
+  }
+  // the containers' outsides along the flanks, in the side's colours
+  COLS.forEach(([x0, x1], k) => {
+    const c = hex(HL.cont[k]);
+    for (const y of [4, 36]) {
+      box(A, x0 * T + 2, y * T + 2, (x1 - x0 + 1) * T - 4, T - 4, rgb(c, 0.9));
+      for (let X = x0 * T + 8; X < (x1 + 1) * T - 6; X += 12) box(A, X, y * T + 3, 2, T - 6, rgb(c, 0.6));
+      box(A, x0 * T + 4, y * T + (y === 4 ? 3 : T - 5), 3, 2, '#c8ccd2');
+    }
+  });
+  // the engines: three bells behind the stern, with their glow
+  for (const dy of [-9, 0, 9]) {
+    const X = (SX0 - 1) * T - 6, Y = (CY + dy) * T + 8;
+    A.fillStyle = '#3a3d44'; A.beginPath(); A.moveTo(X + 14, Y - 9); A.lineTo(X - 8, Y - 14); A.lineTo(X - 8, Y + 14); A.lineTo(X + 14, Y + 9); A.closePath(); A.fill();
+    box(A, X - 9, Y - 13, 3, 26, '#24262c');
+    if (MODE === 'normal' || MODE === 'lockdown' || MODE === 'alarm') { box(E, X - 10, Y - 11, 2, 22, MODE === 'normal' ? '#3a6aa0' : '#2a3a5a'); }
+  }
+  // the cockpit glass in the bow
+  { const X = (BX1 + 1) * T, Y = CY * T + 8; A.fillStyle = '#24323e'; A.beginPath(); A.moveTo(X - 2, Y - 34); A.lineTo(X + 12, Y - 18); A.lineTo(X + 12, Y + 18); A.lineTo(X - 2, Y + 34); A.closePath(); A.fill(); box(E, X + 2, Y - 20, 2, 40, MODE === 'wreck' ? '#0a1018' : '#2a4a6a'); }
+  // a wreck: the floor torn off where containers were, with ragged edges and bent girders over space
+  if (D.torn) for (const c of D.torn) {
+    for (let y = c.y0; y <= c.y1; y++) for (let x = c.x0; x <= c.x1; x++) {
+      if (at(x, y) !== OUT) continue;
+      const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => at(x + dx, y + dy) >= 0);
+      const X = x * T, Y = y * T, n = hash(x, y, 5);
+      if (edge || n < 0.18) { for (let k = 0; k < 5; k++) box(A, X + hash(x, y, k) * 14, Y + hash(y, x, k) * 14, 2 + hash(k, x) * 4, 2 + hash(k, y) * 3, k % 2 ? '#3a3632' : '#2a2724'); }
+      if ((x - c.x0) % 4 === 0 && n < 0.7) box(A, X + 6, Y, 3, T, '#4a4640');
+    }
+  }
+  // the frigate at the airlock, below the ship
+  if (D.lockK !== undefined) { const lx = (SEAMS[D.lockK][0] + 1.5) * T; shipInside(IMG.frigate, lx, 37 * T + 108, 0, -1); }
+}
+let alb, emi;
+function buildDeck(cheap = false) {
+  solids = []; lights = []; emitters = []; cams = []; turrets = []; zones = []; barrels = []; pylons = [];
+  D.solids = solids;
+  // doors that the defence level alarms
+  for (const d of D.doors) {
+    d.kind = d.base;
+    if (d.base !== 'slide' && d.base !== 'staff') continue;
+    const ks = sidesOf(d).map((r) => r.kind);
+    if ((OPT.def >= 2 && ks.some((k) => ['breaker', 'command'].includes(k))) || (OPT.def >= 3 && ks.some((k) => ['server', 'arms', 'comms'].includes(k)))) d.kind = 'alarm';
+  }
+  for (const d of D.doors) { const g = doorGeom(d); zones.push(d.o === 'v' ? { x: g.x - 26, y: g.y - 4, w: 52, h: g.len + 8 } : { x: g.x - 4, y: g.y - 26, w: g.len + 8, h: 52 }); }
+  for (const l of LINKS) if (l.decks.includes(D.i)) { const [x0, y0, x1, y1] = l.r; zones.push({ x: x0 * T - 4, y: y0 * T - 4, w: (x1 - x0 + 1) * T + 8, h: (y1 - y0 + 1) * T + 8 }); }
+  let ag, eg;
+  [alb, ag] = mk(WW, WH); [emi, eg] = mk(WW, WH);
+  A = ag; E = eg;
+  box(A, 0, 0, WW, WH, '#06070b');
+  // stars only where there is nothing between this floor and space
+  const space = (x, y) => { const tx = Math.floor(x / T), ty = Math.floor(y / T); if (at(tx, ty) !== OUT) return false; if (!inShip(tx, ty)) { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (inShip(tx + i, ty + j)) return false; } for (let k = 0; k < D.i; k++) if (decks[k].grid[ty * W + tx] !== OUT) return false; return true; };
+  for (let k = 0; k < 1600; k++) { const x = (hash(k, 7) * WW) | 0, y = (hash(k, 8) * WH) | 0; if (!space(x, y)) continue; const b = hash(k, 9); box(E, x, y, 1, 1, b > 0.9 ? '#9aa4c0' : b > 0.6 ? '#3a4058' : '#22263a'); }
+  if (!cheap) drawShipOutside();
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const v = at(x, y); if (v >= 0) floorTile(D.rooms[v], x, y); }
+  // painted names at the doors, and STAFF on the visitors' side
+  const painted = [];
+  for (const d of D.doors) {
+    if (d.kind === 'hatch' || d.kind === 'arch') continue;
+    const g = doorGeom(d);
+    const sides = d.o === 'v' ? [[d.x - 1, d.y, -1], [d.x, d.y, 1]] : [[d.x, d.y - 1, -1], [d.x, d.y, 1]];
+    for (const [tx, ty, s] of sides) {
+      const here = at(tx, ty), otherT = d.o === 'v' ? [s < 0 ? d.x : d.x - 1, d.y] : [d.x, s < 0 ? d.y : d.y - 1];
+      const other = D.rooms[at(...otherT)];
+      if (here < 0 || !other) continue;
+      const hr = D.rooms[here];
+      const staffSign = d.base === 'staff' && !hr.staff;
+      const c = staffSign ? '#c8b040' : other.tint;
+      if (d.o === 'v') box(A, s < 0 ? g.x - 6 : g.x + 4, g.y + 3, 2, g.len - 6, shade(c, 0.6)); else box(A, g.x + 3, s < 0 ? g.y - 6 : g.y + 4, g.len - 6, 2, shade(c, 0.6));
+      if (staffSign) { if (d.o === 'v') hazard(s < 0 ? g.x - 10 : g.x + 7, g.y + 3, 3, g.len - 6, 0.9); else hazard(g.x + 3, s < 0 ? g.y - 10 : g.y + 7, g.len - 6, 3, 0.9); }
+      if (!['corridor', 'service', 'concourse', 'hold'].includes(hr.kind) || (!other.label && !staffSign)) continue;
+      const text = staffSign ? 'STAFF' : other.name, off = 16;
+      const px = d.o === 'v' ? g.x + (s < 0 ? -off - text.length * 2 : off + text.length * 2) : g.cx;
+      const py = d.o === 'v' ? g.cy : g.y + (s < 0 ? -off : off);
+      const rect = { x: px - text.length * 2 - 4, y: py - 5, w: text.length * 4 + 8, h: 10 };
+      if (painted.some((q) => overlaps(q, rect))) continue;
+      painted.push(rect);
+      paint(A, text, px, py, staffSign ? '#c8b040' : shade(c, D.i === 1 ? 0.55 : 0.85));
+    }
+    if (['pressure', 'lockA', 'lockB'].includes(d.kind)) { if (d.o === 'v') { hazard(g.x - 12, g.y + 2, 4, g.len - 4, 0.7); hazard(g.x + 8, g.y + 2, 4, g.len - 4, 0.7); } else { hazard(g.x + 2, g.y - 12, g.len - 4, 4, 0.7); hazard(g.x + 2, g.y + 8, g.len - 4, 4, 0.7); } }
+  }
+  // furnishing: each room with its own luck, so a change in one room moves nothing in the others
+  reservePaths();
+  R = seeded(SEED * 977 + D.i * 131); furnishGuns();
+  for (const r of D.rooms) if (r.n) { R = seeded(SEED * 977 + D.i * 131 + r.id * 7 + 1); furnish(r); }
+  for (const r of D.rooms) if (r.n) roomLights(r);
+  R = seeded(SEED * 31 + D.i);
+  SPECIAL();
+  // rotating lights only at an alarm: red where the base is an enemy, amber on the crew's own base
+  // rotating lights at an alarm, by the floor's size: one for every 300 tiles of the floor, put in halls and holds,
+  // each as far from the others as it can be, so a big place gets more and none bunch together
+  if (MODE === 'alarm') {
+    const kinds = ['corridor', 'concourse', 'hold', 'security', 'command', 'service'], cand = [];
+    for (const r of D.rooms) if (kinds.includes(r.kind)) for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (at(x, y) === r.id && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => at(x + dx, y + dy) === r.id)) cand.push([x, y]);
+    const area = D.rooms.reduce((q, r) => q + r.n, 0), n = cand.length ? Math.max(1, Math.round(area / 300)) : 0, chosen = [];
+    const far = cand.map(() => Infinity);
+    for (let k = 0; k < n; k++) {
+      let best = k === 0 ? (SEED * 7) % cand.length : 0;
+      if (k > 0) for (let q = 1; q < cand.length; q++) if (far[q] > far[best]) best = q;
+      const [bx, by] = cand[best]; chosen.push(cand[best]);
+      for (let q = 0; q < cand.length; q++) far[q] = Math.min(far[q], Math.hypot(cand[q][0] - bx, cand[q][1] - by));
+    }
+    for (const [x, y] of chosen) lights.push({ x: x * T + 8, y: y * T + 8, r: 160, col: OPT.own ? [255, 170, 60] : L.red, i: 0.7, kind: 'beacon', phase: hash(x, y) * 6 });
+  }
+  // the emergency lamps when the power is out: orange, low, at every door and along the halls
+  if (MODE === 'power') {
+    for (const d of D.doors) { if (d.kind === 'arch') continue; const g = doorGeom(d); lights.push({ x: g.cx, y: g.cy, r: 46, col: [255, 120, 50], i: 0.55, kind: 'static' }); }
+    for (const r of D.rooms) if (['corridor', 'service', 'concourse', 'hold'].includes(r.kind)) for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (at(x, y) === r.id && (x * 5 + y * 11) % 41 === 0) { lights.push({ x: x * T + 8, y: y * T + 8, r: 60, col: [255, 110, 50], i: 0.4, kind: 'static' }); box(E, x * T + 7, y * T + 7, 2, 2, '#ff7a30'); }
+  }
+  // a wreck: sparks and lights that flicker by the torn edges
+  if (MODE === 'wreck' && D.torn) for (const c of D.torn) for (let k = 0; k < 3; k++) {
+    const x = (c.x0 + R() * (c.x1 - c.x0 + 1)) * T, y = (c.side === 'up' ? c.y1 + 1 : c.y0) * T + (c.side === 'up' ? 6 : -6);
+    lights.push({ x, y, r: 70, col: L.amber, i: 0.6, kind: 'pulse', speed: 2 + R() * 3 });
+    emitters.push({ x: x | 0, y: y | 0, c: '#ffd080', rate: 9 + R() * 6, p: R() * 6 });
+  }
+  if (!cheap) drawWalls();
+  Object.assign(D, { alb, emi, solids, lights, emitters, cams, turrets, barrels });
+  bucket();
+  computeWalk();
+}
+const sidesOf = (d) => { const g = d.o === 'v' ? [[d.x - 1, d.y], [d.x, d.y]] : [[d.x, d.y - 1], [d.x, d.y]]; return g.map(([x, y]) => at(x, y)).filter((v) => v >= 0).map((v) => D.rooms[v]); };
+// Cameras and turrets, by the defence bought.
+function SPECIAL() {
+  if (MODE === 'wreck') return;
+  const def = OPT.def;
+  const camN = [1, 2, 3, 4][def];
+  const halls = D.rooms.filter((r) => ['corridor', 'concourse', 'hold', 'security', 'command', 'post', 'service'].includes(r.kind) && r.n > 12);
+  shuffle(halls);
+  for (const r of halls.slice(0, camN)) {
+    for (let k = 0; k < 60; k++) {
+      const tx = r.x0 + Math.floor(R() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R() * (r.y1 - r.y0 + 1));
+      if (at(tx, ty) !== r.id) continue;
+      // on a real wall: not in a doorway, not on an opening into the next hall, not behind a tall cabinet
+      const out = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dx, dy]) => at(tx + dx, ty + dy) !== r.id && edgeType(r.id, at(tx + dx, ty + dy)) > 0 && !doorAt(dx ? 'v' : 'h', dx > 0 ? tx + 1 : tx, dy > 0 ? ty + 1 : ty));
+      if (!out) continue;
+      const cxp = tx * T + 8 + out[0] * 6, cyp = ty * T + 8 + out[1] * 6;
+      if (D.solids.some((s2) => s2.high && cxp > s2.x - 4 && cxp < s2.x + s2.w + 4 && cyp > s2.y - 4 && cyp < s2.y + s2.h + 4)) continue;
+      cams.push({ x: tx * T + 8 + out[0] * 6, y: ty * T + 8 + out[1] * 6, a: Math.atan2(-out[1], -out[0]), sweep: 0.6, r: 150 });
+      break;
+    }
+  }
+  // a turret behind a checkpoint, aimed at the door one comes in by
+  const guard = (roomKind, doorTest) => {
+    const r = D.rooms.find((q) => q.kind === roomKind && q.n); if (!r) return;
+    const d = D.doors.find((q) => sidesOf(q).includes(r) && doorTest(q));
+    if (!d) return;
+    const g = doorGeom(d), fx = r.cx * T + 8, fy = r.cy * T + 8;
+    turrets.push({ x: fx + (fx - g.cx) * 0.25, y: fy + (fy - g.cy) * 0.25, a: Math.atan2(g.cy - fy, g.cx - fx), w: 0.3, r: 200 });
+  };
+  if (def >= 2) {
+    if (D.i === 1) guard('security', (d) => sidesOf(d).some((q) => q.kind === 'concourse'));
+    if (D.i === 2) guard('security', (d) => sidesOf(d).some((q) => q.kind === 'lift'));
+    if (D.i === 0) guard('post', (d) => sidesOf(d).some((q) => q.kind === 'lift' || q.kind === 'corridor'));
+  }
+  if (def >= 3 && D.i === 2) { const r = D.rooms.find((q) => q.kind === 'command'); for (const d of D.doors.filter((q) => sidesOf(q).includes(r)).slice(0, 2)) { const g = doorGeom(d), fx = r.cx * T + 8, fy = r.cy * T + 8; turrets.push({ x: g.cx + (fx - g.cx) * 0.35, y: g.cy + (fy - g.cy) * 0.35, a: Math.atan2(g.cy - fy, g.cx - fx), w: 0.3, r: 180 }); } }
+}
+//@@ 1438-1466
+
+// ================================================================== collision and finding the way
+//@@ 1468-1541
+
+// ================================================================== making a whole base, and checking it
+let SEED = 0;
+//@@ 1544-1589
+function startOf(i) { const p = decks[0].rooms[decks[0].entryLock]; return [(p.cx + 0.5) * T, (p.cy + 0.5) * T]; }
+function finalize() { for (const d of decks) { D = d; finalizeDeck(); } }
+// A ship must work both whole and as a wreck, from the same number.
+function makeBase(seed) {
+  const keep = OPT.wreck;
+  for (let attempt = 0; attempt < 40; attempt++) {
+    OPT.wreck = !keep; let p = tryOnce(seed + attempt);
+    OPT.wreck = keep; if (!p.length) p = tryOnce(seed + attempt);
+    window.__problems = p;
+    if (!p.length) return true;
+  }
+  return false;
+}
+// Everything must be reachable from where one comes onto the floor, and each floor must have its ways up.
+function check() {
+  const problems = [], keep = MODE;
+  decks.forEach((d, i) => {
+    D = d; MODE = 'lockdown';
+    buildDeck(true); d.built = {};
+    const seen = flood(nearestWalk(...startOf(i)));
+    for (const r of d.rooms) {
+      if (!r.n) continue;
+      let ok = false;
+      for (let y = r.y0; y <= r.y1 && !ok; y++) for (let x = r.x0; x <= r.x1 && !ok; x++) {
+        if (at(x, y) !== r.id) continue;
+        for (let jj = 0; jj < 2; jj++) for (let ii = 0; ii < 2; ii++) { const c = (y * 2 + jj) * CN + x * 2 + ii; if (D.walk[c] && seen[c]) ok = true; }
+      }
+      if (!ok) problems.push(`floor ${i + 1}: ${r.name} (${r.kind})`);
+    }
+  });
+  MODE = keep;
+  return problems;
+}
+const snapshot = () => ({ alb: D.alb, emi: D.emi, solids: D.solids, lights: D.lights, emitters: D.emitters, cams: D.cams, turrets: D.turrets, barrels: D.barrels, walk: D.walk, bk: D.bk, stat: D.stat });
+
+// ================================================================== figures
+//@@ 1631-1775
+Object.assign(KINDS, {
+  visitor: { name: 'Besökare', suit: '#6a5a7a', helm: '#4a3020', acc: '#9a8aaa', visor: '#d0a888', cap: true, gun: 'none', eyeless: true },
+  trader: { name: 'Handlare', suit: '#4a6a7a', helm: '#3a2a20', acc: '#7a9aaa', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  mechanic: { name: 'Mekaniker', suit: '#8a6a35', helm: '#2a2420', acc: '#5c4622', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  medic: { name: 'Läkare', suit: '#c8ccd0', helm: '#3a2a20', acc: '#c04a4a', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  barkeep: { name: 'Bartender', suit: '#7a3a3a', helm: '#2a1e1a', acc: '#c9a06a', visor: '#c8a080', cap: true, gun: 'none', eyeless: true },
+  officer: { name: 'Befäl', suit: '#3a4a6a', helm: '#2a2420', acc: '#6fb8ff', visor: '#c8a080', cap: true, gun: 'pistol', eyeless: true },
+});
+
+// ================================================================== the people
+const me = { kind: 'gunner', x: 0, y: 0, a: 0, walked: 0, moving: false, lamp: false, fire: 0, r: 5, deck: 1 };
+let npcs = [];
+function castFor(deck) {
+  const d = decks[deck], out = [];
+  if (MODE === 'wreck') return out;
+  const open = MODE === 'normal';
+  const R2 = seeded(SEED * 31 + deck * 7);
+  const roomsOf = (kinds) => d.rooms.filter((r) => kinds.includes(r.kind) && r.n);
+  const spot = (r) => { if (!r) return null; for (let k = 0; k < 40; k++) { const tx = r.x0 + Math.floor(R2() * (r.x1 - r.x0 + 1)), ty = r.y0 + Math.floor(R2() * (r.y1 - r.y0 + 1)); if (d.grid[ty * W + tx] === r.id) { const px = tx * T + 8, py = ty * T + 8; const c = nearestWalk(px, py); if (c >= 0) return [(c % CN) * CW + 4, ((c / CN) | 0) * CW + 4]; } } return null; };
+  const civ = ['mechanic', 'medic', 'barkeep', 'officer', 'crewman', 'tech'];
+  const add = (kind, route, o = {}) => { route = route.filter(Boolean); if (!route.length) return; out.push({ kind, x: route[0][0], y: route[0][1], a: R2() * 6.28, route, at: 0, path: null, walked: 0, wait: R2() * 2, post: route.length === 1, guard: !civ.includes(kind), speed: kind === 'heavy' ? 18 : open ? 22 : 28, r: 5, ...o }); };
+  D = d;
+  const spine = d.rooms[d.spine], holds = d.holds.map((id) => d.rooms[id]).filter((r) => r.n), ways = d.ways.map((w) => d.rooms[w.id]).filter((r) => r.n);
+  const one = (k) => roomsOf(k)[0];
+  const area = d.rooms.reduce((a, r) => a + r.n, 0);
+  if (open) {
+    for (const h of holds) { add('mechanic', [spot(h), spot(h)]); add('crewman', [spot(h), spot(spine), spot(h)]); }
+    for (const r of roomsOf(['messd'])) { add('crewman', [spot(r)]); add('crewman', [spot(r)]); }
+    for (const r of roomsOf(['kitchen'])) add('barkeep', [spot(r), spot(r)]);
+    for (const r of roomsOf(['med'])) add('medic', [spot(r)]);
+    for (const r of roomsOf(['workshop', 'power', 'tanks', 'fuel'])) add('tech', [spot(r), spot(r)]);
+    const br = one(['command']); if (br) { add('officer', [spot(br)]); add('tech', [spot(br), spot(br)]); }
+    // guards by the ship's size: one for every 1200 tiles while all is calm
+    for (let k = 0; k < Math.max(1, Math.round(area / 1200)); k++) add('watch', [spot(spine), spot(holds[k % holds.length]), spot(spine), spot(spine)]);
+  } else {
+    // guards by the ship's size: one for every 500 tiles. The alarm brings no new guards; the same ones hunt, faster.
+    const n = Math.max(2, Math.round(area / 500));
+    for (let k = 0; k < n; k++) add(k === n - 1 && n >= 4 ? 'heavy' : k % 2 ? 'soldier' : 'watch', [spot(holds[k % holds.length]), spot(spine), spot(ways[k % Math.max(1, ways.length)]), spot(holds[(k + 1) % holds.length])], MODE === 'alarm' ? { speed: 36 } : {});
+    const br = one(['command']); if (br) { add('officer', [spot(br)]); add('soldier', [spot(br)]); }
+    for (const r of roomsOf(['power'])) add('tech', [spot(r)]);
+    for (const r of roomsOf(['vault'])) add('watch', [spot(r)]);
+  }
+  return out;
+}
+
+// ================================================================== view
+const view = document.getElementById('view');
+const vg = view.getContext('2d');
+let VW = 640, VH = 360, overview = false, planView = false, outside = true, approach = false;
+let cA, cAG, cE, cEG, cL, cLG, cB, cBG, cB2, cB2G;
+function sizeView() {
+  VW = approach ? 640 : outside ? 1200 : overview ? WW : 640; VH = approach ? 360 : outside ? 900 : overview ? WH : 360;
+  view.width = VW; view.height = VH; vg.imageSmoothingEnabled = false;
+  [cA, cAG] = mk(VW, VH); [cE, cEG] = mk(VW, VH); [cL, cLG] = mk(VW * LS, VH * LS);
+  [cB, cBG] = mk(VW / 4, VH / 4); [cB2, cB2G] = mk(VW / 4, VH / 4);
+  cLG.imageSmoothingEnabled = true; cBG.imageSmoothingEnabled = true; cB2G.imageSmoothingEnabled = true;
+}
+let camX = 0, camY = 0;
+const shots = [], blasts = [], decals = [];
+//@@ 1874-1881
+// Door lamps: the crew's turquoise on its own base, green where visitors may go, yellow at staff doors, red only when the
+// base is an enemy, orange blinking when the power is out.
+function doorLamp(d, t) {
+  if (MODE === 'wreck') return d.kind === 'hatch' ? '#3a1a08' : '#140806';
+  if (MODE === 'power') return Math.sin(t * 3 + d.x) > 0.6 ? '#ff7a30' : '#3a1a08';
+  if (MODE === 'lockdown') return OPT.own ? '#e0b040' : '#c0302a';
+  if (MODE === 'alarm') return Math.sin(t * Math.PI * 3) > 0 ? (OPT.own ? '#ffc040' : '#ff3b30') : '#3a0a08';
+  if (OPT.own) return '#96d66e';
+  return d.base === 'staff' || d.kind === 'alarm' ? '#e0b040' : '#62e08a';
+}
+const partnerOf = (d) => D.doors.find((q) => q !== d && q.pair && q.pair === d.pair);
+function drawDoors(t) {
+  for (const d of D.doors) {
+    if (d.kind === 'arch') continue;
+    const gm = doorGeom(d), o = doorOpen(d);
+    const heavy = ['pressure', 'hatch', 'locked', 'lift', 'lockA', 'lockB', 'staff'].includes(d.kind);
+    const th = heavy ? 6 : 4, half = gm.len / 2, leaf = Math.max(0, half * (1 - o));
+    const col = D.i === 1 ? (heavy ? '#8a8c94' : '#a4a6ac') : D.i === 2 ? '#4a5262' : heavy ? '#5a5650' : '#4e4c48';
+    const draw = (x, y, w, h) => {
+      if (w <= 0 || h <= 0) return;
+      box(cAG, x, y, w, h, shade(col, 0.6)); box(cAG, x + (w > h ? 0 : 1), y + (w > h ? 1 : 0), w > h ? w : w - 2, w > h ? h - 2 : h, col);
+      const stripe = ['pressure', 'hatch', 'lockA', 'lockB'].includes(d.kind) ? '#8a7234' : d.kind === 'staff' ? '#a89030' : null;
+      if (stripe) { cAG.save(); cAG.beginPath(); cAG.rect(x, y, w, h); cAG.clip(); cAG.fillStyle = stripe; for (let k = -10; k < Math.max(w, h) + 10; k += 5) { if (w > h) cAG.fillRect(x + k, y + 1, 2, h - 2); else cAG.fillRect(x + 1, y + k, w - 2, 2); } cAG.restore(); }
+    };
+    if (d.o === 'v') { draw(gm.x - th / 2, gm.y, th, leaf); draw(gm.x - th / 2, gm.y + gm.len - leaf, th, leaf); }
+    else { draw(gm.x, gm.y - th / 2, leaf, th); draw(gm.x + gm.len - leaf, gm.y - th / 2, leaf, th); }
+    const lx = d.o === 'v' ? gm.x - 1 : gm.x - 6, ly = d.o === 'v' ? gm.y - 6 : gm.y - 1;
+    box(cAG, lx, ly, 2, 2, '#202228'); box(cEG, lx, ly, 2, 2, d.kind === 'hatch' ? '#3a3020' : doorLamp(d, t));
+    // the airlock's buttons: green when this door may open, yellow while the other one is still open
+    if (d.pair) {
+      const p = partnerOf(d), ok = !p || p.open === 0;
+      for (const s of [-1, 1]) {
+        const bx = d.o === 'v' ? gm.x + s * 9 - 2 : gm.x + gm.len + 3, by = d.o === 'v' ? gm.y + gm.len + 3 : gm.y + s * 9 - 2;
+        box(cAG, bx - 1, by - 1, 6, 6, '#2a2c32'); box(cAG, bx, by, 4, 4, '#4a4e58'); box(cEG, bx + 1, by + 1, 2, 2, ok ? '#62e08a' : Math.sin(t * 5) > 0 ? '#e0b040' : '#3a2a08');
+      }
+    }
+    if (d.kind === 'alarm' && Math.hypot(me.x - gm.cx, me.y - gm.cy) < 70) { const ex = d.o === 'v' ? gm.x - 1 : gm.x + gm.len + 4, ey = d.o === 'v' ? gm.y + gm.len + 4 : gm.y - 1; box(cEG, ex, ey, 2, 2, '#ffd040'); }
+  }
+}
+//@@ 1901-1908
+function fire() {
+  if (outside) return;
+  me.fire = 0.12;
+  const ax = Math.cos(me.a), ay = Math.sin(me.a);
+  let x = me.x + ax * 10, y = me.y + ay * 10, hit = null;
+  for (let s = 0; s < 360; s += 2) {
+    x += ax * 2; y += ay * 2;
+    if (at(Math.floor(x / T), Math.floor(y / T)) < 0) break;
+    const list = D.bk[Math.floor(y / BK) * BN + Math.floor(x / BK)] || [];
+    const b = list.find((q) => !q.dead && x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
+    if (b) { hit = b; break; }
+    if (D.doors.some((d) => { if (doorOpen(d) > 0.5) return false; const g = doorGeom(d); return d.o === 'v' ? Math.abs(x - g.x) < 3 && y > g.y && y < g.y + g.len : Math.abs(y - g.y) < 3 && x > g.x && x < g.x + g.len; })) break;
+  }
+  shots.push({ x0: me.x + ax * 10, y0: me.y + ay * 10, x1: x, y1: y, life: 0.08 });
+  if (hit && hit.barrel) explode(hit);
+}
+//@@ 1929-1942
+
+// ================================================================== the tour
+let tour = true, tourAt = 0, tourWait = 0, tourPath = null, TOUR = [];
+function buildTour() {
+  TOUR = [];
+  const d = decks[0]; D = d;
+  const c = (r, w = 1.2) => (r && r.n ? [0, r.cx * T + 8, r.cy * T + 8, w] : null);
+  const s = startOf(0);
+  TOUR.push([0, s[0], s[1], 1.6]);
+  const lockSeam = d.seams.find((q) => q.side === 'dn' && q.k === d.lockK);
+  const big = d.holds.map((id) => d.rooms[id]).sort((a, b) => b.n - a.n)[0];
+  for (const p of [c(d.rooms[lockSeam.id], 0.3), c(big, 1.5), [0, (big.x0 + 2) * T, (big.cy + 0.5) * T, 0.6], [0, (big.x1 - 1) * T, (big.cy + 0.5) * T, 0.6], c(d.rooms.find((r) => r.kind === 'power'), 1.4), c(d.rooms.find((r) => r.kind === 'fuel' || r.kind === 'tanks'), 0.8)]) if (p) TOUR.push(p);
+  const way = d.ways.map((w) => d.rooms[w.id]).filter((r) => r.n).sort((a, b) => b.n - a.n)[0];
+  if (way) { TOUR.push([0, (way.x0 + 1) * T, (way.cy + 0.5) * T, 0.2], [0, (way.x1) * T, (way.cy + 0.5) * T, 0.6]); }
+  for (const k of ['messd', 'command', 'chief', 'vault']) { const p = c(d.rooms.find((r) => r.kind === k)); if (p) TOUR.push(p); }
+  TOUR.push(['restart']);
+}
+
+// A way to a point, or to somewhere near it when the point itself is shut in by furniture.
+function findPathNear(x0, y0, x1, y1) {
+  for (const [dx, dy] of [[0, 0], [32, 0], [-32, 0], [0, 32], [0, -32], [48, 48], [-48, 48], [48, -48], [-48, -48], [72, 0], [-72, 0], [0, 72], [0, -72]]) {
+    const p = findPath(x0, y0, x1 + dx, y1 + dy); if (p) return p;
+  }
+  return null;
+}
+
+// ================================================================== every frame
+const keys = new Set();
+let pointer = null, touchGoal = null;
+const turn = (a, b, k) => { const d = ((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI; return a + Math.max(-k, Math.min(k, d)); };
+function frame(t, dt) {
+  let mx = 0, my = 0;
+  if (keys.has('a') || keys.has('arrowleft')) mx -= 1;
+  if (keys.has('d') || keys.has('arrowright')) mx += 1;
+  if (keys.has('w') || keys.has('arrowup')) my -= 1;
+  if (keys.has('s') || keys.has('arrowdown')) my += 1;
+  if (touchGoal) { const dx = touchGoal.x - me.x, dy = touchGoal.y - me.y, d = Math.hypot(dx, dy); if (d > 4) { mx = dx / d; my = dy / d; } }
+  if (tour && !overview) {
+    const step = TOUR[tourAt];
+    me.moving = false;
+    if (tourWait > 0) tourWait -= dt;
+    else if (step[0] === 'up' || step[0] === 'down') { changeDeck(step[0] === 'up' ? 1 : -1); tourAt++; tourPath = null; tourWait = 0.6; }
+    else if (step[0] === 'restart') startTour();
+    else if (step[0] !== me.deck) tourAt++;
+    else {
+      if (!tourPath) tourPath = findPathNear(me.x, me.y, step[1], step[2]);
+      if (!tourPath) { tourAt++; return frame(t, 0); }
+      const p = tourPath[0], dx = p[0] - me.x, dy = p[1] - me.y, d = Math.hypot(dx, dy);
+      // wait at an airlock door that may not open yet
+      const held = D.doors.some((q) => q.pair && doorOpen(q) < 0.6 && Math.hypot(doorGeom(q).cx - (me.x + (dx / (d || 1)) * 10), doorGeom(q).cy - (me.y + (dy / (d || 1)) * 10)) < 14);
+      if (d < 2) { tourPath.shift(); if (!tourPath.length) { tourPath = null; tourWait = step[3] || 0; tourAt++; } }
+      else if (!held) { const sp = Math.min(d, 84 * dt); me.x += (dx / d) * sp; me.y += (dy / d) * sp; me.walked += sp; me.moving = true; me.a = turn(me.a, Math.atan2(dy, dx), 8 * dt); }
+    }
+  } else {
+    const len = Math.hypot(mx, my);
+    me.moving = len > 0.01;
+    if (me.moving) {
+      const sp = 64 * dt, bx = me.x, by = me.y;
+      if (!blocked(me.x + (mx / len) * sp, me.y, me.r)) me.x += (mx / len) * sp;
+      if (!blocked(me.x, me.y + (my / len) * sp, me.r)) me.y += (my / len) * sp;
+      me.walked += Math.hypot(me.x - bx, me.y - by);
+      if (!pointer || touchGoal) me.a = turn(me.a, Math.atan2(my, mx), 8 * dt);
+    }
+    if (pointer && !touchGoal) me.a = Math.atan2(pointer.y - me.y, pointer.x - me.x);
+  }
+  if (me.fire > 0) me.fire -= dt;
+  const l = linkHere(), k = l ? l.decks.indexOf(me.deck) : -1;
+  upBtn.hidden = !(l && k < l.decks.length - 1); downBtn.hidden = !(l && k > 0);
+  if (l) { upBtn.textContent = '▲ ' + NAMES[l.decks[k + 1]] ; downBtn.textContent = '▼ ' + (k > 0 ? NAMES[l.decks[k - 1]] : ''); }
+  for (const n of npcs) {
+    if (n.wait > 0) { n.wait -= dt; n.moving = false; if (n.post) n.a += Math.sin(t * 0.9 + n.x) * 0.5 * dt; continue; }
+    if (n.post) { n.moving = false; n.wait = 2; continue; }
+    if (!n.path) { const g = n.route[n.at]; n.path = findPath(n.x, n.y, g[0], g[1]) || [[g[0], g[1]]]; }
+    const p = n.path[0], dx = p[0] - n.x, dy = p[1] - n.y, d = Math.hypot(dx, dy);
+    if (d < 2) { n.path.shift(); if (!n.path.length) { n.path = null; n.at = (n.at + 1) % n.route.length; n.wait = n.guard ? 1.4 : 2 + hash(n.at, n.x | 0) * 3; } continue; }
+    const sp = Math.min(d, n.speed * dt);
+    n.x += (dx / d) * sp; n.y += (dy / d) * sp; n.walked += sp; n.moving = true; n.a = turn(n.a, Math.atan2(dy, dx), 6 * dt);
+  }
+  stepDoors(dt, [me, ...npcs]);
+  if (doorsChanged) { buildStaticLight(doorsChanged); doorsChanged = null; }
+  if (overview) { camX = 0; camY = 0; } else { camX = Math.round(Math.max(0, Math.min(WW - VW, me.x - VW / 2))); camY = Math.round(Math.max(0, Math.min(WH - VH, me.y - VH / 2))); }
+  cAG.clearRect(0, 0, VW, VH); cAG.drawImage(D.alb, camX, camY, VW, VH, 0, 0, VW, VH);
+  cEG.clearRect(0, 0, VW, VH); cEG.drawImage(D.emi, camX, camY, VW, VH, 0, 0, VW, VH);
+  cAG.save(); cAG.translate(-camX, -camY); cEG.save(); cEG.translate(-camX, -camY);
+  for (const [x, y] of decals) box(cAG, x, y, 2, 2, 'rgba(12,10,8,0.6)');
+  for (const s of D.solids) if (s.dead) { box(cAG, s.x, s.y, s.w, s.h, 'rgba(16,14,12,0.75)'); if (s.burnt) for (let q = 0; q < 4; q++) box(cAG, s.x + hash(q, s.x) * s.w, s.y + hash(s.y, q) * s.h, 2, 2, '#4a4038'); }
+  drawDoors(t);
+  const ed = EDIM();
+  for (const b of D.emitters) { const on = b.rate === 0 ? 0.55 + 0.45 * Math.sin(t * 1.6) : Math.sin(t * b.rate + b.p) > -0.2 ? 1 : 0.15; cEG.globalAlpha = on * ed; box(cEG, b.x, b.y, 1, 1, b.c); cEG.globalAlpha = 1; }
+  for (const c of D.cams) { const a = c.a + Math.sin(t * 0.5) * c.sweep; c.now = a; box(cAG, c.x - 2, c.y - 2, 5, 5, '#2a2d34'); box(cAG, c.x - 1 + Math.cos(a) * 2, c.y - 1 + Math.sin(a) * 2, 3, 3, '#4a4e58'); box(cEG, Math.round(c.x + Math.cos(a) * 3), Math.round(c.y + Math.sin(a) * 3), 1, 1, OPT.side === 'hostile' || (!OPT.own && MODE !== 'normal') ? '#ff3b30' : OPT.own ? '#96d66e' : '#e0b040'); }
+  for (const u of D.turrets) { disc(cAG, u.x, u.y, 6, '#2a2d34'); disc(cAG, u.x, u.y, 5, '#4a4e58'); box(cAG, u.x + Math.cos(u.a) * 7 - 1, u.y + Math.sin(u.a) * 7 - 1, 3, 3, '#24262c'); box(cEG, u.x - 1, u.y - 1, 2, 2, OPT.side === 'hostile' || (!OPT.own && MODE !== 'normal') ? '#ff3b30' : OPT.own ? '#96d66e' : '#e0b040'); }
+  for (const f of npcs) drawFigure(f, t);
+  drawFigure(me, t);
+  for (const s of shots) { cEG.strokeStyle = 'rgba(255,230,160,0.9)'; cEG.lineWidth = 1; cEG.beginPath(); cEG.moveTo(s.x0, s.y0); cEG.lineTo(s.x1, s.y1); cEG.stroke(); s.life -= dt; }
+  for (let q = shots.length - 1; q >= 0; q--) if (shots[q].life <= 0) shots.splice(q, 1);
+  for (const b of blasts) { const kk = b.life / 0.5; disc(cEG, b.x, b.y, Math.max(1, (1 - kk) * 18 + 4) | 0, `rgba(255,${160 + 80 * kk | 0},80,${kk})`); }
+  cAG.restore(); cEG.restore();
+  // light
+  cLG.drawImage(D.stat, camX * LS, camY * LS, VW * LS, VH * LS, 0, 0, VW * LS, VH * LS);
+  cLG.save(); cLG.scale(LS, LS); cLG.translate(-camX, -camY); cLG.globalCompositeOperation = 'lighter';
+  const inView = (q) => q.x + q.r > camX && q.x - q.r < camX + VW && q.y + q.r > camY && q.y - q.r < camY + VH;
+  for (const q of D.lights) {
+    if (q.kind === 'static' || !inView(q)) continue;
+    if (q.kind === 'pulse') drawLight(cLG, q, q.i * (0.8 + 0.2 * Math.sin(t * q.speed * 6.28)));
+    if (q.kind === 'beacon') drawLight(cLG, q, q.i, { a: t * 2.2 + q.phase * 2, w: 0.42 });
+  }
+  const lit = (x, y, r, col, i, cone) => { const q = { x, y, r, col }; if (inView(q)) drawLight(cLG, q, i, cone); };
+  if (me.lamp) { lit(me.x + Math.cos(me.a) * 8, me.y + Math.sin(me.a) * 8, 170, [235, 238, 225], MODE === 'power' ? 0.95 : 0.6, { a: me.a, w: 0.38 }); lit(me.x, me.y, 30, [160, 165, 175], 0.35); }
+  const hostile = !OPT.own && (MODE !== 'normal' || OPT.side === 'hostile');
+  for (const n of npcs) if (n.guard && MODE !== 'normal') lit(n.x + Math.cos(n.a) * 6, n.y + Math.sin(n.a) * 6, 90, hostile ? [180, 50, 40] : [200, 170, 110], 0.4, { a: n.a, w: 0.5 });
+  for (const b of blasts) { lit(b.x, b.y, b.r, [255, 170, 90], b.life * 2.4); b.life -= dt; }
+  for (let q = blasts.length - 1; q >= 0; q--) if (blasts[q].life <= 0) blasts.splice(q, 1);
+  if (me.fire > 0.05) lit(me.x + Math.cos(me.a) * 14, me.y + Math.sin(me.a) * 14, 70, [255, 210, 140], 0.8);
+  cLG.restore();
+  vg.globalCompositeOperation = 'source-over';
+  vg.drawImage(cA, 0, 0);
+  vg.globalCompositeOperation = 'multiply'; vg.imageSmoothingEnabled = true; vg.drawImage(cL, 0, 0, VW, VH); vg.imageSmoothingEnabled = false;
+  vg.globalCompositeOperation = 'lighter'; vg.drawImage(cE, 0, 0);
+  cBG.clearRect(0, 0, cB.width, cB.height); cBG.drawImage(cE, 0, 0, cB.width, cB.height);
+  cB2G.clearRect(0, 0, cB.width, cB.height); cB2G.filter = 'blur(2px)'; cB2G.drawImage(cB, 0, 0); cB2G.filter = 'none';
+  vg.globalAlpha = 0.9; vg.imageSmoothingEnabled = true; vg.drawImage(cB2, 0, 0, VW, VH); vg.drawImage(cB2, 0, 0, VW, VH); vg.imageSmoothingEnabled = false; vg.globalAlpha = 1;
+  vg.globalCompositeOperation = 'source-over';
+  // an alarm puts a red frame round the picture, as in the game: it swells and fades slowly and does not flash
+  if (MODE === 'alarm') { vg.globalAlpha = 0.35 + 0.25 * Math.sin(t * 2.6); vg.strokeStyle = OPT.own ? '#e0a040' : '#e8503a'; vg.lineWidth = 3; vg.strokeRect(1.5, 1.5, VW - 3, VH - 3); vg.globalAlpha = 1; }
+  if (planView) drawPlan();
+}
+let doorsChanged = null;
+function stepDoors(dt, people) {
+  for (const d of D.doors) {
+    if (d.kind === 'hatch' || d.kind === 'locked' || d.kind === 'arch') continue;
+    const g = doorGeom(d);
+    let near = people.some((f) => Math.abs(f.x - g.cx) < 30 && Math.abs(f.y - g.cy) < 30);
+    // an airlock door stays shut until the other one has closed
+    if (d.pair) { const p = partnerOf(d); if (p && p.open > 0) near = false; }
+    const before = doorOpen(d) > 0.5;
+    d.open = Math.max(0, Math.min(1, d.open + (near ? 4 : -2.5) * dt));
+    if ((doorOpen(d) > 0.5) !== before) doorsChanged = { x: g.cx, y: g.cy };
+  }
+}
+//@@ 2149-2169
