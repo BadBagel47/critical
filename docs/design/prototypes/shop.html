@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Butik, förråd och varv: skiss</title>
+<style>
+/* A sketch of the shop, the stores and the shipyard (D-243), drawn with the game's own font and colours on a
+   screen of the game's size. Everything in it is made up for the sketch: no game is running. */
+:root {
+  color-scheme: dark;
+  --bg: #0b0c16;
+  --panel: #14162a;
+  --line: #2f3350;
+  --text: #c9ccd8;
+  --dim: #8a8ea6;
+  --accent: #dba445;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.5 ui-monospace, Menlo, Consolas, monospace; padding: 20px 16px 40px; }
+main { max-width: 1300px; margin: 0 auto; display: grid; gap: 14px; }
+h1 { font: 600 1.6rem 'Trebuchet MS', 'Segoe UI', sans-serif; margin: 0; }
+p { margin: 0; max-width: 90ch; }
+.lede { color: var(--dim); }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bar span { color: var(--dim); margin-right: 4px; }
+button { font: 600 .95rem 'Trebuchet MS', 'Segoe UI', sans-serif; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 6px 12px; cursor: pointer; }
+button[aria-pressed='true'] { background: var(--accent); color: #15120a; border-color: var(--accent); }
+canvas { width: 100%; max-width: 1280px; aspect-ratio: 16 / 9; image-rendering: pixelated; border: 1px solid var(--line); background: #090911; }
+.note { color: var(--dim); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Butik, förråd och varv</h1>
+  <p class="lede">Skiss för D-243, inte byggd. Klicka i bilden: filterknapparna, sakerna i listan och knapparna i panelen. Piltangenterna flyttar markeringen och Enter gör det knappen säger. Alla siffror är påhittade för skissen.</p>
+  <div class="bar" id="views"><span>Vy:</span></div>
+  <div class="bar" id="players"><span>Du spelar som:</span></div>
+  <canvas id="screen" width="1280" height="720" tabindex="0"></canvas>
+  <p class="note" id="status"></p>
+</main>
+<script type="module">
+import { BitmapFont } from '../../../src/font.js';
+import { COL } from '../../../src/config.js';
+import { rect } from '../../../src/render/draw.js';
+
+const W = 640, H = 360;
+const ROLES = ['captain', 'gunner', 'engineer'];
+const NAME = { captain: 'CAPTAIN', gunner: 'GUNNER', engineer: 'ENGINEER', all: 'ALL' };
+const ROLE_COL = { captain: COL.captain, gunner: COL.gunner, engineer: COL.engineer, all: COL.text };
+
+// ---------- the things, as decided (R-1114, R-1125 to R-1148). Prices are made up. ----------
+// kind: 'part' is installed at a shipyard, 'gear' is carried and works at once, 'service' is bought at the desk.
+// levels: what each level gives, its price, and the number it moves.
+const lv = (price, gives, stat) => ({ price, gives, stat });
+const ITEMS = [
+  { id: 'tank', role: 'captain', kind: 'part', slot: 'system', name: 'FUEL TANK', desc: 'ROOM FOR ONE MORE JUMP OF FUEL FOR EVERY LEVEL',
+    levels: [1, 2, 3, 4, 5].map((k) => lv(120 + 40 * k, '+1 JUMP', ['JUMPS', k, k + 1])) },
+  { id: 'boost', role: 'captain', kind: 'part', slot: 'system', name: 'AFTERBURNER', desc: 'HOLD SHIFT FOR SPEED  ·  BURNS FUEL FAST',
+    levels: [lv(160, 'BOOST', ['TOP SPEED', 120, 190])] },
+  { id: 'jumpcoil', role: 'captain', kind: 'part', slot: 'system', name: 'JUMP COILS', desc: 'JUMPS CHARGE FASTER AND COST LESS FUEL',
+    levels: [lv(180, 'FASTER JUMPS', ['CHARGE', '8 S', '4 S'])] },
+  { id: 'solar', role: 'captain', kind: 'part', slot: 'system', name: 'SOLAR CELLS', desc: 'SLOWLY FILL THE TANK FROM STARLIGHT',
+    levels: [lv(200, 'ONE JUMP IN 5 MIN', ['FUEL PER MIN', 0, 5])] },
+  { id: 'alarm', role: 'captain', kind: 'part', slot: 'system', name: 'ENEMY ALARM', desc: 'WARNS OF PIRATES FAR OUT',
+    levels: [lv(120, 'ALARM', ['REACH', 0, 900]), lv(180, 'FURTHER', ['REACH', 900, 1400]), lv(240, 'ON THE SCREEN', ['WARNING', 'SOUND', 'SCREEN'])] },
+  { id: 'tscan', role: 'captain', kind: 'part', slot: 'system', name: 'TARGET SCANNER', desc: 'SHOWS HEALTH AND BOARDING RISK',
+    levels: [lv(140, 'HEALTH AND RISK', null)] },
+  { id: 'tractor', role: 'captain', kind: 'part', slot: 'system', name: 'TRACTOR BEAM', desc: 'PULLS IN SALVAGE FROM A DISTANCE',
+    levels: [lv(150, 'PULLS SALVAGE', ['REACH', 0, 180])] },
+  { id: 'sysradar', role: 'captain', kind: 'part', slot: 'system', name: 'SYSTEM RADAR', desc: 'SHOWS WHO HOLDS THE SYSTEMS NEAR BY, AS THEY ARE NOW',
+    levels: [lv(200, 'ONE JUMP', ['REACH', 0, 1]), lv(350, 'TWO JUMPS', ['REACH', 1, 2])] },
+  { id: 'nose', role: 'gunner', kind: 'part', slot: 'hull', name: 'NOSE TURRET', desc: 'A PULSE TURRET THAT TURNS, IN THE NOSE',
+    levels: [lv(140, 'TURRET', ['TURRETS', 0, 1])] },
+  { id: 'twin', role: 'gunner', kind: 'part', slot: 'hull', name: 'TWIN WING TURRETS', desc: 'TWO MORE PULSE TURRETS',
+    levels: [lv(150, 'TWO TURRETS', ['TURRETS', 1, 3])] },
+  { id: 'heavy', role: 'gunner', kind: 'part', slot: 'hull', name: 'HEAVY LASER', desc: 'CHARGED BEAM, FIRES STRAIGHT AHEAD',
+    levels: [lv(220, 'HEAVY LASER', ['DAMAGE PER SHOT', 6, 40])] },
+  { id: 'rockets', role: 'gunner', kind: 'part', slot: 'hull', name: 'ROCKET PODS', desc: 'HOMING ROCKETS  ·  BUY THE ROCKETS AT THE DESK',
+    levels: [lv(200, 'ROCKET PODS', ['ROCKETS', 0, 8])] },
+  { id: 'bay', role: 'gunner', kind: 'part', slot: 'hull', name: 'FIGHTER BAY', desc: 'DARTS THAT FIGHT AT YOUR SIDE  ·  LAUNCHED BY HAND',
+    levels: [1, 2, 3].map((k) => lv(220 + 60 * k, '+1 DART', ['DARTS', k - 1, k])) },
+  { id: 'tcomp', role: 'gunner', kind: 'part', slot: 'system', name: 'TARGETING COMPUTER', desc: 'SHOWS THE GUNNER WHERE TO AIM',
+    levels: [lv(130, 'AIM MARK', null)] },
+  { id: 'armor', role: 'engineer', kind: 'part', slot: 'hull', name: 'ARMOR PLATING', desc: 'A STRONGER HULL',
+    levels: [lv(160, 'HULL +80', ['HULL', 200, 280])] },
+  { id: 'pd', role: 'engineer', kind: 'part', slot: 'hull', name: 'POINT DEFENSE', desc: 'SHOOTS DOWN SOME INCOMING FIRE',
+    levels: [lv(220, 'POINT DEFENSE', ['SHOTS STOPPED', '0%', '25%'])] },
+  { id: 'emit', role: 'engineer', kind: 'part', slot: 'system', name: 'SHIELD EMITTERS', desc: 'A STRONGER SHIELD',
+    levels: [lv(180, 'SHIELD +50', ['SHIELD', 100, 150])] },
+  { id: 'core', role: 'engineer', kind: 'part', slot: 'system', name: 'POWER CORE', desc: 'MORE POWER TO SHARE OUT',
+    levels: [lv(240, 'POWER +2', ['POWER', 8, 10])] },
+  { id: 'drones', role: 'engineer', kind: 'part', slot: 'system', name: 'REPAIR DRONES', desc: 'SLOWLY REPAIR THE SHIP ON THEIR OWN',
+    levels: [lv(200, 'DRONES', ['HULL PER MIN', 0, 12])] },
+  { id: 'dockfield', role: 'engineer', kind: 'part', slot: 'system', name: 'DOCKING FIELD', desc: 'A STRONGER EXTRA SHIELD WHILE DOCKED',
+    levels: [lv(150, 'FIELD +50', ['DOCK SHIELD', 40, 90])] },
+  { id: 'pulse', role: 'engineer', kind: 'part', slot: 'system', name: 'SCANNER PULSE', desc: 'SHOWS ALL OF THE SYSTEM FOR A MOMENT  ·  COSTS A LITTLE FUEL',
+    levels: [lv(160, 'PULSE', null)] },
+  ...ROLES.flatMap((role) => [
+    { id: 'slotH-' + role, role, kind: 'part', slot: null, name: 'EXTRA HULL SLOT', desc: `ONE MORE HULL SLOT FOR THE ${NAME[role]}`,
+      levels: [lv(250, '+1 SLOT', ['HULL SLOTS', 2, 3]), lv(375, '+1 SLOT', ['HULL SLOTS', 3, 4])] },
+    { id: 'slotS-' + role, role, kind: 'part', slot: null, name: 'EXTRA SYSTEM SLOT', desc: `ONE MORE SYSTEM SLOT FOR THE ${NAME[role]}`,
+      levels: [lv(200, '+1 SLOT', ['SYSTEM SLOTS', 2, 3]), lv(300, '+1 SLOT', ['SYSTEM SLOTS', 3, 4])] },
+  ]),
+  { id: 'charge', role: 'gunner', kind: 'gear', slot: null, name: 'BREACHING CHARGE', desc: 'BLOWS A VAULT DOOR OPEN  ·  WAKES EVERYONE  ·  USED UP',
+    levels: [lv(50, 'ONE CHARGE', ['CHARGES', 0, 1])] },
+  { id: 'rifle', role: null, kind: 'gear', slot: null, name: 'RIFLE UPGRADE', desc: 'YOUR BOARDER HITS HARDER',
+    levels: [lv(120, '+4 DAMAGE', ['DAMAGE', 10, 14]), lv(180, '+4 DAMAGE', ['DAMAGE', 14, 18])] },
+  { id: 'suit', role: null, kind: 'gear', slot: null, name: 'SUIT ARMOR', desc: 'YOUR BOARDER TAKES MORE BEFORE THE TELEPORT',
+    levels: [lv(160, '+50 HEALTH', ['HEALTH', 100, 150])] },
+  { id: 'pack', role: null, kind: 'gear', slot: null, name: 'CARGO PACK', desc: 'CARRY TWO MORE THINGS PER TRIP',
+    levels: [lv(140, '+2 CARRIED', ['CARRY', 3, 5])] },
+  { id: 'tranq', role: null, kind: 'gear', slot: null, name: 'TRANQ GUN', desc: 'SILENT DARTS THAT PUT GUARDS TO SLEEP', levels: [lv(120, 'TRANQ GUN', null)] },
+  { id: 'flare', role: null, kind: 'gear', slot: null, name: 'FLARES', desc: 'THROW A FLARE THAT LIGHTS A DARK ROOM', levels: [lv(60, 'FLARES', ['FLARES', 0, 3])] },
+  { id: 'sentry', role: null, kind: 'gear', slot: null, name: 'DEPLOYABLE TURRET', desc: 'SET DOWN A SMALL TURRET', levels: [lv(180, 'TURRET', null)] },
+  { id: 'hack', role: null, kind: 'gear', slot: null, name: 'HACKING KIT', desc: 'MORE TIME IN EVERY BREAK-IN', levels: [lv(150, 'MORE TIME', ['TIME', '100%', '140%'])] },
+  { id: 'coils', role: null, kind: 'gear', slot: null, name: 'TELEPORTER COILS', desc: 'THE TELEPORTER RECHARGES FASTER', levels: [lv(150, 'FASTER', ['RECHARGE', '45 S', '25 S'])] },
+];
+const SERVICES = [
+  { id: 'refuel', name: 'REFUEL', price: 75 },
+  { id: 'repair', name: 'REPAIR', price: 17 },
+  { id: 'rockets', name: 'ROCKETS', price: 32 },
+  { id: 'probes', name: 'PROBES', price: 40 },
+  { id: 'buoys', name: 'BUOYS', price: 60 },
+  { id: 'chart', name: 'CHART', price: 100 },
+  { id: 'ore', name: 'SELL ORE', price: -60 },
+];
+
+// ---------- what the crew has, for the sketch ----------
+const state = {
+  view: 'shop',
+  me: 'gunner',
+  solo: false,
+  filter: 'gunner',
+  sel: 'twin',
+  scroll: 0,
+  purses: { captain: 1860, gunner: 1630, engineer: 1820 },
+  // level bought, and how many of those levels are installed. Gear is carried: it counts as installed.
+  own: { tank: { bought: 1, installed: 1 }, twin: { bought: 1, installed: 1 }, bay: { bought: 2, installed: 1 },
+    armor: { bought: 1, installed: 0 }, alarm: { bought: 1, installed: 1 }, rifle: { bought: 1, installed: 1 } },
+  slots: { captain: { hull: [0, 2], system: [2, 2] }, gunner: { hull: [2, 2], system: [0, 2] }, engineer: { hull: [0, 2], system: [0, 2] } },
+  toast: '',
+};
+const VIEWS = { shop: 'SHOP', stores: 'STORES', yard: 'SHIPYARD' };
+const roleOf = (it) => it.role || (state.solo ? 'captain' : state.me);
+const mine = (it) => state.solo || !it.role || it.role === state.me;
+const owned = (it) => state.own[it.id] || { bought: 0, installed: 0 };
+const nextLv = (it) => it.levels[owned(it).bought] || null;
+const slotsOf = (role, kind) => state.slots[role][kind === 'hull' ? 'hull' : 'system'];
+
+// ---------- drawing ----------
+const canvas = document.getElementById('screen');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+let font;
+const text = (t, x, y, c, o) => font.draw(ctx, t, x, y, c, o || {});
+const width = (t) => font.width(t);
+function wrap(t, w) {
+  const out = [];
+  let line = '';
+  for (const word of t.split(' ')) {
+    const next = line ? line + ' ' + word : word;
+    if (width(next) > w && line) {
+      out.push(line);
+      line = word;
+    } else line = next;
+  }
+  if (line) out.push(line);
+  return out;
+}
+
+// The one placeholder icon every thing has for now: a crate with a part in it, and the colour of the role on
+// its corner. `s` is its size in game pixels.
+function icon(x, y, s, role) {
+  const u = s / 16;
+  const r = (a, b, w, h, c) => rect(ctx, x + a * u, y + b * u, w * u, h * u, c);
+  r(1, 1, 14, 14, COL.out);
+  r(2, 2, 12, 12, COL.steel[1]);
+  r(3, 3, 10, 10, COL.steel[0]);
+  r(2, 2, 12, 1, COL.steel[2]);
+  r(2, 2, 1, 12, COL.steel[2]);
+  // the part inside: a cog
+  r(6, 5, 4, 6, COL.steel[3]);
+  r(5, 6, 6, 4, COL.steel[3]);
+  r(7, 7, 2, 2, COL.steel[0]);
+  r(7, 4, 2, 1, COL.steel[2]);
+  r(7, 11, 2, 1, COL.steel[2]);
+  r(4, 7, 1, 2, COL.steel[2]);
+  r(11, 7, 1, 2, COL.steel[2]);
+  r(12, 12, 2, 2, ROLE_COL[role] || COL.text);
+}
+
+const P = { x: 16, y: 12, w: 608, h: 336 };
+const LIST = { x: P.x + 12, y: P.y + 70, w: 378, rows: 5, tw: 122, th: 34 };
+const SIDE = { x: P.x + 400, y: P.y + 48, w: P.w - 412, h: P.h - 62 };
+let hits = [];
+const hit = (x, y, w, h, act) => hits.push({ x, y, w, h, act });
+
+function itemsShown() {
+  let list = ITEMS;
+  if (state.view !== 'shop') list = list.filter((it) => owned(it).bought > 0);
+  if (state.filter !== 'all') list = list.filter((it) => (it.role || 'gear') === state.filter || (!it.role && state.filter === state.me));
+  return list;
+}
+
+// What a thing says about itself in the list: its price, or where it is.
+function badge(it) {
+  const o = owned(it);
+  const next = nextLv(it);
+  if (state.view === 'shop') {
+    if (!next) return [it.levels.length > 1 ? 'ALL LEVELS' : 'OWNED', COL.engineer];
+    if (!mine(it)) return [`${NAME[it.role]} BUYS`, COL.faint];
+    const role = roleOf(it);
+    const lvl = o.bought ? `LV ${o.bought + 1}  ·  ` : '';
+    return [lvl + next.price + ' CR', state.purses[role] >= next.price ? COL.ochre[2] : COL.ember[1]];
+  }
+  if (it.kind === 'gear') return ['CARRIED', COL.engineer];
+  if (o.installed < o.bought) return [o.installed ? `${o.installed} OF ${o.bought} INSTALLED` : 'IN STORES', COL.ochre[2]];
+  return [o.bought > 1 ? `LV ${o.bought}  ·  INSTALLED` : 'INSTALLED', COL.engineer];
+}
+
+function drawList() {
+  const list = itemsShown();
+  const per = 3;
+  const first = state.scroll * per;
+  list.slice(first, first + LIST.rows * per).forEach((it, i) => {
+    const x = LIST.x + (i % per) * (LIST.tw + 6);
+    const y = LIST.y + Math.floor(i / per) * (LIST.th + 4);
+    const sel = it.id === state.sel;
+    rect(ctx, x, y, LIST.tw, LIST.th, sel ? '#1c2140' : '#141420', sel ? COL.ion[2] : COL.line);
+    rect(ctx, x, y, 2, LIST.th, ROLE_COL[it.role] || COL.steel[2]);
+    icon(x + 5, y + 5, 24, it.role);
+    const dim = state.view === 'shop' && !mine(it);
+    const name = wrap(it.name, LIST.tw - 36);
+    text(name[0], x + 33, y + 6, dim ? COL.dim : COL.text);
+    if (name[1]) text(name[1], x + 33, y + 15, dim ? COL.dim : COL.text);
+    const [b, c] = badge(it);
+    text(b, x + 33, y + (name[1] ? 25 : 20), c);
+    hit(x, y, LIST.tw, LIST.th, () => (state.sel = it.id));
+  });
+  const rows = Math.ceil(list.length / per);
+  if (!list.length) text(state.view === 'shop' ? 'NOTHING HERE' : 'NOTHING BOUGHT FOR THIS ROLE YET', LIST.x + 4, LIST.y + 6, COL.faint);
+  if (rows > LIST.rows) {
+    const more = `${state.scroll + 1} / ${rows - LIST.rows + 1}  ·  SCROLL FOR MORE`;
+    text(more, LIST.x + LIST.w, LIST.y + LIST.rows * (LIST.th + 4) + 2, COL.dim, { align: 'r' });
+  }
+}
+
+function drawFilters() {
+  const opts = ['all', ...ROLES];
+  let x = LIST.x;
+  for (const f of opts) {
+    const label = f === state.me && !state.solo ? NAME[f] + '  (YOU)' : NAME[f];
+    const w = width(label) + 16;
+    const on = state.filter === f;
+    rect(ctx, x, P.y + 48, w, 15, on ? '#20243f' : '#141420', on ? ROLE_COL[f] : COL.line);
+    text(label, x + 8, P.y + 52, on ? ROLE_COL[f] : COL.dim);
+    hit(x, P.y + 48, w, 15, () => {
+      state.filter = f;
+      state.scroll = 0;
+    });
+    x += w + 4;
+  }
+}
+
+function drawServices() {
+  const y = P.y + P.h - 58;
+  rect(ctx, LIST.x, y - 6, LIST.w, 1, COL.line);
+  text('ANYONE CAN BUY  ·  PAID FROM YOUR OWN PURSE', LIST.x, y, COL.engineer);
+  let x = LIST.x;
+  let row = 0;
+  for (const s of SERVICES) {
+    const label = s.price < 0 ? `${s.name} +${-s.price}` : `${s.name} ${s.price}`;
+    const w = width(label) + 10;
+    if (x + w > LIST.x + LIST.w) {
+      x = LIST.x;
+      row++;
+    }
+    const by = y + 10 + row * 17;
+    rect(ctx, x, by, w, 14, '#141420', COL.line);
+    text(label, x + 5, by + 3, s.price < 0 ? COL.acid[2] : COL.ochre[2]);
+    hit(x, by, w, 14, () => {
+      const role = state.solo ? 'captain' : state.me;
+      state.purses[role] -= s.price;
+      state.toast = `${s.name}  ·  ${s.price < 0 ? 'EVERY ROLE GETS ' + -s.price : 'PAID BY THE ' + NAME[role]} CR`;
+    });
+    x += w + 4;
+  }
+}
+
+function button(x, y, w, label, color, act, why) {
+  rect(ctx, x, y, w, 18, act ? '#20243f' : '#141420', act ? color : COL.line);
+  text(label, x + w / 2, y + 5, act ? color : COL.faint, { align: 'c' });
+  if (act) hit(x, y, w, 18, act);
+  // Why it cannot be done, said once, above the buttons.
+  else if (why && !reason) reason = why;
+}
+let reason = null;
+
+function drawSide() {
+  const it = ITEMS.find((x) => x.id === state.sel) || itemsShown()[0];
+  rect(ctx, SIDE.x, SIDE.y, SIDE.w, SIDE.h, '#11131f', COL.line);
+  if (!it) return;
+  const x = SIDE.x + 8;
+  let y = SIDE.y + 8;
+  icon(x, y, 40, it.role);
+  const title = wrap(it.name, SIDE.w - 60);
+  title.forEach((t, i) => text(t, x + 46, y + 2 + i * 10, COL.text));
+  const owner = it.role ? NAME[it.role] : 'WHOEVER BUYS IT';
+  text(owner, x + 46, y + 4 + title.length * 10, ROLE_COL[it.role] || COL.dim);
+  const where = it.kind === 'gear' ? 'CARRIED  ·  WORKS AT ONCE' : it.slot ? `TAKES A ${it.slot.toUpperCase()} SLOT` : 'NEEDS NO SLOT';
+  text(where, x + 46, y + 14 + title.length * 10, COL.dim);
+  y += 50;
+  for (const line of wrap(it.desc, SIDE.w - 16)) {
+    text(line, x, y, COL.text);
+    y += 10;
+  }
+  y += 4;
+  // Every level: what it gives, whether the crew has it, and what it costs (R-1128).
+  const o = owned(it);
+  text('LEVELS', x, y, COL.dim);
+  y += 11;
+  it.levels.forEach((l, k) => {
+    const have = k < o.bought;
+    const inst = k < o.installed;
+    const roman = ['I', 'II', 'III', 'IV', 'V'][k];
+    rect(ctx, x, y - 2, SIDE.w - 16, 11, k === o.bought ? '#1c2140' : null);
+    text(roman, x + 2, y, have ? COL.engineer : COL.dim);
+    text(l.gives, x + 22, y, have ? COL.text : COL.dim);
+    const right = have ? (it.kind === 'gear' || inst ? 'OWNED' : 'IN STORES') : l.price + ' CR';
+    text(right, x + SIDE.w - 18, y, have ? (inst || it.kind === 'gear' ? COL.engineer : COL.ochre[2]) : COL.ochre[2], { align: 'r' });
+    y += 11;
+  });
+  // Before and after for the next level, in numbers.
+  const next = nextLv(it);
+  y += 4;
+  if (next && next.stat) {
+    const [what, a, b] = next.stat;
+    text(`${what}  ${a}  >  ${b}`, x, y, COL.ion[2]);
+    y += 12;
+  }
+  if (it.slot && it.role) {
+    const [used, max] = slotsOf(it.role, it.slot);
+    text(`${NAME[it.role]} ${it.slot.toUpperCase()} SLOTS  ${used} / ${max}`, x, y, used >= max ? COL.ember[2] : COL.dim);
+    y += 12;
+  }
+  // The buttons of the view.
+  reason = null;
+  const by = SIDE.y + SIDE.h - 26;
+  const bw = (SIDE.w - 20) / 2;
+  const role = roleOf(it);
+  if (state.view === 'shop') {
+    const why = !next ? 'ALL LEVELS BOUGHT' : !mine(it) ? `THE ${NAME[it.role]} BUYS THIS` : state.purses[role] < next.price ? 'NOT ENOUGH CREDITS' : null;
+    button(x, by, bw, next ? `BUY  ${next.price} CR` : 'BUY', COL.ochre[2], why ? null : () => {
+      state.purses[role] -= next.price;
+      state.own[it.id] = { bought: o.bought + 1, installed: it.kind === 'gear' ? o.installed + 1 : o.installed };
+      state.toast = it.kind === 'gear' ? `${it.name}  ·  CARRIED, IT WORKS AT ONCE` : `${it.name}  ·  IN THE STORES, INSTALL IT AT A SHIPYARD`;
+    }, why);
+    const back = o.bought ? Math.floor(it.levels[o.bought - 1].price / 2) : 0;
+    const sellWhy = !o.bought ? null : !mine(it) ? `THE ${NAME[it.role]} SELLS THIS` : it.kind === 'part' && o.installed >= o.bought ? 'REMOVE IT AT A SHIPYARD FIRST' : null;
+    button(x + bw + 4, by, bw, o.bought ? `SELL  +${back} CR` : 'SELL', COL.acid[2], o.bought && !sellWhy ? () => {
+      state.purses[role] += back;
+      state.own[it.id] = { bought: o.bought - 1, installed: Math.min(o.installed, o.bought - 1) };
+      state.toast = `${it.name}  ·  SOLD FOR HALF  ·  +${back} CR`;
+    } : null, sellWhy);
+  } else if (state.view === 'yard') {
+    const can = mine(it);
+    const instWhy = it.kind === 'gear' ? 'CARRIED, NOTHING TO INSTALL' : !can ? `ONLY THE ${NAME[it.role]} INSTALLS THIS` : o.installed >= o.bought ? 'ALL OF IT IS INSTALLED' : null;
+    button(x, by, bw, 'INSTALL', COL.engineer, instWhy ? null : () => {
+      state.own[it.id] = { ...o, installed: o.installed + 1 };
+      state.toast = `${it.name}  ·  INSTALLED  ·  FREE`;
+    }, instWhy);
+    const remWhy = it.kind === 'gear' ? null : !can ? null : o.installed === 0 ? 'NOTHING INSTALLED' : null;
+    button(x + bw + 4, by, bw, 'REMOVE', COL.ochre[2], it.kind === 'part' && can && !remWhy ? () => {
+      state.own[it.id] = { ...o, installed: o.installed - 1 };
+      state.toast = `${it.name}  ·  BACK IN THE STORES`;
+    } : null, remWhy);
+  } else {
+    text('INSTALL AND REMOVE AT A SHIPYARD', x, by - 6, COL.dim);
+    text('BUY AND SELL AT A SHOP', x, by + 5, COL.dim);
+  }
+  if (reason) text(reason, x, by - 12, COL.ember[2]);
+}
+
+function drawPurses() {
+  const me = state.solo ? 'captain' : state.me;
+  const big = state.solo ? 'YOUR PURSES' : `${NAME[me]}  ${state.purses[me]} CR`;
+  text(big, P.x + P.w - 12, P.y + 12, state.solo ? COL.text : ROLE_COL[me], { align: 'r', scale: state.solo ? 1 : 1 });
+  const rest = ROLES.filter((r) => state.solo || r !== me).map((r) => `${NAME[r]} ${state.purses[r]}`).join('   ');
+  text(rest, P.x + P.w - 12, P.y + 25, COL.dim, { align: 'r' });
+}
+
+function draw() {
+  hits = [];
+  ctx.setTransform(2, 0, 0, 2, 0, 0);
+  ctx.fillStyle = '#0d0d18';
+  ctx.fillRect(0, 0, W, H);
+  // The station floor behind it, as in the game.
+  for (let gx = 0; gx < W; gx += 16) for (let gy = 0; gy < H; gy += 16) rect(ctx, gx, gy, 15, 15, (gx + gy) % 32 ? '#161724' : '#141522');
+  ctx.globalAlpha = 0.6;
+  ctx.fillStyle = '#05050a';
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = 1;
+  rect(ctx, P.x, P.y, P.w, P.h, COL.panel, COL.steel[1]);
+  rect(ctx, P.x + 3, P.y + 3, P.w - 6, P.h - 6, null, COL.line);
+  const place = { shop: 'KESTREL YARD', stores: 'THE STORES', yard: 'KESTREL YARD' }[state.view];
+  text(place, P.x + 12, P.y + 12, COL.text, { scale: 2 });
+  const sub = {
+    shop: 'SHOP  ·  FRIENDLY STATION  ·  BUY AND SELL',
+    stores: 'WHAT THE CREW OWNS  ·  EVERYONE SEES IT',
+    yard: 'SHIPYARD  ·  INSTALLING IS FREE  ·  NO BUYING OR SELLING',
+  }[state.view];
+  text(sub, P.x + 12, P.y + 32, COL.dim);
+  drawPurses();
+  drawFilters();
+  drawList();
+  if (state.view === 'shop') drawServices();
+  else {
+    // The slots of the roles shown, at the foot of the list (R-1137).
+    const y = P.y + P.h - 58;
+    rect(ctx, LIST.x, y - 6, LIST.w, 1, COL.line);
+    text('SLOTS  ·  EACH ROLE HAS ITS OWN', LIST.x, y, COL.dim);
+    let row = 0;
+    for (const r of ROLES) {
+      if (state.filter !== 'all' && state.filter !== r) continue;
+      const s = state.slots[r];
+      const t = `${NAME[r]}  HULL ${s.hull[0]}/${s.hull[1]}  SYSTEM ${s.system[0]}/${s.system[1]}`;
+      text(t, LIST.x, y + 13 + row * 11, ROLE_COL[r]);
+      row++;
+    }
+  }
+  drawSide();
+  text('ARROWS  MOVE    ENTER  BUY    F  CLOSE', P.x + P.w - 12, P.y + P.h - 9, COL.faint, { align: 'r' });
+  if (state.toast) {
+    const w = width(state.toast) + 16;
+    rect(ctx, W / 2 - w / 2, P.y + P.h + 1, w, 11, COL.out, COL.engineer);
+    text(state.toast, W / 2, P.y + P.h + 3, COL.engineer, { align: 'c' });
+  }
+  document.getElementById('status').textContent = state.solo
+    ? 'Ensam: alla roller är dina, och alla avdelningar är öppna för köp.'
+    : `Du spelar som ${NAME[state.me].toLowerCase()}. Butiken visar allt, men du köper bara det som hör till din roll.`;
+}
+
+// ---------- input ----------
+canvas.addEventListener('click', (e) => {
+  const b = canvas.getBoundingClientRect();
+  const mx = ((e.clientX - b.left) / b.width) * W;
+  const my = ((e.clientY - b.top) / b.height) * H;
+  const h = hits.find((x) => mx >= x.x && mx < x.x + x.w && my >= x.y && my < x.y + x.h);
+  if (h) {
+    state.toast = '';
+    h.act();
+    draw();
+  }
+  canvas.focus();
+});
+canvas.addEventListener('wheel', (e) => {
+  const rows = Math.ceil(itemsShown().length / 3);
+  state.scroll = Math.max(0, Math.min(rows - LIST.rows, state.scroll + Math.sign(e.deltaY)));
+  e.preventDefault();
+  draw();
+}, { passive: false });
+canvas.addEventListener('keydown', (e) => {
+  const list = itemsShown();
+  let i = Math.max(0, list.findIndex((x) => x.id === state.sel));
+  const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 3, ArrowUp: -3 }[e.key];
+  if (step) {
+    i = Math.max(0, Math.min(list.length - 1, i + step));
+    state.sel = list[i].id;
+    const row = Math.floor(i / 3);
+    if (row < state.scroll) state.scroll = row;
+    if (row >= state.scroll + LIST.rows) state.scroll = row - LIST.rows + 1;
+    e.preventDefault();
+    draw();
+  }
+});
+
+const views = document.getElementById('views');
+for (const [v, label] of Object.entries({ shop: 'Butik', stores: 'Förråd', yard: 'Varv' })) {
+  const b = document.createElement('button');
+  b.textContent = label;
+  b.onclick = () => {
+    state.view = v;
+    state.scroll = 0;
+    state.toast = '';
+    for (const x of views.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+    draw();
+  };
+  b.setAttribute('aria-pressed', String(v === state.view));
+  views.append(b);
+}
+const players = document.getElementById('players');
+for (const [who, label] of Object.entries({ captain: 'Captain', gunner: 'Gunner', engineer: 'Engineer', solo: 'Ensam' })) {
+  const b = document.createElement('button');
+  b.textContent = label;
+  b.onclick = () => {
+    state.solo = who === 'solo';
+    state.me = state.solo ? 'captain' : who;
+    state.filter = state.solo ? 'all' : who;
+    state.scroll = 0;
+    state.toast = '';
+    for (const x of players.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+    draw();
+  };
+  b.setAttribute('aria-pressed', String(who === state.me));
+  players.append(b);
+}
+
+const img = new Image();
+img.src = '../../../assets/font.png';
+const meta = await fetch('../../../assets/font.json').then((r) => r.json());
+await img.decode();
+font = new BitmapFont(img, meta);
+window.__shop = { state, draw };
+draw();
+</script>
+</body>
+</html>
