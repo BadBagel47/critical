@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { createState } from '../src/sim/state.js';
 import { step } from '../src/sim/step.js';
 import { thingsOf, mapInfo } from '../src/sim/things.js';
-import { createWorld, hopsFrom, SIZES } from '../src/sim/world.js';
+import { createWorld, hopsFrom, SIZES, END_MIN } from '../src/sim/world.js';
 import { gatherForTesting, jumpBlocked, generateSector } from '../src/sim/sectors.js';
 import { viewOf } from '../src/sim/intel.js';
 import { arrival } from '../src/sim/system.js';
@@ -95,7 +95,7 @@ test('R-1089 R-050: most systems have two or three lanes, every lane goes both w
     const deepest = Math.max(...w.map((x) => x.hops));
     for (const x of w) {
       for (const l of x.links) assert.ok(w[l].links.includes(x.id), 'the way back is always there');
-      if (x.links.length === 1) {
+      if (x.links.length === 1 && !x.boss) {
         assert.equal(x.kind, 'empty', 'only an empty system is a dead end');
         assert.ok(x.hops >= deepest / 2, 'and only far out');
       }
@@ -127,16 +127,54 @@ test('R-125 R-130: danger goes up one step for every two jumps from the sanctuar
   }
 });
 
-test('R-126: the end is in one of the three inhabited systems furthest away, and pirates hold it', () => {
-  for (const { w } of worlds()) {
+test('R-1099 R-1095: the end lies furthest out, far enough for the size of the world, with a single lane in', () => {
+  for (const { size, w } of worlds()) {
     const ends = w.filter((x) => x.boss);
     assert.equal(ends.length, 1);
     const end = ends[0];
     assert.equal(end.kind, 'inhabited');
     assert.equal(end.owner, 'pirate');
-    const far = w.filter((x) => x.kind === 'inhabited').sort((a, b) => b.hops - a.hops);
-    assert.ok(end.hops >= far[2].hops, 'no more than two inhabited systems lie further away');
+    assert.ok(end.hops >= END_MIN[size], `at least ${END_MIN[size]} jumps away in a ${size} world`);
+    assert.equal(Math.max(...w.map((x) => x.hops)), end.hops, 'no system lies further away');
+    assert.equal(end.links.length, 1, 'one lane in');
   }
+});
+
+test('R-1093 R-1094 R-1097 R-1100: wrecks are few, none in the sanctuary, and most where the pirates hold the system', () => {
+  const per = { pirate: [0, 0], faction: [0, 0] };
+  for (const { w } of worlds()) {
+    assert.equal(w[0].wrecks, 0, 'none in the sanctuary');
+    for (const x of w.filter((y) => y.kind === 'inhabited')) {
+      assert.ok(x.wrecks <= 2, 'never more than two in an inhabited system');
+      const k = x.owner === 'pirate' ? 'pirate' : x.owner === 'contested' ? null : 'faction';
+      if (!k) continue;
+      per[k][0] += x.wrecks;
+      per[k][1]++;
+    }
+  }
+  const pirate = per.pirate[0] / per.pirate[1];
+  const faction = per.faction[0] / per.faction[1];
+  assert.ok(pirate >= 1, 'a pirate system has at least one');
+  assert.ok(faction < 0.5 && faction < pirate / 2, 'a faction system seldom has one');
+});
+
+test('R-1101: a system the crew comes back to after a while may have a new wreck, the sanctuary never', () => {
+  let found = 0;
+  for (let seed = 1; seed <= 12; seed++) {
+    const s = quiet(createState(seed));
+    const to = s.sectors[0].links[0];
+    hop(s, to);
+    s.things = s.things.filter((t) => t.kind !== 'wreck');
+    hop(s, 0);
+    assert.equal(thingsOf(s, 'wreck').length, 0, 'the sanctuary gets none');
+    s.time += B.WRECK_RETURN_TIME + 1;
+    hop(s, to);
+    found += thingsOf(s, 'wreck').length;
+    s.time += 10;
+    hop(s, 0);
+    s.things = s.things.filter((t) => t.kind !== 'wreck');
+  }
+  assert.ok(found > 0 && found < 12, 'now and then, not every time');
 });
 
 test('R-400 R-401: a system is owned by a faction or contested, and about one inhabited in five is contested', () => {

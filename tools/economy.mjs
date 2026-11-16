@@ -121,7 +121,7 @@ function worldSheet() {
   }
   L.push(
     '',
-    `Vrak och pods är de som finns när man kommer till ett system. Nya vrak driver in när de gamla har sprängts. Ett vrak har en bränslecell hälften av gångerna (${B.WRECK_CELL_CHANCE}), en station har en i valvet.`,
+    `Vrak och pods är de som finns när man först kommer till ett system. Vrak är en bonus (R-1097): inga i fristaden, flest där piraterna håller systemet. Inga nya vrak driver in när ett har sprängts. Kommer man tillbaka till ett system efter minst ${B.WRECK_RETURN_TIME} sekunder kan ett nytt ligga där, med chansen ${B.WRECK_RETURN_CHANCE.pirate} där piraterna håller systemet, ${B.WRECK_RETURN_CHANCE.contested} i ett omstritt och ${B.WRECK_RETURN_CHANCE.other} annars. En nedskjuten gunboat eller ett fraktskepp lämnar vrak med chansen ${B.KILL_WRECK_CHANCE}. Ett vrak har en bränslecell med chansen ${B.WRECK_CELL_CHANCE}, en station har en i valvet. Slutet nås bara när man har dess stjärnkarta från valvet på en piratbas.`,
   );
   return L;
 }
@@ -175,9 +175,8 @@ export function simulateHour(sector, players, seed = 1) {
   const income = { pirater: 0, vrak: 0, pods: 0, malm: 0, nödanrop: 0 };
   let at = thingsOf(state, 'station').find((s) => s.home || s.sanctuary) || state.ship;
   const targets = [...thingsOf(state, 'wreck'), ...thingsOf(state, 'pod')];
-  // A wreck that has been boarded blows up when its reactor runs out, and then a new one drifts in somewhere
-  // else, as long as there are fewer than three (see blowUp in boarding.js). These are the times they come.
-  const coming = [];
+  // A wreck that has been boarded blows up, and no new one takes its place (R-1097). A wreck that a shot-down
+  // gunboat leaves now and then is not counted.
   let mined = 0;
   let wave = 0,
     nextWave = B.FIRST_WAVE_DELAY * pace;
@@ -190,7 +189,7 @@ export function simulateHour(sector, players, seed = 1) {
   };
   // Pirate waves come on their own clock, whatever the crew is doing.
   const waves = () => {
-    while (!calm && t >= nextWave && t < 3600) {
+    while (!calm && nextWave <= Math.min(t, 3600)) {
       wave++;
       const n = Math.min(1 + Math.floor(wave / 3) + (tier >= 2 ? 1 : 0), 4);
       const gunboat = tier >= 1 && wave >= 2 ? 0.2 + 0.12 * tier : 0;
@@ -217,19 +216,13 @@ export function simulateHour(sector, players, seed = 1) {
   };
   while (t < 3600) {
     waves();
-    // The nearest thing that is left, and when there is none, a new wreck drifts in further out.
-    while (coming.length && coming[0] <= t) {
-      coming.shift();
-      const a = wrecks * 2.1;
-      targets.push({ kind: 'wreck', x: at.x + Math.sin(a) * 1750, y: at.y - Math.cos(a) * 1750, fresh: true });
-    }
+    // The nearest thing that is left.
     let next = null;
     for (const x of targets)
       if (!x.done && (!next || dist(at.x, at.y, x.x, x.y) < dist(at.x, at.y, next.x, next.y))) next = x;
     if (!next) {
-      // Nothing to board: rocks are mined until the next wreck drifts in.
-      const until = coming.length ? Math.min(coming[0], 3600) : 3600;
-      const wait = Math.max(1, until - t);
+      // Nothing left to board: rocks are mined for the rest of the hour.
+      const wait = Math.max(1, 3600 - t);
       mined += wait / ASSUME.mineEvery;
       t += wait;
       continue;
@@ -242,11 +235,9 @@ export function simulateHour(sector, players, seed = 1) {
       fuelIn += B.CELL_FUEL / 2;
       pods++;
     } else {
-      const wreck = next.fresh ? thingsOf(state, 'wreck')[wrecks % thingsOf(state, 'wreck').length] : next;
+      const wreck = next;
       // One player stays on the ship when there are more of them. The others go aboard.
       const run = wreckRun(state, wreck, carry, Math.max(1, players - 1));
-      coming.push(t + (B.REACTOR_TIME[wreck.difficulty] || 150));
-      coming.sort((a, b) => a - b);
       t += run.time;
       credits += run.credits;
       income.vrak += run.credits;
@@ -255,6 +246,11 @@ export function simulateHour(sector, players, seed = 1) {
     }
     next.done = true;
   }
+  // The waves that came while the crew was mining at the end of the hour. Time spent fighting them is time not
+  // spent mining.
+  const mining = t;
+  waves();
+  mined = Math.max(0, mined - (t - mining) / ASSUME.mineEvery);
   // Rocks broken on the way, and distress calls, over the hour.
   const ore = (ASSUME.rocksPerHour + mined) * ASSUME.orePerRock * B.ORE_PRICE;
   const raids = calm ? 0 : (3600 / avg(B.RAID_GAP)) * ASSUME.raidsHelped * B.RAID_REWARD;
@@ -316,7 +312,7 @@ export function buildSheet() {
     '',
     '## 4. En timme med den simulerade spelaren',
     '',
-    'Spelaren flyger till närmaste vrak eller pod, bryter upp låset, bär hem lootet i vändor och skjuter ner varje piratvåg som kommer. Ett bordat vrak sprängs när reaktorn har gått, och då driver ett nytt in längre ut, som i spelet. Finns inget att borda bryts asteroider. Ensam avbryter en strid allt annat. Med fler spelare stannar någon på skeppet och slåss medan de andra bordar. Allt räknas med spelets egna avstånd, loot, vågor och priser.',
+    'Spelaren flyger till närmaste vrak eller pod, bryter upp låset, bär hem lootet i vändor och skjuter ner varje piratvåg som kommer. Vraken är de som finns i systemet när man kommer. Ett bordat vrak sprängs, och inget nytt driver in, som i spelet. Vrak som nedskjutna gunboats ibland lämnar räknas inte. När det inte finns något kvar att borda bryts asteroider resten av timmen. Ensam avbryter en strid allt annat. Med fler spelare stannar någon på skeppet och slåss medan de andra bordar. Allt räknas med spelets egna avstånd, loot, vågor och priser.',
     '',
     '| | ' + runs.map((r) => r.name).join(' | ') + ' |',
     '|---|' + runs.map(() => '---').join('|') + '|',

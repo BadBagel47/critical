@@ -80,50 +80,50 @@ Räknat över 8 världar av varje storlek, som nya spel gör dem. Ett hopp kosta
 
 | Storlek | System | Bebodda | Tomma | Omstridda | Piraternas | Stationer | Vrak | Pods | Hopp till slutet |
 |---|---|---|---|---|---|---|---|---|---|
-| SHORT | 16 | 8 | 8 | 2 | 2 | 11.8 | 37.5 | 32 | 2 |
-| MEDIUM | 24 | 12 | 12 | 2 | 3 | 17.9 | 57.4 | 48 | 3.6 |
-| LONG | 36 | 18 | 18 | 4 | 5 | 26.5 | 87.1 | 72 | 3.9 |
+| SHORT | 16 | 8 | 8 | 2 | 2 | 11.6 | 6.3 | 32 | 4.8 |
+| MEDIUM | 24 | 12 | 12 | 2 | 3 | 17.5 | 14.3 | 48 | 5.9 |
+| LONG | 36 | 18 | 18 | 4 | 5 | 27.3 | 18.3 | 72 | 6.5 |
 
-Vrak och pods är de som finns när man kommer till ett system. Nya vrak driver in när de gamla har sprängts. Ett vrak har en bränslecell hälften av gångerna (0.5), en station har en i valvet.
+Vrak och pods är de som finns när man först kommer till ett system. Vrak är en bonus (R-1097): inga i fristaden, flest där piraterna håller systemet. Inga nya vrak driver in när ett har sprängts. Kommer man tillbaka till ett system efter minst 300 sekunder kan ett nytt ligga där, med chansen 0.5 där piraterna håller systemet, 0.35 i ett omstritt och 0.15 annars. En nedskjuten gunboat eller ett fraktskepp lämnar vrak med chansen 0.4. Ett vrak har en bränslecell med chansen 0.5, en station har en i valvet. Slutet nås bara när man har dess stjärnkarta från valvet på en piratbas.
 
 ## 4. En timme med den simulerade spelaren
 
-Spelaren flyger till närmaste vrak eller pod, bryter upp låset, bär hem lootet i vändor och skjuter ner varje piratvåg som kommer. Ett bordat vrak sprängs när reaktorn har gått, och då driver ett nytt in längre ut, som i spelet. Finns inget att borda bryts asteroider. Ensam avbryter en strid allt annat. Med fler spelare stannar någon på skeppet och slåss medan de andra bordar. Allt räknas med spelets egna avstånd, loot, vågor och priser.
+Spelaren flyger till närmaste vrak eller pod, bryter upp låset, bär hem lootet i vändor och skjuter ner varje piratvåg som kommer. Vraken är de som finns i systemet när man kommer. Ett bordat vrak sprängs, och inget nytt driver in, som i spelet. Vrak som nedskjutna gunboats ibland lämnar räknas inte. När det inte finns något kvar att borda bryts asteroider resten av timmen. Ensam avbryter en strid allt annat. Med fler spelare stannar någon på skeppet och slåss medan de andra bordar. Allt räknas med spelets egna avstånd, loot, vågor och priser.
 
-| | Ensam, fristaden | Ensam, grannsystem (nivå 0) | Ensam, bebott system på nivå 1 | Ensam, tomt system (nivå 2) | Tre spelare, grannsystem (nivå 0) |
+| | Ensam, fristaden | Ensam, grannsystem (nivå 0) | Ensam, bebott system på nivå 2 | Ensam, tomt system (nivå 1) | Tre spelare, grannsystem (nivå 0) |
 |---|---|---|---|---|---|
-| Krediter per timme | 9605 | 8986 | 9251 | 9585 | 16726 |
-| varav pirater | 0 | 2236 | 2626 | 2845 | 5351 |
-| varav vrak | 9095 | 5340 | 5215 | 5530 | 9965 |
+| Krediter per timme | 2341 | 4728 | 5562 | 5922 | 8737 |
+| varav pirater | 0 | 2370 | 2951 | 2728 | 5485 |
+| varav vrak | 0 | 0 | 374 | 1260 | 0 |
 | varav pods | 300 | 300 | 300 | 100 | 300 |
-| varav malm | 210 | 210 | 210 | 210 | 210 |
+| varav malm | 2041 | 1158 | 1036 | 934 | 2053 |
 | varav nödanrop | 0 | 900 | 900 | 900 | 900 |
-| Nedskjutna pirater | 0 | 201 | 205 | 213 | 481 |
-| Vrak tömda | 21 | 12 | 12 | 11 | 23 |
+| Nedskjutna pirater | 0 | 213 | 221 | 213 | 493 |
+| Vrak tömda | 0 | 0 | 1 | 3 | 0 |
 | Pods öppnade | 3 | 3 | 3 | 1 | 3 |
-| Bränsle in (celler) | 238 | 238 | 213 | 163 | 338 |
-| Bränsle ut (flygning) | 41 | 27 | 28 | 27 | 46 |
+| Bränsle in (celler) | 38 | 38 | 38 | 38 | 38 |
+| Bränsle ut (flygning) | 9 | 5 | 5 | 6 | 5 |
 
 Världen är den första av storleken SHORT (frö 1). Timmen spelas i ett och samma system, så hopp mellan system räknas inte här, se avsnitt 3 för vad de kostar.
 
 ### Hur länge det dröjer till varje köp, ensam den första timmen
 
-Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: 9141 krediter. Köpen görs i en enkel ordning, och tiden är minuter från start.
+Den första timmen räknas som en kvart i fristaden och resten i ett bebott grannsystem: 4131 krediter. Köpen görs i en enkel ordning, och tiden är minuter från start.
 
 | Köp | Minuter |
 |---|---|
-| TWIN WING TURRETS | 1 |
-| CARGO PACK | 2 |
-| ARMOR PLATING | 3 |
-| SHIELD EMITTERS | 4 |
-| HEAVY LASER | 6 |
-| POWER CORE | 7 |
-| TRANQ GUN | 8 |
-| ENEMY ALARM | 9 |
-| ROCKET PODS | 10 |
-| SOLAR CELLS | 11 |
-| POINT DEFENSE | 13 |
-| FIGHTER BAY | 15 |
+| TWIN WING TURRETS | 2 |
+| CARGO PACK | 4 |
+| ARMOR PLATING | 7 |
+| SHIELD EMITTERS | 9 |
+| HEAVY LASER | 12 |
+| POWER CORE | 16 |
+| TRANQ GUN | 18 |
+| ENEMY ALARM | 19 |
+| ROCKET PODS | 22 |
+| SOLAR CELLS | 25 |
+| POINT DEFENSE | 28 |
+| FIGHTER BAY | 33 |
 
 ### Antaganden
 

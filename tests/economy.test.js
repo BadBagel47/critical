@@ -8,7 +8,7 @@ import { buildSheet, firstHourIncome } from '../tools/economy.mjs';
 
 // What the simulated player earns alone in the first hour (a quarter in the sanctuary, the rest next door), as
 // last decided. When the balance is changed on purpose, run node tools/economy.mjs and set the new figure here.
-const SOLO_FIRST_HOUR = 9141;
+const SOLO_FIRST_HOUR = 4131;
 const BAND = [0.6, 1.6];
 
 test('the economy sheet matches the code (run node tools/economy.mjs after a change)', () => {

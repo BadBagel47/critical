@@ -790,6 +790,8 @@ const end = await page.evaluate(() => {
     s.sectors[s.sector].links.unshift(end);
     s.sectors[end].links.push(s.sector);
   }
+  // Its lane is sealed until the crew has its chart, from the vault of a pirate station.
+  if (!s.charts.includes(end)) s.charts.push(end);
   s.ship.fuel = 90;
   s.spawn.timer = 1e9;
   return end;

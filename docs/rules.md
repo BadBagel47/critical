@@ -35,7 +35,7 @@ Funna när boken sattes ihop. Varje punkt har en rekommendation. Tills ett beslu
 11. **Tangenten L.** Förslaget om meddelanden lägger loggen på L, som tänder lampan vid bordning. Rekommendation: loggen får en annan tangent.
 12. **Sprängladdningens pris.** 130 krediter i förslaget om ekonomi mot 50 i det byggda. Rekommendation: 50, som byggt, tills ekonomin ses över.
 13. ~~**Bränslet i fristaden.**~~ Avgjort 2026-11-16: alla priser i fristaden är som hos en neutral bas, också bränslet (R-1091). Gratis bränsle på ett eget köpt varv gäller som förut (R-1092).
-14. **Pengarna i fristaden.** "De större pengarna finns längre ut" (R-884) och "vrak ska inte finnas i överflöd" (R-1093) mot det byggda: i fristaden driver nya vrak in hela tiden, så en timme där ger mest. Användaren frågar 2026-11-16 om fristaden ska vara helt utan vrak; förslag med frågor ligger i F-233.
+14. ~~**Pengarna i fristaden.**~~ Avgjort 2026-11-16: vrak är en bonus, och fristaden har inga (R-1097, R-1100). Där ger malmen och poddarna nog för att komma igång.
 
 ## Beslut som inte är byggda än
 
@@ -55,11 +55,16 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1090 | Fristadens bas säljer billigt bränsle. Bränslet är gratis först på ett eget köpt varv. | ersatt av: R-1091 och R-1092 | Användaren 2026-11-16 (krock 1) | tests/world.test.js |
 | R-1091 | Alla priser i fristadens butik är som hos en neutral bas, också bränslet, så att man inte vinner på att åka dit och handla. | byggd | Användaren 2026-11-16 (krock 13) | tests/world.test.js |
 | R-1092 | Bränslet är gratis först på ett eget köpt varv. | bestämd | Användaren 2026-11-16 (krock 1) | – |
-| R-1093 | Vrak ska inte finnas i överflöd. | bestämd | Användaren 2026-11-16 | – |
-| R-1094 | I system där det finns pirater är chansen större att hitta vrak. | bestämd | Användaren 2026-11-16 | – |
-| R-1095 | Slutet ska vara svårare att nå än andra system. | bestämd | Användaren 2026-11-16 (F-234) | – |
+| R-1093 | Vrak ska inte finnas i överflöd. | byggd | Användaren 2026-11-16 | tests/world.test.js |
+| R-1094 | I system där det finns pirater är chansen större att hitta vrak. | byggd | Användaren 2026-11-16 | tests/world.test.js |
+| R-1095 | Slutet ska vara svårare att nå än andra system. | byggd | Användaren 2026-11-16 (F-234) | tests/world.test.js |
 | R-1096 | Vägen till slutet öppnas också genom uppdrag som öppnar nya vägar. | bestämd | Användaren 2026-11-16 (F-234) | – |
-| R-1097 | Vrak är en bonus för den som hittar dem, inte en stor inkomst som man kan räkna med. | bestämd | Användaren 2026-11-16 | – |
+| R-1097 | Vrak är en bonus för den som hittar dem, inte en stor inkomst som man kan räkna med. | byggd | Användaren 2026-11-16 | tests/world.test.js |
+| R-1098 | Tills uppdragen finns är vägen till slutet stängd, och den öppnas av slutets stjärnkarta, som ligger i valvet på en piratbas. | byggd | Användaren 2026-11-16 (F-234, förslag 7) | tests/sim.test.js |
+| R-1099 | Slutet ligger i det system som ligger längst bort, minst 4, 5 eller 6 hopp från fristaden efter kartans storlek, med en enda hoppväg in. | byggd | Användaren 2026-11-16 (F-234, förslag 5 och 6) | tests/world.test.js |
+| R-1100 | Fristaden har inga vrak. Där piraterna håller systemet finns oftast ett vrak och ibland två, i vartannat omstritt system ett, och annars sällan något. | byggd | Användaren 2026-11-16 (F-233, förslag 1 och 2) | tests/world.test.js |
+| R-1101 | Inget nytt vrak driver in när ett har sprängts. Kommer man tillbaka till ett system efter en stund kan ett nytt ligga där, oftast där piraterna finns, aldrig i fristaden. | byggd | Användaren 2026-11-16 (F-233, förslag 3) | tests/world.test.js |
+| R-1102 | En nedskjuten gunboat eller ett fraktskepp lämnar ett vrak ibland, inte varje gång. | byggd | Användaren 2026-11-16 (F-233, förslag 4) | tests/sim.test.js |
 | R-1086 | Ett vrak har 0 eller 1 bränslecell, och en cell räcker till ett hopp. En station har en cell i valvet. | byggd | Användaren 2026-11-16 | tests/world.test.js |
 | R-1087 | Bränslemätaren visar med markeringar hur många hopp skeppet kan göra, utan siffror. | byggd | Användaren 2026-11-16 | tests/world.test.js |
 | R-1088 | Krediterna från alla belöningar räknas om efter antalet spelare, gånger 1, 0,75 och 0,6 för en, två och tre, så att en besättning på tre tjänar ungefär en femtedel mer än en ensam spelare totalt. | förslag | Agenten 2026-11-16, utifrån docs/economy.md | – |
@@ -125,7 +130,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 
 | Nr | Regel | Status | Källa | Test |
 |---|---|---|---|---|
-| R-1089 | De flesta system har 2–3 hoppvägar, och några tomma system längst ut är återvändsgränder med en enda väg. | byggd | Användaren 2026-11-16 (krock 9) | tests/world.test.js |
+| R-1089 | De flesta system har 2–3 hoppvägar, och några tomma system längst ut är återvändsgränder med en enda väg. Slutet har också en enda väg in (R-1099). | byggd | Användaren 2026-11-16 (krock 9) | tests/world.test.js |
 | R-058 | Sektorer nås med stjärnkartor som hittas eller köps. | ersatt av: R-115 och R-120 | HANDOFF beslut | – |
 | R-059 | Det går att hoppa tillbaka till sektorer man varit i, och de är som de lämnades (tills vidare). | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-060 | Det är fri sikt i rymden. | byggd | HANDOFF beslut | saknas |
@@ -194,7 +199,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-123 | Ett tomt system kan ibland ha något eget: ett tätt asteroidfält, ett vrakfält eller senare anomalier. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
 | R-124 | Systemen har tre storlekar blandat, med flest små, och tomma system kan vara mindre. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
 | R-125 | Farligheten ökar ett steg för varje två hopp från startsystemet, upp till steg 3. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
-| R-126 | Slutet ligger slumpat i ett av de tre bebodda system som ligger längst bort. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-126 | Slutet ligger slumpat i ett av de tre bebodda system som ligger längst bort. | ersatt av: R-1099 | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
 | R-127 | Olika system får olika stjärnor i färg och storlek (förslag D), och de kommer med den genererade kartan. | bestämd | BACKLOG D-089 och F-201 | – |
 | R-128 | Stjärnkartan visar ett system i ägarens färg och ett omstritt system randigt i båda färgerna. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | saknas |
 | R-129 | Status syns bara för system som man har köpt karta över, scannat eller satt ut en boj i. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
@@ -509,7 +514,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-423 | Vrakets reaktor räknar ner från första steget in. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-424 | När reaktorn når noll sprängs vraket och alla som är inne teleporteras hem. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-425 | När ett vrak sprängs skadas ett dockat skepp. | byggd | HANDOFF beslut 2026-11-14 | saknas |
-| R-426 | När ett vrak sprängs dyker ett nytt vrak upp på annat håll. | byggd | HANDOFF beslut 2026-11-14 | saknas |
+| R-426 | När ett vrak sprängs dyker ett nytt vrak upp på annat håll. | ersatt av: R-1097 | HANDOFF beslut 2026-11-14 | – |
 | R-427 | En nedskjuten Gunboat blir ett vrak som går att borda. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-428 | Inne på ett ställe finns tre lägen: lugnt (handelsgolv), lockdown (stället räknar besättningen som fiende) och larm (upptäckt). | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-429 | Lockdown är mörkt med roterande röda ljus och stängda dörrar, och man smyger. | byggd | HANDOFF beslut 2026-11-14 | saknas |

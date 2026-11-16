@@ -3,7 +3,7 @@
 import { currentSector } from './sim/sectors.js';
 
 // Raised whenever the shape of the game state changes, so that an old save is refused instead of breaking.
-export const SAVE_VERSION = 22;
+export const SAVE_VERSION = 23;
 // One save made by the game itself every time the ship docks, and five that the player makes.
 export const AUTO = 'auto';
 export const MANUAL = ['1', '2', '3', '4', '5'];

@@ -13,7 +13,7 @@ import {
   weaponPower,
 } from '../src/sim/ship.js';
 import { damageShip } from '../src/sim/damage.js';
-import { thingsOf, portsOf, solidCircles, dockTargets, mapInfo } from '../src/sim/things.js';
+import { thingsOf, portsOf, solidCircles, dockTargets, mapInfo, addThing } from '../src/sim/things.js';
 import { hurtVessel, makeVessel } from '../src/sim/vessels.js';
 import { weaponsOf } from '../src/sim/weapons.js';
 import { SHIPS, HULLS } from '../src/sim/kinds.js';
@@ -24,6 +24,7 @@ import { B, SHIP_GEOM, WING_MOUNTS } from '../src/sim/balance.js';
 import { headingTo, dist, toWorld, angleDiff } from '../src/sim/util.js';
 import { newRock, hurtRock } from '../src/sim/rocks.js';
 import { arrival } from '../src/sim/system.js';
+import { withWreck } from './helpers.js';
 const speed = (s) => Math.hypot(s.ship.vx, s.ship.vy);
 
 const wrecks = (s) => thingsOf(s, 'wreck');
@@ -43,7 +44,7 @@ const quiet = (s) => {
   s.spawn.timer = 1e9;
   s.sectors[s.sector].star = false;
   Object.assign(s.ship, { x: 0, y: 0, heading: 0, vx: 0, vy: 0, throttle: 0 });
-  return s;
+  return withWreck(s);
 };
 // A station of every side near the start, as in a test game, but the ship has nothing bought.
 const gathered = (seed = 1) => {
@@ -725,7 +726,7 @@ function sightings(s, it, g, av, secs) {
 }
 
 test('a guard fights from cover: it steps out to fire and steps back again', () => {
-  const { s, it, av } = boarded(3);
+  const { s, it, av } = boarded(2);
   it.turrets = [];
   it.guards = it.guards.slice(0, 1);
   const g = it.guards[0];
@@ -885,8 +886,9 @@ test('the vault door opens when a player holds the use key next to it', () => {
   assert.ok(!it.tiles.includes('L'));
 });
 
-test('when the reactor timer runs out the wreck explodes and everyone is teleported home', () => {
+test('R-1097: when the reactor timer runs out the wreck explodes, everyone is teleported home, and no new wreck comes', () => {
   const { s, w, it } = boarded();
+  const count = wrecks(s).length;
   it.guards = [];
   it.turrets = [];
   it.timer = 0.5;
@@ -894,7 +896,7 @@ test('when the reactor timer runs out the wreck explodes and everyone is telepor
   run(s, { away: { 0: {} } }, 1);
   assert.equal(s.players[0].inside, null);
   assert.ok(!wrecks(s).includes(w), 'the wreck is gone');
-  assert.equal(wrecks(s).length, 3, 'a new wreck appears elsewhere');
+  assert.equal(wrecks(s).length, count - 1, 'no new wreck drifts in: wrecks are a bonus');
   assert.equal(s.ship.docked, null);
   assert.ok(s.ship.hull + s.ship.shield < hull, 'a docked ship is caught in the blast');
 });
@@ -1074,6 +1076,7 @@ test('the scanner pulse sees far for a moment and then needs to recharge', () =>
 
 test('a probe flies to its target, reveals the way, burns out and is restocked', () => {
   const s = quiet(createState(1));
+  addThing(s, createWreck(s, 0, 0, 1));
   const [near, far] = wrecks(s);
   Object.assign(near, { x: 900, y: 60 });
   Object.assign(far, { x: 1500, y: 60 });
@@ -1526,23 +1529,32 @@ test('R-120 R-121: a star chart shows three systems around the one it is of, as 
   assert.equal(viewOf(s, base.chart).live, false, 'and it is not kept up to date');
 });
 
-test('destroying the cruiser in the last sector wins the game, and gunboats leave wrecks', () => {
+test('R-1098 R-1102: the end is sealed until its chart is found, the cruiser there wins it, gunboats leave wrecks at times', () => {
   const s = quiet(createState(1));
   const end = s.sectors.find((x) => x.boss);
   assert.equal(end.kind, 'inhabited');
   s.sector = end.links[0];
   quiet(s);
   s.ship.fuel = 80;
+  assert.match(jumpBlocked(s, end.id), /SEALED/, 'R-1098: the lane to the end is sealed');
+  s.charts.push(end.id);
   step(s, { captain: { jump: end.id } }, DT);
   run(s, {}, B.JUMP_CHARGE + 0.2);
   assert.equal(s.sector, end.id);
   const boss = s.vessels.find((p) => p.kind === 'cruiser');
   assert.ok(boss);
   s.spawn.timer = 1e9;
+  // R-1102: some gunboats leave a wreck when they are shot down, not all of them.
   const before = wrecks(s).length;
-  const gb = target(s, s.ship.x + 3000, s.ship.y, 'gunboat', 10);
-  hurtVessel(s, gb, 50);
-  assert.equal(wrecks(s).length, before + 1);
+  let left = 0;
+  for (let i = 0; i < 12; i++) {
+    const n = wrecks(s).length;
+    const gb = target(s, s.ship.x + 3000 + i * 40, s.ship.y, 'gunboat', 10);
+    hurtVessel(s, gb, 50);
+    if (wrecks(s).length > n) left++;
+  }
+  assert.ok(left > 0 && left < 12, 'some of them leave a wreck');
+  assert.ok(wrecks(s).length > before);
   hurtVessel(s, boss, SHIPS.cruiser.hp);
   assert.equal(s.won, true);
 });

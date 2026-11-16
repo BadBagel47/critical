@@ -1,7 +1,7 @@
 // Boarding: the top-down interior of a wreck, with guards, turrets, loot and the teleporter.
 import { B } from './balance.js';
-import { createWreck, currentSector } from './sectors.js';
-import { addThing, removeThing, thingsOf, dockTargets, findDock, portsOf } from './things.js';
+import { currentSector } from './sectors.js';
+import { removeThing, thingsOf, dockTargets, findDock, portsOf } from './things.js';
 import { shipNose } from './ship.js';
 import { layOut } from './layout.js';
 import { TILE, tileAt, solidAt, blocked, move, los } from './floor.js';
@@ -232,11 +232,15 @@ export function createInterior(state, wreck) {
   for (let i = 0; i < 2; i++) addLoot(vaultRoom, () => ({ type: 'crate', value: credits(B.VAULT_CREDITS) }));
   if (wreck.kind === 'station') addLoot(vaultRoom, () => ({ type: 'cell' }));
   // Vaults sometimes hold a star chart of the nearest system the crew knows nothing of, or a spare slot. A
-  // station vault always has a chart while there are such systems left.
+  // station vault always has a chart while there are such systems left. The vault of a pirate station holds
+  // the chart that opens the lane to the end, until the crew has it (R-1098).
   const hops = hopsFrom(state.sectors, state.sector);
+  const end = state.sectors.find((x) => x.boss);
+  const key = wreck.kind === 'station' && wreck.side === PIRATE && end && !state.charts.includes(end.id);
   const missing = state.sectors
-    .filter((x) => x.id !== state.sector && !x.intel && !state.charts.includes(x.id))
+    .filter((x) => x.id !== state.sector && !x.boss && !x.intel && !state.charts.includes(x.id))
     .sort((a, b) => hops[a.id] - hops[b.id] || a.id - b.id);
+  if (key) missing.unshift(end);
   if (missing.length && (wreck.kind === 'station' || rand(state) < 0.35)) {
     addLoot(vaultRoom, () => ({ type: 'chart', sector: missing[0].id }));
   }
@@ -532,6 +536,8 @@ function deposit(state, av) {
         state.charts.push(item.sector);
         readChart(state, item.sector);
         state.events.push({ type: 'chart', sector: item.sector });
+        if (state.sectors[item.sector].boss)
+          state.events.push({ type: 'laneOpen', name: state.sectors[item.sector].name });
       }
     } else if (item.type === 'part') {
       state.ship.slots[item.slot]++;
@@ -1115,13 +1121,7 @@ function blowUp(state, wreck) {
     ship.vy = f.y * 60;
     damageShip(state, B.WRECK_BLAST_DMG, { x: ship.x, y: ship.y });
   }
-  // A new wreck drifts in somewhere else so there is always something to find.
-  const a = rand(state) * TAU;
-  const d = randRange(state, 1300, 2200);
-  if (thingsOf(state, 'wreck').length >= 3) return;
-  const x = ship.x + Math.sin(a) * d;
-  const y = ship.y - Math.cos(a) * d;
-  addThing(state, createWreck(state, x, y, 1 + Math.floor(rand(state) * 3)));
+  // No new wreck drifts in to take its place: wrecks are a bonus (R-1097). See returnWreck in sectors.js.
 }
 
 // A station does not blow up. It fights back: fighters scramble and the lock resets.

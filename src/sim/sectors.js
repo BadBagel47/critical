@@ -111,7 +111,7 @@ export function generateSector(s, id) {
   }
   // Each trading station sells a star chart of the systems around one a little way off.
   const hops = hopsFrom(s.sectors, id);
-  const charted = s.sectors.filter((x) => hops[x.id] >= 2 && hops[x.id] <= 3).map((x) => x.id);
+  const charted = s.sectors.filter((x) => !x.boss && hops[x.id] >= 2 && hops[x.id] <= 3).map((x) => x.id);
   sec.plan.forEach(([side, yard, d, name, sanctuary], i) => {
     const p = at(base + 1.1 + i * 2.3 + randRange(s, -0.2, 0.2), out(d));
     const st = createStation(s, p.x, p.y, side, yard, name, false);
@@ -206,6 +206,9 @@ export function jumpBlocked(state, to) {
   const ship = state.ship;
   if (!state.sectors[to] || to === state.sector) return 'NOT A SYSTEM';
   if (!sec.links.includes(to)) return 'NO ROUTE FROM HERE';
+  // The lane to the end is sealed until the crew has its chart, from the vault of a pirate station (R-1098).
+  // Missions will open it too, once there are missions.
+  if (state.sectors[to].boss && !state.charts.includes(to)) return 'SEALED  ·  ITS CHART IS IN A PIRATE VAULT';
   if (ship.docked) return 'UNDOCK FIRST';
   if (state.players.some((p) => p.inside !== null)) return 'CREW STILL AWAY';
   if (ship.fuel < jumpFuel(ship)) return 'NOT ENOUGH FUEL';
@@ -229,6 +232,18 @@ function orderJump(state, to, at = null) {
   state.events.push({ type: 'jumpCharging', name: state.sectors[to].name });
 }
 
+// A system the crew comes back to after a while may have a new wreck in it, more likely where the pirates are,
+// and never in the sanctuary (R-1094, R-1097). `away` is how long the crew was gone.
+function returnWreck(state, sec, away) {
+  if (sec.kind === 'sanctuary' || away < B.WRECK_RETURN_TIME) return;
+  if (thingsOf(state, 'wreck').length >= B.WRECK_RETURN_MAX) return;
+  const chance = B.WRECK_RETURN_CHANCE[sec.owner === 'pirate' ? 'pirate' : sec.sides ? 'contested' : 'other'];
+  if (rand(state) >= chance) return;
+  const p = at(rand(state) * TAU, Math.max(B.SYSTEM_CORE, randRange(state, 0.4, 0.85) * sec.radius));
+  const difficulty = Math.min(3, 1 + Math.floor(rand(state) * (sec.tier + 1)));
+  addThing(state, createWreck(state, p.x, p.y, difficulty));
+}
+
 // Store this sector as it is, then load or create the next one.
 function arrive(state, to) {
   const ship = state.ship;
@@ -248,6 +263,7 @@ function arrive(state, to) {
     known: state.known,
     field: state.field,
     bosses,
+    left: state.time,
   };
   ship.fuel -= jumpFuel(ship);
   ship.dartStock += state.darts.length;
@@ -261,10 +277,12 @@ function arrive(state, to) {
     state.known = next.saved.known;
     state.field = next.saved.field;
     const bosses = next.saved.bosses || [];
+    const away = state.time - (next.saved.left ?? state.time);
     next.saved = null;
     clearTraffic(state, B.RAID_GAP);
     state.vessels.push(...bosses);
     state.spawn = { timer: firstWaveDelay(state), wave: Math.floor(state.spawn.wave / 2) };
+    returnWreck(state, next, away);
   } else generateSector(state, to);
   placeShip(state, arrival(state, at));
   ship.pulse = null;

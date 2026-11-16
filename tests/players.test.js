@@ -6,6 +6,7 @@ import { stepPlayers } from '../src/sim/step.js';
 import { addPlayer, removePlayer, playerById, holderOf } from '../src/sim/players.js';
 import { thingsOf } from '../src/sim/things.js';
 import { speedOf } from '../src/sim/ship.js';
+import { withWreck } from './helpers.js';
 
 const DT = 1 / 60;
 const run = (s, inputs, seconds) => {
@@ -16,7 +17,7 @@ const run = (s, inputs, seconds) => {
 const quiet = (s) => {
   s.spawn.timer = 1e9;
   s.raidTimer = 1e9;
-  return s;
+  return withWreck(s);
 };
 const crewOf = (n) => {
   const s = quiet(createState(1));

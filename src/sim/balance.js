@@ -367,6 +367,12 @@ export const B = {
   // pirates in later sectors
   TIER_HP: 0.15,
   MAX_WRECKS: 5,
+  // Wrecks are a bonus (R-1097). A ship that leaves a wreck does so this often when it is shot down. A system the
+  // crew comes back to after this many seconds may have a new wreck, more likely where the pirates are.
+  KILL_WRECK_CHANCE: 0.4,
+  WRECK_RETURN_TIME: 300,
+  WRECK_RETURN_CHANCE: { pirate: 0.5, contested: 0.35, other: 0.15 },
+  WRECK_RETURN_MAX: 2,
   // darts
   DART_COUNT: 3,
   DART_HP: 18,

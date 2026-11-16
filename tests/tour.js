@@ -5,6 +5,7 @@ import { stepPlayers } from '../src/sim/step.js';
 import { addPlayer } from '../src/sim/players.js';
 import { thingsOf, findThing } from '../src/sim/things.js';
 import { summon } from '../src/sim/testing.js';
+import { withWreck } from './helpers.js';
 
 export const DT = 1 / 60;
 const BUY = [
@@ -29,7 +30,7 @@ const nearest = (list, x, y) =>
   );
 
 export function startTour(seed, test = false) {
-  const state = createState(seed, { test });
+  const state = withWreck(createState(seed, { test }));
   addPlayer(state, 'GUNNER');
   addPlayer(state, 'ENGINEER');
   return { state, i: 0 };

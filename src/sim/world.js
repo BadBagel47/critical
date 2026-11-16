@@ -6,9 +6,11 @@
 //   - Danger rises one step for every two jumps from the sanctuary, up to three.
 //   - Each faction has an area of its own, in one piece. Some systems on the borders are contested, with the
 //     stations of two factions whose ships fight each other. The pirates hold the systems furthest out, and
-//     the end waits in one of the three inhabited systems that lie furthest away.
+//     the end.
 //   - Most systems have two or three jump lanes. A few empty ones far out are dead ends.
 //   - Every system has asteroids, so that fuel can always be mined.
+//   - The end lies furthest out, at least END_MIN jumps away, with a single lane in.
+//   - Wrecks are few, a bonus for whoever finds one, and most where the pirates are (wrecksFor).
 import { B } from './balance.js';
 import { FACTIONS, PIRATE } from './sides.js';
 import { rand, randRange } from './util.js';
@@ -171,13 +173,14 @@ function layLanes(s, pts) {
   return links;
 }
 
-// One more lane from system `i`, to the nearest system it can reach without crossing a lane, if there is one.
-function addLane(pts, links, i) {
+// One more lane from system `i`, to the nearest system it can reach without crossing a lane, if there is one,
+// other than `not`.
+function addLane(pts, links, i, not = -1) {
   const d = (j) => Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y);
   const lanes = links.flatMap((l, a) => l.filter((b) => a < b).map((b) => [a, b]));
   const ok = (j) => !lanes.some(([a, b]) => cross(pts[i], pts[j], pts[a], pts[b]));
   const near = [...pts.keys()]
-    .filter((j) => j !== i && !links[i].includes(j) && links[j].length < 4)
+    .filter((j) => j !== i && j !== not && !links[i].includes(j) && links[j].length < 4)
     .sort((a, b) => d(a) - d(b));
   const j = near.find(ok);
   if (j === undefined) return;
@@ -185,10 +188,20 @@ function addLane(pts, links, i) {
   links[j].push(i);
 }
 
-// The world for a new game: one entry for each system, in the shape the rest of the game reads.
-export function createWorld(s, size = 'short') {
-  const inhabited = SIZES[size] || SIZES.short;
-  const total = inhabited * 2;
+// How few jumps from the sanctuary the end may lie, by the size of the world (R-1095).
+export const END_MIN = { short: 4, medium: 5, long: 6 };
+
+// Whether every system can still be reached when the lane between `a` and `b` is gone.
+function canCut(links, a, b) {
+  const without = links.map((l, i) => l.filter((j) => !((i === a && j === b) || (i === b && j === a))));
+  return hopsFrom(
+    without.map((l) => ({ links: l })),
+    0,
+  ).every((h) => h < Infinity);
+}
+
+// Where the systems lie, their lanes, which are inhabited, and the end.
+function layout(s, inhabited, total) {
   const pts = placeSystems(s, total);
   const links = layLanes(s, pts);
   const sectors = pts.map((p, id) => ({ id, x: p.x, y: p.y, links: links[id] }));
@@ -206,13 +219,56 @@ export function createWorld(s, size = 'short') {
     if (links[i].length === 1 && (lived.has(i) || hops[i] < deepest / 2)) addLane(pts, links, i);
   }
   hops = hopsFrom(sectors, 0);
+  // The end is the system furthest away, and it is inhabited (R-1095). Another inhabited system far out is
+  // left empty instead, so that the count stays the same.
+  const end = sectors
+    .slice(1)
+    .map((x) => x.id)
+    .sort((a, b) => hops[b] - hops[a] || a - b)[0];
+  if (!lived.has(end)) {
+    const out = [...lived].filter((i) => i !== 0).sort((a, b) => hops[b] - hops[a] || a - b)[0];
+    lived.delete(out);
+    lived.add(end);
+  }
+  // It has a single lane in, from the side that is furthest out: the others are cut where the map stays in one
+  // piece and a system at the other end that may not be a dead end keeps two lanes.
+  const keep = [...links[end]].sort((a, b) => hops[b] - hops[a] || a - b)[0];
+  for (const j of [...links[end]]) {
+    if (j === keep) continue;
+    // Only an empty system far out may be left with a single lane.
+    const guard = lived.has(j) || hops[j] < Math.max(...hops) / 2;
+    if (links[j].length <= 2 && guard) addLane(pts, links, j, end);
+    if ((links[j].length <= 2 && guard) || !canCut(links, end, j)) continue;
+    links[end] = links[end].filter((x) => x !== j);
+    links[j] = links[j].filter((x) => x !== end);
+  }
+  for (const x of sectors) x.links = links[x.id];
+  hops = hopsFrom(sectors, 0);
+  // The map is deeper now, so a dead end that was far out may no longer be.
   deepest = Math.max(...hops);
-  // The end: one of the three inhabited systems furthest away.
-  const far = [...lived]
-    .filter((i) => i !== 0)
-    .sort((a, b) => hops[b] - hops[a] || a - b)
-    .slice(0, 3);
-  const end = far[Math.floor(rand(s) * far.length)];
+  for (const i of [...pts.keys()]) {
+    if (i !== end && links[i].length === 1 && (lived.has(i) || hops[i] < deepest / 2)) addLane(pts, links, i, end);
+  }
+  for (const x of sectors) x.links = links[x.id];
+  hops = hopsFrom(sectors, 0);
+  return { pts, links, sectors, hops, lived, end };
+}
+
+// The world for a new game: one entry for each system, in the shape the rest of the game reads. A layout whose
+// end is too close is made again, with the next random numbers, so that the same seed still gives the same world.
+export function createWorld(s, size = 'short') {
+  const inhabited = SIZES[size] || SIZES.short;
+  const total = inhabited * 2;
+  const need = END_MIN[size] || END_MIN.short;
+  const worth = (l) => Math.min(l.hops[l.end], need) * 2 + (l.links[l.end].length === 1 ? 1 : 0);
+  let best = null;
+  for (let tries = 0; tries < 60; tries++) {
+    const l = layout(s, inhabited, total);
+    if (!best || worth(l) > worth(best)) best = l;
+    if (worth(best) === need * 2 + 1) break;
+  }
+  const { pts, sectors, lived, end } = best;
+  const hops = best.hops;
   // The pirates hold the end and the inhabited systems furthest out: about one in four.
   const owner = sectors.map(() => null);
   owner[end] = PIRATE;
@@ -264,6 +320,7 @@ export function createWorld(s, size = 'short') {
     const roll = rand(s);
     const sizeIdx = kind === 'empty' ? (roll < 0.7 ? 0 : 1) : roll < 0.45 ? 0 : roll < 0.8 ? 1 : 2;
     const special = kind === 'empty' && rand(s) < 0.35 ? (rand(s) < 0.5 ? 'rocks' : 'wrecks') : null;
+    const plan = stationsFor(s, kind, owner[i], sides, tier, i === end, allNames[i]);
     return {
       id: i,
       name: allNames[i],
@@ -277,12 +334,25 @@ export function createWorld(s, size = 'short') {
       special,
       boss: i === end,
       size: sizeIdx,
-      plan: stationsFor(s, kind, owner[i], sides, tier, i === end, allNames[i]),
-      wrecks: kind === 'empty' ? (special === 'wrecks' ? 5 : Math.floor(rand(s) * 3)) : 3,
+      plan,
+      wrecks: wrecksFor(s, kind, owner[i], sides, special, plan),
       pods: kind === 'empty' ? 1 : 3,
       links: sec.links,
     };
   });
+}
+
+// How many wrecks a system has when the crew first comes (R-1093, R-1094, R-1097). A wreck is a bonus for whoever
+// finds one, not an income to count on: none in the sanctuary, most where the pirates are, one at times where two
+// factions fight, and seldom anywhere else. Now and then an empty system has a field of them.
+function wrecksFor(s, kind, owner, sides, special, plan) {
+  if (kind === 'sanctuary') return 0;
+  const r = rand(s);
+  if (special === 'wrecks') return 3;
+  if (owner === PIRATE) return r < 0.3 ? 2 : 1;
+  if (sides) return r < 0.5 ? 1 : 0;
+  const pirates = plan.some(([side]) => side === PIRATE);
+  return r < (pirates ? 0.35 : 0.15) ? 1 : 0;
 }
 
 // What stations a system has: [side, shipyard, how far out in the largest size, name, sanctuary].

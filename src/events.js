@@ -88,6 +88,7 @@ const TOAST = {
   repairedAll: () => ['SHIP REPAIRED', GOOD],
   rearmed: () => ['ROCKETS REARMED', LOOT],
   chart: (e, state) => [`STAR CHART  ·  ${state.sectors[e.sector].name}  ·  J FOR THE STAR MAP`, TECH],
+  laneOpen: (e) => [`THE LANE TO ${e.name} IS OPEN`, GOOD],
   probedSystem: (e) => [`PROBE REPORT  ·  ${e.name}  ·  ON THE STAR MAP`, TECH],
   slotFound: (e) => [e.slot === 'hard' ? 'FOUND A SPARE HARDPOINT' : 'FOUND A SPARE SYSTEM SLOT', GOOD],
   holdFire: (e) => [`${e.name}:  HOLD YOUR FIRE`, WARM],

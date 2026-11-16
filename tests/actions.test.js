@@ -7,12 +7,13 @@ import { thingsOf, portsOf } from '../src/sim/things.js';
 import { SHIP_GEOM } from '../src/sim/balance.js';
 import { actionsOf } from '../src/actions.js';
 import { padButtonFor } from '../src/input.js';
+import { withWreck } from './helpers.js';
 
 const DT = 1 / 60;
 const quiet = () => {
   const s = createState(1);
   s.spawn.timer = s.raidTimer = s.traffic.timer = 1e9;
-  return s;
+  return withWreck(s);
 };
 // What the first player is offered on the screen they are on.
 const offered = (s, mode) => actionsOf({ state: s, me: s.players[0] }, mode || s.players[0].post || 'crew');
