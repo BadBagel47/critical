@@ -5,7 +5,7 @@
 //   state.bounty  the price on the crew: { amount, beaten, from }. Hunters come for it, one group at a time, until
 //                 it is paid at a station that trades with the crew, or BOUNTY_GROUPS groups have been beaten.
 import { B } from './balance.js';
-import { CREW, HUNTER, isFaction, enemies } from './sides.js';
+import { CREW, HUNTER, isFaction, enemies, inSanctuary } from './sides.js';
 import { makeVessel, fleeFrom } from './vessels.js';
 import { rand, randRange, TAU } from './util.js';
 
@@ -71,8 +71,8 @@ export function stepHunt(state, dt) {
   const hunt = state.hunt;
   if (!hunt || state.over) return;
   if (!hunt.out) {
-    // Nobody comes while the ship is between sectors.
-    if (state.jump) return;
+    // Nobody comes while the ship is between sectors, nor into the sanctuary.
+    if (state.jump || inSanctuary(state)) return;
     hunt.timer -= dt;
     if (hunt.timer <= 0) sendGroup(state);
     return;

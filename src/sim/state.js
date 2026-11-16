@@ -9,6 +9,7 @@ import { applyTestLoadout } from './upgrades.js';
 
 // `options.test` starts the game with everything unlocked, for trying things out.
 // `options.hardcore` gives the crew a single life: a lost ship ends the run for good.
+// `options.size` is how big the world is: 'short', 'medium' or 'long' (see world.js).
 export function createState(seed = 1, options = {}) {
   const state = {
     seed,
@@ -60,16 +61,19 @@ export function createState(seed = 1, options = {}) {
     strife: {},
     // What each post has pointed out for the others, see teamwork.js.
     marks: { gunner: null, captain: null },
-    // Sectors, the star charts the crew holds, and a jump being charged.
-    sectors: createSectors(),
+    // The systems of the world, the star charts the crew holds (by the system each is of), and a jump being
+    // charged. The world is made below, once the random numbers are set up.
+    size: options.size || 'short',
+    sectors: [],
     sector: 0,
-    charts: [0],
+    charts: [],
     jump: null,
   };
+  state.sectors = createSectors(state, state.size);
   generateSector(state, 0);
-  // The game starts a little way from the crew's own yard, which is all they know of so far.
+  // The game starts a little way from the base of the sanctuary, which is all the crew knows of so far.
   state.known = thingsOf(state, 'station')
-    .filter((st) => st.home)
+    .filter((st) => st.sanctuary)
     .map(mapInfo);
   placeShip(state, { ...arrival(state), throttle: 0 });
   if (options.test) {

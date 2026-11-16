@@ -13,6 +13,8 @@ import {
   enemies,
   changeStanding,
   thankForPirate,
+  rivalHere,
+  inSanctuary,
   provoke,
   isAngry,
   anyoneAngry,
@@ -113,7 +115,12 @@ export function hurtVessel(state, v, dmg, by = CREW) {
     state.kills++;
     state.credits += c.bounty;
     thankForPirate(state);
-  } else if (crew) changeStanding(state, v.side, -B.STANDING_LOSS.shipKill);
+  } else if (crew) {
+    changeStanding(state, v.side, -B.STANDING_LOSS.shipKill);
+    // In a contested system the other side is glad of it.
+    const rival = rivalHere(state, v.side);
+    if (rival) changeStanding(state, rival, B.STANDING_GAIN.rival);
+  }
   state.events.push({
     type: 'kill',
     id: v.id,
@@ -162,8 +169,8 @@ function spawnWave(state) {
 }
 
 function stepWaves(state, dt) {
-  // A test game has no pirates unless they are asked for, see testing.js.
-  if (state.test) return;
+  // A test game has no pirates unless they are asked for, see testing.js. The sanctuary has none.
+  if (state.test || inSanctuary(state)) return;
   state.spawn.timer -= dt;
   if (state.spawn.timer > 0) return;
   if (pirateCount(state) < B.MAX_PIRATES) spawnWave(state);

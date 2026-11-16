@@ -37,6 +37,7 @@ const SCENES = [
     },
   },
   { name: 'map', query: '?still&test', frames: 60, setup: () => (window.__critical.view.panel = 'map') },
+  { name: 'stars', query: '?still&test', frames: 60, setup: () => (window.__critical.view.panel = 'stars') },
   {
     name: 'station-floor',
     query: '?still&test',

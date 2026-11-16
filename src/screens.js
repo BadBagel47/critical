@@ -17,6 +17,7 @@ import { drawRadar, radarPlace, radarPoint } from './render/radar.js';
 import { drawBoarding, insideOrigin } from './render/boarding.js';
 import { drawBreakin, breakinAction, breakinButtons } from './render/breakin.js';
 import { drawMap, mapPoint, chartClick, mapButtons } from './render/map.js';
+import { drawStarMap, starClick, starButtons } from './render/stars.js';
 import { drawShop, shopClick, shopButtons } from './render/shop.js';
 import { drawMainframe, mainframeClick, mainframeButtons } from './render/mainframe.js';
 import { atMainframe } from './sim/mainframe.js';
@@ -24,8 +25,9 @@ import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS, hackTarget, 
 import { drawActions, actionButtons } from './render/actions.js';
 
 // What is kept about the screen. None of it is part of the game: two players look at the same game differently.
-//   panel  what the player has opened on top of their place in the game: 'map', 'lock', 'shop', 'mainframe',
-//          'menu' or null
+//   panel  what the player has opened on top of their place in the game: 'map', 'stars', 'lock', 'shop',
+//          'mainframe', 'menu' or null
+//   starPick  the system the player has picked on the star map, or null for the one the ship is in
 //   mfArm  whether the player has clicked once to take a trading station from its mainframe, and must click again
 //   menu   which page of the menu is open and which row is picked, see menu.js
 export function createView(input) {
@@ -33,6 +35,7 @@ export function createView(input) {
     started: false,
     playerId: 0,
     panel: null,
+    starPick: null,
     shopTab: 'hull',
     mfArm: false,
     menu: createMenu(),
@@ -67,6 +70,7 @@ export function modeOf(game) {
   }
   if (view.panel === 'lock' && docked && docked.breakin && docked.lock !== 'open') return 'lock';
   if (view.panel === 'map') return 'map';
+  if (view.panel === 'stars') return 'stars';
   if (view.panel === 'radar' && me.post === 'captain' && radarPlace(state)) return 'radar';
   // On board the ship: the post the player holds, or 'crew' when they hold none.
   return me.post || 'crew';
@@ -209,6 +213,24 @@ function mapInput(game, out) {
   if (to === null) return;
   if (me.post === 'captain') out.captain = { jump: to };
   else toast(view, state, 'ONLY THE CAPTAIN CAN START A JUMP', COL.ochre[2], 3);
+}
+
+// On the star map: a click picks a system. For a system next to this one, the Captain starts the jump by
+// picking where to arrive, and the Engineer sends a probe.
+function starsInput(game, out) {
+  const { keys, state, view, me } = game;
+  const m = keys.mouse;
+  onBoard(game, out);
+  const row = m.clicked ? starClick(state, view, m.x, m.y) : null;
+  if (!row) return;
+  if (row.star !== null) view.starPick = row.star;
+  else if (row.probe !== null) {
+    if (me.post === 'engineer') out.engineer = { power: [], repair: null, tool: { type: 'probe', system: row.probe } };
+    else toast(view, state, 'ONLY THE ENGINEER SENDS PROBES', COL.ochre[2], 3);
+  } else if (row.jump !== null) {
+    if (me.post === 'captain') out.captain = { jump: row.jump, arriveAt: row.at };
+    else toast(view, state, 'ONLY THE CAPTAIN CAN START A JUMP', COL.ochre[2], 3);
+  }
 }
 
 // At the break-in panel: clicks work the lock. F steps away from it.
@@ -366,6 +388,14 @@ export const SCREENS = {
     toasts: [296, 180],
     buttons: (game) => mapButtons(game.state),
   },
+  stars: {
+    pad: 'map',
+    cursor: true,
+    input: starsInput,
+    draw: (game) => drawStarMap(game.ctx, game.state, game.view, game.assets),
+    toasts: [296, 180],
+    buttons: (game) => starButtons(game.state, game.view),
+  },
   lock: {
     pad: 'panel',
     cursor: true,
@@ -453,8 +483,13 @@ export function viewKeys(game, mode) {
   // B opens the Captain's boarding radar, and closes it.
   if (mode === 'radar' && keys.hit('KeyB', 'KeyF', 'Escape')) view.panel = null;
   else if (mode === 'captain' && keys.hit('KeyB') && radarPlace(state)) view.panel = 'radar';
-  const canOpenMap = mode === 'map' || POSTS.includes(mode) || mode === 'crew';
+  const canOpenMap = mode === 'map' || mode === 'stars' || POSTS.includes(mode) || mode === 'crew';
   if (keys.hit('KeyM') && canOpenMap) view.panel = mode === 'map' ? null : 'map';
+  // J opens the star map, and closes it. It opens on the system the ship is in.
+  if (keys.hit('KeyJ') && canOpenMap) {
+    view.panel = mode === 'stars' ? null : 'stars';
+    view.starPick = null;
+  }
 }
 
 const fmtTime = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');

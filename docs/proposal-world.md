@@ -2,7 +2,7 @@
 
 **Förslag, inte byggt.** Skrivet 2026-11-15 efter dina besked. Det ersätter det långa förslaget, som ligger kvar i [proposal-world-v1.md](proposal-world-v1.md).
 
-Varje steg går att provspela innan nästa börjar. Under varje steg står vad du har bestämt, vad agenten föreslår och vilka frågor som behöver svar innan just det steget byggs. **Steg 1 är byggt** och påslaget i alla spel (2026-11-15). **Steg 2 är byggt** (2026-11-16). Nästa är steg 3, som har tre frågor att svara på först.
+Varje steg går att provspela innan nästa börjar. Under varje steg står vad du har bestämt, vad agenten föreslår och vilka frågor som behöver svar innan just det steget byggs. **Steg 1 är byggt** och påslaget i alla spel (2026-11-15). **Steg 2 är byggt** (2026-11-16). **Steg 3 är byggt** (2026-11-16). Nästa är steg 4.
 
 ## Riktningen (bestämt)
 
@@ -70,6 +70,8 @@ Alla är besvarade. Bilderna på stjärnan, bältet och diset visas innan de lä
 4. Tar solcellerna en slot, och hur fort laddar de? Rekommendation: en slot, och ett hopps bränsle på ungefär fem minuter.
 
 ## Steg 3 – Många system
+
+**Byggt 2026-11-16.** Allt som bestämts nedan är byggt, utom olika stjärnor per system (F-230) och dolda system som storyn låser upp (steg 4). Fristadens bas säljer de billigaste uppgraderingarna, högst 150 krediter, som agentens förslag (R-882). Det som gäller står i docs/rules.md.
 
 **Bestämt**
 - Systemen genereras för varje omgång. Antalet väljs vid start och är fler än fem.

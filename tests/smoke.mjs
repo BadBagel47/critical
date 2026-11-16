@@ -44,6 +44,15 @@ await shot('01-title');
 await page.keyboard.press('Enter');
 await page.waitForTimeout(200);
 check(await settles(async () => (await get('v.started')) === true), 'enter starts the game');
+check(
+  (await get("s.sectors[s.sector].kind === 'sanctuary' && window.__critical.stations.length")) === 1,
+  'the game starts in the sanctuary, with its one base',
+);
+// The rest of the test needs a station of every side close by, as a test game has. The ship has nothing bought.
+await page.evaluate(async () => {
+  const { gatherForTesting } = await import(new URL('src/sim/sectors.js', document.baseURI).href);
+  gatherForTesting(window.__critical.state);
+});
 
 // Captain: throttle up and turn.
 await page.keyboard.down('KeyW');
@@ -310,7 +319,7 @@ await page.keyboard.press('Digit1');
 await page.evaluate(() => {
   const c = window.__critical,
     s = c.state,
-    st = c.stations.find((x) => x.home);
+    st = c.stations.find((x) => x.home || x.sanctuary);
   s.spawn.timer = s.raidTimer = s.traffic.timer = 1e9;
   s.vessels = [];
   s.bolts = [];
@@ -332,7 +341,7 @@ await page.waitForTimeout(2000);
 const noseOff = await page.evaluate(() => {
   const c = window.__critical,
     s = c.state,
-    st = c.stations.find((x) => x.home);
+    st = c.stations.find((x) => x.home || x.sanctuary);
   const nx = s.ship.x + Math.sin(s.ship.heading) * 44;
   const ny = s.ship.y - Math.cos(s.ship.heading) * 44;
   return s.ship.docked === st.id ? Math.hypot(nx - st.x, ny - (st.y + 96)) : 999;
@@ -366,7 +375,7 @@ check(await settles(async () => (await get('s.ship.docked')) === null), 'a click
 await page.evaluate(() => {
   const c = window.__critical,
     s = c.state,
-    st = c.stations.find((x) => x.home);
+    st = c.stations.find((x) => x.home || x.sanctuary);
   s.spawn.timer = 1e9;
   s.raidTimer = 1e9;
   s.vessels = [];
@@ -598,7 +607,7 @@ check(
   'a hostile station with an open lock can be boarded',
 );
 await page.evaluate(() => {
-  const it = window.__critical.stations.find((x) => x.name === 'DRIFT POST').interior,
+  const it = window.__critical.stations.find((x) => x.name === 'FREE TEST POST').interior,
     a = it.avatars[0];
   it.guards = [];
   it.turrets = [];
@@ -620,7 +629,7 @@ await page.waitForTimeout(300);
 await shot('12d-hack');
 // Most of the work is skipped, so that the test does not wait the whole time.
 await page.evaluate(() => {
-  window.__critical.stations.find((x) => x.name === 'DRIFT POST').interior.work[2] = 0.97;
+  window.__critical.stations.find((x) => x.name === 'FREE TEST POST').interior.work[2] = 0.97;
 });
 await page.waitForTimeout(1200);
 check(
@@ -633,7 +642,7 @@ await page.keyboard.press('KeyF');
 // The panel has to be closed before the boarder walks to the airlock, or the next F would go to the panel.
 await page.waitForFunction(() => window.__critical.view.panel === null, null, { timeout: 3000 }).catch(() => {});
 await page.evaluate(() => {
-  const it = window.__critical.stations.find((x) => x.name === 'DRIFT POST').interior,
+  const it = window.__critical.stations.find((x) => x.name === 'FREE TEST POST').interior,
     a = it.avatars[0];
   a.x = it.entry.x;
   a.y = it.entry.y;
@@ -744,44 +753,58 @@ await page.keyboard.press('Digit1');
 await page.keyboard.press('KeyR');
 await page.waitForTimeout(100);
 
-// Star charts and the jump.
+// The lanes on the map, the star map and the jump.
+const lane = await get('s.sectors[s.sector].links[0]');
 await page.evaluate(() => {
   const s = window.__critical.state;
-  s.charts.push(1);
   s.ship.fuel = 90;
 });
 await page.keyboard.press('KeyM');
 await page.waitForTimeout(150);
 await shot('14-starcharts');
-await clickOn('chart.1');
+await page.keyboard.press('KeyJ');
+await page.waitForTimeout(150);
+check(await settles(async () => (await get("v.panel === 'stars'")) === true), 'J opens the star map from the map');
+await clickOn('star.' + lane);
+await page.waitForTimeout(150);
+check(await settles(async () => (await get('v.starPick')) === lane), 'a click on a system picks it');
+await shot('14a-starmap');
+await clickOn('jump.0');
 await page.waitForTimeout(200);
 check(
-  await settles(async () => (await get('s.jump !== null && s.jump.to')) === 1),
-  'the captain starts a jump by clicking a star chart',
+  await settles(async () => (await get('s.jump !== null && s.jump.to')) === lane),
+  'the captain starts a jump from the star map',
 );
+await page.keyboard.press('KeyJ');
+await page.waitForTimeout(100);
 await page.evaluate(() => window.__critical.advance(9));
 await page.waitForTimeout(300);
-check(await settles(async () => (await get('s.sector')) === 1), 'the ship arrives in the next sector');
+check(await settles(async () => (await get('s.sector')) === lane), 'the ship arrives in the next system');
 check(await settles(async () => (await get("v.panel === 'map'")) === false), 'the map closes after a jump');
 await shot('15-new-sector');
-await page.evaluate(() => {
+const end = await page.evaluate(() => {
   const s = window.__critical.state;
-  s.sectors[1].links.push(4);
-  s.charts.push(4);
+  const end = s.sectors.find((x) => x.boss).id;
+  // A lane straight to the end, for the test.
+  if (!s.sectors[s.sector].links.includes(end)) {
+    s.sectors[s.sector].links.unshift(end);
+    s.sectors[end].links.push(s.sector);
+  }
   s.ship.fuel = 90;
   s.spawn.timer = 1e9;
+  return end;
 });
 await page.keyboard.press('KeyM');
 await page.waitForTimeout(100);
-await clickOn('chart.4');
+await clickOn('chart.' + end);
 await page.waitForTimeout(100);
 await page.evaluate(() => window.__critical.advance(9));
 await page.waitForTimeout(300);
 check(
   await settles(
-    async () => (await get('s.sector')) === 4 && (await get("s.vessels.some((p) => p.kind === 'cruiser')")),
+    async () => (await get('s.sector')) === end && (await get("s.vessels.some((p) => p.kind === 'cruiser')")),
   ),
-  'the last sector holds the cruiser',
+  'the last system holds the cruiser',
 );
 await page.evaluate(() => {
   const s = window.__critical.state,

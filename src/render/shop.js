@@ -1,7 +1,7 @@
 // The shop panel at a station desk: services on the left, and three tabs of things to buy on the right.
 // The world keeps running behind it.
 import { VIEW_W, VIEW_H, COL } from '../config.js';
-import { servicePrices, yardOpen, priceFactor } from '../sim/stations.js';
+import { servicePrices, yardOpen, priceFactor, notSoldHere } from '../sim/stations.js';
 import { CREW, FACTIONS, moodOf } from '../sim/sides.js';
 import { CATALOG, TABS, TAB_NAME, itemsOf, blockedReason, priceOf, level, slotsUsed } from '../sim/upgrades.js';
 import { rect } from './draw.js';
@@ -60,10 +60,9 @@ export function shopRows(state, st, tab) {
   if (ship.mods.rockets) service('REARM ROCKETS', prices.rockets, 'rockets');
   if (st.chart !== null) service('STAR CHART  ' + state.sectors[st.chart].name, prices.chart, 'chart', 'OWNED');
   if (state.bounty) service('PAY THE BOUNTY', prices.bounty, 'bounty');
-  const open = tab === 'armory' || yardOpen(st);
   itemsOf(tab).forEach((id, i) => {
     const item = CATALOG[id],
-      why = blockedReason(state, id, k),
+      why = blockedReason(state, id, k) || notSoldHere(state, st, id),
       lv = level(ship, id);
     const owned = why === 'INSTALLED' || why === 'MAXED' || why === 'OWNED' || why === 'CARRIED';
     rows.push({
@@ -73,7 +72,7 @@ export function shopRows(state, st, tab) {
       h: 14,
       label: item.name + (item.levels && lv ? '  ' + 'I'.repeat(lv) : ''),
       right: owned ? why : priceOf(ship, id, k) + ' CR',
-      enabled: open && !why,
+      enabled: !why,
       owned,
       order: { action: 'buy', item: id },
       desc: item.desc + (why && !owned ? '  ·  ' + why : ''),
@@ -172,7 +171,11 @@ export function drawShop(ctx, font, state, st, tab, mouse) {
   }
   rect(ctx, PX + 12, PY + PH - 28, PW - 24, 1, COL.line);
   const closed = tab !== 'armory' && !yardOpen(st);
-  const note = closed ? 'NO SHIPYARD AT THIS STATION  ·  THE ARMORY IS OPEN' : null;
+  const note = !closed
+    ? null
+    : st.sanctuary
+      ? 'NO SHIPYARD IN THE SANCTUARY  ·  ONLY THE SIMPLEST UPGRADES'
+      : 'NO SHIPYARD AT THIS STATION  ·  THE ARMORY IS OPEN';
   font.draw(
     ctx,
     note || (hover && hover.desc) || 'CLICK WHAT YOU WANT TO BUY',

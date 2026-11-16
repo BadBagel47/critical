@@ -15,6 +15,8 @@ import { usesOf, furnish, doorsOf, stepDoors } from './furnish.js';
 import { has, level, fuelMax, crewHpMax, carryMax, rifleDmg, teleCooldown, breakinBonus } from './upgrades.js';
 import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
+import { hopsFrom } from './world.js';
+import { readChart } from './intel.js';
 import { clamp, forward, headingTo, angleDiff, turnToward, dist, rand, randRange, TAU } from './util.js';
 
 export { TILE, tileAt, blocked, los };
@@ -221,19 +223,22 @@ export function createInterior(state, wreck) {
     taken.push(p);
     it.turrets.push(newTurret(state, p, Math.PI * 1.5));
   }
-  // Loot: fuel cells and crates in the rooms, and the best of it in the vault.
-  for (let i = 0; i < 2 + difficulty; i++) addLoot(anyRoom(), () => ({ type: 'cell' }));
+  // Loot: crates in the rooms, and the best of it in the vault. A wreck holds one fuel cell or none, enough for
+  // one jump (F-229). A station keeps one in its vault.
+  if (wreck.kind !== 'station' && rand(state) < B.WRECK_CELL_CHANCE) addLoot(anyRoom(), () => ({ type: 'cell' }));
   for (let i = 0; i < 2 + difficulty; i++) {
     addLoot(anyRoom(), () => ({ type: 'crate', value: credits(B.CRATE_CREDITS) }));
   }
   for (let i = 0; i < 2; i++) addLoot(vaultRoom, () => ({ type: 'crate', value: credits(B.VAULT_CREDITS) }));
-  addLoot(vaultRoom, () => ({ type: 'cell' }));
-  // Vaults sometimes hold a star chart or a spare slot. A station vault always has a chart if one is missing.
-  const missing = currentSector(state)
-    .links.filter((l) => !state.charts.includes(l))
-    .sort((a, b) => b - a);
+  if (wreck.kind === 'station') addLoot(vaultRoom, () => ({ type: 'cell' }));
+  // Vaults sometimes hold a star chart of the nearest system the crew knows nothing of, or a spare slot. A
+  // station vault always has a chart while there are such systems left.
+  const hops = hopsFrom(state.sectors, state.sector);
+  const missing = state.sectors
+    .filter((x) => x.id !== state.sector && !x.intel && !state.charts.includes(x.id))
+    .sort((a, b) => hops[a.id] - hops[b.id] || a.id - b.id);
   if (missing.length && (wreck.kind === 'station' || rand(state) < 0.35)) {
-    addLoot(vaultRoom, () => ({ type: 'chart', sector: missing[0] }));
+    addLoot(vaultRoom, () => ({ type: 'chart', sector: missing[0].id }));
   }
   if (rand(state) < 0.2) addLoot(vaultRoom, () => ({ type: 'part', slot: rand(state) < 0.5 ? 'hard' : 'system' }));
   // A hostile station is taken over from its mainframe, and has two more guards, and more again for the
@@ -525,6 +530,7 @@ function deposit(state, av) {
       if (state.charts.includes(item.sector)) credits += 60;
       else {
         state.charts.push(item.sector);
+        readChart(state, item.sector);
         state.events.push({ type: 'chart', sector: item.sector });
       }
     } else if (item.type === 'part') {

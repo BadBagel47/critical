@@ -38,25 +38,21 @@ Funna när boken sattes ihop. Varje punkt har en rekommendation. Tills ett beslu
 ## Beslut som inte är byggda än
 
 Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är byggt. Det är inte fel, men det ska byggas. Reglerna står med status `bestämd`, och de gamla som `ersatt av`.
-- Spelet börjar i en fristad nära kartans mitt. I dag börjar det vid den egna varvsstationen i första sektorn.
 - Slutet är piraternas slutbas med en boss. I dag är det Cruisern i The Maw.
 - Standardbasen har tre våningar, och övertagandet kräver först ett steg i källaren och sedan mainframen överst. I dag har stationerna en våning, och mainframen står i rummet längst in.
 - Ingen flyttas tillbaka till skeppet av sig själv, och skeppet får inte hoppa medan någon är inne. I dag kallas alla hem när skeppet lägger ut.
 - En övertagen bas får inget varv, utan det köps. I dag får en övertagen station shipyard.
-- Världen genereras med 16, 24 eller 36 system, och man upptäcker system genom att hoppa dit. I dag finns fem fasta sektorer som nås med stjärnkartor.
-- En sond visar ett grannsystem. I dag fungerar sonder bara inuti systemet.
-- Faktioner kan vara i krig med varandra. I dag slåss de inte med varandra.
+- Faktioner kan vara i krig med varandra. I dag slåss de bara i omstridda system.
 - Anseendet förbättras inte av sig självt med tiden. I dag gör det det, fram till avvaktande, tills uppdragen finns.
-- Ett vrak har 0 eller 1 bränslecell (R-1086), och bränslemätaren visar antalet hopp (R-1087). I dag har ett vrak 4–6 celler.
 - Kanontorn köps, och skeppet börjar med en fast kanon rakt fram. I dag har skeppet ett torn i nosen och torn på vingarna.
 
 ## Bränsle och färd
 
 | Nr | Regel | Status | Källa | Test |
 |---|---|---|---|---|
-| R-1090 | Fristadens bas säljer billigt bränsle. Bränslet är gratis först på ett eget köpt varv. | bestämd | Användaren 2026-11-16 (krock 1) | – |
-| R-1086 | Ett vrak har 0 eller 1 bränslecell, och en cell räcker till ett hopp. Det ersätter antalet celler i R-866, R-867 och R-897 när det byggs. | bestämd | Användaren 2026-11-16 | – |
-| R-1087 | Bränslemätaren visar med markeringar hur många hopp skeppet kan göra, utan siffror. | bestämd | Användaren 2026-11-16 | – |
+| R-1090 | Fristadens bas säljer billigt bränsle. Bränslet är gratis först på ett eget köpt varv. | byggd | Användaren 2026-11-16 (krock 1) | tests/world.test.js |
+| R-1086 | Ett vrak har 0 eller 1 bränslecell, och en cell räcker till ett hopp. En station har en cell i valvet. | byggd | Användaren 2026-11-16 | tests/world.test.js |
+| R-1087 | Bränslemätaren visar med markeringar hur många hopp skeppet kan göra, utan siffror. | byggd | Användaren 2026-11-16 | tests/world.test.js |
 | R-1088 | Krediterna från alla belöningar räknas om efter antalet spelare, gånger 1, 0,75 och 0,6 för en, två och tre, så att en besättning på tre tjänar ungefär en femtedel mer än en ensam spelare totalt. | förslag | Agenten 2026-11-16, utifrån docs/economy.md | – |
 | R-001 | Överladdningen av vapen och sköld är borttagen, och bara motorernas överladdning (boosten) finns kvar. | byggd | HANDOFF beslut 2026-11-16 | saknas |
 | R-002 | En träff på skölden nollställer en boost som håller på att laddas. | byggd | HANDOFF beslut 2026-11-16; proposal-world.md steg 2 fråga 2, BACKLOG F-197 | tests/fuel.test.js |
@@ -100,28 +96,28 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-040 | Vid en fientlig bas anländer man utanför basens räckvidd. | byggd | proposal-world.md steg 3 (förslag), src/sim/balance.js | saknas |
 | R-041 | Man kan hoppa tillbaka, och ett system är som man lämnade det. | byggd | proposal-world.md steg 3, BACKLOG D-031, src/sim/sectors.js | saknas |
 | R-042 | Hoppen med bränsle är en viktig del av spelet. | bestämd | HANDOFF beslut 2026-11-15 | – |
-| R-043 | Vid hopp till ett utforskat system väljer Captain vilken bas man anländer vid, med förvald bas i ordningen vänlig, neutral, fientlig. | bestämd | HANDOFF beslut 2026-11-15; proposal-world.md steg 3, BACKLOG D-089 | – |
-| R-044 | Vid hopp till ett okänt system slumpas ankomstplatsen. | bestämd | HANDOFF beslut 2026-11-15; proposal-world.md steg 3, BACKLOG D-089 | – |
+| R-043 | Vid hopp till ett utforskat system väljer Captain vilken bas man anländer vid, med förvald bas i ordningen vänlig, neutral, fientlig. | byggd | HANDOFF beslut 2026-11-15; proposal-world.md steg 3, BACKLOG D-089 | tests/world.test.js |
+| R-044 | Vid hopp till ett okänt system slumpas ankomstplatsen. | byggd | HANDOFF beslut 2026-11-15; proposal-world.md steg 3, BACKLOG D-089 | tests/world.test.js |
 | R-045 | Ett hopp tar under en halv minut, så man hinner fram även två hopp bort. | bestämd | station-boarding.md §14 | – |
 | R-046 | Skeppet får lämna dockan och röra sig i systemet, men aldrig hoppa så länge någon är kvar inne i basen. | bestämd | proposal-bases.md §4 | – |
-| R-047 | Ett hopp till ett outforskat system kostar lika mycket bränsle som andra hopp. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-048 | Captain ser senast kända status på baserna, eller aktuell status om en boj ligger i systemet. | bestämd | proposal-world.md steg 3, BACKLOG D-089 | – |
-| R-049 | Utan val anländer man vid en förvald bas: först en känd vänlig, sedan en neutral, sist en fientlig. | bestämd | proposal-world.md steg 3, BACKLOG D-089 | – |
-| R-050 | Alla hoppvägar går åt båda håll, så vägen hem finns alltid. | bestämd | proposal-world.md "Aldrig låsa sig" och steg 3 (förslag) | – |
-| R-051 | Varje system har 2–3 hoppvägar. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
+| R-047 | Ett hopp till ett outforskat system kostar lika mycket bränsle som andra hopp. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-048 | Captain ser senast kända status på baserna, eller aktuell status om en boj ligger i systemet. | byggd | proposal-world.md steg 3, BACKLOG D-089 | tests/world.test.js |
+| R-049 | Utan val anländer man vid en förvald bas: först en känd vänlig, sedan en neutral, sist en fientlig. | byggd | proposal-world.md steg 3, BACKLOG D-089 | tests/world.test.js |
+| R-050 | Alla hoppvägar går åt båda håll, så vägen hem finns alltid. | byggd | proposal-world.md "Aldrig låsa sig" och steg 3 (förslag) | tests/world.test.js |
+| R-051 | Varje system har 2–3 hoppvägar. | ersatt av: R-1089 | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
 | R-052 | Ett eget varv ger gratis bränsle och gratis lagning. | förslag | proposal-bases.md §7 | – |
 | R-053 | En slumpad ankomst hamnar aldrig intill en fientlig bas eller mitt i en samling asteroider. | förslag | proposal-world.md steg 3 | – |
 | R-054 | Besättningens egen varvsstation i första sektorn ger gratis bränsle. | ersatt av: ett senare beslut, se källan | proposal-bases.md §1 (ersatt av fristaden utan varv, §5) | – |
 | R-055 | Ett hopp som laddas bryts inte av beskjutning. | ersatt av: f-197: en träff gör att hoppet börjar om | proposal-world.md steg 2 (Läget i dag) | – |
 | R-056 | Bränsle är gratis hos vänliga stationer. | ersatt av: steg 2 2026-11-16: 70 procent av priset hos vänliga | proposal-world.md steg 2 (Läget i dag), proposal-economy.md 1.1 och 1.2 | – |
-| R-057 | Man kan bara hoppa till en sektor man har stjärnkarta till. | ersatt av: steg 3: man upptäcker system genom att hoppa dit; fortfarande så i src | BACKLOG D-089 besked 2026-11-15, src/sim/sectors.js | – |
+| R-057 | Man kan bara hoppa till en sektor man har stjärnkarta till. | ersatt av: R-115 | BACKLOG D-089 besked 2026-11-15, src/sim/sectors.js | – |
 
 ## Kartan och systemen
 
 | Nr | Regel | Status | Källa | Test |
 |---|---|---|---|---|
-| R-1089 | De flesta system har 2–3 hoppvägar, och några tomma system längst ut är återvändsgränder med en enda väg. | bestämd | Användaren 2026-11-16 (krock 9) | – |
-| R-058 | Sektorer nås med stjärnkartor som hittas eller köps. | byggd | HANDOFF beslut | saknas |
+| R-1089 | De flesta system har 2–3 hoppvägar, och några tomma system längst ut är återvändsgränder med en enda väg. | byggd | Användaren 2026-11-16 (krock 9) | tests/world.test.js |
+| R-058 | Sektorer nås med stjärnkartor som hittas eller köps. | ersatt av: R-115 och R-120 | HANDOFF beslut | – |
 | R-059 | Det går att hoppa tillbaka till sektorer man varit i, och de är som de lämnades (tills vidare). | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-060 | Det är fri sikt i rymden. | byggd | HANDOFF beslut | saknas |
 | R-061 | Stillastående objekt ligger kvar på kartan i senast kända läge, och skepp syns bara medan de ses. | byggd | HANDOFF beslut | saknas |
@@ -150,7 +146,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-084 | Stjärnans mitt bränner först skölden och sedan skrovet tre gånger hårdare. | byggd | proposal-world.md steg 1, BACKLOG F-196 | saknas |
 | R-085 | Med vanlig sköld går skeppet förlorat rakt över stjärnan, men med den bättre skölden och all energi på sköld och motorer klarar det sig. | byggd | proposal-world.md steg 1, BACKLOG F-196 | saknas |
 | R-086 | Stjärnans farliga område är litet, och skadan stiger ju närmare mitten man kommer. | byggd | proposal-world.md steg 1 (förslag), src/sim/balance.js | saknas |
-| R-087 | Det finns asteroider i varje system, så att man alltid kan skaffa bränsle. | byggd | proposal-world.md steg 1 och steg 3 besked, BACKLOG D-089 och D-100 | saknas |
+| R-087 | Det finns asteroider i varje system, så att man alltid kan skaffa bränsle. | byggd | proposal-world.md steg 1 och steg 3 besked, BACKLOG D-089 och D-100 | tests/world.test.js |
 | R-088 | Asteroiderna ligger i ett bälte och i två till fyra tätare fält, aldrig närmare en station än 330. | byggd | proposal-world.md steg 1, BACKLOG F-200 | saknas |
 | R-089 | Nya asteroider kommer till utom synhåll, så att fälten aldrig tar slut. | byggd | proposal-world.md steg 1, BACKLOG F-200 | saknas |
 | R-090 | Asteroider är det enda skeppet krockar med. Över baser, skepp, vrak och pods flyger man. | byggd | proposal-world.md steg 1, BACKLOG F-200 | saknas |
@@ -163,38 +159,38 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-097 | En systemradar som köps visar vilken sida grannsystemen hör till. | bestämd | HANDOFF beslut 2026-11-15 | – |
 | R-098 | Det minsta antalet system ska vara fler än fem. | bestämd | HANDOFF beslut 2026-11-15 | – |
 | R-099 | System ska gå att upptäcka själv genom att hoppa dit, inte bara genom kartor. | bestämd | HANDOFF beslut 2026-11-15 | – |
-| R-100 | En boj håller sitt system uppdaterat och syns på stjärnkartan. | bestämd | HANDOFF beslut 2026-11-15; proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-101 | En sond skickas till ett grannsystem. | bestämd | HANDOFF beslut 2026-11-15 | – |
-| R-102 | Stjärnkartan visar obesökta grannar som outforskade. | bestämd | HANDOFF beslut 2026-11-15 | – |
+| R-100 | En boj håller sitt system uppdaterat och syns på stjärnkartan. | byggd | HANDOFF beslut 2026-11-15; proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-101 | En sond skickas till ett grannsystem. | byggd | HANDOFF beslut 2026-11-15 | tests/world.test.js |
+| R-102 | Stjärnkartan visar obesökta grannar som outforskade. | byggd | HANDOFF beslut 2026-11-15 | tests/world.test.js |
 | R-103 | Dolda system syns inte förrän storyn lagt till dem. | bestämd | HANDOFF beslut 2026-11-15; proposal-world.md steg 3, BACKLOG D-089 | – |
 | R-104 | Olika system får olika stjärnor när kartan blir genererad. | bestämd | HANDOFF beslut 2026-11-15 | – |
-| R-105 | Kartans storlek väljs vid start. | bestämd | HANDOFF beslut 2026-11-14 | – |
-| R-106 | Startsystemet är en fristad nära kartans mitt, utan pirater och utan faktioner som bråkar. | bestämd | HANDOFF beslut 2026-11-16; proposal-world.md steg 3 besked, BACKLOG F-213 och D-089 | – |
-| R-107 | Kartan ska inte vara symmetrisk. | bestämd | HANDOFF beslut 2026-11-16; proposal-bases.md §5; BACKLOG F-213 och D-089 | – |
+| R-105 | Kartans storlek väljs vid start. | byggd | HANDOFF beslut 2026-11-14 | tests/world.test.js |
+| R-106 | Startsystemet är en fristad nära kartans mitt, utan pirater och utan faktioner som bråkar. | byggd | HANDOFF beslut 2026-11-16; proposal-world.md steg 3 besked, BACKLOG F-213 och D-089 | tests/world.test.js |
+| R-107 | Kartan ska inte vara symmetrisk. | byggd | HANDOFF beslut 2026-11-16; proposal-bases.md §5; BACKLOG F-213 och D-089 | saknas |
 | R-108 | Det minsta valet av antal system ska ge ungefär två timmars spel. | bestämd | proposal-bases.md §2 | – |
-| R-109 | Startsystemet är en fristad utan pirater och utan bråkande faktioner, med bara en neutral bas. | bestämd | proposal-bases.md §5 | – |
-| R-110 | Fristaden ligger i eller nära mitten av stjärnkartan. | bestämd | proposal-bases.md §5 | – |
-| R-111 | Systemen genereras för varje omgång. | bestämd | proposal-world.md steg 3, BACKLOG D-089 | – |
-| R-112 | Vid start väljer man 8, 12 eller 18 bebodda system (det ska provas). | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-113 | Det finns lika många tomma system som bebodda, alltså 16, 24 eller 36 totalt, och fler tomma ju längre ut man kommer. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
+| R-109 | Startsystemet är en fristad utan pirater och utan bråkande faktioner, med bara en neutral bas. | byggd | proposal-bases.md §5 | tests/sim.test.js |
+| R-110 | Fristaden ligger i eller nära mitten av stjärnkartan. | byggd | proposal-bases.md §5 | tests/world.test.js |
+| R-111 | Systemen genereras för varje omgång. | byggd | proposal-world.md steg 3, BACKLOG D-089 | tests/world.test.js |
+| R-112 | Vid start väljer man 8, 12 eller 18 bebodda system (det ska provas). | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-113 | Det finns lika många tomma system som bebodda, alltså 16, 24 eller 36 totalt, och fler tomma ju längre ut man kommer. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
 | R-114 | Antalet system avgör hur många uppdrag det finns före slutet. | bestämd | proposal-world.md steg 3, BACKLOG D-052 | – |
-| R-115 | Man upptäcker system genom att hoppa dit, och stjärnkartan visar närliggande obesökta system som outforskade. | bestämd | proposal-world.md steg 3, BACKLOG D-089 | – |
-| R-116 | En sond skickas till ett närliggande system, ett hopp bort, och visar vad som finns där. | bestämd | proposal-world.md steg 3 | – |
-| R-117 | Systemradarn köps och visar vems de närliggande systemen är och om de är vänliga eller omstridda. | bestämd | proposal-world.md steg 3, BACKLOG F-195 | – |
-| R-118 | Systemradarn scannar grannsystemen av sig själv, och statusen uppdateras när man kommer inom räckvidd. | bestämd | BACKLOG F-195 | – |
-| R-119 | Systemradarns nivå 1 når ett hopp för 200 krediter, och nivå 2 når två hopp för 350. | bestämd | proposal-world.md steg 3 besked, BACKLOG F-195 | – |
-| R-120 | En köpt eller hittad stjärnkarta visar 3 system i närheten med status som när den köptes: stationer, ägare och farlighet. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-121 | En stjärnkarta uppdateras inte efteråt och fungerar som en scanning av de systemen. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-122 | Ett tomt system har asteroider, ibland ett vrak eller en pod och ibland pirater. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-123 | Ett tomt system kan ibland ha något eget: ett tätt asteroidfält, ett vrakfält eller senare anomalier. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-124 | Systemen har tre storlekar blandat, med flest små, och tomma system kan vara mindre. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-125 | Farligheten ökar ett steg för varje två hopp från startsystemet, upp till steg 3. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-126 | Slutet ligger slumpat i ett av de tre bebodda system som ligger längst bort. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
+| R-115 | Man upptäcker system genom att hoppa dit, och stjärnkartan visar närliggande obesökta system som outforskade. | byggd | proposal-world.md steg 3, BACKLOG D-089 | tests/sim.test.js |
+| R-116 | En sond skickas till ett närliggande system, ett hopp bort, och visar vad som finns där. | byggd | proposal-world.md steg 3 | tests/world.test.js |
+| R-117 | Systemradarn köps och visar vems de närliggande systemen är och om de är vänliga eller omstridda. | byggd | proposal-world.md steg 3, BACKLOG F-195 | tests/world.test.js |
+| R-118 | Systemradarn scannar grannsystemen av sig själv, och statusen uppdateras när man kommer inom räckvidd. | byggd | BACKLOG F-195 | tests/world.test.js |
+| R-119 | Systemradarns nivå 1 når ett hopp för 200 krediter, och nivå 2 når två hopp för 350. | byggd | proposal-world.md steg 3 besked, BACKLOG F-195 | tests/world.test.js |
+| R-120 | En köpt eller hittad stjärnkarta visar 3 system i närheten med status som när den köptes: stationer, ägare och farlighet. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/sim.test.js |
+| R-121 | En stjärnkarta uppdateras inte efteråt och fungerar som en scanning av de systemen. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/sim.test.js |
+| R-122 | Ett tomt system har asteroider, ibland ett vrak eller en pod och ibland pirater. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-123 | Ett tomt system kan ibland ha något eget: ett tätt asteroidfält, ett vrakfält eller senare anomalier. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-124 | Systemen har tre storlekar blandat, med flest små, och tomma system kan vara mindre. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-125 | Farligheten ökar ett steg för varje två hopp från startsystemet, upp till steg 3. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-126 | Slutet ligger slumpat i ett av de tre bebodda system som ligger längst bort. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
 | R-127 | Olika system får olika stjärnor i färg och storlek (förslag D), och de kommer med den genererade kartan. | bestämd | BACKLOG D-089 och F-201 | – |
-| R-128 | Stjärnkartan visar ett system i ägarens färg och ett omstritt system randigt i båda färgerna. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-129 | Status syns bara för system som man har köpt karta över, scannat eller satt ut en boj i. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-130 | Systemen närmast fristaden är lätta. | förslag | proposal-bases.md §5 | – |
-| R-131 | Systemen sprids i klungor med tomrum emellan, och hoppvägar går mellan närmaste grannar med några genvägar, återvändsgränder och slingor. | förslag | proposal-bases.md §5; BACKLOG D-089 (agentens förslag i proposal-bases.md avsnitt 5) | – |
+| R-128 | Stjärnkartan visar ett system i ägarens färg och ett omstritt system randigt i båda färgerna. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | saknas |
+| R-129 | Status syns bara för system som man har köpt karta över, scannat eller satt ut en boj i. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-130 | Systemen närmast fristaden är lätta. | byggd | proposal-bases.md §5 | tests/world.test.js |
+| R-131 | Systemen sprids i klungor med tomrum emellan, och hoppvägar går mellan närmaste grannar med några genvägar, återvändsgränder och slingor. | byggd | proposal-bases.md §5; BACKLOG D-089 (agentens förslag i proposal-bases.md avsnitt 5) Byggt som agentens förslag i världssteg 3. | saknas |
 | R-132 | Varje faktion får ett sammanhängande område, inte jämna tårtbitar. | förslag | proposal-bases.md §5 | – |
 | R-133 | Piraternas slutbas ligger långt ut, och dolda system ligger utanför de vanliga vägarna. | förslag | proposal-bases.md §5 | – |
 | R-134 | Baserna ligger stilla på olika avstånd från stjärnan, och inget rör sig i banor. | förslag | proposal-world.md steg 1 | – |
@@ -202,7 +198,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-136 | Hemsystemet är alltid av samma slag, och farligheten stiger med avståndet hemifrån. | förslag | proposal-world.md steg 3 | – |
 | R-137 | Systemnamn sätts ihop av egna ordlistor. | förslag | proposal-world.md steg 3 | – |
 | R-138 | Fog of war finns bara på kartan, men det ersattes 2026-11-15 av en karta utan fog of war inuti systemet. | ersatt av: ett senare beslut, se källan | HANDOFF beslut | – |
-| R-139 | Spelet börjar vid besättningens egen varvsstation i första sektorn. | ersatt av: fristaden, f-213; fortfarande byggt | BACKLOG F-196 | – |
+| R-139 | Spelet börjar vid besättningens egen varvsstation i första sektorn. | ersatt av: R-109 | BACKLOG F-196 | – |
 
 ## Stationer och baser
 
@@ -319,9 +315,9 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-248 | Ett övertagande kräver något i källaren först och sedan mainframen överst. | bestämd | HANDOFF beslut 2026-11-16; proposal-bases.md §3; BACKLOG F-209 | – |
 | R-249 | Efter källaren går övertagandet inte på tid, utan läget skärps steg för steg. | bestämd | HANDOFF beslut 2026-11-16; proposal-bases.md §3; BACKLOG F-209 | – |
 | R-250 | Baserna anpassas efter antalet spelare, så att det inte blir för svårt ensam. | bestämd | HANDOFF beslut 2026-11-16 | – |
-| R-251 | Fristaden har en neutral bas som inte kan tas över. | bestämd | HANDOFF beslut 2026-11-16; BACKLOG F-213 | – |
-| R-252 | Inga anfall sker i fristaden. | bestämd | HANDOFF beslut 2026-11-16; proposal-bases.md §1, §5; BACKLOG F-213, proposal-bases.md avsnitt 1 | – |
-| R-253 | Det finns inget varv i fristaden. | bestämd | HANDOFF beslut 2026-11-16; proposal-bases.md avsnitt 1, BACKLOG F-213 | – |
+| R-251 | Fristaden har en neutral bas som inte kan tas över. | byggd | HANDOFF beslut 2026-11-16; BACKLOG F-213 | tests/world.test.js |
+| R-252 | Inga anfall sker i fristaden. | byggd | HANDOFF beslut 2026-11-16; proposal-bases.md §1, §5; BACKLOG F-213, proposal-bases.md avsnitt 1 | tests/sim.test.js |
+| R-253 | Det finns inget varv i fristaden. | byggd | HANDOFF beslut 2026-11-16; proposal-bases.md avsnitt 1, BACKLOG F-213 | tests/sim.test.js |
 | R-254 | En övertagen bas får inget varv. | bestämd | HANDOFF beslut 2026-11-16 | – |
 | R-255 | Basens försvar köps i mainframen, och fullt utbyggt gör det risken för övertagande mycket låg. | bestämd | HANDOFF beslut 2026-11-16 | – |
 | R-256 | Basernas utsida ska bli större (inte 1:1) och hänga ihop med våningarna. | bestämd | HANDOFF beslut 2026-11-16; BACKLOG D-217 | – |
@@ -332,7 +328,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-261 | Personaldelen har korridorer, vaktrum, valv och mainframe, och en markerad dörr skiljer delarna åt. | bestämd | station-boarding.md §3 | – |
 | R-262 | Varje turret har en väg runt, eller en strömbrytare som går att nå utan att passera den, och det vaktas av ett test. | bestämd | station-boarding.md §6 | – |
 | R-263 | Lockdown tar slut av sig själv när stationen tas över. | bestämd | station-boarding.md §8 | – |
-| R-264 | Det finns inget eget varv i början, utan spelet börjar i en fristad. | bestämd | proposal-bases.md §1, §5 | – |
+| R-264 | Det finns inget eget varv i början, utan spelet börjar i en fristad. | byggd | proposal-bases.md §1, §5 | tests/sim.test.js |
 | R-265 | Anfall på egna baser följer fortfarande reglerna i station-boarding.md §14. | bestämd | proposal-bases.md §1 | – |
 | R-266 | Föremål har samma form inne som i rymden. | bestämd | proposal-bases.md §3; BACKLOG F-208 | – |
 | R-267 | Standardbasen har tre våningar: källare, mitten och översta våningen, med var sin stil. | bestämd | proposal-bases.md §3 | – |
@@ -343,7 +339,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-272 | Bränsletunnor finns bara där de passar, som i last och verkstad, inte i bostäderna. | bestämd | proposal-bases.md §3; BACKLOG F-208 | – |
 | R-273 | Basen har rum som fyller ut så att den känns som en riktig plats. | bestämd | proposal-bases.md §3 | – |
 | R-274 | Det finns inget varv i startsystemet, så man måste ge sig ut när man skaffat pengar. | bestämd | proposal-bases.md §5 | – |
-| R-275 | Basen i fristaden kan inte tas över och är alltid en trygg plats att komma tillbaka till. | bestämd | proposal-bases.md §5 | – |
+| R-275 | Basen i fristaden kan inte tas över och är alltid en trygg plats att komma tillbaka till. | byggd | proposal-bases.md §5 | tests/world.test.js |
 | R-276 | En övertagen bas får inget varv, utan varvet är en permanent uppgradering som köps till basen. | bestämd | proposal-bases.md §1, §7 | – |
 | R-277 | Alla standardbaser kan köpa varv. | bestämd | proposal-bases.md §7 | – |
 | R-278 | Försvaret köps i mainframen (sköld, kanontorn och inre säkerhet), och fullt utbyggt ska risken att basen tas över vara mycket låg. | bestämd | proposal-bases.md §7 | – |
@@ -473,10 +469,10 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-397 | Faktioner ska kunna vara i krig med varandra (F-119). | bestämd | station-boarding.md §10 | – |
 | R-398 | Så länge ni håller en faktions station kan anseendet hos den faktionen som bäst bli "stängd". | bestämd | station-boarding.md §10 | – |
 | R-399 | Det ska alltid finnas en väg tillbaka: pirater, nödanrop och faktionsuppdrag som erbjuds på andras baser. | bestämd | station-boarding.md §10; proposal-economy.md 1.5 regel 6, BACKLOG F-118 | – |
-| R-400 | Ett system kan ägas av en faktion eller vara omstritt. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-401 | Ungefär ett av fem bebodda system är omstritt och ligger på gränsen mellan två faktioners områden. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-402 | I ett omstritt system har båda faktionerna stationer, och deras patruller skjuter på varandra när de möts. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 | – |
-| R-403 | Hjälper man den ena sidan stiger anseendet hos den och sjunker hos den andra. | bestämd | proposal-world.md steg 3 besked, BACKLOG D-089 och D-073 | – |
+| R-400 | Ett system kan ägas av en faktion eller vara omstritt. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-401 | Ungefär ett av fem bebodda system är omstritt och ligger på gränsen mellan två faktioners områden. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-402 | I ett omstritt system har båda faktionerna stationer, och deras patruller skjuter på varandra när de möts. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-403 | Hjälper man den ena sidan stiger anseendet hos den och sjunker hos den andra. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 och D-073 | tests/world.test.js |
 | R-404 | Ett system byter inte ägare i steg 3. Det kommer med F-087. | bestämd | proposal-world.md steg 3 besked | – |
 | R-405 | Anseende höjs genom uppdrag och inte av sig självt med tiden. | bestämd | proposal-world.md steg 4, BACKLOG F-118, proposal-economy.md 1.5 regel 6 | – |
 | R-406 | Ett dåligt anseende stiger i dag av sig självt upp till avvaktande. Det ska tas bort när uppdragen finns. | bestämd | proposal-economy.md 1.5 regel 6, BACKLOG F-118 | – |
@@ -964,8 +960,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-863 | En faktions Fighter eller Gunboat lämnar samma gods som piraternas men inga prispengar. | byggd | proposal-economy.md 2.1 | saknas |
 | R-864 | Ett fraktskepp lämnar alltid tre gods à 15 till 35 och ett vrak. | byggd | proposal-economy.md 2.1 | saknas |
 | R-865 | Cruisern ger 500 krediter och sex gods à 20 till 80, men inget vrak. | byggd | proposal-economy.md 1.1 och 2.1 | saknas |
-| R-866 | Ett vrak med risk 1 har 3 lådor à 30 till 70, 2 lådor i valvet à 90 till 160 och 4 bränsleceller. | byggd | proposal-economy.md 1.1 | saknas |
-| R-867 | Risk 2 ger en låda och en bränslecell till, och risk 3 ytterligare en av varje. | byggd | proposal-economy.md 1.1 | saknas |
+| R-866 | Ett vrak med risk 1 har 3 lådor à 30 till 70, 2 lådor i valvet à 90 till 160 och 4 bränsleceller. | ersatt av: R-1086 | proposal-economy.md 1.1 | – |
+| R-867 | Risk 2 ger en låda och en bränslecell till, och risk 3 ytterligare en av varje. | ersatt av: R-1086 | proposal-economy.md 1.1 | – |
 | R-868 | En fientlig station har innehåll som ett vrak med risk 3, och alltid kartan om den saknas. | byggd | proposal-economy.md 1.1 och 2.1 | saknas |
 | R-869 | En pod ger 60 till 140 krediter och 50 procents chans på 25 bränsle. | byggd | proposal-economy.md 1.1 | saknas |
 | R-870 | Vakter och turrets inne lämnar inget. | byggd | proposal-economy.md 2.1 | saknas |
@@ -980,7 +976,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-879 | Startkanonen går att uppgradera och är billig. | bestämd | proposal-bases.md §6 | – |
 | R-880 | Handel finns bara för att tjäna pengar, inte för att använda varorna själv. | bestämd | BACKLOG F-068 | – |
 | R-881 | Början ska kännas svår, och uppgraderingar ska vara värda pengarna. | bestämd | BACKLOG F-050 | – |
-| R-882 | Basen i fristaden har bara grunderna: sälja malm, billigt bränsle, lagning, enklaste uppgraderingarna och enkla jobb. | förslag | proposal-bases.md §5 | – |
+| R-882 | Basen i fristaden har bara grunderna: sälja malm, billigt bränsle, lagning, enklaste uppgraderingarna och enkla jobb. | byggd | proposal-bases.md §5 Byggt som agentens förslag, inte godkänt än: basen säljer uppgraderingar som kostar högst 150. | tests/world.test.js |
 | R-883 | Bättre saker finns i andra system, och varje faktion säljer sina egna. | förslag | proposal-bases.md §5 | – |
 | R-884 | Asteroiderna i fristaden räcker för att komma igång, men de större pengarna finns längre ut. | förslag | proposal-bases.md §5 | – |
 | R-885 | Startkanonen uppgraderas i några billiga steg: mer skada, långsammare uppvärmning och mer malm per asteroid. | förslag | proposal-bases.md §6 | – |

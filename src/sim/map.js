@@ -4,6 +4,7 @@
 import { B } from './balance.js';
 import { addThing, thingsOf, mapInfo } from './things.js';
 import { dist, forward, headingTo } from './util.js';
+import { learn } from './intel.js';
 
 // `scanned` is set once the system has been scanned, and the map then shows its asteroid fields too.
 export function createMap() {
@@ -84,6 +85,14 @@ const TOOLS = {
   // A probe flies to where it was sent, no further than its range.
   probe(state, ship, tool) {
     if (ship.probeStock <= 0) return notReady(state, 'probe');
+    // A probe sent to a system next to this one jumps there and reports what it finds (D-089).
+    if (tool.system !== undefined && tool.system !== null) {
+      if (!state.sectors[state.sector].links.includes(tool.system)) return false;
+      ship.probeStock--;
+      learn(state, tool.system);
+      state.events.push({ type: 'probedSystem', name: state.sectors[tool.system].name });
+      return true;
+    }
     let tx = tool.x;
     let ty = tool.y;
     const d = dist(ship.x, ship.y, tx, ty);

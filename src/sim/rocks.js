@@ -56,10 +56,11 @@ export function layTestRocks(s, x, y) {
 
 // Lay out the asteroids of a system that is `radius` across from its middle to its edge. Stations, wrecks and
 // pods have to be in place first.
-export function layRocks(s, radius) {
+// `dense` is how many times as many rocks as usual, for a system with a field of its own.
+export function layRocks(s, radius, dense = 1) {
   const belt = [radius * B.BELT[0], radius * B.BELT[1]];
   const clusters = [];
-  const count = 2 + (radius > 1500 ? 1 : 0) + (radius > 2100 ? 1 : 0);
+  const count = (2 + (radius > 1500 ? 1 : 0) + (radius > 2100 ? 1 : 0)) * dense;
   for (let i = 0; i < count; i++) {
     const p = at(rand(s) * TAU, randRange(s, Math.max(radius * 0.25, B.STAR_BURN + 320), radius * 0.92));
     clusters.push({ x: p.x, y: p.y, r: randRange(s, B.CLUSTER_R[0], B.CLUSTER_R[1]) });

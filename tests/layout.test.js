@@ -61,7 +61,7 @@ test('at a station the crew comes in through the arm the frigate is docked at', 
   for (let port = 0; port < 4; port++) {
     const s = createState(1);
     s.spawn.timer = s.raidTimer = s.traffic.timer = 1e9;
-    const st = thingsOf(s, 'station').find((x) => x.home);
+    const st = thingsOf(s, 'station').find((x) => x.sanctuary);
     const p = portsOf(st)[port];
     const h = Math.atan2(st.x - p.x, -(st.y - p.y));
     s.ship.heading = h;

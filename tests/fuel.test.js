@@ -84,7 +84,7 @@ test('R-027: a broken rock leaves ore, which goes into the hold and sells at a s
   assert.equal(ore.length, 1);
   step(s, {}, DT);
   assert.equal(s.ship.ore, 1, 'flown over, it is in the hold');
-  const st = thingsOf(s, 'station').find((x) => x.home);
+  const st = thingsOf(s, 'station').find((x) => x.sanctuary);
   s.ship.docked = st.id;
   s.ship.ore = 10;
   s.ship.fuel = fuelMax(s.ship);

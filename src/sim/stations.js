@@ -2,14 +2,15 @@
 // follows from that: friendly and neutral ones trade, hostile ones shoot. All of them defend themselves.
 import { B } from './balance.js';
 import { THINGS } from './kinds.js';
-import { CREW, PIRATE, ownSide, moodOf, enemies, changeStanding, provoke, isAngry } from './sides.js';
+import { CREW, PIRATE, ownSide, moodOf, enemies, changeStanding, provoke, isAngry, inSanctuary } from './sides.js';
 import { thingsOf, findThing, findDock, mapInfo } from './things.js';
 import { makeVessel } from './vessels.js';
 import { currentSector } from './sectors.js';
 import { teleportAllHome } from './boarding.js';
-import { buyUpgrade, hullMax, fuelMax, CATALOG } from './upgrades.js';
+import { buyUpgrade, hullMax, fuelMax, priceOf, CATALOG } from './upgrades.js';
 import { payBounty } from './bounty.js';
 import { fuelUnit } from './fuel.js';
+import { readChart } from './intel.js';
 import { turnOnCrew } from './mainframe.js';
 import { forward, headingTo, turnToward, angleDiff, toWorld, dist, rand, randRange, TAU } from './util.js';
 
@@ -176,6 +177,14 @@ export function fall(state, st, by = PIRATE) {
 
 // ---------- trade ----------
 export const yardOpen = (st) => st.shipyard;
+// Why an item is not sold at a station, or null when it is. Boarding gear is sold at any trading station, and
+// everything else at a shipyard. The base of the sanctuary has no shipyard, but sells the cheapest upgrades.
+export function notSoldHere(state, st, id) {
+  const item = CATALOG[id];
+  if (!item || item.tab === 'armory' || yardOpen(st)) return null;
+  if (st.sanctuary && priceOf(state.ship, id) <= B.SANCTUARY_SHOP_MAX) return null;
+  return st.sanctuary ? 'NOT SOLD IN THE SANCTUARY' : 'NO SHIPYARD HERE';
+}
 // What the crew pays compared with the listed price: less at a station that owes them a favour,
 // more at one that is wary of them.
 export function priceFactor(state, st) {
@@ -251,15 +260,16 @@ const SERVICES = {
   chart(state, st, info) {
     if (!pay(state, info.price)) return;
     state.charts.push(st.chart);
+    // It shows the systems around the one it is of, as they are now (D-089).
+    readChart(state, st.chart);
     state.events.push({ type: 'chart', sector: st.chart });
   },
 };
 
 function shop(state, st, order) {
   if (order.action === 'buy') {
-    // Boarding gear is sold at any trading station. Everything else needs a shipyard.
-    const needsYard = CATALOG[order.item] && CATALOG[order.item].tab !== 'armory';
-    if (needsYard && !yardOpen(st)) return refuse(state, 'NO SHIPYARD HERE');
+    const why = notSoldHere(state, st, order.item);
+    if (why) return refuse(state, why);
     buyUpgrade(state, order.item, priceFactor(state, st));
     return;
   }
@@ -288,8 +298,9 @@ export function struckBy(state, st, side) {
 export function damageStation(state, st, dmg, at, by) {
   st.lastHit = state.time;
   if (by === CREW && st.side !== PIRATE && st.side !== CREW) {
-    // Shooting at someone who is not an enemy costs their good will, and they do not just take it.
-    changeStanding(state, st.side, -B.STANDING_LOSS.stationHit);
+    // Shooting at someone who is not an enemy costs their good will, and they do not just take it. The base of
+    // the sanctuary fights back for a while too, but forgets: it is always somewhere to come back to.
+    if (!st.sanctuary) changeStanding(state, st.side, -B.STANDING_LOSS.stationHit);
     provoke(state, st.side);
   }
   const absorbed = Math.min(st.shield, dmg);
@@ -404,9 +415,14 @@ function mended(state, st) {
 // so that there is always somewhere to refuel and repair.
 export function startRaid(state) {
   const ship = state.ship;
+  // Nobody attacks in the sanctuary.
+  if (inSanctuary(state)) {
+    state.raidTimer = 60;
+    return;
+  }
   // The crew's own stations are attacked in a way of their own, see siege.js.
   const open = thingsOf(state, 'station').filter(
-    (st) => st.align !== 'hostile' && !st.home && st.side !== CREW && st.id !== ship.docked,
+    (st) => st.align !== 'hostile' && !st.home && !st.sanctuary && st.side !== CREW && st.id !== ship.docked,
   );
   if (!open.length) {
     state.raidTimer = 60;

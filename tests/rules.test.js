@@ -30,7 +30,7 @@ const testText = readdirSync(new URL('.', import.meta.url))
 const tested = new Set(testText.match(/R-\d{3,}/g) || []);
 
 // How many built rules may still lack a test. Lower it as tests are written; never raise it.
-const LACKING = 678;
+const LACKING = 677;
 
 test('the rule book has rules, each number once, each with a known status and a source', () => {
   assert.ok(rules.length > 20, 'the book has rules in it');

@@ -182,6 +182,11 @@ function done(state, st, it, level) {
     openVault(it);
   }
   if (level !== 2) return;
+  // The base of the sanctuary cannot be taken (docs/proposal-bases.md, section 5).
+  if (st.sanctuary) {
+    state.events.push({ type: 'cannotBuy', reason: 'THE SANCTUARY CANNOT BE TAKEN' });
+    return;
+  }
   const side = st.side;
   const seized = it.seize;
   takeOver(state, st);

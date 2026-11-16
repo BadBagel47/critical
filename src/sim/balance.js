@@ -33,7 +33,8 @@ export const B = {
   // what moves the standing: shooting a station or a ship, destroying a ship, answering a distress call,
   // destroying a pirate, and how fast a bad standing mends by itself, per second.
   STANDING_LOSS: { stationHit: 10, shipHit: 2, shipKill: 25 },
-  STANDING_GAIN: { rescue: 20, pirate: 0.5, forgive: 0.05 },
+  // `rival`: a ship of one side shot down in a contested system, for the other side.
+  STANDING_GAIN: { rescue: 20, pirate: 0.5, forgive: 0.05, rival: 6 },
   WARY_PRICE: 1.5,
   // a side that the crew shoots at warns them first. A hit after the warning, but not in the first moment
   // after it, starts a fight that lasts this long after the crew's last shot
@@ -134,6 +135,8 @@ export const B = {
   FUEL_BURN: 0.2,
   ADRIFT_FACTOR: 0.2,
   CELL_FUEL: 25,
+  // How likely a wreck is to hold a fuel cell. It holds one at most (F-229).
+  WRECK_CELL_CHANCE: 0.5,
   CRATE_CREDITS: [30, 70],
   VAULT_CREDITS: [90, 160],
   // boarding
@@ -281,7 +284,10 @@ export const B = {
   STATION_REPAIR_DELAY: 20,
   STATION_REPAIR: 2,
   // What fuel costs a unit: free only at the crew's own yard, a little less among friends (decided 2026-11-16).
-  FUEL_PRICE: { home: 0, friendly: 0.7, neutral: 1 },
+  // Fuel is cheap in the sanctuary, and free at a shipyard of the crew's own.
+  FUEL_PRICE: { home: 0, sanctuary: 0.5, friendly: 0.7, neutral: 1 },
+  // The base of the sanctuary has no shipyard, but sells the upgrades that cost this much or less.
+  SANCTUARY_SHOP_MAX: 150,
   // Ore from asteroids (F-085): how much fuel one piece gives, what it sells for, how much the hold takes, and how
   // many pieces a second the ship refines when the tank is too low for a jump.
   ORE_FUEL: 4,

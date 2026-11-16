@@ -126,7 +126,11 @@ function inputs(state, i) {
   } else if (t < 105) {
     // A trading station: buy things at the desks, walk around, leave.
     const station = thingsOf(state, 'station').find((st) => st.align !== 'hostile');
-    if (at(80) && station) dockAt(state, station);
+    if (at(80) && station) {
+      // Stray shots earlier may have angered the station. By now it has calmed down.
+      state.strife = {};
+      dockAt(state, station);
+    }
     if (at(80.5)) {
       state.credits += 3000;
       gunner.board = true;

@@ -55,7 +55,7 @@ test('the list of saves says where, how long and how rich, and which one is the 
   assert.equal(list['1'], null);
   assert.equal(latestSlot(list), AUTO);
   assert.equal(latestSlot(listSaves(fakeStorage())), null);
-  assert.equal(describeSave(list['2']).left, 'KESTREL DRIFT  ·  1:30  ·  250 CR');
+  assert.equal(describeSave(list['2']).left, `${s.sectors[0].name}  ·  1:30  ·  250 CR`);
   const hard = createState(2, { hardcore: true, test: true });
   assert.match(describeSave(packSave(hard, 0)).left, /HARDCORE {2}· {2}TEST$/);
 });
@@ -121,5 +121,5 @@ test('the save version is raised whenever the game state changes shape', () => {
     .slice(0, 12);
   // When this fails the game state has new, renamed or removed fields, and saves made before the change
   // would no longer load correctly. Raise SAVE_VERSION in src/saves.js and put the new values here.
-  assert.deepEqual({ version: SAVE_VERSION, print }, { version: 21, print: 'e88d4efe79de' });
+  assert.deepEqual({ version: SAVE_VERSION, print }, { version: 22, print: 'c3228ef898cb' });
 });

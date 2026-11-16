@@ -2,7 +2,7 @@
 // Freighters dock at stations for a while. Patrols make a round and fight whoever is their enemy.
 import { B } from './balance.js';
 import { SHIPS, THINGS } from './kinds.js';
-import { FACTIONS, PIRATE } from './sides.js';
+import { FACTIONS, PIRATE, sectorHere } from './sides.js';
 import { thingsOf } from './things.js';
 import { makeVessel } from './vessels.js';
 import { shipNose } from './ship.js';
@@ -18,10 +18,12 @@ const warp = (state, at) => state.fx.push({ type: 'warp', x: at.x, y: at.y, t: 0
 // The last leg of every errand: fly clear of the station and jump out.
 const leave = (state, from) => ({ ...around(state, from, 600, 900), hold: 0, jump: true });
 
-// Factions are seen most in the sectors they call home.
+// Factions are seen most in the systems they own, and in those they fight over.
 function pickFaction(state) {
   const sides = Object.keys(FACTIONS);
-  const weights = sides.map((side) => (FACTIONS[side].home.includes(state.sector) ? 3 : 1));
+  const sec = sectorHere(state);
+  const mine = (side) => sec.owner === side || (!!sec.sides && sec.sides.includes(side));
+  const weights = sides.map((side) => (mine(side) ? 4 : 1));
   let roll = rand(state) * weights.reduce((a, b) => a + b, 0);
   for (let i = 0; i < sides.length; i++) {
     roll -= weights[i];

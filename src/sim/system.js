@@ -69,9 +69,11 @@ export function stepSystem(state, dt) {
 // base the place is anyone's guess, but never in the star or so close to it that there is no time to turn away,
 // and never right by a hostile base or a ship that waits there.
 const rank = (k) => (k.align === 'friendly' ? 0 : k.align === 'hostile' ? 2 : 1);
-export function arrival(state) {
+// `want` is a base the Captain chose to arrive at, by its id. Without one the best known base is taken.
+export function arrival(state, want = null) {
   const known = state.known.filter((k) => k.kind === 'station').sort((a, b) => rank(a) - rank(b) || a.id - b.id);
-  const base = known[0];
+  // `want` is the name of the base the Captain chose, or 'open' for open space away from every base.
+  const base = want === 'open' ? null : known.find((k) => k.name === want) || known[0];
   if (base) {
     const far = Math.hypot(base.x, base.y) || 1;
     const gap = base.align === 'hostile' ? B.STATION_RANGE + B.ARRIVE_CLEAR : B.ARRIVE_GAP;

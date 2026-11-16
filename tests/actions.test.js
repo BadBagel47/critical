@@ -17,7 +17,7 @@ const quiet = () => {
 // What the first player is offered on the screen they are on.
 const offered = (s, mode) => actionsOf({ state: s, me: s.players[0] }, mode || s.players[0].post || 'crew');
 const names = (s, mode) => offered(s, mode).map((a) => a.name);
-const yard = (s) => thingsOf(s, 'station').find((st) => st.home);
+const yard = (s) => thingsOf(s, 'station').find((st) => st.sanctuary);
 function atPort(s, thing) {
   const port = portsOf(thing)[0];
   const h = Math.atan2(thing.x - port.x, -(thing.y - port.y));

@@ -39,7 +39,7 @@ test('the scene follows the title screen, calm space, a warning and a fight', ()
 
 test('the scene follows stations, boarding and the loss of the ship', () => {
   const s = quiet();
-  const station = thingsOf(s, 'station').find((st) => st.align === 'friendly');
+  const station = thingsOf(s, 'station').find((st) => st.sanctuary);
   s.ship.docked = station.id;
   assert.equal(sceneOf(s, 0), 'station');
   step(s, { system: { board: [0] } }, 1 / 60);

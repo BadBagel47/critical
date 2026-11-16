@@ -13,13 +13,16 @@ import { SHIPS, THINGS } from '../src/sim/kinds.js';
 import { B } from '../src/sim/balance.js';
 import { forward, toWorld, dist } from '../src/sim/util.js';
 import { sceneOf } from '../src/scene.js';
+import { gatherForTesting } from '../src/sim/sectors.js';
 
 const DT = 1 / 60;
 const stations = (s) => thingsOf(s, 'station');
 const salvage = (s) => thingsOf(s, 'salvage');
-// A world where nothing happens by itself: no pirate waves, no raids and no traffic.
+// A world where nothing happens by itself: no pirate waves, no raids and no traffic. A station of every side
+// stands near the start, as in a test game, but the ship has nothing bought.
 const quiet = (seed = 1) => {
   const s = createState(seed);
+  gatherForTesting(s);
   s.spawn.timer = 1e9;
   s.raidTimer = 1e9;
   s.traffic.timer = 1e9;
@@ -98,13 +101,6 @@ test('a wary station charges more, and a closed one neither trades nor lets anyo
 
 test('a faction that falls out with the crew turns its stations and ships on them, and makes peace again', () => {
   const s = quiet();
-  s.sector = 0;
-  s.charts.push(1);
-  s.ship.fuel = 90;
-  step(s, { captain: { jump: 1 } }, DT);
-  run(s, {}, B.JUMP_CHARGE + 0.2);
-  s.spawn.timer = s.raidTimer = s.traffic.timer = 1e9;
-  s.vessels = [];
   const depot = stations(s).find((st) => st.side === 'drifters');
   assert.ok(depot, 'the Drifters have a station here');
   s.ship.x = depot.x;
@@ -364,13 +360,9 @@ test('an unarmed ship runs from pirates, and from the first shot the crew fires 
 
 test('a patrol comes from afar when raiders are at a station of its own side, and others do not', () => {
   const s = quiet();
-  s.charts.push(1);
-  s.ship.fuel = 90;
-  step(s, { captain: { jump: 1 } }, DT);
-  run(s, {}, B.JUMP_CHARGE + 0.2);
-  s.spawn.timer = s.traffic.timer = 1e9;
-  s.vessels = [];
   const depot = stations(s).find((st) => st.side === 'drifters');
+  // The depot is the only station here that can be raided.
+  s.things = s.things.filter((t) => t.kind !== 'station' || t === depot);
   s.ship.x = depot.x + 6000;
   s.ship.y = depot.y;
   const own = parked(makeVessel(s, 'gunboat', depot.x, depot.y + 1000, 'drifters'));
@@ -442,6 +434,8 @@ function arrivals(s, kind) {
 
 test('a freighter jumps in, docks nose first at a station for a while and jumps out again', () => {
   const s = quiet();
+  // Without the pirates' station, which would shoot at it.
+  s.things = s.things.filter((t) => t.kind !== 'station' || t.side !== 'pirate');
   dockAt(s, yard(s));
   const [freighter] = arrivals(s, 'freighter');
   assert.equal(freighter.kind, 'freighter');

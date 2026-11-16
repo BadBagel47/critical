@@ -172,7 +172,7 @@ function planAfterLoss() {
   }
   const latest = latestSlot(game.saves);
   if (latest) return { line: 'PRESS R TO LOAD THE LAST SAVE', go: () => load(latest) };
-  return { line: 'PRESS R TO TRY AGAIN', go: () => game.actions.newGame({ test: state.test }) };
+  return { line: 'PRESS R TO TRY AGAIN', go: () => game.actions.newGame({ test: state.test, size: state.size }) };
 }
 
 // The camera follows the ship, looking a little ahead of where it is going.

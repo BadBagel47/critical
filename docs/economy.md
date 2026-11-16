@@ -29,6 +29,7 @@
 | SOLAR CELLS | system | system | 200 | 1 |
 | DOCKING FIELD | system | system | 150 | 1 |
 | EXTRA SYSTEM SLOT | system | – | 200 | 2 |
+| SYSTEM RADAR | system | – | 200 | 2 |
 | RIFLE UPGRADE | armory | – | 120 | 2 |
 | CARGO PACK | armory | – | 140 | 1 |
 | SUIT ARMOR | armory | – | 160 | 1 |
@@ -77,17 +78,17 @@ Spelaren flyger till närmaste vrak eller pod, bryter upp låset, bär hem loote
 
 | | Ensam, första sektorn | Ensam, The Narrows (nivå 2) | Tre spelare, första sektorn |
 |---|---|---|---|
-| Krediter per timme | 8655 | 9082 | 16416 |
-| varav pirater | 2325 | 2845 | 5351 |
-| varav vrak | 5020 | 4827 | 9655 |
-| varav pods | 200 | 300 | 300 |
+| Krediter per timme | 8341 | 9206 | 16073 |
+| varav pirater | 2236 | 2626 | 5218 |
+| varav vrak | 4695 | 5170 | 9445 |
+| varav pods | 300 | 300 | 300 |
 | varav malm | 210 | 210 | 210 |
 | varav nödanrop | 900 | 900 | 900 |
-| Nedskjutna pirater | 209 | 213 | 481 |
-| Vrak tömda | 11 | 11 | 22 |
-| Pods öppnade | 2 | 3 | 3 |
-| Bränsle in (celler) | 1225 | 1324 | 2438 |
-| Bränsle ut (flygning) | 27 | 24 | 50 |
+| Nedskjutna pirater | 201 | 205 | 469 |
+| Vrak tömda | 11 | 12 | 22 |
+| Pods öppnade | 3 | 3 | 3 |
+| Bränsle in (celler) | 138 | 213 | 238 |
+| Bränsle ut (flygning) | 27 | 27 | 55 |
 
 ### Hur länge det dröjer till varje köp, ensam i första sektorn
 
@@ -98,11 +99,11 @@ Köpen görs i en enkel ordning, och tiden är minuter från start vid inkomsten
 | TWIN WING TURRETS | 1 |
 | CARGO PACK | 2 |
 | ARMOR PLATING | 3 |
-| SHIELD EMITTERS | 4 |
+| SHIELD EMITTERS | 5 |
 | HEAVY LASER | 6 |
 | POWER CORE | 8 |
-| TRANQ GUN | 8 |
-| ENEMY ALARM | 9 |
+| TRANQ GUN | 9 |
+| ENEMY ALARM | 10 |
 | ROCKET PODS | 11 |
 | SOLAR CELLS | 12 |
 | POINT DEFENSE | 14 |

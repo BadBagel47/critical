@@ -9,7 +9,7 @@ import { findDock, findThing, nameOf } from '../sim/things.js';
 import { isTrading, allStations } from '../sim/stations.js';
 import { RISK_NAMES } from '../sim/siege.js';
 import { currentSector } from '../sim/sectors.js';
-import { has, hullMax, shieldMax, dockShieldMax, fuelMax, jumpCharge } from '../sim/upgrades.js';
+import { has, hullMax, shieldMax, dockShieldMax, fuelMax, jumpCharge, fuelMarks } from '../sim/upgrades.js';
 import { dist } from '../sim/util.js';
 import { rect, label, bar } from './draw.js';
 import { drawMiniMap } from './map.js';
@@ -67,6 +67,12 @@ export function drawBars(ctx, font, state, x = 8, y = 314) {
     font.draw(ctx, name, x + 4, y + 5 + i * 12, COL.dim);
     bar(ctx, x + 46, y + 5 + i * 12, 84, frac, color);
   });
+  // The fuel gauge is marked where each jump's worth of fuel ends, so that it shows how many jumps the tank
+  // holds without a number (F-229). The marks stand out from the bar in the dark, and are lit where it is full.
+  for (const at of fuelMarks(ship)) {
+    const mx = x + 46 + Math.round(84 * at);
+    rect(ctx, mx, y + 4, 1, 8, ship.fuel / fuelMax(ship) >= at ? COL.out : COL.steel[2]);
+  }
   // Ore in the hold, just above the panel. It turns into fuel by itself when the tank is too low for a jump.
   if (ship.ore > 0)
     label(ctx, font, x, y - 14, `ORE  ${ship.ore}${ship.refined > 0 ? '  ·  REFINING' : ''}`, { fg: COL.ochre[3] });
@@ -280,7 +286,7 @@ export function drawHud(ctx, state, view, assets, dock) {
   } else if (!me.post) font.draw(ctx, '1 2 3  TAKE A FREE POST', VIEW_W - 8, 346, COL.faint, { align: 'r' });
   drawOwnSystem(ctx, font, state, me.post);
   drawMiniMap(ctx, state, VIEW_W - 70, 44);
-  font.draw(ctx, 'M  MAP', VIEW_W - 8, 110, COL.faint, { align: 'r' });
+  font.draw(ctx, 'M  MAP    J  STARS', VIEW_W - 8, 110, COL.faint, { align: 'r' });
 }
 
 export function drawOverlay(ctx, font, title, lines, color = COL.text) {
@@ -295,17 +301,23 @@ export function drawOverlay(ctx, font, title, lines, color = COL.text) {
 }
 
 const HELP = [
-  ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     F  USE WHAT YOU ARE DOCKED AT'],
+  [
+    'ALL POSTS',
+    '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     J  STAR MAP     F  USE WHAT YOU ARE DOCKED AT',
+  ],
   [
     'CAPTAIN',
     'W S  THROTTLE     A D  TURN     X  FULL STOP     E  DOCK AND UNDOCK     R  DARTS     SHIFT  AFTERBURNER',
   ],
   ['', 'C  SET A COURSE FOR THE NEXT PLACE ON THE MAP'],
   ['ALL POSTS', 'Z  CHARGE THE BOOST, CAPTAIN LETS IT GO     CAPTAIN AND GUNNER  T  MARK A SHIP FOR THE OTHER'],
-  ['', 'ON THE MAP  CLICK A STAR CHART TO JUMP TO THAT SECTOR'],
+  ['', 'ON THE STAR MAP  PICK A SYSTEM NEXT TO THIS ONE, AND WHERE TO ARRIVE'],
   ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE     Q E  CHANGE WEAPON'],
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW     SHIFT CLICK  QUEUE'],
-  ['', 'V  OPEN AND FOLD AWAY THE PANEL     Q  SCANNER PULSE     B  DROP A BUOY     ON THE MAP  CLICK FOR A PROBE'],
+  [
+    '',
+    'V  OPEN AND FOLD AWAY THE PANEL     Q  SCANNER PULSE     B  DROP A BUOY     ON THE MAP  CLICK FOR A PROBE  ·  STAR MAP TOO',
+  ],
   ['BOARDING', 'W A S D  MOVE     MOUSE  AIM     CLICK  FIRE     G  GRENADE     F  USE     C  CHARGE     T  TURRET'],
   [
     '',

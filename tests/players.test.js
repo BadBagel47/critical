@@ -123,9 +123,10 @@ test('a post taken while its holder was away stays taken, and the one who return
 
 test('station desks only take orders from a player who is inside the station', () => {
   const s = crewOf(2);
-  const station = thingsOf(s, 'station').find((st) => st.align === 'friendly');
+  const station = thingsOf(s, 'station').find((st) => st.sanctuary);
   s.ship.docked = station.id;
   s.ship.fuel = 20;
+  s.credits = 500;
   stepPlayers(s, { 1: { shop: [{ action: 'refuel' }] } }, DT);
   assert.equal(s.ship.fuel, 20, 'nothing is sold to someone still on the ship');
   stepPlayers(s, { 1: { board: true } }, DT);

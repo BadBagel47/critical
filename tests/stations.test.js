@@ -6,7 +6,7 @@ import { createState } from '../src/sim/state.js';
 import { step } from '../src/sim/step.js';
 import { thingsOf } from '../src/sim/things.js';
 import { tryBoard, createInterior } from '../src/sim/boarding.js';
-import { createWreck } from '../src/sim/sectors.js';
+import { createWreck, gatherForTesting } from '../src/sim/sectors.js';
 import { USES } from '../src/sim/furnish.js';
 import { waysFrom, solidAt, solidTile, TILE } from '../src/sim/floor.js';
 import { takeOver, stationShieldMax, gunHpMax, allStations, servicePrices } from '../src/sim/stations.js';
@@ -18,8 +18,10 @@ import { B } from '../src/sim/balance.js';
 import { dist } from '../src/sim/util.js';
 
 const DT = 1 / 20;
+// A station of every side stands near the start, as in a test game, but the ship has nothing bought.
 const quiet = (seed = 1) => {
   const s = createState(seed);
+  gatherForTesting(s);
   s.spawn.timer = 1e9;
   s.raidTimer = 1e9;
   s.traffic.timer = 1e9;
@@ -66,6 +68,8 @@ function jumpAway(s, to = 1) {
   s.jump = { to, t: 1e4 };
   step(s, {}, DT);
   assert.equal(s.sector, to);
+  // Nothing happens by itself there either.
+  s.spawn.timer = s.raidTimer = s.traffic.timer = 1e9;
 }
 
 // ---------- the mainframe ----------

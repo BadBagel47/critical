@@ -9,6 +9,9 @@ import { VIEW_W, VIEW_H, COL } from './config.js';
 import { rect, bar } from './render/draw.js';
 import { volumeOf, setVolume, isMuted, toggleMute } from './audio.js';
 import { AUTO, MANUAL, latestSlot, describeSave } from './saves.js';
+import { SIZES, SIZE_NAMES } from './sim/world.js';
+
+const SIZE_ORDER = Object.keys(SIZES);
 
 const W = 430;
 const X = (VIEW_W - W) / 2;
@@ -16,7 +19,8 @@ const ROW_H = 16;
 const STEP_Y = 20;
 const SLIDER = { x: X + W - 150, w: 110 };
 
-export const createMenu = () => ({ page: 'title', row: 0, confirm: null, note: null });
+// `size` is how big a world a new game gets, see sim/world.js.
+export const createMenu = () => ({ page: 'title', row: 0, confirm: null, note: null, size: 'short' });
 // Open a page with the first row that can be chosen picked.
 export function openPage(game, page) {
   const menu = game.view.menu;
@@ -51,6 +55,7 @@ const PAGES = {
     rows(game) {
       const a = game.actions;
       const latest = latestSlot(game.saves);
+      const size = game.view.menu.size;
       return [
         {
           id: 'continue',
@@ -59,8 +64,19 @@ const PAGES = {
           off: !latest,
           run: () => a.load(latest),
         },
-        { id: 'new', label: 'NEW GAME', run: () => a.newGame({}) },
-        { id: 'hardcore', label: 'NEW GAME  ·  HARDCORE', right: 'ONE LIFE', run: () => a.newGame({ hardcore: true }) },
+        { id: 'new', label: 'NEW GAME', run: () => a.newGame({ size }) },
+        {
+          id: 'hardcore',
+          label: 'NEW GAME  ·  HARDCORE',
+          right: 'ONE LIFE',
+          run: () => a.newGame({ hardcore: true, size }),
+        },
+        {
+          id: 'size',
+          label: 'MAP SIZE',
+          right: `${SIZE_NAMES[size]}  ·  ${SIZES[size]} INHABITED SYSTEMS`,
+          run: () => (game.view.menu.size = SIZE_ORDER[(SIZE_ORDER.indexOf(size) + 1) % SIZE_ORDER.length]),
+        },
         { id: 'load', label: 'LOAD GAME', run: () => openPage(game, 'load') },
         { id: 'sound', label: 'SOUND', run: () => openPage(game, 'sound') },
         { id: 'test', label: 'TEST MODE', right: 'EVERYTHING UNLOCKED', run: () => a.newGame({ test: true }) },
@@ -211,7 +227,9 @@ export function drawMenu(game, t) {
     rect(ctx, X - 14, top - 34, W + 28, bottom - top + 66, COL.panel, COL.steel[1]);
   } else {
     font.draw(ctx, 'CRITICAL ST8', VIEW_W / 2, 26, COL.text, { align: 'c', scale: 5 });
-    font.draw(ctx, 'ONE SHIP  ·  THREE POSTS  ·  FIVE SECTORS', VIEW_W / 2, 68, COL.ion[1], { align: 'c' });
+    font.draw(ctx, 'ONE SHIP  ·  THREE POSTS  ·  A NEW STAR MAP EVERY GAME', VIEW_W / 2, 68, COL.ion[1], {
+      align: 'c',
+    });
   }
   if (page.title) font.draw(ctx, page.title, X, top - 20, COL.ochre[2]);
   rows.forEach((row, i) => {

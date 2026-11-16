@@ -5,9 +5,10 @@
 import { B } from './balance.js';
 import { has, fuelMax, jumpFuel } from './upgrades.js';
 
-// What a unit of fuel costs at a station: free only at the crew's own yard.
+// What a unit of fuel costs at a station: free only at the crew's own yard, and cheap in the sanctuary.
 export function fuelUnit(st) {
   if (st.home) return B.FUEL_PRICE.home;
+  if (st.sanctuary) return B.FUEL_PRICE.sanctuary;
   return st.align === 'friendly' ? B.FUEL_PRICE.friendly : B.FUEL_PRICE.neutral;
 }
 

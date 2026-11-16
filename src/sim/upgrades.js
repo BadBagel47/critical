@@ -1,5 +1,6 @@
 // What stations sell, and what the bought upgrades do to the ship's numbers.
 import { B } from './balance.js';
+import { learn } from './intel.js';
 
 // slot: 'hard' sits on the hull and shows, 'system' sits inside, null takes no slot.
 // tab: where it is sold. 'hull' and 'system' need a shipyard, 'armory' is boarding gear sold at any trading station.
@@ -124,6 +125,17 @@ export const CATALOG = {
     levels: 2,
     desc: 'ROOM FOR ONE MORE SYSTEM',
   },
+  // It needs no slot. Level one shows the systems one jump away as they are now, level two those two jumps away
+  // (F-195). The second level costs what `prices` says.
+  sysradar: {
+    tab: 'system',
+    name: 'SYSTEM RADAR',
+    slot: null,
+    price: 200,
+    prices: [200, 350],
+    levels: 2,
+    desc: 'SHOWS WHO HOLDS THE SYSTEMS NEAR BY, AS THEY ARE NOW',
+  },
   rifle: { tab: 'armory', name: 'RIFLE UPGRADE', slot: null, price: 120, levels: 2, desc: 'BOARDERS HIT HARDER' },
   pack: { tab: 'armory', name: 'CARGO PACK', slot: null, price: 140, desc: 'CARRY TWO MORE THINGS PER TRIP' },
   suit: { tab: 'armory', name: 'SUIT ARMOR', slot: null, price: 160, desc: 'BOARDERS TAKE MORE BEFORE THE TELEPORT' },
@@ -161,6 +173,14 @@ export const dockShieldMax = (ship) => B.DOCK_SHIELD + (has(ship, 'dockfield') ?
 export const fuelMax = (ship) => B.FUEL_MAX + (has(ship, 'tank') ? B.TANK_FUEL : 0);
 export const jumpCharge = (ship) => (has(ship, 'jumpcoil') ? B.COIL_CHARGE : B.JUMP_CHARGE);
 export const jumpFuel = (ship) => (has(ship, 'jumpcoil') ? B.COIL_FUEL : B.JUMP_FUEL);
+// Where on the fuel gauge each jump's worth of fuel ends, from 0 to 1, so that the gauge shows how many jumps
+// the tank holds without a number (F-229).
+export function fuelMarks(ship) {
+  const step = jumpFuel(ship) / fuelMax(ship);
+  const marks = [];
+  for (let k = 1; k * step < 0.999; k++) marks.push(k * step);
+  return marks;
+}
 export const crewHpMax = (ship) => B.CREW_HP + (has(ship, 'suit') ? B.SUIT_HP : 0);
 export const carryMax = (ship) => B.CARRY_MAX + (has(ship, 'pack') ? B.PACK_EXTRA : 0);
 export const rifleDmg = (ship) => B.RIFLE_DMG + B.RIFLE_STEP * level(ship, 'rifle');
@@ -168,8 +188,13 @@ export const teleCooldown = (ship) => (has(ship, 'coils') ? B.COIL_TELEPORT : B.
 export const breakinBonus = (ship) => (has(ship, 'hack') ? B.HACK_BONUS : 1);
 export const slotsUsed = (ship, kind) =>
   Object.keys(ship.mods).reduce((a, id) => a + (CATALOG[id].slot === kind && has(ship, id) ? CATALOG[id].size : 0), 0);
-export const priceOf = (ship, id, discount = 1) =>
-  Math.round(CATALOG[id].price * (1 + 0.5 * level(ship, id)) * discount);
+export const priceOf = (ship, id, discount = 1) => {
+  const item = CATALOG[id];
+  const base = item.prices
+    ? item.prices[Math.min(level(ship, id), item.prices.length - 1)]
+    : item.price * (1 + 0.5 * level(ship, id));
+  return Math.round(base * discount);
+};
 
 // Why an item cannot be bought right now, or null when it can.
 export function blockedReason(state, id, discount = 1) {
@@ -200,7 +225,9 @@ export function applyTestLoadout(state) {
   ship.rockets = B.ROCKET_LOAD;
   ship.dartStock = B.DART_COUNT;
   state.credits = 5000;
+  // Every system is known, as it is at the start.
   state.charts = state.sectors.map((s) => s.id);
+  for (const sec of state.sectors) learn(state, sec.id);
   for (const p of state.players) p.hp = crewHpMax(ship);
   state.test = true;
 }

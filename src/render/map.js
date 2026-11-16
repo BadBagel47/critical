@@ -8,6 +8,7 @@ import { has, jumpCharge, jumpFuel } from '../sim/upgrades.js';
 import { rect, label } from './draw.js';
 import { THING_LOOK, lookOf, SIDE_COL, MOOD_COL } from './looks.js';
 import { CREW, FACTIONS, enemies, moodOf, standingOf } from '../sim/sides.js';
+import { viewOf } from '../sim/intel.js';
 
 export const MAP = { x: 12, y: 12, size: 336 };
 // The map is drawn to fit the system the ship is in: `HALF` is how far it reaches from the middle, and `K` how
@@ -51,9 +52,11 @@ export function mapPoint(state, mx, my) {
   fit(state);
   return { x: (mx - MAP.x) / K - HALF, y: (my - MAP.y) / K - HALF };
 }
-// The star chart rows in the side panel, one per sector that can be reached from here.
+// The jump lanes in the side panel, one row per system that can be reached from here.
 export function chartRows(state) {
-  return currentSector(state).links.map((id, i) => ({ id, x: PX + 10, y: 126 + i * 30, w: PW - 20, h: 27 }));
+  return currentSector(state)
+    .links.slice(0, 4)
+    .map((id, i) => ({ id, x: PX + 10, y: 120 + i * 25, w: PW - 20, h: 23 }));
 }
 export function chartClick(state, mx, my) {
   const row = chartRows(state).find((r) => over({ x: mx, y: my }, r));
@@ -277,13 +280,23 @@ function drawMapContents(ctx, font, state, sources) {
   return hostiles;
 }
 
+// Who holds a system, in a few words, from what the crew knows of it.
+function heldBy(v) {
+  if (!v) return 'NOTHING KNOWN  ·  J FOR THE STAR MAP';
+  if (v.kind === 'sanctuary') return 'THE SANCTUARY';
+  if (v.kind === 'empty') return 'EMPTY  ·  NO STATIONS';
+  if (v.sides) return `CONTESTED  ·  ${FACTIONS[v.sides[0]].short} AND ${FACTIONS[v.sides[1]].short}`;
+  return v.owner === 'pirate' ? 'HELD BY THE PIRATES' : 'HELD BY ' + FACTIONS[v.owner].name;
+}
+
 function drawChartRow(ctx, font, state, row, mouse) {
   const ship = state.ship;
   const to = state.sectors[row.id];
-  const charted = state.charts.includes(row.id);
+  const v = viewOf(state, row.id);
+  const charted = !!v || to.visited;
   const why = jumpBlocked(state, row.id);
   const jumping = state.jump && state.jump.to === row.id;
-  const lit = over(mouse, row) && charted;
+  const lit = over(mouse, row);
   rect(
     ctx,
     row.x,
@@ -293,18 +306,15 @@ function drawChartRow(ctx, font, state, row, mouse) {
     lit ? '#1c2140' : '#141420',
     jumping ? COL.ion[2] : lit ? COL.ion[0] : COL.line,
   );
-  font.draw(ctx, charted ? to.name : 'UNKNOWN SECTOR', row.x + 6, row.y + 4, charted ? COL.ion[2] : COL.dim);
-  let status = 'NO CHART';
-  let color = COL.faint;
+  font.draw(ctx, charted ? to.name : 'UNKNOWN SYSTEM', row.x + 6, row.y + 3, charted ? COL.ion[2] : COL.dim);
+  let status = why || 'CLICK TO JUMP';
+  let color = why ? COL.faint : COL.ochre[2];
   if (jumping) {
     status = `JUMP IN ${Math.ceil(jumpCharge(ship) - state.jump.t)} S`;
     color = COL.ion[3];
-  } else if (charted) {
-    status = why || 'CLICK TO JUMP';
-    if (!why) color = COL.ochre[2];
   }
-  font.draw(ctx, status, row.x + row.w - 6, row.y + 4, color, { align: 'r' });
-  font.draw(ctx, charted ? to.hint : 'FIND OR BUY THE CHART', row.x + 6, row.y + 16, COL.dim);
+  font.draw(ctx, status, row.x + row.w - 6, row.y + 3, color, { align: 'r' });
+  font.draw(ctx, heldBy(v), row.x + 6, row.y + 14, COL.dim);
 }
 
 function drawSidePanel(ctx, font, state, post, mouse, hostiles) {
@@ -314,7 +324,7 @@ function drawSidePanel(ctx, font, state, post, mouse, hostiles) {
   rect(ctx, PX, 0, PW, VIEW_H, COL.panel);
   rect(ctx, PX, 0, 1, VIEW_H, COL.line);
   font.draw(ctx, sec.name, left, 14, COL.text, { scale: 2 });
-  font.draw(ctx, `SECTOR ${state.sector + 1} OF ${state.sectors.length}`, left, 34, COL.dim);
+  font.draw(ctx, heldBy(viewOf(state, state.sector)), left, 34, COL.dim);
   LEGEND.forEach(([color, text], i) => {
     const x = left + (i % 3) * 88;
     const y = 52 + Math.floor(i / 3) * 13;
@@ -327,13 +337,13 @@ function drawSidePanel(ctx, font, state, post, mouse, hostiles) {
     const text = `${FACTIONS[side].short} ${Math.round(standingOf(state, side))}`;
     fx += font.draw(ctx, text, fx, 82, MOOD_COL[moodOf(state, side)]) + 12;
   }
-  font.draw(ctx, 'STAR CHARTS', left, 104, COL.text);
-  font.draw(ctx, `JUMP COSTS ${jumpFuel(ship)} FUEL`, VIEW_W - 12, 104, COL.dim, { align: 'r' });
-  rect(ctx, left, 116, PW - 24, 1, COL.line);
+  font.draw(ctx, 'JUMP LANES', left, 100, COL.text);
+  font.draw(ctx, `JUMP COSTS ${jumpFuel(ship)} FUEL`, VIEW_W - 12, 100, COL.dim, { align: 'r' });
+  rect(ctx, left, 112, PW - 24, 1, COL.line);
   for (const row of chartRows(state)) drawChartRow(ctx, font, state, row, mouse);
   const captain = post === 'captain';
   const jumpNote = captain ? 'THE CAPTAIN STARTS AND STOPS A JUMP HERE' : 'ONLY THE CAPTAIN (1) CAN START A JUMP';
-  font.draw(ctx, jumpNote, left, 222, captain ? COL.captain : COL.faint);
+  font.draw(ctx, jumpNote, left, 224, captain ? COL.captain : COL.faint);
   font.draw(ctx, 'ENGINEER TOOLS', left, 244, COL.text);
   rect(ctx, left, 256, PW - 24, 1, COL.line);
   drawTools(ctx, font, state, left, 264, PW - 24);
@@ -344,7 +354,7 @@ function drawSidePanel(ctx, font, state, post, mouse, hostiles) {
     const text = `${hostiles} ${hostiles === 1 ? 'HOSTILE' : 'HOSTILES'} IN SIGHT`;
     label(ctx, font, left, 324, text, { fg: COL.ember[2], border: COL.ember[0] });
   }
-  font.draw(ctx, 'M  CLOSE', VIEW_W - 12, 344, COL.dim, { align: 'r' });
+  font.draw(ctx, 'J  STAR MAP    M  CLOSE', VIEW_W - 12, 344, COL.dim, { align: 'r' });
 }
 
 export function drawMap(ctx, state, view, assets) {

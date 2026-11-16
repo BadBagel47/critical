@@ -10,11 +10,10 @@ export const PIRATE = 'pirate';
 export const HUNTER = 'hunter';
 
 // The factions. Names and characters are placeholders until they have been gone through (D-095).
-//   home     the sectors where most of its stations and ships are, by sector number
 export const FACTIONS = {
-  charter: { name: 'THE CHARTER', short: 'CHARTER', about: 'A TRADE LEAGUE WITH RICH STATIONS', home: [0, 2] },
-  wardens: { name: 'THE WARDENS', short: 'WARDENS', about: 'KEEPERS OF ORDER WITH HEAVY SHIPS', home: [3] },
-  drifters: { name: 'THE DRIFTERS', short: 'DRIFTERS', about: 'FREE SALVAGERS OUT ON THE EDGE', home: [1, 2] },
+  charter: { name: 'THE CHARTER', short: 'CHARTER', about: 'A TRADE LEAGUE WITH RICH STATIONS' },
+  wardens: { name: 'THE WARDENS', short: 'WARDENS', about: 'KEEPERS OF ORDER WITH HEAVY SHIPS' },
+  drifters: { name: 'THE DRIFTERS', short: 'DRIFTERS', about: 'FREE SALVAGERS OUT ON THE EDGE' },
 };
 export const isFaction = (side) => side in FACTIONS;
 // A station that belongs to no faction stands on its own, with a standing of its own.
@@ -40,14 +39,27 @@ export function moodOf(state, side) {
   return 'hostile';
 }
 
+// The system the crew is in, and whether it is the sanctuary, where nobody attacks (docs/proposal-bases.md).
+export const sectorHere = (state) => (state.sectors ? state.sectors[state.sector] : null);
+export const inSanctuary = (state) => !!sectorHere(state) && sectorHere(state).kind === 'sanctuary';
+// The two factions that fight over the system the crew is in, or null when nobody does (D-089).
+export const contestedHere = (state) => (sectorHere(state) && sectorHere(state).sides) || null;
+// In a contested system: the faction that fights `side` there, or null.
+export function rivalHere(state, side) {
+  const sides = contestedHere(state);
+  if (!sides || !sides.includes(side)) return null;
+  return sides[0] === side ? sides[1] : sides[0];
+}
+
 // Two sides that shoot at each other on sight. Pirates fight everyone. Factions and free stations
-// leave each other alone, and fight the crew only when the crew has made enemies of them.
+// leave each other alone, and fight the crew only when the crew has made enemies of them. In a contested
+// system the two factions that fight over it are enemies.
 export function enemies(state, a, b) {
   if (a === b) return false;
   if (a === PIRATE || b === PIRATE) return true;
   if (a === CREW) return moodOf(state, b) === 'hostile' || isAngry(state, b);
   if (b === CREW) return moodOf(state, a) === 'hostile' || isAngry(state, a);
-  return false;
+  return isFaction(a) && rivalHere(state, a) === b;
 }
 
 // ---------- trouble on the spot ----------

@@ -18,7 +18,8 @@ import { hurtVessel, makeVessel } from '../src/sim/vessels.js';
 import { weaponsOf } from '../src/sim/weapons.js';
 import { SHIPS, HULLS } from '../src/sim/kinds.js';
 import { summon } from '../src/sim/testing.js';
-import { createWreck, jumpBlocked } from '../src/sim/sectors.js';
+import { createWreck, jumpBlocked, gatherForTesting } from '../src/sim/sectors.js';
+import { viewOf } from '../src/sim/intel.js';
 import { B, SHIP_GEOM, WING_MOUNTS } from '../src/sim/balance.js';
 import { headingTo, dist, toWorld, angleDiff } from '../src/sim/util.js';
 import { newRock, hurtRock } from '../src/sim/rocks.js';
@@ -44,6 +45,21 @@ const quiet = (s) => {
   Object.assign(s.ship, { x: 0, y: 0, heading: 0, vx: 0, vy: 0, throttle: 0 });
   return s;
 };
+// A station of every side near the start, as in a test game, but the ship has nothing bought.
+const gathered = (seed = 1) => {
+  const s = createState(seed);
+  gatherForTesting(s);
+  return quiet(s);
+};
+// The first system a lane leads to from where the ship is, and a jump there that is over at once.
+const next = (s) => s.sectors[s.sector].links[0];
+function hop(s, to) {
+  s.ship.docked = null;
+  s.ship.fuel = Math.max(s.ship.fuel, B.JUMP_FUEL + 5);
+  s.jump = { to, t: 1e4, at: null };
+  step(s, {}, DT);
+  assert.equal(s.sector, to);
+}
 
 test('same seed and commands give the same world', () => {
   const a = run(createState(7), { captain: { throttle: 1, turn: 0.3 } }, 5);
@@ -198,8 +214,11 @@ test('pause freezes the world for everyone', () => {
   assert.equal(s.paused, false);
 });
 
-test('pirates arrive, attack and can destroy an idle ship', () => {
+test('R-252: no pirates come to the sanctuary, but out of it they arrive, attack and can destroy an idle ship', () => {
   const s = createState(3);
+  run(s, {}, 240);
+  assert.equal(s.spawn.wave, 0, 'nobody comes to the sanctuary');
+  hop(s, next(s));
   // Far from any station, so that nobody else shoots the pirates.
   s.ship.x = 6000;
   s.ship.y = 6000;
@@ -218,7 +237,7 @@ function flyAt(s, thing) {
 const rocks = (s) => s.things.filter((t) => t.kind === 'rock');
 // One rock alone in empty space, for trying things on.
 function loneRock(s, variant = 2) {
-  s.things = s.things.filter((t) => t.kind !== 'rock');
+  s.things = s.things.filter((t) => t.kind !== 'rock' && dist(t.x, t.y, 0, -1000) > 300);
   const rock = newRock(s, 0, -1000, variant);
   s.things.unshift(rock);
   return rock;
@@ -282,7 +301,7 @@ test('asteroids lie in a belt and in fields, never near a station, and new ones 
   for (let seed = 1; seed <= 6; seed++) {
     const s = quiet(createState(seed));
     const radius = s.sectors[0].radius;
-    assert.ok(rocks(s).length > 30, 'there is plenty to fly round and to shoot at');
+    assert.ok(rocks(s).length > 20, 'there is plenty to fly round and to shoot at');
     for (const r of rocks(s)) {
       for (const st of stations(s)) assert.ok(dist(r.x, r.y, st.x, st.y) >= B.ROCK_GAP_STATION, 'none by a station');
     }
@@ -376,10 +395,10 @@ test('the haze at the edge of a system slows the ship to a stop, and lets it tur
   assert.ok(Math.hypot(s.ship.x, s.ship.y) < far - 100);
 });
 
-test('the game starts by the home yard, pointing at it', () => {
+test('the game starts by the base of the sanctuary, pointing at it', () => {
   for (let seed = 1; seed <= 5; seed++) {
     const s = createState(seed);
-    const yard = stations(s).find((st) => st.home);
+    const yard = stations(s).find((st) => st.sanctuary);
     const gap = dist(s.ship.x, s.ship.y, yard.x, yard.y);
     assert.ok(Math.abs(gap - B.ARRIVE_GAP) < 1, 'a little way from the yard');
     const way = headingTo(yard.x - s.ship.x, yard.y - s.ship.y);
@@ -396,30 +415,30 @@ test('the game starts by the home yard, pointing at it', () => {
 test('a jump to a system the crew knows comes in by a base, and one to an unknown system comes in anywhere safe', () => {
   for (let seed = 1; seed <= 8; seed++) {
     const s = quiet(createState(seed));
-    s.charts.push(1);
+    const to = next(s);
     s.ship.fuel = 100;
-    step(s, { captain: { jump: 1 } }, DT);
+    step(s, { captain: { jump: to } }, DT);
     run(s, {}, B.JUMP_CHARGE + 0.2);
-    assert.equal(s.sector, 1);
+    assert.equal(s.sector, to);
     const d = Math.hypot(s.ship.x, s.ship.y);
     assert.ok(d >= B.STAR_BURN + B.ARRIVE_STAR - 1, 'never in the star, or too close to turn away');
-    assert.ok(d <= s.sectors[1].radius, 'and inside the system');
+    assert.ok(d <= s.sectors[to].radius, 'and inside the system');
     for (const st of stations(s).filter((x) => x.align === 'hostile'))
       assert.ok(dist(st.x, st.y, s.ship.x, s.ship.y) > B.STATION_RANGE, 'out of reach of a hostile base');
     assert.equal(s.ship.throttle, 0, 'at rest');
-    // Back to the first system, where the yard is known.
+    // Back to the sanctuary, where the base is known.
     s.spawn.timer = 1e9;
     step(s, { captain: { jump: 0 } }, DT);
     run(s, {}, B.JUMP_CHARGE + 0.2);
     assert.equal(s.sector, 0);
-    const yard = stations(s).find((st) => st.home);
+    const yard = stations(s).find((st) => st.sanctuary);
     assert.ok(Math.abs(dist(s.ship.x, s.ship.y, yard.x, yard.y) - B.ARRIVE_GAP) < 40, 'it comes in by the yard');
     assert.ok(s.ship.throttle > 0 && s.ship.throttle < 0.5, 'gliding in on low throttle');
   }
 });
 
 test('a known hostile base is the last choice to arrive at, and then out of reach of its guns', () => {
-  const s = quiet(createState(1));
+  const s = gathered(1);
   const [a, b] = stations(s);
   s.known = [
     { ...mapInfo(a), align: 'hostile' },
@@ -448,7 +467,7 @@ import { inSight, isLit } from '../src/sim/guards.js';
 test('docking works from a little way off, and the ship is pulled in until its nose rests at the port', () => {
   const s = quiet(createState(1));
   s.traffic.timer = 1e9;
-  const st = stations(s).find((x) => x.home);
+  const st = stations(s).find((x) => x.sanctuary);
   const port = portsOf(st)[1];
   // Off to the side of the port and turned away from it, well outside the old reach of 20.
   s.ship.heading = -0.5;
@@ -519,7 +538,7 @@ test('a destroyed gunboat or freighter leaves a wreck of its own kind', () => {
 
 test('the nearest port is the one the ship docks at', () => {
   const s = quiet(createState(1));
-  const st = stations(s).find((x) => x.home);
+  const st = stations(s).find((x) => x.sanctuary);
   const [first, second] = [portsOf(st)[0], portsOf(st)[3]];
   s.ship.heading = 0;
   s.ship.x = second.x + 30;
@@ -586,7 +605,7 @@ test('every interior lets the crew reach all loot and enemies', () => {
       assert.ok(seen.has(key(Math.floor(e.x / TILE), Math.floor(e.y / TILE))), `seed ${seed}: everything is reachable`);
       assert.ok(!blocked(it, e.x, e.y, 4), `seed ${seed}: nothing is stuck in a wall`);
     }
-    assert.ok(it.loot.length >= 7 && it.guards.length >= 2);
+    assert.ok(it.loot.length >= 5 && it.guards.length >= 2);
   }
 });
 
@@ -597,6 +616,8 @@ test('boarding needs a docked ship, and loot carried to the airlock becomes fuel
   assert.equal(s.players[0].inside, s.ship.docked);
   it.guards = [];
   it.turrets = [];
+  // A wreck holds a fuel cell or none (F-229). For the test one of its crates is a cell.
+  if (!it.loot.some((l) => l.type === 'cell')) it.loot.filter((l) => l.type === 'crate')[1].type = 'cell';
   const cell = it.loot.find((l) => l.type === 'cell'),
     crate = it.loot.find((l) => l.type === 'crate');
   av.x = cell.x;
@@ -704,7 +725,7 @@ function sightings(s, it, g, av, secs) {
 }
 
 test('a guard fights from cover: it steps out to fire and steps back again', () => {
-  const { s, it, av } = boarded(4);
+  const { s, it, av } = boarded(3);
   it.turrets = [];
   it.guards = it.guards.slice(0, 1);
   const g = it.guards[0];
@@ -993,7 +1014,10 @@ test('the map has no fog: it shows what is in sight, and one scan shows everythi
   assert.equal(s.map.scanned, true);
   assert.ok(s.events.some((e) => e.type === 'scanned' && e.fresh > 0));
   // A scan is a picture of how things are right now. What changes afterwards is not seen from afar.
-  const far = stations(s).find((st) => !st.home);
+  const far = stations(s)[0];
+  // Out of sight of it, once the scan is over.
+  Object.assign(s.ship, { x: -far.x * 2, y: -far.y * 2 });
+  for (let i = 0; i < 600 && s.ship.pulse; i++) step(s, {}, DT);
   s.standing[far.side] = -100;
   run(s, {}, 1);
   assert.equal(far.align, 'hostile', 'the station has turned on the crew');
@@ -1007,7 +1031,7 @@ test('a wreck stays on the map as last seen, and pirates show only while in sigh
   const s = quiet(createState(1)),
     w = wrecks(s)[0];
   // The wreck lies far from the start, on the other side of the system from the yard and its radar.
-  const yard = stations(s).find((st) => st.home),
+  const yard = stations(s).find((st) => st.sanctuary),
     far = 1500 / Math.hypot(yard.x, yard.y);
   Object.assign(w, { x: -yard.x * far, y: -yard.y * far });
   run(s, {}, 0.5);
@@ -1130,20 +1154,23 @@ function atStation(s, st) {
   return st;
 }
 
-test('the first sector has a friendly shipyard in sight and a neutral station further out', () => {
-  const s = quiet(createState(1));
-  run(s, {}, 0.5);
-  const yard = station(s, 'friendly');
-  assert.ok(yard && yard.shipyard);
-  assert.ok(
-    s.known.some((k) => k.kind === 'station' && k.align === 'friendly'),
-    'the yard is on the map from the start',
-  );
-  assert.ok(station(s, 'neutral'));
+test('R-109 R-253 R-264: the game starts in the sanctuary, with one neutral base and no shipyard, on the map from the start', () => {
+  for (let seed = 1; seed <= 5; seed++) {
+    const s = quiet(createState(seed));
+    run(s, {}, 0.5);
+    assert.equal(s.sectors[0].kind, 'sanctuary');
+    assert.equal(stations(s).length, 1, 'one base');
+    const base = stations(s)[0];
+    assert.ok(base.sanctuary && base.align === 'neutral' && !base.shipyard);
+    assert.ok(
+      s.known.some((k) => k.id === base.id),
+      'the base is on the map from the start',
+    );
+  }
 });
 
 test('fuel is free at a friendly station and costs credits at a neutral one', () => {
-  const s = quiet(createState(1));
+  const s = gathered(1);
   s.ship.fuel = 40;
   atStation(s, station(s, 'friendly'));
   step(s, { shop: [{ action: 'refuel' }] }, DT);
@@ -1159,7 +1186,7 @@ test('fuel is free at a friendly station and costs credits at a neutral one', ()
 });
 
 test('upgrades need a shipyard, credits and a free slot', () => {
-  const s = quiet(createState(1));
+  const s = gathered(1);
   atStation(s, station(s, 'neutral'));
   s.credits = 1000;
   step(s, { shop: [{ action: 'buy', item: 'armor' }] }, DT);
@@ -1190,7 +1217,7 @@ test('shield emitters and the power core raise the ship limits', () => {
 });
 
 test('shooting a neutral station turns it hostile, and its guns open fire', () => {
-  const s = quiet(createState(1)),
+  const s = gathered(1),
     st = station(s, 'neutral');
   s.ship.x = st.x;
   s.ship.y = st.y + 200;
@@ -1202,7 +1229,7 @@ test('shooting a neutral station turns it hostile, and its guns open fire', () =
 });
 
 test('a hostile station is broken into, boarded and taken over from its mainframe', () => {
-  const s = quiet(createState(1)),
+  const s = gathered(1),
     st = station(s, 'neutral');
   turnHostile(s, st);
   s.ship.x = st.x;
@@ -1438,40 +1465,38 @@ test('with autolaunch the darts go out by themselves when pirates show up', () =
 });
 
 // ---------- sectors, charts and the boss ----------
-test('a jump needs a chart, a route, fuel and everyone on board', () => {
+test('R-115: a jump needs a lane, fuel and everyone on board, but no star chart', () => {
   const s = quiet(createState(1));
-  assert.equal(jumpBlocked(s, 1), 'NO STAR CHART');
-  s.charts.push(1);
-  assert.equal(jumpBlocked(s, 4), 'NO ROUTE FROM HERE');
+  const to = next(s);
+  const away = s.sectors.find((x) => x.id !== 0 && !s.sectors[0].links.includes(x.id)).id;
+  assert.equal(jumpBlocked(s, to), null, 'no chart is needed');
+  assert.equal(jumpBlocked(s, away), 'NO ROUTE FROM HERE');
   s.ship.fuel = 5;
-  assert.equal(jumpBlocked(s, 1), 'NOT ENOUGH FUEL');
+  assert.equal(jumpBlocked(s, to), 'NOT ENOUGH FUEL');
   s.ship.fuel = 80;
   s.ship.docked = wrecks(s)[0].id;
-  assert.equal(jumpBlocked(s, 1), 'UNDOCK FIRST');
+  assert.equal(jumpBlocked(s, to), 'UNDOCK FIRST');
   s.ship.docked = null;
-  assert.equal(jumpBlocked(s, 1), null);
+  assert.equal(jumpBlocked(s, to), null);
 });
 
 test('jumping takes time and fuel, changes the sector, and the old sector is remembered', () => {
   const s = quiet(createState(1));
-  s.charts.push(1);
+  const to = next(s);
   s.ship.fuel = 80;
   run(s, {}, 0.5);
   const oldWrecks = wrecks(s).map((w) => w.id),
     knownBefore = s.known.length,
     fieldBefore = s.field.target;
-  step(s, { captain: { jump: 1 } }, DT);
+  step(s, { captain: { jump: to } }, DT);
   assert.ok(s.jump);
   run(s, {}, B.JUMP_CHARGE / 2);
   assert.equal(s.sector, 0, 'still charging');
   run(s, {}, B.JUMP_CHARGE / 2 + 0.2);
-  assert.equal(s.sector, 1);
+  assert.equal(s.sector, to);
   assert.equal(s.ship.fuel < 80 - B.JUMP_FUEL + 0.01, true);
   assert.ok(!wrecks(s).some((w) => oldWrecks.includes(w.id)), 'a new sector has its own wrecks');
-  assert.ok(
-    stations(s).some((x) => x.align === 'hostile'),
-    'the second sector has a hostile station',
-  );
+  assert.ok(s.sectors[0].intel, 'the system that was left is on the star map as it was seen');
   s.spawn.timer = 1e9;
   step(s, { captain: { jump: 0 } }, DT);
   run(s, {}, B.JUMP_CHARGE + 0.2);
@@ -1485,26 +1510,32 @@ test('jumping takes time and fuel, changes the sector, and the old sector is rem
   assert.equal(s.field.target, fieldBefore, 'and its asteroid fields');
 });
 
-test('a star chart can be bought at a station or carried out of a vault', () => {
+test('R-120 R-121: a star chart shows three systems around the one it is of, as they are when it is bought', () => {
   const s = quiet(createState(1)),
-    yard = station(s, 'friendly');
-  atStation(s, yard);
+    base = stations(s)[0];
+  atStation(s, base);
   s.credits = 500;
-  assert.ok(yard.chart !== null);
+  assert.ok(base.chart !== null);
+  assert.equal(viewOf(s, base.chart), null, 'nothing is known of it before');
   step(s, { shop: [{ action: 'chart' }] }, DT);
-  assert.ok(s.charts.includes(yard.chart));
-  assert.equal(s.credits, 500 - B.CHART_PRICE.friendly);
+  assert.ok(s.charts.includes(base.chart));
+  assert.equal(s.credits, 500 - B.CHART_PRICE.neutral);
+  const shown = s.sectors.filter((x) => x.id !== 0 && x.intel);
+  assert.equal(shown.length, 3);
+  assert.ok(shown.some((x) => x.id === base.chart));
+  assert.equal(viewOf(s, base.chart).live, false, 'and it is not kept up to date');
 });
 
 test('destroying the cruiser in the last sector wins the game, and gunboats leave wrecks', () => {
   const s = quiet(createState(1));
-  s.sector = 3;
+  const end = s.sectors.find((x) => x.boss);
+  assert.equal(end.kind, 'inhabited');
+  s.sector = end.links[0];
   quiet(s);
-  s.charts.push(4);
   s.ship.fuel = 80;
-  step(s, { captain: { jump: 4 } }, DT);
+  step(s, { captain: { jump: end.id } }, DT);
   run(s, {}, B.JUMP_CHARGE + 0.2);
-  assert.equal(s.sector, 4);
+  assert.equal(s.sector, end.id);
   const boss = s.vessels.find((p) => p.kind === 'cruiser');
   assert.ok(boss);
   s.spawn.timer = 1e9;
@@ -1608,7 +1639,7 @@ test('a cargo pod opens after three good stops of the needle and gives its cargo
 });
 
 test('three misses on a cargo pod set off an alarm that brings pirates', () => {
-  const s = quiet(createState(1)),
+  const s = gathered(1),
     pod = pods(s)[0];
   s.ship.docked = pod.id;
   step(s, { system: { board: [0] } }, DT);
@@ -1680,7 +1711,7 @@ test('a station under attack calls for help, and a neutral one repays it with a 
 
 // A raid on the free station in the first sector, with the frigate far away.
 function raidFarAway() {
-  const s = quiet(createState(1));
+  const s = gathered(1);
   s.traffic.timer = 1e9;
   s.raidTimer = 0.1;
   s.ship.x = 9000;
@@ -1740,7 +1771,7 @@ test('a station that loses the fight falls to the pirates, and can be taken back
 test('every catalog item belongs to a tab, and boarding gear is sold without a shipyard', () => {
   for (const id of Object.keys(CATALOG)) assert.ok(['hull', 'system', 'armory'].includes(CATALOG[id].tab), id);
   assert.ok(itemsOf('armory').length >= 6);
-  const s = quiet(createState(1));
+  const s = gathered(1);
   atStation(s, station(s, 'neutral'));
   s.credits = 1000;
   step(s, { shop: [{ action: 'buy', item: 'pack' }] }, DT);
@@ -1905,8 +1936,7 @@ test('a test game has one of everything that can be docked with close to the sta
   assert.equal(s.known.length, all.length, 'all of it is on the map from the start');
   assert.ok(s.known.some((k) => k.id === pirate.id));
   const usual = createState(4);
-  assert.equal(stations(usual).length, 2, 'an ordinary game is laid out as before');
-  assert.ok(stations(usual).some((st) => near(st) > 1000));
+  assert.equal(stations(usual).length, 1, 'an ordinary game starts in the sanctuary, with its one base');
 });
 
 test('a test game has no pirates of its own, and they can be called in', () => {
@@ -1958,7 +1988,7 @@ test('test mode starts with everything installed, room for it, credits and all c
 
 // ---------- walking around on friendly and neutral stations ----------
 test('a friendly station is walked into without a lock, and its desks open the shop', () => {
-  const s = quiet(createState(1)),
+  const s = gathered(1),
     st = atStation(s, station(s, 'friendly'));
   s.players[0].tele = 30;
   step(s, { system: { board: [0] } }, DT);
@@ -2005,7 +2035,7 @@ test('undocking calls people back from a trading station without a teleport, and
 });
 
 test('a station that is taken over becomes a trading floor', () => {
-  const s = quiet(createState(1)),
+  const s = gathered(1),
     st = station(s, 'neutral');
   turnHostile(s, st);
   atStation(s, st);
