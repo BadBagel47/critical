@@ -859,6 +859,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1108 | Varje spelare har sina primära roller från start. | bestämd | Användaren 2026-11-16 (D-189) | – |
 | R-1109 | När en spelare lämnar skeppet blir hens roller tillfälligt lediga, och de som är kvar kan ta över en ledig roll tills den som har den på riktigt kommer tillbaka. | bestämd | Användaren 2026-11-16 (D-189) | – |
 | R-1110 | Bara en spelare åt gången har en roll. Den som tillfälligt tar en ledig roll håller också kvar sin egen, så ingen annan kan ta någon av dem. | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1118 | När den som har en roll kommer tillbaka får hen den direkt, och den som hade tagit över går tillbaka till sin egen roll. | bestämd | Användaren 2026-11-16 (D-189) | – |
 | R-1111 | Med två spelare tas den tredje rollen över på samma sätt, eller sköts av datorn. | bestämd | Användaren 2026-11-16 (D-189) | – |
 | R-1112 | Om datorn får sköta roller, och vilka, bestäms när omgången startar och gäller hela omgången. Datorn slås på i vyn för en roll där det är tillåtet. | bestämd | Användaren 2026-11-16 (D-189, D-186) | – |
 | R-1113 | Varje roll köper utrustningen till sin egen bordare ur sin egen kassa. | bestämd | Användaren 2026-11-16 (D-189) | – |
@@ -956,6 +957,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1107 | Butikens utseende får en design innan den ritas om. | bestämd | Användaren 2026-11-16 (F-080) | – |
 | R-1115 | En övertagen station har en egen kassa som fylls av stationens inkomst över tid, och dess försvar köps ur den kassan. | bestämd | Användaren 2026-11-16 (D-189, F-088) | – |
 | R-1116 | Stationens inkomst ger också spelarna pengar: varje rolls kassa får lika mycket. | bestämd | Användaren 2026-11-16 (D-189, F-088) | – |
+| R-1117 | Prissumman betalas av den som står vid disken, ur den egna kassan. | bestämd | Användaren 2026-11-16 (D-189) | – |
 | R-834 | Neutrala shipyards är alltid öppna mot betalning. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-835 | Neutrala shipyards har samma priser som vänliga så länge spelet testas. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-836 | Stationer säljer kartan till nästa sektor. | byggd | HANDOFF beslut 2026-11-14 | saknas |
