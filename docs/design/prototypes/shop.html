@@ -34,7 +34,7 @@ canvas { width: 100%; max-width: 1280px; aspect-ratio: 16 / 9; image-rendering: 
 <body>
 <main>
   <h1>Butik, förråd och varv</h1>
-  <p class="lede">Skiss för D-243, inte byggd. Klicka i bilden: filterknapparna, sakerna i listan och knapparna i panelen. Piltangenterna flyttar markeringen och Enter gör det knappen säger. Alla siffror är påhittade för skissen.</p>
+  <p class="lede">Skiss för D-243, inte byggd. Klicka i bilden: filterknapparna, sakerna i listan, platserna på varvet och knapparna i panelen. Piltangenterna flyttar markeringen och Enter gör det knappen säger. Alla siffror är påhittade för skissen.</p>
   <div class="bar" id="views"><span>Vy:</span></div>
   <div class="bar" id="players"><span>Du spelar som:</span></div>
   <canvas id="screen" width="1280" height="720" tabindex="0"></canvas>
@@ -98,10 +98,10 @@ const ITEMS = [
   { id: 'pulse', role: 'engineer', kind: 'part', slot: 'system', name: 'SCANNER PULSE', desc: 'SHOWS ALL OF THE SYSTEM FOR A MOMENT  ·  COSTS A LITTLE FUEL',
     levels: [lv(160, 'PULSE', null)] },
   ...ROLES.flatMap((role) => [
-    { id: 'slotH-' + role, role, kind: 'part', slot: null, name: 'EXTRA HULL SLOT', desc: `ONE MORE HULL SLOT FOR THE ${NAME[role]}`,
-      levels: [lv(250, '+1 SLOT', ['HULL SLOTS', 2, 3]), lv(375, '+1 SLOT', ['HULL SLOTS', 3, 4])] },
-    { id: 'slotS-' + role, role, kind: 'part', slot: null, name: 'EXTRA SYSTEM SLOT', desc: `ONE MORE SYSTEM SLOT FOR THE ${NAME[role]}`,
-      levels: [lv(200, '+1 SLOT', ['SYSTEM SLOTS', 2, 3]), lv(300, '+1 SLOT', ['SYSTEM SLOTS', 3, 4])] },
+    { id: 'slotH-' + role, role, kind: 'slot', slot: 'hull', name: 'EXTRA HULL SLOT', desc: `ONE MORE HULL SLOT FOR THE ${NAME[role]}  ·  PERMANENT`,
+      levels: [lv(250, '+1 SLOT', ['HULL SLOTS', 1, 2]), lv(375, '+1 SLOT', ['HULL SLOTS', 2, 3])] },
+    { id: 'slotS-' + role, role, kind: 'slot', slot: 'system', name: 'EXTRA SYSTEM SLOT', desc: `ONE MORE SYSTEM SLOT FOR THE ${NAME[role]}  ·  PERMANENT`,
+      levels: [lv(200, '+1 SLOT', ['SYSTEM SLOTS', 1, 2]), lv(300, '+1 SLOT', ['SYSTEM SLOTS', 2, 3])] },
   ]),
   { id: 'charge', role: 'gunner', kind: 'gear', slot: null, name: 'BREACHING CHARGE', desc: 'BLOWS A VAULT DOOR OPEN  ·  WAKES EVERYONE  ·  USED UP',
     levels: [lv(50, 'ONE CHARGE', ['CHARGES', 0, 1])] },
@@ -127,27 +127,61 @@ const SERVICES = [
   { id: 'ore', name: 'SELL ORE', price: -60 },
 ];
 
+// What a thing is, for the second filter (R-1176).
+for (const it of ITEMS) it.cat = it.kind === 'slot' ? 'slot' : it.kind === 'gear' ? 'boarding' : 'upgrade';
+const CATS = { all: 'ALL', upgrade: 'UPGRADES', boarding: 'BOARDING', slot: 'SLOTS' };
+// Every role can have three slots of each kind, one of them open from the start (a proposal, O2).
+const MAX_SLOTS = 3;
+
 // ---------- what the crew has, for the sketch ----------
 const state = {
   view: 'shop',
   me: 'gunner',
   solo: false,
   filter: 'gunner',
-  sel: 'twin',
+  type: 'all',
+  sel: 'bay',
+  slotSel: null,
   scroll: 0,
   purses: { captain: 1860, gunner: 1630, engineer: 1820 },
-  // level bought, and how many of those levels are installed. Gear is carried: it counts as installed.
-  own: { tank: { bought: 1, installed: 1 }, twin: { bought: 1, installed: 1 }, bay: { bought: 2, installed: 1 },
-    armor: { bought: 1, installed: 0 }, alarm: { bought: 1, installed: 1 }, rifle: { bought: 1, installed: 1 } },
-  slots: { captain: { hull: [0, 2], system: [2, 2] }, gunner: { hull: [2, 2], system: [0, 2] }, engineer: { hull: [0, 2], system: [0, 2] } },
+  // How many levels of a thing are bought, and how many of them are installed. Gear is carried, and counts as
+  // installed. A slot counts the slots bought beyond the first.
+  own: {
+    tank: { bought: 1, installed: 1 },
+    alarm: { bought: 1, installed: 1 },
+    twin: { bought: 1, installed: 1 },
+    bay: { bought: 2, installed: 1 },
+    armor: { bought: 1, installed: 0 },
+    rifle: { bought: 1, installed: 1 },
+    'slotS-captain': { bought: 1, installed: 1 },
+    'slotH-gunner': { bought: 1, installed: 1 },
+  },
+  // The slots of every role: how many are open, and the part in each (R-1137, R-1174).
+  slots: {
+    captain: { hull: { open: 1, parts: [] }, system: { open: 2, parts: ['tank', 'alarm'] } },
+    gunner: { hull: { open: 2, parts: ['twin', 'bay'] }, system: { open: 1, parts: [] } },
+    engineer: { hull: { open: 1, parts: [] }, system: { open: 1, parts: [] } },
+  },
   toast: '',
 };
-const VIEWS = { shop: 'SHOP', stores: 'STORES', yard: 'SHIPYARD' };
-const roleOf = (it) => it.role || (state.solo ? 'captain' : state.me);
+const me = () => (state.solo ? 'captain' : state.me);
+const roleOf = (it) => it.role || me();
 const mine = (it) => state.solo || !it.role || it.role === state.me;
 const owned = (it) => state.own[it.id] || { bought: 0, installed: 0 };
 const nextLv = (it) => it.levels[owned(it).bought] || null;
-const slotsOf = (role, kind) => state.slots[role][kind === 'hull' ? 'hull' : 'system'];
+const item = (id) => ITEMS.find((x) => x.id === id);
+const inSlot = (it) => !!it.role && !!it.slot && it.kind === 'part' && state.slots[it.role][it.slot].parts.includes(it.id);
+// The slots of a kind a role has taken: by parts that are installed, and by parts in the stores (R-1173).
+function slotsTaken(role, kind) {
+  const s = state.slots[role][kind];
+  const stored = ITEMS.filter((x) => x.kind === 'part' && x.role === role && x.slot === kind && owned(x).bought > 0 && !inSlot(x));
+  return { taken: s.parts.length + stored.length, open: s.open };
+}
+// A part that would need a slot the role does not have free.
+const noSlot = (it) => it.kind === 'part' && it.slot && owned(it).bought === 0 && (() => {
+  const t = slotsTaken(it.role, it.slot);
+  return t.taken >= t.open;
+})();
 
 // ---------- drawing ----------
 const canvas = document.getElementById('screen');
@@ -180,7 +214,6 @@ function icon(x, y, s, role) {
   r(3, 3, 10, 10, COL.steel[0]);
   r(2, 2, 12, 1, COL.steel[2]);
   r(2, 2, 1, 12, COL.steel[2]);
-  // the part inside: a cog
   r(6, 5, 4, 6, COL.steel[3]);
   r(5, 6, 6, 4, COL.steel[3]);
   r(7, 7, 2, 2, COL.steel[0]);
@@ -190,34 +223,79 @@ function icon(x, y, s, role) {
   r(11, 7, 1, 2, COL.steel[2]);
   r(12, 12, 2, 2, ROLE_COL[role] || COL.text);
 }
+// A small arrow, since the font has none: before and after (U4).
+function arrow(x, y, c) {
+  rect(ctx, x, y + 2.5, 6, 1, c);
+  rect(ctx, x + 4, y + 1.5, 1, 3, c);
+  rect(ctx, x + 5, y + 2, 1, 2, c);
+}
+// A slot as a small box: the colour of its role when something is in it, a frame when it is open and empty, and
+// dark with a lock when it is not bought yet.
+function slotBox(x, y, s, role, state3) {
+  if (state3 === 'used') {
+    rect(ctx, x, y, s, s, COL.steel[0], ROLE_COL[role]);
+    rect(ctx, x + 2, y + 2, s - 4, s - 4, ROLE_COL[role]);
+  } else if (state3 === 'open') rect(ctx, x, y, s, s, '#141420', ROLE_COL[role]);
+  else {
+    rect(ctx, x, y, s, s, '#0c0c14', COL.faint);
+    const c = COL.faint;
+    rect(ctx, x + s / 2 - 1.5, y + s / 2 - 2, 3, 1, c);
+    rect(ctx, x + s / 2 - 1.5, y + s / 2 - 2, 0.5, 2, c);
+    rect(ctx, x + s / 2 + 1, y + s / 2 - 2, 0.5, 2, c);
+    rect(ctx, x + s / 2 - 2, y + s / 2, 4, 2.5, c);
+  }
+}
+const slotState = (role, kind, i) => {
+  const s = state.slots[role][kind];
+  return i < s.parts.length ? 'used' : i < s.open ? 'open' : 'locked';
+};
+// One line per role: its hull slots and its system slots, as boxes.
+function slotRow(x, y, role) {
+  text(NAME[role], x, y + 1, ROLE_COL[role]);
+  let cx = x + 58;
+  for (const kind of ['hull', 'system']) {
+    text(kind.toUpperCase(), cx, y + 1, COL.dim);
+    cx += width(kind.toUpperCase()) + 4;
+    for (let i = 0; i < MAX_SLOTS; i++) {
+      slotBox(cx, y, 7, role, slotState(role, kind, i));
+      cx += 9;
+    }
+    cx += 10;
+  }
+}
 
 const P = { x: 16, y: 12, w: 608, h: 336 };
-const LIST = { x: P.x + 12, y: P.y + 70, w: 378, rows: 5, tw: 122, th: 34 };
+const LIST = { x: P.x + 12, y: P.y + 88, w: 378, rows: 4, tw: 122, th: 34 };
 const SIDE = { x: P.x + 400, y: P.y + 48, w: P.w - 412, h: P.h - 62 };
 let hits = [];
 const hit = (x, y, w, h, act) => hits.push({ x, y, w, h, act });
 
 function itemsShown() {
   let list = ITEMS;
-  if (state.view !== 'shop') list = list.filter((it) => owned(it).bought > 0);
-  if (state.filter !== 'all') list = list.filter((it) => (it.role || 'gear') === state.filter || (!it.role && state.filter === state.me));
+  // What the crew has the most of that can be had is not offered (R-1175). Slots are not in the stores.
+  if (state.view === 'shop') list = list.filter((it) => nextLv(it));
+  else list = list.filter((it) => it.kind !== 'slot' && owned(it).bought > 0);
+  if (state.filter !== 'all') list = list.filter((it) => (it.role ? it.role === state.filter : state.solo || state.filter === state.me));
+  if (state.type !== 'all') list = list.filter((it) => it.cat === state.type);
   return list;
 }
 
-// What a thing says about itself in the list: its price, or where it is.
+// What a thing says about itself in the list: its level and price, or where it is (R-1172).
 function badge(it) {
   const o = owned(it);
-  const next = nextLv(it);
+  const n = it.levels.length;
+  const lvl = n > 1 ? `LV ${o.bought}/${n}` : '';
   if (state.view === 'shop') {
-    if (!next) return [it.levels.length > 1 ? 'ALL LEVELS' : 'OWNED', COL.engineer];
-    if (!mine(it)) return [`${NAME[it.role]} BUYS`, COL.faint];
-    const role = roleOf(it);
-    const lvl = o.bought ? `LV ${o.bought + 1}  ·  ` : '';
-    return [lvl + next.price + ' CR', state.purses[role] >= next.price ? COL.ochre[2] : COL.ember[1]];
+    const next = nextLv(it);
+    if (!mine(it)) return [(lvl ? lvl + '  ·  ' : '') + `${NAME[it.role]} BUYS`, COL.faint];
+    if (noSlot(it)) return ['NO FREE SLOT', COL.ember[1]];
+    const price = next.price + ' CR';
+    return [lvl ? `${lvl}  ·  ${price}` : price, state.purses[roleOf(it)] >= next.price ? COL.ochre[2] : COL.ember[1]];
   }
-  if (it.kind === 'gear') return ['CARRIED', COL.engineer];
-  if (o.installed < o.bought) return [o.installed ? `${o.installed} OF ${o.bought} INSTALLED` : 'IN STORES', COL.ochre[2]];
-  return [o.bought > 1 ? `LV ${o.bought}  ·  INSTALLED` : 'INSTALLED', COL.engineer];
+  if (it.kind === 'gear') return [lvl ? `${lvl}  ·  CARRIED` : 'CARRIED', COL.engineer];
+  if (!inSlot(it)) return ['IN STORES', COL.ochre[2]];
+  if (o.installed < o.bought) return [`LV ${o.installed}/${n} · ${o.bought - o.installed} STORED`, COL.ochre[2]];
+  return [lvl ? `${lvl}  ·  INSTALLED` : 'INSTALLED', COL.engineer];
 }
 
 function drawList() {
@@ -231,7 +309,7 @@ function drawList() {
     rect(ctx, x, y, LIST.tw, LIST.th, sel ? '#1c2140' : '#141420', sel ? COL.ion[2] : COL.line);
     rect(ctx, x, y, 2, LIST.th, ROLE_COL[it.role] || COL.steel[2]);
     icon(x + 5, y + 5, 24, it.role);
-    const dim = state.view === 'shop' && !mine(it);
+    const dim = state.view === 'shop' && (!mine(it) || noSlot(it));
     const name = wrap(it.name, LIST.tw - 36);
     text(name[0], x + 33, y + 6, dim ? COL.dim : COL.text);
     if (name[1]) text(name[1], x + 33, y + 15, dim ? COL.dim : COL.text);
@@ -240,28 +318,34 @@ function drawList() {
     hit(x, y, LIST.tw, LIST.th, () => (state.sel = it.id));
   });
   const rows = Math.ceil(list.length / per);
-  if (!list.length) text(state.view === 'shop' ? 'NOTHING HERE' : 'NOTHING BOUGHT FOR THIS ROLE YET', LIST.x + 4, LIST.y + 6, COL.faint);
+  if (!list.length) text(state.view === 'shop' ? 'NOTHING MORE TO BUY HERE' : 'NOTHING BOUGHT HERE YET', LIST.x + 4, LIST.y + 6, COL.faint);
   if (rows > LIST.rows) {
     const more = `${state.scroll + 1} / ${rows - LIST.rows + 1}  ·  SCROLL FOR MORE`;
-    text(more, LIST.x + LIST.w, LIST.y + LIST.rows * (LIST.th + 4) + 2, COL.dim, { align: 'r' });
+    text(more, LIST.x + LIST.w, LIST.y + LIST.rows * (LIST.th + 4) + 1, COL.dim, { align: 'r' });
   }
 }
 
-function drawFilters() {
-  const opts = ['all', ...ROLES];
+function filterRow(y, opts, now, label, color, pick) {
   let x = LIST.x;
   for (const f of opts) {
-    const label = f === state.me && !state.solo ? NAME[f] + '  (YOU)' : NAME[f];
-    const w = width(label) + 16;
-    const on = state.filter === f;
-    rect(ctx, x, P.y + 48, w, 15, on ? '#20243f' : '#141420', on ? ROLE_COL[f] : COL.line);
-    text(label, x + 8, P.y + 52, on ? ROLE_COL[f] : COL.dim);
-    hit(x, P.y + 48, w, 15, () => {
-      state.filter = f;
+    const t = label(f);
+    const w = width(t) + 16;
+    const on = now === f;
+    rect(ctx, x, y, w, 15, on ? '#20243f' : '#141420', on ? color(f) : COL.line);
+    text(t, x + 8, y + 4, on ? color(f) : COL.dim);
+    hit(x, y, w, 15, () => {
+      pick(f);
       state.scroll = 0;
     });
     x += w + 4;
   }
+}
+function drawFilters() {
+  // Whose things (R-1123), and what they are (R-1176).
+  filterRow(P.y + 48, ['all', ...ROLES], state.filter, (f) => (f === state.me && !state.solo ? NAME[f] + '  (YOU)' : NAME[f]),
+    (f) => ROLE_COL[f], (f) => (state.filter = f));
+  const cats = state.view === 'shop' ? Object.keys(CATS) : ['all', 'upgrade', 'boarding'];
+  filterRow(P.y + 67, cats, state.type, (f) => CATS[f], () => COL.ion[2], (f) => (state.type = f));
 }
 
 function drawServices() {
@@ -281,14 +365,14 @@ function drawServices() {
     rect(ctx, x, by, w, 14, '#141420', COL.line);
     text(label, x + 5, by + 3, s.price < 0 ? COL.acid[2] : COL.ochre[2]);
     hit(x, by, w, 14, () => {
-      const role = state.solo ? 'captain' : state.me;
-      state.purses[role] -= s.price;
-      state.toast = `${s.name}  ·  ${s.price < 0 ? 'EVERY ROLE GETS ' + -s.price : 'PAID BY THE ' + NAME[role]} CR`;
+      state.purses[me()] -= s.price;
+      state.toast = `${s.name}  ·  ${s.price < 0 ? 'EVERY ROLE GETS ' + -s.price : 'PAID BY THE ' + NAME[me()]} CR`;
     });
     x += w + 4;
   }
 }
 
+let reason = null;
 function button(x, y, w, label, color, act, why) {
   rect(ctx, x, y, w, 18, act ? '#20243f' : '#141420', act ? color : COL.line);
   text(label, x + w / 2, y + 5, act ? color : COL.faint, { align: 'c' });
@@ -296,103 +380,209 @@ function button(x, y, w, label, color, act, why) {
   // Why it cannot be done, said once, above the buttons.
   else if (why && !reason) reason = why;
 }
-let reason = null;
 
-function drawSide() {
-  const it = ITEMS.find((x) => x.id === state.sel) || itemsShown()[0];
-  rect(ctx, SIDE.x, SIDE.y, SIDE.w, SIDE.h, '#11131f', COL.line);
+// The levels of a thing, what each gives, and the next one before and after (R-1128).
+function levels(it, x, y) {
+  const o = owned(it);
+  text(`LEVELS  ${o.bought}/${it.levels.length}`, x, y, COL.dim);
+  y += 11;
+  it.levels.forEach((l, k) => {
+    const have = k < o.bought;
+    const inst = it.kind !== 'part' || (inSlot(it) && k < o.installed);
+    rect(ctx, x, y - 2, SIDE.w - 16, 11, k === o.bought ? '#1c2140' : null);
+    text(['I', 'II', 'III', 'IV', 'V'][k], x + 2, y, have ? COL.engineer : COL.dim);
+    text(l.gives, x + 22, y, have ? COL.text : COL.dim);
+    const right = have ? (inst ? 'OWNED' : 'IN STORES') : l.price + ' CR';
+    text(right, x + SIDE.w - 18, y, have && inst ? COL.engineer : COL.ochre[2], { align: 'r' });
+    y += 11;
+  });
+  const next = nextLv(it);
+  if (next && next.stat) {
+    y += 4;
+    const [what, a, b] = next.stat;
+    const left = `${what}  ${a}  `;
+    text(left, x, y, COL.ion[2]);
+    arrow(x + width(left), y, COL.ion[2]);
+    text(`  ${b}`, x + width(left) + 6, y, COL.ion[2]);
+    y += 12;
+  }
+  return y;
+}
+
+function drawSideItem() {
+  const it = item(state.sel) || itemsShown()[0];
   if (!it) return;
+  state.sel = it.id;
   const x = SIDE.x + 8;
   let y = SIDE.y + 8;
   icon(x, y, 40, it.role);
   const title = wrap(it.name, SIDE.w - 60);
   title.forEach((t, i) => text(t, x + 46, y + 2 + i * 10, COL.text));
-  const owner = it.role ? NAME[it.role] : 'WHOEVER BUYS IT';
-  text(owner, x + 46, y + 4 + title.length * 10, ROLE_COL[it.role] || COL.dim);
-  const where = it.kind === 'gear' ? 'CARRIED  ·  WORKS AT ONCE' : it.slot ? `TAKES A ${it.slot.toUpperCase()} SLOT` : 'NEEDS NO SLOT';
+  text(it.role ? NAME[it.role] : 'WHOEVER BUYS IT', x + 46, y + 4 + title.length * 10, ROLE_COL[it.role] || COL.dim);
+  const where = { gear: 'CARRIED  ·  WORKS AT ONCE', slot: 'PERMANENT  ·  NEEDS NO SLOT' }[it.kind] || `TAKES A ${it.slot.toUpperCase()} SLOT`;
   text(where, x + 46, y + 14 + title.length * 10, COL.dim);
   y += 50;
   for (const line of wrap(it.desc, SIDE.w - 16)) {
     text(line, x, y, COL.text);
     y += 10;
   }
-  y += 4;
-  // Every level: what it gives, whether the crew has it, and what it costs (R-1128).
-  const o = owned(it);
-  text('LEVELS', x, y, COL.dim);
-  y += 11;
-  it.levels.forEach((l, k) => {
-    const have = k < o.bought;
-    const inst = k < o.installed;
-    const roman = ['I', 'II', 'III', 'IV', 'V'][k];
-    rect(ctx, x, y - 2, SIDE.w - 16, 11, k === o.bought ? '#1c2140' : null);
-    text(roman, x + 2, y, have ? COL.engineer : COL.dim);
-    text(l.gives, x + 22, y, have ? COL.text : COL.dim);
-    const right = have ? (it.kind === 'gear' || inst ? 'OWNED' : 'IN STORES') : l.price + ' CR';
-    text(right, x + SIDE.w - 18, y, have ? (inst || it.kind === 'gear' ? COL.engineer : COL.ochre[2]) : COL.ochre[2], { align: 'r' });
-    y += 11;
-  });
-  // Before and after for the next level, in numbers.
-  const next = nextLv(it);
-  y += 4;
-  if (next && next.stat) {
-    const [what, a, b] = next.stat;
-    text(`${what}  ${a}  >  ${b}`, x, y, COL.ion[2]);
-    y += 12;
+  y = levels(it, x, y + 4);
+  if (it.role && it.slot) {
+    y += 2;
+    slotRow(x, y, it.role);
   }
-  if (it.slot && it.role) {
-    const [used, max] = slotsOf(it.role, it.slot);
-    text(`${NAME[it.role]} ${it.slot.toUpperCase()} SLOTS  ${used} / ${max}`, x, y, used >= max ? COL.ember[2] : COL.dim);
-    y += 12;
-  }
-  // The buttons of the view.
-  reason = null;
   const by = SIDE.y + SIDE.h - 26;
   const bw = (SIDE.w - 20) / 2;
+  const o = owned(it);
   const role = roleOf(it);
+  const next = nextLv(it);
   if (state.view === 'shop') {
-    const why = !next ? 'ALL LEVELS BOUGHT' : !mine(it) ? `THE ${NAME[it.role]} BUYS THIS` : state.purses[role] < next.price ? 'NOT ENOUGH CREDITS' : null;
-    button(x, by, bw, next ? `BUY  ${next.price} CR` : 'BUY', COL.ochre[2], why ? null : () => {
+    const why = !mine(it) ? `THE ${NAME[it.role]} BUYS THIS` : noSlot(it) ? 'NO FREE SLOT  ·  BUY AN EXTRA SLOT' : state.purses[role] < next.price ? 'NOT ENOUGH CREDITS' : null;
+    button(x, by, bw, `BUY  ${next.price} CR`, COL.ochre[2], why ? null : () => {
       state.purses[role] -= next.price;
-      state.own[it.id] = { bought: o.bought + 1, installed: it.kind === 'gear' ? o.installed + 1 : o.installed };
-      state.toast = it.kind === 'gear' ? `${it.name}  ·  CARRIED, IT WORKS AT ONCE` : `${it.name}  ·  IN THE STORES, INSTALL IT AT A SHIPYARD`;
+      if (it.kind === 'slot') {
+        state.slots[it.role][it.slot].open++;
+        state.own[it.id] = { bought: o.bought + 1, installed: o.installed + 1 };
+        state.toast = `${it.name}  ·  OPEN NOW`;
+      } else {
+        state.own[it.id] = { bought: o.bought + 1, installed: it.kind === 'gear' ? o.installed + 1 : o.installed };
+        state.toast = it.kind === 'gear' ? `${it.name}  ·  CARRIED, IT WORKS AT ONCE` : `${it.name}  ·  IN THE STORES, INSTALL IT AT A SHIPYARD`;
+      }
     }, why);
     const back = o.bought ? Math.floor(it.levels[o.bought - 1].price / 2) : 0;
-    const sellWhy = !o.bought ? null : !mine(it) ? `THE ${NAME[it.role]} SELLS THIS` : it.kind === 'part' && o.installed >= o.bought ? 'REMOVE IT AT A SHIPYARD FIRST' : null;
-    button(x + bw + 4, by, bw, o.bought ? `SELL  +${back} CR` : 'SELL', COL.acid[2], o.bought && !sellWhy ? () => {
+    const stored = it.kind === 'part' && (!inSlot(it) || o.installed < o.bought);
+    const sellWhy = !o.bought ? null : it.kind === 'slot' ? 'SLOTS ARE PERMANENT' : !mine(it) ? `THE ${NAME[it.role]} SELLS THIS` : it.kind === 'part' && !stored ? 'REMOVE IT AT A SHIPYARD FIRST' : null;
+    button(x + bw + 4, by, bw, o.bought && it.kind !== 'slot' ? `SELL  +${back} CR` : 'SELL', COL.acid[2], o.bought && !sellWhy ? () => {
       state.purses[role] += back;
-      state.own[it.id] = { bought: o.bought - 1, installed: Math.min(o.installed, o.bought - 1) };
+      const left = o.bought - 1;
+      state.own[it.id] = { bought: left, installed: Math.min(o.installed, left) };
+      if (!left && inSlot(it)) state.slots[it.role][it.slot].parts = state.slots[it.role][it.slot].parts.filter((p) => p !== it.id);
       state.toast = `${it.name}  ·  SOLD FOR HALF  ·  +${back} CR`;
     } : null, sellWhy);
-  } else if (state.view === 'yard') {
-    const can = mine(it);
-    const instWhy = it.kind === 'gear' ? 'CARRIED, NOTHING TO INSTALL' : !can ? `ONLY THE ${NAME[it.role]} INSTALLS THIS` : o.installed >= o.bought ? 'ALL OF IT IS INSTALLED' : null;
-    button(x, by, bw, 'INSTALL', COL.engineer, instWhy ? null : () => {
-      state.own[it.id] = { ...o, installed: o.installed + 1 };
-      state.toast = `${it.name}  ·  INSTALLED  ·  FREE`;
-    }, instWhy);
-    const remWhy = it.kind === 'gear' ? null : !can ? null : o.installed === 0 ? 'NOTHING INSTALLED' : null;
-    button(x + bw + 4, by, bw, 'REMOVE', COL.ochre[2], it.kind === 'part' && can && !remWhy ? () => {
-      state.own[it.id] = { ...o, installed: o.installed - 1 };
-      state.toast = `${it.name}  ·  BACK IN THE STORES`;
-    } : null, remWhy);
   } else {
     text('INSTALL AND REMOVE AT A SHIPYARD', x, by - 6, COL.dim);
     text('BUY AND SELL AT A SHOP', x, by + 5, COL.dim);
   }
+}
+
+// ---------- the shipyard: the ship with its slots (O1) ----------
+const SHIP = { x: LIST.x + 8, y: LIST.y + 4, w: LIST.w - 16 };
+function slotPlaces() {
+  // Hull slots outside the hull, above it; system slots inside it. Each role has its own group.
+  const out = [];
+  ROLES.forEach((role, r) => {
+    for (let i = 0; i < MAX_SLOTS; i++) {
+      out.push({ role, kind: 'hull', i, x: SHIP.x + 20 + r * 116 + i * 28, y: SHIP.y + 18 });
+      out.push({ role, kind: 'system', i, x: SHIP.x + 20 + r * 116 + i * 28, y: SHIP.y + 92 });
+    }
+  });
+  return out;
+}
+function drawShipSlots() {
+  const top = SHIP.y + 60;
+  // The frigate, drawn simply: a hull with wings.
+  ctx.fillStyle = '#1b1d2c';
+  ctx.beginPath();
+  ctx.moveTo(SHIP.x + SHIP.w / 2, top - 6);
+  ctx.lineTo(SHIP.x + SHIP.w - 6, top + 22);
+  ctx.lineTo(SHIP.x + SHIP.w - 30, top + 82);
+  ctx.lineTo(SHIP.x + 30, top + 82);
+  ctx.lineTo(SHIP.x + 6, top + 22);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = COL.steel[1];
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  text('HULL SLOTS  ·  OUTSIDE', SHIP.x, SHIP.y + 4, COL.dim);
+  text('SYSTEM SLOTS  ·  INSIDE', SHIP.x + 24, SHIP.y + 80, COL.dim);
+  for (const p of slotPlaces()) {
+    const st = slotState(p.role, p.kind, p.i);
+    const sel = state.slotSel && state.slotSel.role === p.role && state.slotSel.kind === p.kind && state.slotSel.i === p.i;
+    if (sel) rect(ctx, p.x - 3, p.y - 3, 28, 28, null, COL.ion[2]);
+    slotBox(p.x, p.y, 22, p.role, st);
+    if (st === 'used') icon(p.x + 3, p.y + 3, 16, p.role);
+    hit(p.x - 3, p.y - 3, 28, 28, () => (state.slotSel = { role: p.role, kind: p.kind, i: p.i }));
+  }
+  ROLES.forEach((role, r) => text(NAME[role], SHIP.x + 20 + r * 116, SHIP.y + 124, ROLE_COL[role]));
+  text('CLICK A SLOT', SHIP.x + SHIP.w, SHIP.y + 124, COL.faint, { align: 'r' });
+  // What lies in the stores, waiting to be installed.
+  const waiting = ITEMS.filter((it) => it.kind === 'part' && owned(it).bought > 0 && (!inSlot(it) || owned(it).installed < owned(it).bought));
+  const y = P.y + P.h - 58;
+  rect(ctx, LIST.x, y - 6, LIST.w, 1, COL.line);
+  text('IN THE STORES, WAITING', LIST.x, y, COL.dim);
+  let x = LIST.x;
+  for (const it of waiting) {
+    const t = it.name + (inSlot(it) ? '  LV ' + (owned(it).installed + 1) : '');
+    text(t, x, y + 12, ROLE_COL[it.role]);
+    x += width(t) + 12;
+  }
+}
+function drawSideSlot() {
+  if (!state.slotSel) state.slotSel = { role: me(), kind: 'hull', i: 0 };
+  const { role, kind, i } = state.slotSel;
+  const s = state.slots[role][kind];
+  const st = slotState(role, kind, i);
+  const x = SIDE.x + 8;
+  let y = SIDE.y + 8;
+  text(`${NAME[role]}  ${kind.toUpperCase()} SLOT ${i + 1}`, x, y, ROLE_COL[role]);
+  y += 14;
+  const by = SIDE.y + SIDE.h - 26;
+  const bw = (SIDE.w - 20) / 2;
+  const can = state.solo || role === state.me;
+  if (st === 'locked') {
+    text('LOCKED', x, y, COL.dim);
+    for (const line of wrap('BUY AN EXTRA SLOT IN A SHOP TO OPEN IT. A SLOT STAYS ONCE IT IS BOUGHT.', SIDE.w - 16)) {
+      y += 11;
+      text(line, x, y, COL.dim);
+    }
+    return;
+  }
+  if (st === 'open') {
+    text('EMPTY', x, y, COL.dim);
+    y += 16;
+    const fits = ITEMS.filter((it) => it.kind === 'part' && it.role === role && it.slot === kind && owned(it).bought > 0 && !inSlot(it));
+    text(fits.length ? 'IN THE STORES, FITS HERE' : 'NOTHING IN THE STORES FITS HERE', x, y, COL.dim);
+    y += 12;
+    for (const it of fits) {
+      button(x, y, SIDE.w - 16, 'INSTALL  ' + it.name, COL.engineer, can ? () => {
+        s.parts.push(it.id);
+        state.own[it.id] = { ...owned(it), installed: 1 };
+        state.toast = `${it.name}  ·  INSTALLED  ·  FREE`;
+      } : null, can ? null : `ONLY THE ${NAME[role]} INSTALLS HERE`);
+      y += 22;
+    }
+    if (reason) text(reason, x, y + 2, COL.ember[2]);
+    return;
+  }
+  const it = item(s.parts[i]);
+  const o = owned(it);
+  icon(x, y, 32, role);
+  text(it.name, x + 38, y + 4, COL.text);
+  text(it.levels.length > 1 ? `LV ${o.installed}/${it.levels.length} INSTALLED` : 'INSTALLED', x + 38, y + 15, COL.engineer);
+  y = levels(it, x, y + 40);
+  const why = !can ? `ONLY THE ${NAME[role]} INSTALLS AND REMOVES THIS` : null;
+  button(x, by, bw, 'NEXT LEVEL', COL.engineer, !why && o.installed < o.bought ? () => {
+    state.own[it.id] = { ...o, installed: o.installed + 1 };
+    state.toast = `${it.name}  ·  LEVEL ${o.installed + 1} INSTALLED  ·  FREE`;
+  } : null, why || (o.installed >= o.bought ? 'NO HIGHER LEVEL IN THE STORES' : null));
+  button(x + bw + 4, by, bw, 'REMOVE', COL.ochre[2], why ? null : () => {
+    s.parts = s.parts.filter((p) => p !== it.id);
+    state.own[it.id] = { ...o, installed: 0 };
+    state.toast = `${it.name}  ·  BACK IN THE STORES`;
+  }, why);
   if (reason) text(reason, x, by - 12, COL.ember[2]);
 }
 
 function drawPurses() {
-  const me = state.solo ? 'captain' : state.me;
-  const big = state.solo ? 'YOUR PURSES' : `${NAME[me]}  ${state.purses[me]} CR`;
-  text(big, P.x + P.w - 12, P.y + 12, state.solo ? COL.text : ROLE_COL[me], { align: 'r', scale: state.solo ? 1 : 1 });
-  const rest = ROLES.filter((r) => state.solo || r !== me).map((r) => `${NAME[r]} ${state.purses[r]}`).join('   ');
+  const big = state.solo ? 'YOUR PURSES' : `${NAME[me()]}  ${state.purses[me()]} CR`;
+  text(big, P.x + P.w - 12, P.y + 12, state.solo ? COL.text : ROLE_COL[me()], { align: 'r' });
+  const rest = ROLES.filter((r) => state.solo || r !== me()).map((r) => `${NAME[r]} ${state.purses[r]}`).join('   ');
   text(rest, P.x + P.w - 12, P.y + 25, COL.dim, { align: 'r' });
 }
 
 function draw() {
   hits = [];
+  reason = null;
   ctx.setTransform(2, 0, 0, 2, 0, 0);
   ctx.fillStyle = '#0d0d18';
   ctx.fillRect(0, 0, W, H);
@@ -408,29 +598,29 @@ function draw() {
   text(place, P.x + 12, P.y + 12, COL.text, { scale: 2 });
   const sub = {
     shop: 'SHOP  ·  FRIENDLY STATION  ·  BUY AND SELL',
-    stores: 'WHAT THE CREW OWNS  ·  EVERYONE SEES IT',
+    stores: 'WHAT THE CREW OWNS  ·  EVERYONE SEES IT  ·  I OPENS IT ON BOARD',
     yard: 'SHIPYARD  ·  INSTALLING IS FREE  ·  NO BUYING OR SELLING',
   }[state.view];
   text(sub, P.x + 12, P.y + 32, COL.dim);
   drawPurses();
-  drawFilters();
-  drawList();
-  if (state.view === 'shop') drawServices();
-  else {
-    // The slots of the roles shown, at the foot of the list (R-1137).
-    const y = P.y + P.h - 58;
-    rect(ctx, LIST.x, y - 6, LIST.w, 1, COL.line);
-    text('SLOTS  ·  EACH ROLE HAS ITS OWN', LIST.x, y, COL.dim);
-    let row = 0;
-    for (const r of ROLES) {
-      if (state.filter !== 'all' && state.filter !== r) continue;
-      const s = state.slots[r];
-      const t = `${NAME[r]}  HULL ${s.hull[0]}/${s.hull[1]}  SYSTEM ${s.system[0]}/${s.system[1]}`;
-      text(t, LIST.x, y + 13 + row * 11, ROLE_COL[r]);
-      row++;
+  rect(ctx, SIDE.x, SIDE.y, SIDE.w, SIDE.h, '#11131f', COL.line);
+  if (state.view === 'yard') {
+    drawShipSlots();
+    drawSideSlot();
+  } else {
+    drawFilters();
+    drawList();
+    if (state.view === 'shop') drawServices();
+    else {
+      // The slots of every role, at the foot of the list (R-1137).
+      const y = P.y + P.h - 58;
+      rect(ctx, LIST.x, y - 6, LIST.w, 1, COL.line);
+      text('SLOTS  ·  EACH ROLE HAS ITS OWN, AND THEY STAY', LIST.x, y, COL.dim);
+      ROLES.forEach((r, k) => slotRow(LIST.x, y + 11 + k * 11, r));
     }
+    drawSideItem();
+    if (reason) text(reason, SIDE.x + 8, SIDE.y + SIDE.h - 38, COL.ember[2]);
   }
-  drawSide();
   text('ARROWS  MOVE    ENTER  BUY    F  CLOSE', P.x + P.w - 12, P.y + P.h - 9, COL.faint, { align: 'r' });
   if (state.toast) {
     const w = width(state.toast) + 16;
@@ -483,6 +673,7 @@ for (const [v, label] of Object.entries({ shop: 'Butik', stores: 'Förråd', yar
   b.onclick = () => {
     state.view = v;
     state.scroll = 0;
+    state.slotSel = null;
     state.toast = '';
     for (const x of views.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
     draw();
@@ -499,6 +690,7 @@ for (const [who, label] of Object.entries({ captain: 'Captain', gunner: 'Gunner'
     state.me = state.solo ? 'captain' : who;
     state.filter = state.solo ? 'all' : who;
     state.scroll = 0;
+    state.slotSel = null;
     state.toast = '';
     for (const x of players.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
     draw();
