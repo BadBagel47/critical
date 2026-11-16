@@ -103,6 +103,7 @@ Väntar på användaren: förslagen D-187 (meddelanden), D-193 (permanenta pryla
 
 | ID | Vad | Status |
 |---|---|---|
+| F-258 | Större kartor och varv på en fjärdedel av baserna: SHORT 20 system, MEDIUM 35 och LONG 50 (R-1195), och ungefär en fjärdedel av varje sidas baser har varv, också neutrala och piraternas (R-1194). Hur många system som är bebodda väntar på användaren (K7). Användaren 2026-11-16 | Ej påbörjad |
 | F-222 | Provspelslista med testlägen. En lista över det som är byggt men inte provspelat, med en direktlänk per sak, och adresser som startar rätt situation direkt (till exempel anfall på egen station, bas med personaldel, tom tank vid asteroider). Synpunkterna förs in i regelboken. Användaren 2026-11-16: ja | Ej påbörjad |
 | D-223 | Innehållskatalog som skapas ur koden: skeppsklasser, vakttyper, stationer, faktioner, uppgraderingar, utrustning och låsspel med sina viktigaste siffror, så att det alltid finns en överblick som stämmer. Användaren 2026-11-16: ja | Ej påbörjad |
 | D-227 | Dela upp de stora filerna för bordning (src/sim/boarding.js och src/render/boarding.js, runt 1 000 rader var) efter ämne: vakter, lås, mainframe, inredning och ritning, så att två agenter krockar mer sällan. Körs när den andra agenten är klar med insidorna. Användaren 2026-11-16: ja | Ej påbörjad |

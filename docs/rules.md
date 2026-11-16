@@ -43,6 +43,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 - Slutet är piraternas slutbas med en boss. I dag är det Cruisern i The Maw.
 - Standardbasen har tre våningar, och övertagandet kräver först ett steg i källaren och sedan mainframen överst. I dag har stationerna en våning, och mainframen står i rummet längst in.
 - Ingen flyttas tillbaka till skeppet av sig själv, och skeppet får inte hoppa medan någon är inne. I dag kallas alla hem när skeppet lägger ut.
+- Kartan har 20, 35 eller 50 system (R-1195). I dag har den 16, 24 eller 36.
 - Ungefär en fjärdedel av varje sidas baser har varv (R-1194). I dag har alla faktionsbaser varv och inga neutrala baser.
 - En övertagen bas får inget varv, utan det köps. I dag får en övertagen station shipyard.
 - Faktioner kan vara i krig med varandra. I dag slåss de bara i omstridda system.
@@ -191,7 +192,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-109 | Startsystemet är en fristad utan pirater och utan bråkande faktioner, med bara en neutral bas. | byggd | proposal-bases.md §5 | tests/sim.test.js |
 | R-110 | Fristaden ligger i eller nära mitten av stjärnkartan. | byggd | proposal-bases.md §5 | tests/world.test.js |
 | R-111 | Systemen genereras för varje omgång. | byggd | proposal-world.md steg 3, BACKLOG D-089 | tests/world.test.js |
-| R-112 | Vid start väljer man 8, 12 eller 18 bebodda system (det ska provas). | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-112 | Vid start väljer man 8, 12 eller 18 bebodda system (det ska provas). | ersatt av: R-1195 | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
+| R-1195 | Kartan har 20 system på SHORT, 35 på MEDIUM och 50 på LONG, bebodda och tomma tillsammans. Hur många som är bebodda är inte bestämt. | bestämd | Användaren 2026-11-16 (K6, F-258) | – |
 | R-113 | Det finns lika många tomma system som bebodda, alltså 16, 24 eller 36 totalt, och fler tomma ju längre ut man kommer. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
 | R-114 | Antalet system avgör hur många uppdrag det finns före slutet. | bestämd | proposal-world.md steg 3, BACKLOG D-052 | – |
 | R-115 | Man upptäcker system genom att hoppa dit, och stjärnkartan visar närliggande obesökta system som outforskade. | byggd | proposal-world.md steg 3, BACKLOG D-089 | tests/sim.test.js |
