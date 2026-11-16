@@ -3,20 +3,39 @@ import { TILE } from './layout.js';
 import { clamp, dist } from './util.js';
 
 export { TILE };
-// Walls, the locked vault door, space outside the hull, rooms that are torn open to it, and the things that stand
-// in the rooms (see furnish.js).
-const SOLID = new Set(['#', 'L', ' ', 'X', 'K']);
+// Walls, the locked vault door, a door that is sealed (of an airlock, or of the command room), space outside the
+// hull, rooms that are torn open to it, and the things that stand in the rooms (see furnish.js).
+const SOLID = new Set(['#', 'L', 'D', ' ', 'X', 'K']);
 export const tileAt = (it, tx, ty) => (tx < 0 || ty < 0 || tx >= it.w || ty >= it.h ? ' ' : it.tiles[ty * it.w + tx]);
 export const solidTile = (it, tx, ty) => SOLID.has(tileAt(it, tx, ty));
+
+// A base has several floors side by side in the same grid (see base.js). Which of them a spot is on, or 0 in a
+// place with one floor only.
+export function deckOf(it, x) {
+  if (!it.decks) return 0;
+  for (let d = it.decks.length - 1; d > 0; d--) if (x >= it.decks[d].x0 * TILE - TILE * 8) return d;
+  return 0;
+}
+// The outer wall of each floor of a base is round (R-1165): whether a spot is outside it, or nearer to it than r.
+export function outsideHull(it, x, y, r = 0) {
+  if (!it.decks) return false;
+  const d = it.decks[deckOf(it, x)];
+  const far = d.r - r;
+  const dx = x - d.cx,
+    dy = y - d.cy;
+  return dx * dx + dy * dy > far * far;
+}
 // What a look or a shot cannot pass: what is solid, and a door that is shut. A shut door is no wall to walk
 // into or to find a way round, since it opens for whoever comes up to it.
 export function solidAt(it, x, y) {
   const tx = Math.floor(x / TILE),
     ty = Math.floor(y / TILE);
-  return solidTile(it, tx, ty) || (!!it.shut && it.shut.length > 0 && it.shut.includes(ty * it.w + tx));
+  if (solidTile(it, tx, ty) || outsideHull(it, x, y)) return true;
+  return !!it.shut && it.shut.length > 0 && it.shut.includes(ty * it.w + tx);
 }
 
 export function blocked(it, x, y, r) {
+  if (outsideHull(it, x, y, r)) return true;
   const x0 = Math.floor((x - r) / TILE),
     x1 = Math.floor((x + r) / TILE),
     y0 = Math.floor((y - r) / TILE),
@@ -70,6 +89,13 @@ export function waysFrom(it, tx, ty, cost = null) {
         if (!rounds[to]) rounds[to] = [];
         rounds[to].push(j);
       }
+      // A way between two floors of a base is one step, to the same spot on the other floor.
+      const j = it.jumps ? it.jumps[i] : undefined;
+      if (j === undefined || d + 1 >= steps[j]) continue;
+      steps[j] = d + 1;
+      from[j] = i;
+      if (!rounds[d + 1]) rounds[d + 1] = [];
+      rounds[d + 1].push(j);
     }
   }
   return { steps, from };

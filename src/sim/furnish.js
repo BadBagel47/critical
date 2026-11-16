@@ -8,7 +8,54 @@
 import { TILE } from './layout.js';
 import { dist } from './util.js';
 
-export const USES = ['CARGO', 'CREW', 'MESS', 'BRIDGE', 'STORES', 'ENGINES', 'CONTROL', 'VAULT'];
+// What the things in a room look like, and how they stand: a kind of its own, or like one of the older kinds.
+const LIKE = {
+  HOLD: 'CARGO',
+  FUEL: 'ENGINES',
+  SPARES: 'STORES',
+  GALLEY: 'MESS',
+  SICKBAY: 'CREW',
+  WORKSHOP: 'ENGINES',
+  CAPTAIN: 'CREW',
+  RADIO: 'BRIDGE',
+  // The rooms of a base, see base.js.
+  REACTOR: 'ENGINES',
+  REFINERY: 'ENGINES',
+  PUMPS: 'ENGINES',
+  COOLING: 'ENGINES',
+  BARRACKS: 'CREW',
+  HOTEL: 'CREW',
+  CLINIC: 'CREW',
+  QUARTERS: 'CREW',
+  LOCKERS: 'STORES',
+  ARMORY: 'STORES',
+  ARMS: 'STORES',
+  SERVERS: 'STORES',
+  ARCHIVE: 'STORES',
+  LAUNDRY: 'STORES',
+  PANTRY: 'STORES',
+  SHIPYARD: 'STORES',
+  MARKET: 'CARGO',
+  BAR: 'MESS',
+  KITCHEN: 'MESS',
+  LOUNGE: 'MESS',
+  SERVICES: 'BRIDGE',
+  SECURITY: 'BRIDGE',
+  OFFICE: 'BRIDGE',
+  SENSORS: 'BRIDGE',
+  COMMS: 'BRIDGE',
+  COMMAND: 'CONTROL',
+  // Rooms that are left bare: the ways in and out and between floors, and those with something of their own.
+  AIRLOCK: 'VAULT',
+  LIFT: 'VAULT',
+  STAIRS: 'VAULT',
+  LADDER: 'VAULT',
+  GUN: 'VAULT',
+  BREAKER: 'VAULT',
+  DRONES: 'VAULT',
+};
+export const likeOf = (use) => LIKE[use] || use;
+export const USES = ['CARGO', 'CREW', 'MESS', 'BRIDGE', 'STORES', 'ENGINES', 'CONTROL', 'VAULT', ...Object.keys(LIKE)];
 // What the other rooms are, in turn from the largest: in a wreck and on a station.
 const IN_TURN = { wreck: ['CARGO', 'CREW', 'MESS', 'BRIDGE'], station: ['CARGO', 'CREW', 'MESS', 'STORES'] };
 // The things in each kind of room, as [column, row, width, height] in tiles from the room's first floor tile.
@@ -65,10 +112,12 @@ const put = (it, tx, ty, c) => {
   it.tiles[ty * it.w + tx] = c;
 };
 
-// What each room is for. `far` is the room of a wreck that is furthest in, where its reactor stands.
+// What each room is for. A plan that knows what its rooms are says so itself (`use`). Otherwise `far` is the
+// room of a wreck that is furthest in, where its reactor stands, and the rest go by size.
 export function usesOf(it, place, far) {
-  const out = it.rooms.map(() => null);
+  const out = it.rooms.map((r) => r.use || null);
   out[it.vault] = 'VAULT';
+  if (out.every(Boolean)) return out;
   it.rooms.forEach((r, i) => {
     if (it.mainframe && r.mid.x === it.mainframe.x && r.mid.y === it.mainframe.y) out[i] = 'CONTROL';
     if (far && r === far) out[i] = 'ENGINES';
@@ -81,11 +130,11 @@ export function usesOf(it, place, far) {
   return out;
 }
 
-// How many tiles can be walked to from the first airlock, with the vault door counted as open.
-const WALK = new Set(['.', ',', 'A', 'L']);
-function reachable(it) {
-  const a = it.airlocks[0];
-  const first = Math.floor(a.y / TILE) * it.w + Math.floor(a.x / TILE);
+// How many tiles of a room can be walked to from its door without leaving the room.
+const WALK = new Set(['.', ',', 'A', 'L', 'D']);
+function reachable(it, r) {
+  const door = tileOf(r.door);
+  const first = door.ty * it.w + door.tx;
   const seen = new Set([first]);
   const todo = [first];
   while (todo.length) {
@@ -98,8 +147,10 @@ function reachable(it) {
       [0, 1],
       [0, -1],
     ]) {
-      if (!WALK.has(at(it, tx + dx, ty + dy))) continue;
-      const j = (ty + dy) * it.w + tx + dx;
+      const nx = tx + dx,
+        ny = ty + dy;
+      if (nx < r.c0 || nx > r.c1 || ny < r.r0 || ny > r.r1 || !WALK.has(at(it, nx, ny))) continue;
+      const j = ny * it.w + nx;
       if (seen.has(j)) continue;
       seen.add(j);
       todo.push(j);
@@ -114,12 +165,31 @@ const byWayIn = (it, tx, ty) =>
     [-1, 0],
     [0, 1],
     [0, -1],
-  ].some(([dx, dy]) => [',', 'A', 'L'].includes(at(it, tx + dx, ty + dy)));
+  ].some(([dx, dy]) => [',', 'A', 'L', 'D'].includes(at(it, tx + dx, ty + dy)));
+
+// A room much larger than the lists above are made for gets more of the same, in rows with ways between them:
+// stacks of crates in a hold, and so on. `n` is a number that is always the same for a spot, to leave gaps.
+const ROWS = { CARGO: [2, 2, 5, 4], STORES: [1, 2, 4, 4], ENGINES: [2, 1, 6, 4], MESS: [2, 1, 5, 4], CREW: [2, 1, 5, 4] };
+const LARGE = 90;
+const gap = (tx, ty) => (((tx * 73856093) ^ (ty * 19349663)) >>> 0) % 5 === 0;
+function rowsFor(use, r) {
+  const rows = ROWS[use];
+  const w = r.c1 - r.c0 - 1,
+    h = r.r1 - r.r0 - 1;
+  if (!rows || w * h < LARGE) return [];
+  const [bw, bh, dx, dy] = rows;
+  const out = [];
+  for (let row = 2; row + bh <= h - 2; row += dy)
+    for (let c = 2; c + bw <= w - 2; c += dx) if (!gap(r.c0 + c, r.r0 + row)) out.push([c, row, bw, bh]);
+  return out;
+}
 
 // Put the things into each room, where they fit. Only the room's own floor is used, never a corridor.
 export function furnish(it) {
   it.rooms.forEach((r, i) => {
-    const list = THINGS[it.uses[i]] || [];
+    const use = likeOf(it.uses[i]);
+    const large = rowsFor(use, r);
+    const list = large.length ? large : THINGS[use] || [];
     if (!r.door || !list.length) return;
     const door = tileOf(r.door);
     const mid = tileOf(r.mid);
@@ -144,10 +214,10 @@ export function furnish(it) {
           !byWayIn(it, tx, ty),
       );
       if (!fits) continue;
-      const before = reachable(it);
+      const before = reachable(it, r);
       for (const t of tiles) put(it, t.tx, t.ty, 'K');
-      // Taken away again if it would cut off any part of the place.
-      if (reachable(it) !== before - tiles.length) for (const t of tiles) put(it, t.tx, t.ty, '.');
+      // Taken away again if it would cut off any part of the room.
+      if (reachable(it, r) !== before - tiles.length) for (const t of tiles) put(it, t.tx, t.ty, '.');
     }
   });
 }
@@ -166,17 +236,21 @@ export function doorsOf(it) {
           tiles.push(ty * it.w + tx);
         }
       }
-    if (tiles.length) out.push({ x: r.door.x, y: r.door.y, room: i, tiles });
+    if (tiles.length) out.push({ x: r.door.x, y: r.door.y, room: i, tiles, kind: 'slide' });
   });
   return out;
 }
 
 // A door is open while anyone stands near it, and shut otherwise. `it.shut` holds the tiles of the shut doors.
+// The doors that are sealed (of an airlock, the command room and the vault) are not worked this way: they are
+// tiles of their own, see floor.js.
 export const DOOR_REACH = 26;
+const SLIDES = new Set(['slide', 'staff', 'alarm']);
 export function stepDoors(it) {
   const who = [...it.avatars, ...it.guards, ...it.civilians];
   it.shut = [];
   for (const d of it.doors) {
+    if (!SLIDES.has(d.kind)) continue;
     if (who.some((p) => dist(p.x, p.y, d.x, d.y) < DOOR_REACH)) continue;
     it.shut.push(...d.tiles);
   }

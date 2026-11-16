@@ -21,7 +21,7 @@ import { allStations, fall, gunDmg, defenseOf } from './stations.js';
 import { makeVessel, fleeFrom } from './vessels.js';
 import { portsOf, mapInfo } from './things.js';
 import { newGuard, alertGuard, guardKind } from './guards.js';
-import { gearUp, spotIn, TILE } from './boarding.js';
+import { gearUp, spotIn, TILE, setMood } from './boarding.js';
 import { clamp, dist, rand, randRange, TAU } from './util.js';
 
 export const RISK_NAMES = ['LOW', 'MEDIUM', 'HIGH'];
@@ -241,10 +241,12 @@ function boardersIn(state, s, st) {
   it.trade = false;
   it.desks = [];
   it.civilians = [];
-  it.mood = 'alarm';
+  setMood(it, 'alarm');
   for (const a of it.avatars) gearUp(state, a);
-  const away = (a) => dist(a.x, a.y, it.entry.x, it.entry.y);
-  const lock = [...it.airlocks].sort((a, b) => away(b) - away(a))[0] || it.entry;
+  // They come in at a cargo arm in the basement, the one furthest from the crew, and have to fight their way up.
+  const crew = it.avatars[0] || it.mainframe;
+  const away = (a) => dist(a.x, a.y, crew.x, crew.y);
+  const lock = [...it.docks].sort((a, b) => away(b) - away(a))[0] || it.entry;
   const tier = tierOf(state, s.sector);
   const where = isFaction(s.side) ? 'other' : 'pirate';
   const taken = it.avatars.map((a) => ({ x: a.x, y: a.y }));
@@ -295,7 +297,7 @@ function end(state, won, st) {
   const it = st && st.interior;
   if (it && s.inside && !won) {
     it.guards = it.guards.filter((g) => !g.boarder);
-    it.mood = null;
+    setMood(it, null);
     it.bolts = [];
   }
   for (const v of state.vessels) {

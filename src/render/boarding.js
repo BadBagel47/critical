@@ -14,6 +14,7 @@ import { forward, dist } from '../sim/util.js';
 import { hunters, roomName } from './radar.js';
 import { awake } from '../sim/guards.js';
 import { drawFigure } from './figures.js';
+import { likeOf } from '../sim/furnish.js';
 import { shownPurse, ROLE_NAME } from '../sim/purses.js';
 
 // Where on the screen the inside of a place is drawn. The camera follows the player's own figure. A place
@@ -222,7 +223,7 @@ function useAt(it, tx, ty) {
   if (!map) {
     map = new Map();
     it.rooms.forEach((r, i) => {
-      for (let y = r.r0; y <= r.r1; y++) for (let x = r.c0; x <= r.c1; x++) map.set(y * it.w + x, it.uses[i]);
+      for (let y = r.r0; y <= r.r1; y++) for (let x = r.c0; x <= r.c1; x++) map.set(y * it.w + x, likeOf(it.uses[i]));
     });
     thingUses.set(it, map);
   }

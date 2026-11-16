@@ -2,10 +2,10 @@
 import { B } from './balance.js';
 import { earn } from './purses.js';
 import { currentSector } from './sectors.js';
-import { removeThing, thingsOf, dockTargets, findDock, portsOf } from './things.js';
+import { removeThing, thingsOf, dockTargets, findDock, localPorts } from './things.js';
 import { shipNose } from './ship.js';
 import { layOut } from './layout.js';
-import { TILE, tileAt, solidAt, blocked, move, los } from './floor.js';
+import { TILE, tileAt, solidAt, blocked, move, los, deckOf } from './floor.js';
 import { newGuard, stepGuard, alertGuard, planRounds, awake, guardKind, kindOf, inStaff } from './guards.js';
 import { makeVessel } from './vessels.js';
 import { PIRATE, CREW } from './sides.js';
@@ -13,6 +13,9 @@ import { playerById, leavePost, returnToPost } from './players.js';
 import { isTrading } from './stations.js';
 import { stepHack, stepMainframe, turnOnCrew, MAINFRAME_REACH } from './mainframe.js';
 import { usesOf, furnish, doorsOf, stepDoors } from './furnish.js';
+import { makeLocks, lockNear, hatchOpen, cycleLock, stepLocks } from './airlock.js';
+import { cutPower, restorePower, openCommand, stepPressure, stopCall, wreckHangar } from './pressure.js';
+import { defenseOf } from './stations.js';
 import {
   has,
   level,
@@ -29,7 +32,7 @@ import { damageShip } from './damage.js';
 import { createBreakin, stepBreakin } from './breakin.js';
 import { hopsFrom } from './world.js';
 import { readChart } from './intel.js';
-import { clamp, forward, headingTo, angleDiff, turnToward, dist, rand, randRange, TAU } from './util.js';
+import { clamp, forward, headingTo, angleDiff, turnToward, toWorld, dist, rand, randRange, TAU } from './util.js';
 
 export { TILE, tileAt, blocked, los };
 
@@ -53,10 +56,16 @@ function reachable(it, from, to, shut) {
         key = ty * it.w + tx;
       if (seen.has(key) || shut.has(key)) continue;
       const c = tileAt(it, tx, ty);
-      // The vault door counts as a way through here: it is the crew's to open.
-      if (c !== '.' && c !== ',' && c !== 'A' && c !== 'L') continue;
+      // The vault door counts as a way through here: it is the crew's to open. So do the doors of an airlock.
+      if (c !== '.' && c !== ',' && c !== 'A' && c !== 'L' && c !== 'D') continue;
       seen.add(key);
       queue.push({ tx, ty });
+    }
+    // A way between two floors.
+    const to = it.jumps ? it.jumps[at.ty * it.w + at.tx] : undefined;
+    if (to !== undefined && !seen.has(to) && !shut.has(to)) {
+      seen.add(to);
+      queue.push({ tx: to % it.w, ty: Math.floor(to / it.w) });
     }
   }
   return false;
@@ -84,6 +93,17 @@ function alarmDoors(state, it) {
     it.alarmed.push({ x: r.door.x, y: r.door.y, tx: t.tx, ty: t.ty, off: false });
   }
 }
+// How a place takes the crew, and whether it is dark with that. A wreck is always dark. A base is dim in
+// lockdown, when it has shut itself in, and when its power is out. In an alarm every lamp is lit (R-1188).
+export function relight(it) {
+  it.dark = it.wreck || !it.power || it.mood === 'lockdown';
+}
+export function setMood(it, mood) {
+  it.mood = mood;
+  relight(it);
+}
+// How much floor a place has, in tiles.
+export const floorArea = (it) => it.tiles.reduce((n, c) => n + (c === '.' || c === ',' ? 1 : 0), 0);
 
 // A turret. `rest` is the way it points while it watches. `hot` is how long it still follows what it has
 // seen, `out` how long it is still knocked out, and `turned` how long it is still on the crew's side.
@@ -121,6 +141,7 @@ export function spotIn(state, it, box, taken, away = 0) {
 export function createInterior(state, wreck) {
   const plan = layOut(state, wreck);
   const { rooms, vault } = plan;
+  const base = wreck.kind === 'station';
   const it = {
     w: plan.w,
     h: plan.h,
@@ -130,12 +151,21 @@ export function createInterior(state, wreck) {
     halls: plan.halls,
     airlocks: plan.airlocks,
     far: plan.far,
-    // The airlock the crew comes in through. tryBoard sets it to the one at the arm the frigate is docked at.
+    // A base has three floors side by side in the same grid, and ways between them (see base.js): where each
+    // floor lies, the ways, the tile each tile of a way leads to, and where help comes in at the cargo arms.
+    decks: plan.decks || null,
+    links: plan.links || [],
+    jumps: plan.jumps || null,
+    docks: plan.docks || [],
+    // The airlock the crew comes in through. tryBoard sets it to the one the frigate is docked at.
     entry: plan.airlocks[0],
+    // The airlocks of a base, each with a hatch and an inner door that are never open together. See airlock.js.
+    locks: base ? makeLocks(plan) : [],
     timer: null,
     live: false,
     // A wreck has no power. It is dark inside, and the crew finds its way by lamp and flare.
-    dark: wreck.kind === 'wreck',
+    wreck: !base,
+    dark: !base,
     // How a place that counts the crew as an enemy takes them: 'lockdown' until someone is found out, then
     // 'alarm' until they have all left. A wreck has nobody to sound an alarm, and a place that trades is calm.
     mood: null,
@@ -146,7 +176,7 @@ export function createInterior(state, wreck) {
     turning: 0,
     doorCut: 0,
     doorOpen: false,
-    // The station's mainframe, in the room furthest in apart from the vault, and what has been done at it: which
+    // The station's mainframe, in the command room on the top floor, and what has been done at it: which
     // of the three levels of a hack are done, the one being worked on, how far each has come, and how full the
     // trace meter is. See mainframe.js.
     mainframe: null,
@@ -160,6 +190,16 @@ export function createInterior(state, wreck) {
     plan: false,
     // Whether the crew is taking a station that traded with them, from the inside.
     seize: false,
+    // The power of a base, the switchgear that puts it out, the drone hangar, the console that stops a call for
+    // help, the call itself, and how far things have gone since the power went out. See pressure.js.
+    power: true,
+    breaker: null,
+    hangar: null,
+    comms: null,
+    call: null,
+    pressure: null,
+    // Where the turning lights of an alarm are, spread evenly over the floor (R-1182).
+    beacons: [],
     // What each room is for, the doors of the rooms, and the tiles of those that are shut. See furnish.js.
     uses: [],
     doors: [],
@@ -184,68 +224,48 @@ export function createInterior(state, wreck) {
     flares: [],
     fx: [],
   };
-  // Every station has a mainframe, as far in as it goes. It stands in the room furthest from the way in that is
-  // not the vault, so that a hack can open the vault.
-  if (wreck.kind === 'station') {
-    const rest = rooms.filter((_, i) => i !== vault);
-    const away = (r) => dist(r.mid.x, r.mid.y, it.entry.x, it.entry.y);
-    const far = [...rest].sort((a, b) => away(b) - away(a))[0] || rooms[vault];
-    it.mainframe = { ...far.mid };
-  }
-  // What the rooms are for, and the things in them. The engines of a wreck are in the room furthest in, where
-  // its reactor stands.
   const away = (r) => dist(r.mid.x, r.mid.y, it.entry.x, it.entry.y);
   const rest = rooms.filter((_, i) => i !== vault);
-  const deep = wreck.kind === 'wreck' ? [...rest].sort((a, b) => away(b) - away(a))[0] : null;
+  const roomFor = (use) => rooms.find((r) => r.use === use);
+  if (base) {
+    // What stands in a base: the mainframe in the command room, the switchgear, the drone hangar and the comms.
+    it.mainframe = { ...roomFor('COMMAND').mid };
+    it.breaker = { ...roomFor('BREAKER').mid, out: false, loud: false };
+    it.hangar = { ...roomFor('DRONES').mid, out: false };
+    it.comms = { ...roomFor('COMMS').mid };
+    it.beacons = beaconsFor(it);
+  }
+  // What the rooms are for, and the things in them. A plan that says where its engines are has the reactor of a
+  // wreck there. Otherwise it stands in the room furthest in.
+  const named = rooms.find((r, i) => i !== vault && r.use === 'ENGINES');
+  const deep = base ? null : named || [...rest].sort((a, b) => away(b) - away(a))[0];
   it.uses = usesOf(it, wreck, deep);
   furnish(it);
-  it.doors = doorsOf(it);
+  it.doors = plan.doors ? plan.doors.map((d) => ({ ...d })) : doorsOf(it);
   // A friendly or neutral station is a place to walk around and trade in, with nothing to fight.
   if (isTrading(wreck)) {
     makeTrade(state, it, wreck);
     return it;
   }
-  // Nothing is put down on top of the mainframe.
-  const taken = it.mainframe ? [it.mainframe] : [];
-  const spot = (box, away = 0) => spotIn(state, it, box, taken, away);
-  const difficulty = wreck.difficulty;
-  const vaultRoom = rooms[vault];
-  const open = rooms.map((_, i) => i).filter((i) => i !== vault);
-  const anyRoom = () => rooms[open[Math.floor(rand(state) * open.length)]];
-  const credits = (range) => Math.round(randRange(state, range[0], range[1]) / 5) * 5;
-  // `what` is called after the spot is found, so that the random numbers come in a fixed order.
-  const addLoot = (room, what) => {
-    const p = spot(room);
-    it.loot.push({ id: state.nextId++, ...what(), ...p });
-  };
+  if (base) fillBase(state, it, wreck);
+  else fillWreck(state, it, wreck, deep);
+  return it;
+}
 
-  // Guards: the first one in the corridor, the rest in the rooms. More of them where it is more dangerous, and of
-  // harder kinds the more dangerous the place and the sector are.
-  const where = wreck.kind !== 'station' ? 'wreck' : wreck.side === PIRATE ? 'pirate' : 'other';
-  const danger = difficulty + currentSector(state).tier;
-  const kind = () => guardKind(state, where, danger);
-  for (let i = 0; i < difficulty + 1; i++) {
-    const hall = it.halls[Math.floor(rand(state) * it.halls.length)];
-    const p = i === 0 ? spot(hall, 12 * TILE) : spot(anyRoom(), 7 * TILE);
-    it.guards.push(newGuard(state, p, rand(state) * TAU, kind()));
-  }
-  // Turrets: the first one at the far end of the corridor.
-  for (let i = 0; i < difficulty - 1; i++) {
-    const p = i === 0 ? { x: it.far.x, y: it.far.y + (rand(state) - 0.5) * TILE } : spot(anyRoom(), 8 * TILE);
-    taken.push(p);
-    it.turrets.push(newTurret(state, p, Math.PI * 1.5));
-  }
-  // Loot: crates in the rooms, and the best of it in the vault. A wreck holds one fuel cell or none, enough for
-  // one jump (F-229). A station keeps one in its vault.
-  if (wreck.kind !== 'station' && rand(state) < B.WRECK_CELL_CHANCE) addLoot(anyRoom(), () => ({ type: 'cell' }));
-  for (let i = 0; i < 2 + difficulty; i++) {
-    addLoot(anyRoom(), () => ({ type: 'crate', value: credits(B.CRATE_CREDITS) }));
-  }
-  for (let i = 0; i < 2; i++) addLoot(vaultRoom, () => ({ type: 'crate', value: credits(B.VAULT_CREDITS) }));
+// Rooms that nothing is put in: the ways in and out, the ways between floors, the rooms of the guns and those
+// that have something of their own standing in the middle.
+const KEPT_CLEAR = new Set(['AIRLOCK', 'LIFT', 'STAIRS', 'LADDER', 'GUN', 'VAULT', 'COMMAND', 'BREAKER', 'DRONES']);
+const plainRooms = (it) => it.rooms.map((r, i) => i).filter((i) => !KEPT_CLEAR.has(it.uses[i]));
+const credits = (state, range) => Math.round(randRange(state, range[0], range[1]) / 5) * 5;
+
+// What the vault of a place holds: the best of the loot. It sometimes holds a star chart of the nearest system
+// the crew knows nothing of, or a spare slot. A station vault always has a chart while there are such systems
+// left. The vault of a pirate station holds the chart that opens the lane to the end, until the crew has it
+// (R-1098).
+function fillVault(state, it, wreck, addLoot) {
+  const vaultRoom = it.rooms[it.vault];
+  for (let i = 0; i < 2; i++) addLoot(vaultRoom, () => ({ type: 'crate', value: credits(state, B.VAULT_CREDITS) }));
   if (wreck.kind === 'station') addLoot(vaultRoom, () => ({ type: 'cell' }));
-  // Vaults sometimes hold a star chart of the nearest system the crew knows nothing of, or a spare slot. A
-  // station vault always has a chart while there are such systems left. The vault of a pirate station holds
-  // the chart that opens the lane to the end, until the crew has it (R-1098).
   const hops = hopsFrom(state.sectors, state.sector);
   const end = state.sectors.find((x) => x.boss);
   const key = wreck.kind === 'station' && wreck.side === PIRATE && end && !state.charts.includes(end.id);
@@ -259,51 +279,175 @@ export function createInterior(state, wreck) {
   // Now and then an extra slot, made for one role (R-1179, R-1180).
   const slot = rand(state) < 0.2 ? foundSlot(state) : null;
   if (slot) addLoot(vaultRoom, () => ({ type: 'part', ...slot }));
-  // A hostile station is taken over from its mainframe, and has two more guards, and more again for the
-  // security that the crew bought for it while it was theirs.
-  if (wreck.kind === 'station') {
-    const more = 2 + ((wreck.defense && wreck.defense.inner) || 0);
-    for (let i = 0; i < more; i++) it.guards.push(newGuard(state, spot(anyRoom(), 8 * TILE), 0, kind()));
-    // A station that counts the crew as an enemy is in lockdown: dark, and on its guard.
-    it.mood = 'lockdown';
-    it.dark = true;
-    // Cameras in some of its rooms. Each sweeps from side to side about the way to the room's door.
-    for (const room of open
-      .map((i) => rooms[i])
-      .filter((r) => r.door)
-      .slice(0, 3)) {
-      const rest = headingTo(room.door.x - room.mid.x, room.door.y - room.mid.y);
-      it.cameras.push({ id: state.nextId++, x: room.mid.x, y: room.mid.y, rest, phase: rand(state) * TAU });
-    }
-  }
-  if (wreck.kind === 'station') alarmDoors(state, it);
-  // The reactor of a wreck stands in the room that is furthest from the way in.
-  else {
-    const far = open
-      .map((i) => rooms[i])
-      .sort(
-        (a, b) => dist(b.mid.x, b.mid.y, it.entry.x, it.entry.y) - dist(a.mid.x, a.mid.y, it.entry.x, it.entry.y),
-      )[0];
-    if (far) it.reactor = { ...spot(far), steadied: false };
-  }
-  // On a station most guards walk a round. In a wreck most of them stand at a post.
-  planRounds(state, it, wreck.kind === 'station' ? 0.7 : 0.34);
-  return it;
 }
 
-// Turn an interior into a trading floor: doors open, desks to trade at, people walking about. The rooms without a
-// desk are for the staff (docs/station-boarding.md, section 3): guards walk there and cameras watch them, and a
-// visitor who is seen there gives the crew away. The crew's own station has no staff to hide from.
+// Guards, turrets and loot for a wreck.
+function fillWreck(state, it, wreck, deep) {
+  const { rooms, vault } = it;
+  const taken = [];
+  const spot = (box, away = 0) => spotIn(state, it, box, taken, away);
+  const difficulty = wreck.difficulty;
+  const open = rooms.map((_, i) => i).filter((i) => i !== vault);
+  const anyRoom = () => rooms[open[Math.floor(rand(state) * open.length)]];
+  // `what` is called after the spot is found, so that the random numbers come in a fixed order.
+  const addLoot = (room, what) => {
+    const p = spot(room);
+    it.loot.push({ id: state.nextId++, ...what(), ...p });
+  };
+  // Guards: the first one in the corridor, the rest in the rooms. More of them where it is more dangerous, and of
+  // harder kinds the more dangerous the place and the sector are. A large hull has as many as its floor is
+  // large, so that it feels as closely guarded as a small one (R-1182).
+  const danger = difficulty + currentSector(state).tier;
+  const count = Math.max(difficulty + 1, Math.round(floorArea(it) / B.GUARD_AREA));
+  for (let i = 0; i < count; i++) {
+    const hall = it.halls[Math.floor(rand(state) * it.halls.length)];
+    const p = i === 0 ? spot(hall, 12 * TILE) : spot(anyRoom(), 7 * TILE);
+    it.guards.push(newGuard(state, p, rand(state) * TAU, guardKind(state, 'wreck', danger)));
+  }
+  // Turrets: the first one at the far end of the corridor.
+  for (let i = 0; i < difficulty - 1; i++) {
+    const p = i === 0 ? { x: it.far.x, y: it.far.y + (rand(state) - 0.5) * TILE } : spot(anyRoom(), 8 * TILE);
+    taken.push(p);
+    it.turrets.push(newTurret(state, p, Math.PI * 1.5));
+  }
+  // Loot: crates in the rooms, and the best of it in the vault. A wreck holds one fuel cell or none, enough for
+  // one jump (F-229).
+  if (rand(state) < B.WRECK_CELL_CHANCE) addLoot(anyRoom(), () => ({ type: 'cell' }));
+  for (let i = 0; i < 2 + difficulty; i++) {
+    addLoot(anyRoom(), () => ({ type: 'crate', value: credits(state, B.CRATE_CREDITS) }));
+  }
+  fillVault(state, it, wreck, addLoot);
+  if (deep) it.reactor = { ...spot(deep), steadied: false };
+  // In a wreck most of the guards stand at a post.
+  planRounds(state, it, 0.34);
+}
+
+// A spot for a camera in a box of walls: on a wall, looking out over the floor in front of it. Never in a
+// doorway, and never with something tall right in front of it (R-1166). Null when the box has no such wall.
+export function wallMount(state, it, box) {
+  const open = (tx, ty) => '.,'.includes(tileAt(it, tx, ty));
+  const doorway = new Set(it.doors.flatMap((d) => d.tiles));
+  const fits = [];
+  for (let ty = box.r0 + 1; ty < box.r1; ty++)
+    for (let tx = box.c0 + 1; tx < box.c1; tx++) {
+      if (!open(tx, ty) || doorway.has(ty * it.w + tx)) continue;
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ]) {
+        // A wall behind it, with wall on both sides of that, and three tiles of open floor in front.
+        if (tileAt(it, tx - dx, ty - dy) !== '#') continue;
+        if (tileAt(it, tx - dx + dy, ty - dy + dx) !== '#' || tileAt(it, tx - dx - dy, ty - dy - dx) !== '#') continue;
+        if (![1, 2, 3].every((k) => open(tx + dx * k, ty + dy * k))) continue;
+        const x = (tx + 0.5 - dx * 0.4) * TILE,
+          y = (ty + 0.5 - dy * 0.4) * TILE;
+        if (!blocked(it, x, y, 1)) fits.push({ x, y, rest: headingTo(dx, dy) });
+      }
+    }
+  return fits.length ? fits[Math.floor(rand(state) * fits.length)] : null;
+}
+function addCamera(state, it, box) {
+  const at = box && wallMount(state, it, box);
+  if (at) it.cameras.push({ id: state.nextId++, ...at, phase: rand(state) * TAU });
+}
+
+// Where the turning lights of an alarm are: one for every 300 tiles of floor, spread evenly along the corridors
+// and over the holds (R-1182).
+function beaconsFor(it) {
+  const spots = [];
+  const every = 9;
+  for (const h of it.halls) {
+    const w = h.c1 - h.c0 - 1,
+      tall = h.r1 - h.r0 - 1;
+    const n = Math.max(1, Math.round(Math.max(w, tall) / every));
+    for (let k = 0; k < n; k++) {
+      const u = (k + 0.5) / n;
+      spots.push(w >= tall ? { x: (h.c0 + 1 + w * u) * TILE, y: (h.r0 + 1 + tall / 2) * TILE } : { x: (h.c0 + 1 + w / 2) * TILE, y: (h.r0 + 1 + tall * u) * TILE });
+    }
+  }
+  it.rooms.forEach((r) => {
+    if (r.use !== 'HOLD' && r.use !== 'CARGO') return;
+    for (let x = r.c0 + 5; x < r.c1 - 3; x += every) spots.push({ x: x * TILE, y: r.mid.y });
+  });
+  const want = Math.max(1, Math.round(floorArea(it) / B.BEACON_AREA));
+  const free = spots.filter((p) => !blocked(it, p.x, p.y, 2));
+  // Every so-and-so-many of them, so that those that are kept lie evenly.
+  const out = [];
+  for (let k = 0; k < Math.min(want, free.length); k++) out.push(free[Math.floor((k * free.length) / Math.min(want, free.length))]);
+  return out;
+}
+
+// Guards, turrets, cameras and loot for a base that counts the crew as an enemy. It is in lockdown: dim, with
+// its doors shut, and on its guard.
+function fillBase(state, it, st) {
+  const taken = [it.mainframe, it.breaker, it.hangar, it.comms].map((p) => ({ x: p.x, y: p.y }));
+  const spot = (box, away = 0) => spotIn(state, it, box, taken, away);
+  const pick = (list) => list[Math.floor(rand(state) * list.length)];
+  const inner = defenseOf(st).inner;
+  const danger = st.difficulty + currentSector(state).tier;
+  const where = st.side === PIRATE ? 'pirate' : 'other';
+  const plain = plainRooms(it);
+  const onDeck = (deck) => plain.filter((i) => it.rooms[i].deck === deck).map((i) => it.rooms[i]);
+  const hallsOn = (deck) => it.halls.filter((h) => h.deck === deck);
+  const roomFor = (use, deck) => it.rooms.find((r) => r.use === use && (deck === undefined || r.deck === deck));
+  const addLoot = (room, what) => {
+    const p = spot(room);
+    it.loot.push({ id: state.nextId++, ...what(), ...p });
+  };
+  // Guards: as many as the floor is large (R-1182), and more for the security that was bought for the base. The
+  // first two are on the top floor, the rest are spread over all three.
+  const count = Math.round(floorArea(it) / B.GUARD_AREA) + inner;
+  for (let i = 0; i < count; i++) {
+    const r = rand(state);
+    const deck = i < 2 ? 2 : r < 0.45 ? 0 : r < 0.8 ? 1 : 2;
+    const box = rand(state) < 0.35 ? pick(hallsOn(deck)) : pick(onDeck(deck));
+    it.guards.push(newGuard(state, spot(box, deck === 1 ? 10 * TILE : 0), rand(state) * TAU, guardKind(state, where, danger)));
+  }
+  // Turrets: at the security checkpoint in the middle and outside the command room, and more with security.
+  const posts = [roomFor('SECURITY', 1), pick(hallsOn(2)), roomFor('HOLD'), roomFor('SECURITY', 2), pick(hallsOn(0))];
+  for (let i = 0; i < st.difficulty - 1 + inner && i < posts.length; i++) {
+    const box = posts[i];
+    if (!box) continue;
+    const p = spot(box, 8 * TILE);
+    const to = box.door || it.mainframe;
+    it.turrets.push(newTurret(state, p, headingTo(to.x - p.x, to.y - p.y)));
+  }
+  // Cameras, on the walls: at the checkpoint, in the corridors and in the hold, and more with security.
+  const watched = [roomFor('SECURITY', 1), pick(hallsOn(2)), pick(hallsOn(0)), roomFor('HOLD'), roomFor('OFFICE', 1)];
+  for (let i = 0; i < 3 + inner && i < watched.length; i++) addCamera(state, it, watched[i]);
+  // Loot: crates in the rooms, most of them in the basement, and the best of it in the vault with a fuel cell.
+  for (let i = 0; i < 4 + st.difficulty; i++) {
+    const room = pick(rand(state) < 0.6 ? onDeck(0) : [...onDeck(1), ...onDeck(2)]);
+    addLoot(room, () => ({ type: 'crate', value: credits(state, B.CRATE_CREDITS) }));
+  }
+  fillVault(state, it, st, addLoot);
+  setMood(it, 'lockdown');
+  // The ladders are behind doors with an alarm on them, and so are some of the rooms with something to take.
+  for (const d of it.doors) {
+    if (d.kind !== 'alarm') continue;
+    const first = d.tiles[0];
+    it.alarmed.push({ x: d.x, y: d.y, tx: first % it.w, ty: Math.floor(first / it.w), tiles: d.tiles, off: false });
+  }
+  alarmDoors(state, it);
+  // On a base most guards walk a round.
+  planRounds(state, it, 0.7);
+}
+
+// Turn an interior into a trading floor: doors open, desks to trade at, people walking about. The rooms that
+// are not open to visitors are for the staff (docs/station-boarding.md, section 3): guards walk there and
+// cameras watch them, and a visitor who is seen there gives the crew away. The crew's own station has no staff
+// to hide from.
 export function makeTrade(state, it, st) {
   it.trade = true;
-  it.mood = null;
-  it.dark = false;
   it.doorOpen = true;
   it.timer = null;
   it.seize = false;
   it.hack = null;
   it.blackout = 0;
   it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
+  setMood(it, null);
   it.guards = [];
   it.turrets = [];
   it.cameras = [];
@@ -311,21 +455,25 @@ export function makeTrade(state, it, st) {
   it.bolts = [];
   it.grenades = [];
   it.flares = [];
-  // A desk in each of the three largest rooms, apart from the vault and the room with the mainframe.
-  const mf = it.mainframe;
-  const all = it.rooms.filter((_, i) => i !== it.vault);
-  const free = all.filter((r) => !mf || r.mid.x !== mf.x || r.mid.y !== mf.y);
-  const open = free.length ? free : all;
-  const area = (rm) => (rm.c1 - rm.c0) * (rm.r1 - rm.r0);
-  const largest = [...open].sort((a, b) => area(b) - area(a) || a.c0 - b.c0 || a.r0 - b.r0);
-  it.desks = ['services', 'shipyard', 'armory'].map((type, k) => ({ type, ...largest[k % largest.length].mid }));
-  const front = largest.slice(0, 3);
-  it.staff = it.rooms.map((r, i) => i).filter((i) => !front.includes(it.rooms[i]));
+  // A desk in each of the rooms that visitors come for.
+  const roomFor = (use) => it.rooms.find((r) => r.use === use);
+  const yard = roomFor('SHIPYARD') || roomFor('LOUNGE');
+  it.desks = [
+    ['services', roomFor('SERVICES')],
+    ['shipyard', yard],
+    ['armory', roomFor('ARMORY')],
+  ].map(([type, room]) => ({ type, ...room.mid }));
+  it.staff = it.rooms.map((r, i) => i).filter((i) => it.rooms[i].staff);
+  // People walk about in the concourse and in the rooms that are open to them.
   it.civilians = [];
   const taken = it.desks.map((d) => ({ x: d.x, y: d.y }));
-  if (it.mainframe) taken.push(it.mainframe);
-  for (let i = 0; i < 6; i++) {
-    const box = i < 3 ? it.halls[i % it.halls.length] : front[i % front.length];
+  taken.push(it.mainframe);
+  const halls = it.halls.filter((h) => h.deck === 1 && !h.staff);
+  const open = plainRooms(it)
+    .map((i) => it.rooms[i])
+    .filter((r) => r.deck === 1 && !r.staff);
+  for (let i = 0; i < 9; i++) {
+    const box = i < 5 ? halls[i % halls.length] : open[i % open.length];
     const { x, y } = spotIn(state, it, box, taken);
     it.civilians.push({
       id: state.nextId++,
@@ -338,23 +486,27 @@ export function makeTrade(state, it, st) {
     });
   }
   if (st && st.side !== CREW) staffUp(state, it, st, taken);
+  // The crew's own mainframe is theirs to walk up to.
+  else if (st) openCommand(it);
 }
 
-// Guards and cameras for the staff rooms of a trading station. They keep to their rounds, and only take notice of
-// a visitor who is somewhere they should not be.
+// Guards and cameras for the staff's part of a trading station: the basement, the top and the back rooms of
+// the middle. They keep to their rounds, and only take notice of a visitor who is somewhere they should not be.
+// While all is calm there is one guard for every 1200 tiles of floor (R-1182).
 function staffUp(state, it, st, taken) {
-  const rooms = it.staff.map((i) => it.rooms[i]);
+  const rooms = plainRooms(it)
+    .map((i) => it.rooms[i])
+    .filter((r) => r.staff);
   if (!rooms.length) return;
   const tier = currentSector(state).tier;
-  const n = 1 + tier + ((st.defense && st.defense.inner) || 0);
+  const n = Math.round(floorArea(it) / B.GUARD_AREA_CALM) + ((st.defense && st.defense.inner) || 0);
   for (let i = 0; i < n; i++) {
-    const p = spotIn(state, it, rooms[i % rooms.length], taken);
+    const p = spotIn(state, it, rooms[Math.floor(rand(state) * rooms.length)], taken);
     it.guards.push(newGuard(state, p, rand(state) * TAU, guardKind(state, 'other', tier + 1)));
   }
-  for (const room of rooms.filter((r) => r.door).slice(0, 2)) {
-    const rest = headingTo(room.door.x - room.mid.x, room.door.y - room.mid.y);
-    it.cameras.push({ id: state.nextId++, x: room.mid.x, y: room.mid.y, rest, phase: rand(state) * TAU });
-  }
+  const security = it.rooms.filter((r) => r.use === 'SECURITY');
+  const halls = it.halls.filter((h) => h.staff);
+  for (const box of [...security, halls[0], halls[halls.length - 1]]) addCamera(state, it, box);
   planRounds(state, it, 0.5);
 }
 
@@ -364,15 +516,26 @@ function comeIn(it, k) {
   const side = k * 8 - 6;
   return { x: e.x + e.nx * 14 - e.ny * side, y: e.y + e.ny * 14 + e.nx * side, heading: Math.atan2(e.nx, -e.ny) };
 }
-// The crew comes in through the airlock at the port the frigate is docked at.
+// The crew comes in through the airlock that the port the frigate is docked at leads to. At a base every port
+// on the ring leads to the bridge and the main airlock, and the building dock of a shipyard to its own.
 function useAirlock(state, place, it) {
   const nose = shipNose(state.ship);
-  const ports = portsOf(place);
+  const ports = localPorts(place);
   let best = 0;
   ports.forEach((p, i) => {
-    if (dist(p.x, p.y, nose.x, nose.y) < dist(ports[best].x, ports[best].y, nose.x, nose.y)) best = i;
+    const at = toWorld(place, p),
+      now = toWorld(place, ports[best]);
+    if (dist(at.x, at.y, nose.x, nose.y) < dist(now.x, now.y, nose.x, nose.y)) best = i;
   });
-  it.entry = it.airlocks[best] || it.airlocks[0];
+  it.entry = it.airlocks[ports[best].airlock || 0] || it.airlocks[0];
+}
+// Whether the way in is ready: the hatch of the airlock is open. If it is not, the airlock is set going, and
+// the one who asked has to ask again in a moment.
+function hatchReady(state, it, playerId) {
+  if (hatchOpen(it)) return true;
+  cycleLock(state, it, it.airlocks.indexOf(it.entry));
+  state.events.push({ type: 'lockWait', player: playerId });
+  return false;
 }
 
 // ---------- players ----------
@@ -397,6 +560,7 @@ export function tryBoard(state, playerId) {
     if (!floor.trade) makeTrade(state, floor, wreck);
     floor.live = true;
     if (!floor.avatars.length) useAirlock(state, wreck, floor);
+    if (!hatchReady(state, floor, playerId)) return false;
     player.inside = wreck.id;
     leavePost(player);
     floor.avatars.push({
@@ -441,6 +605,7 @@ export function tryBoard(state, playerId) {
   }
   it.live = true;
   if (!it.avatars.length) useAirlock(state, wreck, it);
+  if (!hatchReady(state, it, playerId)) return false;
   player.inside = wreck.id;
   leavePost(player);
   const av = {
@@ -477,6 +642,7 @@ export function gearUp(state, av) {
 
 function leave(state, it, av, teleported) {
   const player = playerById(state, av.player);
+  const placeId = player.inside;
   it.avatars = it.avatars.filter((a) => a !== av);
   if (teleported) {
     // What was carried stays where the player stood.
@@ -492,10 +658,13 @@ function leave(state, it, av, teleported) {
   }
   player.inside = null;
   returnToPost(state, player);
-  // An alarm lasts until the last boarder has left. Then the place is on its guard again.
+  // An alarm lasts until the last boarder has left. Then the place is on its guard again, and a base that had
+  // its power put out has it back.
   if (!it.avatars.length) it.hack = null;
+  const place = it.avatars.length ? null : findDock(state, placeId);
+  if (place && place.interior === it) restorePower(place);
   if (!it.avatars.length && it.mood === 'alarm') {
-    it.mood = 'lockdown';
+    setMood(it, 'lockdown');
     it.seize = false;
     for (const g of it.guards) {
       g.mode = 'idle';
@@ -514,11 +683,11 @@ const fighting = (it) =>
 export function foundOut(state, it, at) {
   if (!it.mood) return;
   if (it.mood !== 'alarm') state.events.push({ type: 'foundOut' });
-  it.mood = 'alarm';
+  setMood(it, 'alarm');
   for (const g of it.guards) alertGuard(g, at);
 }
 // The crew is seen where it should not be. On a trading station that turns the station on them, see mainframe.js.
-function giveAway(state, place, it, at) {
+export function giveAway(state, place, it, at) {
   if (it.trade) turnOnCrew(state, place, at, true);
   else foundOut(state, it, at);
 }
@@ -582,6 +751,10 @@ function explode(state, it, g) {
   }
   for (const av of [...it.avatars]) if (inBlast(av)) hurtAvatar(state, it, av, B.GRENADE_SELF_DMG);
   heard(state, it, g);
+  // A blast puts the switchgear of a base out, the loud way (R-1167), and wrecks its drone hangar.
+  const place = it.breaker ? state.things.find((t) => t.interior === it) : null;
+  if (place && inBlast(it.breaker)) cutPower(state, place, true);
+  if (place && inBlast(it.hangar)) wreckHangar(state, it);
 }
 
 // ---------- what a boarder does ----------
@@ -602,7 +775,18 @@ export function useTarget(it, av) {
     if (it.reactor && !it.reactor.steadied && dist(it.reactor.x, it.reactor.y, av.x, av.y) < 18)
       return { type: 'reactor' };
   }
-  if (atAirlockDoor(it, av)) return { type: 'airlock' };
+  // An airlock is worked with its button: at the hatch when the hatch is shut, and at the inner door.
+  const lock = lockNear(it, av);
+  if (atAirlockDoor(it, av) && hatchOpen(it)) return { type: 'airlock' };
+  if (lock >= 0) return { type: 'lock', lock, busy: it.locks[lock].busy > 0 };
+  // A way to another floor: the lift, the stairs or the ladder.
+  const link = linkAt(it, av);
+  if (link) return { type: 'link', ...link };
+  if (it.breaker && !it.breaker.out && dist(av.x, av.y, it.breaker.x, it.breaker.y) < B.CONSOLE_REACH)
+    return { type: 'breaker' };
+  if (it.hangar && !it.hangar.out && !it.trade && dist(av.x, av.y, it.hangar.x, it.hangar.y) < B.CONSOLE_REACH)
+    return { type: 'hangar' };
+  if (it.call && dist(av.x, av.y, it.comms.x, it.comms.y) < B.CONSOLE_REACH) return { type: 'comms' };
   if (it.mainframe && dist(av.x, av.y, it.mainframe.x, it.mainframe.y) < MAINFRAME_REACH) return { type: 'mainframe' };
   if (it.trade) {
     const desk = it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20);
@@ -612,6 +796,31 @@ export function useTarget(it, av) {
   const door = it.rooms[it.vault].door;
   const away = dist(av.x, av.y, door.x, door.y);
   return away < 28 ? { type: 'door', door, cut: away < 22 } : null;
+}
+// The way between floors that a boarder stands in, with the floor it leads to, or null.
+export function linkAt(it, av) {
+  if (!it.jumps) return null;
+  const to = it.jumps[Math.floor(av.y / TILE) * it.w + Math.floor(av.x / TILE)];
+  if (to === undefined) return null;
+  const deck = deckOf(it, av.x);
+  const link = it.links.find((l) => l.decks.includes(deck) && dist(l.at[l.decks.indexOf(deck)].x, l.at[l.decks.indexOf(deck)].y, av.x, av.y) < TILE * 4);
+  const other = link.decks[0] === deck ? link.decks[1] : link.decks[0];
+  return { link, to: other, up: other > deck };
+}
+// Go to the other floor, to the same spot there. A lift is heard on both floors: whoever is near and has
+// noticed nobody comes to look.
+function takeLink(state, it, av, at) {
+  const from = it.decks[deckOf(it, av.x)],
+    to = it.decks[at.to];
+  const k = at.link.decks.indexOf(at.to);
+  av.x += (to.x0 - from.x0) * TILE;
+  state.events.push({ type: 'floor', player: av.player, deck: at.to, kind: at.link.kind });
+  if (at.link.kind !== 'lift' || it.trade) return;
+  for (const g of it.guards) {
+    if (!awake(g) || g.mode === 'alert' || g.curious) continue;
+    const near = at.link.doors.some((d) => dist(g.x, g.y, d.x, d.y) < B.GUARD_HEARING);
+    if (near) g.curious = { x: at.link.doors[k].x, y: at.link.doors[k].y, wait: B.GUARD_CURIOUS };
+  }
 }
 export const openVault = (it) => {
   it.doorOpen = true;
@@ -758,26 +967,44 @@ function workVaultDoor(state, it, av, cmd, dt) {
 }
 
 // On a trading station weapons stay holstered. The use key works the desks and the airlock.
-function stepVisitor(state, it, av, cmd) {
+function stepVisitor(state, place, it, av, cmd, dt) {
+  // The switchgear can be switched off by a visitor too, if nobody sees it done.
+  if (cmd.use) workConsole(state, place, it, av, useTarget(it, av), dt);
   if (!cmd.usePressed) return;
-  if (atAirlockDoor(it, av)) {
+  const at = useTarget(it, av);
+  if (at && at.type === 'airlock') {
     leave(state, it, av, false);
     return;
   }
-  const at = useTarget(it, av);
+  if (at && at.type === 'lock') cycleLock(state, it, at.lock);
+  if (at && at.type === 'link') takeLink(state, it, av, at);
   if (at && at.type === 'mainframe') state.events.push({ type: 'mainframeUsed', player: av.player });
   const desk = it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20);
   if (desk && (!at || at.type === 'desk')) state.events.push({ type: 'deskUsed', player: av.player, desk: desk.type });
 }
 
-function stepAvatar(state, it, av, cmd, dt) {
+// What is done by holding the use key at a console of a base: the switchgear is switched off, the drone hangar
+// is put out of use and the call for help is stopped. The Engineer is quicker at all of it.
+function workConsole(state, place, it, av, at, dt) {
+  const time = at && { breaker: B.BREAKER_TIME, hangar: B.HANGAR_TIME, comms: B.COMMS_TIME }[at.type];
+  if (!time) return;
+  it.turning = Math.min(1, it.turning + (dt / time) * (av.role === 'engineer' ? B.ROLE_HACK : 1));
+  it.working = true;
+  if (it.turning < 1) return;
+  it.turning = 0;
+  if (at.type === 'breaker') cutPower(state, place, false);
+  else if (at.type === 'hangar') wreckHangar(state, it);
+  else stopCall(state, it);
+}
+
+function stepAvatar(state, place, it, av, cmd, dt) {
   const player = playerById(state, av.player);
   av.cool = Math.max(0, av.cool - dt);
   if (!cmd) return;
   if (cmd.aim) av.heading = headingTo(cmd.aim.x - av.x, cmd.aim.y - av.y);
   walk(it, av, cmd, dt);
   if (it.trade) {
-    stepVisitor(state, it, av, cmd);
+    stepVisitor(state, place, it, av, cmd, dt);
     return;
   }
   if (cmd.swap && av.darts > 0) av.weapon = av.weapon === 'rifle' ? 'tranq' : 'rifle';
@@ -792,14 +1019,20 @@ function stepAvatar(state, it, av, cmd, dt) {
   }
   // The mainframe is worked from its own panel, see mainframe.js.
   if (at && at.type === 'mainframe') state.events.push({ type: 'mainframeUsed', player: av.player });
+  if (at && at.type === 'lock') cycleLock(state, it, at.lock);
+  if (at && at.type === 'link') {
+    takeLink(state, it, av, at);
+    return;
+  }
   if (cmd.grenade && av.grenades > 0) throwGrenade(it, av, cmd.grenade);
   if (cmd.lampPressed) av.lamp = !av.lamp;
   if (cmd.flare && av.flares > 0) throwFlare(state, it, av, cmd.flare);
   pickUpLoot(state, it, av);
-  // What is carried is stowed on the ship at the airlock.
-  const atAirlock = tileAt(it, Math.floor(av.x / TILE), Math.floor(av.y / TILE)) === 'A' || atAirlockDoor(it, av);
+  // What is carried is stowed on the ship at the airlock, through its open hatch.
+  const onHatch = tileAt(it, Math.floor(av.x / TILE), Math.floor(av.y / TILE)) === 'A' || atAirlockDoor(it, av);
+  const atAirlock = onHatch && hatchOpen(it);
   if (atAirlock) deposit(state, av);
-  if (cmd.usePressed && atAirlockDoor(it, av)) {
+  if (cmd.usePressed && atAirlockDoor(it, av) && hatchOpen(it)) {
     deposit(state, av);
     leave(state, it, av, false);
     return;
@@ -815,8 +1048,20 @@ function stepAvatar(state, it, av, cmd, dt) {
       state.events.push({ type: 'sentryDown' });
     }
   }
+  // A breaching charge at the switchgear puts the power out at once, and is heard (R-1167).
+  if (cmd.charge && av.charges > 0 && it.breaker && !it.breaker.out) {
+    if (dist(av.x, av.y, it.breaker.x, it.breaker.y) < 28) {
+      av.charges--;
+      state.ship.mods.charge = Math.max(0, level(state.ship, 'charge') - 1);
+      state.ship.owned.charge = state.ship.mods.charge;
+      it.fx.push({ type: 'boom', x: it.breaker.x, y: it.breaker.y, t: 0, dur: 0.45, size: 24 });
+      cutPower(state, place, true);
+      state.events.push({ type: 'breached' });
+    }
+  }
   // What the Engineer does by holding the use key next to it.
   const near = cmd.use ? useTarget(it, av) : null;
+  workConsole(state, place, it, av, near, dt);
   const work = near && { turret: B.TURRET_TURN_TIME, alarm: B.DISARM_TIME, reactor: B.STEADY_TIME }[near.type];
   if (work) {
     it.turning = Math.min(1, it.turning + dt / work);
@@ -842,7 +1087,8 @@ function stepAvatar(state, it, av, cmd, dt) {
   if (it.mood === 'lockdown') {
     const tx = Math.floor(av.x / TILE),
       ty = Math.floor(av.y / TILE);
-    if (it.alarmed.some((d) => !d.off && d.tx === tx && d.ty === ty)) foundOut(state, it, av);
+    const on = (d) => (d.tiles ? d.tiles.includes(ty * it.w + tx) : d.tx === tx && d.ty === ty);
+    if (it.alarmed.some((d) => !d.off && on(d))) foundOut(state, it, av);
   }
   workVaultDoor(state, it, av, cmd, dt);
   if (player.hp <= 0) leave(state, it, av, true);
@@ -1084,7 +1330,9 @@ function stepInterior(state, wreck, cmds, dt) {
   it.working = false;
   for (const f of it.fx) f.t += dt;
   it.fx = it.fx.filter((f) => f.t < f.dur);
-  for (const av of [...it.avatars]) stepAvatar(state, it, av, cmds.away ? cmds.away[av.player] : null, dt);
+  for (const av of [...it.avatars]) stepAvatar(state, wreck, it, av, cmds.away ? cmds.away[av.player] : null, dt);
+  stepLocks(state, it, dt);
+  stepPressure(state, wreck, it, dt);
   stepHack(state, wreck, it, dt);
   // Guards that have noticed nobody watch for boarders, and for other guards that lie still.
   for (const av of it.avatars) av.watched = false;

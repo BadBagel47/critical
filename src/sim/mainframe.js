@@ -14,7 +14,7 @@ import { B } from './balance.js';
 import { CREW, isFaction, changeStanding } from './sides.js';
 import { newGuard, alertGuard, guardKind } from './guards.js';
 import { takeOver, stationShieldMax, gunHpMax, defenseOf } from './stations.js';
-import { foundOut, gearUp, openVault, spotIn } from './boarding.js';
+import { foundOut, gearUp, openVault, spotIn, setMood } from './boarding.js';
 import { callHelp, putBounty } from './bounty.js';
 import { currentSector } from './sectors.js';
 import { findDock } from './things.js';
@@ -51,6 +51,8 @@ export const hackTime = (it, level) => (level === 2 && it.seize ? B.SEIZE_TIME :
 // Why a level cannot be started right now, or null when it can.
 export function hackBlocked(it, av, level) {
   if (it.hacked[level]) return 'DONE';
+  // A base is not given up while it has power: the switchgear in the basement comes first (F-209).
+  if (level === 2 && it.breaker && !it.breaker.out) return 'CUT THE POWER IN THE BASEMENT FIRST';
   if (level === 1 && av.role !== 'engineer') return 'ONLY THE ENGINEER';
   if (it.hack && it.hack.level === level) return 'WORKING';
   return null;
@@ -93,8 +95,7 @@ export function turnOnCrew(state, st, at, caught) {
   it.seize = true;
   it.desks = [];
   it.civilians = [];
-  it.dark = true;
-  it.mood = 'alarm';
+  setMood(it, 'alarm');
   for (const a of it.avatars) gearUp(state, a);
   const tier = currentSector(state).tier;
   const n = B.SEIZE_GUARDS + tier + defenseOf(st).inner;
@@ -115,6 +116,10 @@ export function turnOnCrew(state, st, at, caught) {
 
 // Taking a station that trades with the crew, from its mainframe. It turns on them at once.
 function seize(state, st, it, av) {
+  if (it.breaker && !it.breaker.out) {
+    state.events.push({ type: 'cannotHack', player: av.player, reason: 'CUT THE POWER IN THE BASEMENT FIRST' });
+    return;
+  }
   turnOnCrew(state, st, it.mainframe, true);
   it.hack = { level: 2, by: av.player };
 }

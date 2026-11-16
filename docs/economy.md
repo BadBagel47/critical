@@ -98,16 +98,16 @@ Spelaren flyger till närmaste vrak eller pod, bryter upp låset, bär hem loote
 
 | | Ensam, fristaden | Ensam, grannsystem (nivå 0) | Ensam, bebott system på nivå 2 | Ensam, tomt system (nivå 2) | Tre spelare, grannsystem (nivå 0) |
 |---|---|---|---|---|---|
-| Krediter per timme | 2333 | 4702 | 5987 | 6249 | 8711 |
+| Krediter per timme | 2333 | 4702 | 5821 | 6114 | 8711 |
 | varav pirater | 0 | 2370 | 2951 | 2951 | 5485 |
-| varav vrak | 0 | 0 | 916 | 1445 | 0 |
+| varav vrak | 0 | 0 | 755 | 1314 | 0 |
 | varav pods | 300 | 300 | 300 | 100 | 300 |
-| varav malm | 2033 | 1132 | 920 | 853 | 2027 |
+| varav malm | 2033 | 1132 | 915 | 849 | 2027 |
 | varav nödanrop | 0 | 900 | 900 | 900 | 900 |
 | Nedskjutna pirater | 0 | 213 | 221 | 221 | 493 |
 | Vrak tömda | 0 | 0 | 2 | 3 | 0 |
 | Pods öppnade | 3 | 3 | 3 | 1 | 3 |
-| Bränsle in (celler) | 38 | 38 | 63 | 88 | 38 |
+| Bränsle in (celler) | 38 | 38 | 76 | 57 | 38 |
 | Bränsle ut (flygning) | 11 | 14 | 12 | 14 | 14 |
 
 Världen är den första av storleken SHORT (frö 1). Timmen spelas i ett och samma system, så hopp mellan system räknas inte här, se avsnitt 3 för vad de kostar.

@@ -15,73 +15,17 @@
 //             A station has one for each docking arm, in the order of its ports in kinds.js
 //   far       a spot in a corridor far from the way in, where the first turret stands
 import { rand } from './util.js';
+import { TILE, AROUND, pickInt, pickOf, px, makeGrid, stepsFrom, midOf, boxOf } from './grid.js';
+import { freighterPlan } from './freighter.js';
+import { basePlan } from './base.js';
 
-export const TILE = 16;
-const WALKABLE = new Set(['.', ',', 'A']);
-const AROUND = [
-  [1, 0],
-  [-1, 0],
-  [0, 1],
-  [0, -1],
-];
-
-const pickInt = (state, lo, hi) => lo + Math.floor(rand(state) * (hi - lo + 1));
-const pickOf = (state, list) => list[Math.floor(rand(state) * list.length)];
-const px = (tiles) => tiles * TILE;
-
-// A grid that is easy to write to while a plan is made.
-function makeGrid(w, h) {
-  const cells = new Array(w * h).fill(' ');
-  const inside = (x, y) => x >= 0 && y >= 0 && x < w && y < h;
-  return {
-    w,
-    h,
-    cells,
-    get: (x, y) => (inside(x, y) ? cells[y * w + x] : ' '),
-    set(x, y, c) {
-      if (inside(x, y)) cells[y * w + x] = c;
-    },
-  };
-}
-
-// How many steps it is to every tile that can be walked to from the start. Locked doors count as open.
-function stepsFrom(grid, sx, sy) {
-  const steps = new Map([[sy * grid.w + sx, 0]]);
-  const todo = [[sx, sy]];
-  for (let i = 0; i < todo.length; i++) {
-    const [x, y] = todo[i];
-    const n = steps.get(y * grid.w + x);
-    for (const [dx, dy] of AROUND) {
-      const c = grid.get(x + dx, y + dy);
-      const key = (y + dy) * grid.w + x + dx;
-      if (steps.has(key) || !(WALKABLE.has(c) || c === 'L')) continue;
-      steps.set(key, n + 1);
-      todo.push([x + dx, y + dy]);
-    }
-  }
-  return steps;
-}
-
-// A tile in the middle of a room that is sure to be floor, in pixels. `shift` is how far the tiles are drawn
-// in from the edge of the grid.
-function midOf(tiles, shift = 0) {
-  const [x, y] = tiles[Math.floor(tiles.length / 2)];
-  return { x: px(x + shift) + TILE / 2, y: px(y) + TILE / 2 };
-}
-
-// The walls round a set of floor tiles.
-function boxOf(tiles) {
-  const xs = tiles.map((t) => t[0]);
-  const ys = tiles.map((t) => t[1]);
-  return { c0: Math.min(...xs) - 1, c1: Math.max(...xs) + 1, r0: Math.min(...ys) - 1, r1: Math.max(...ys) + 1 };
-}
+export { TILE };
 
 // ---------------------------------------------------------------- wrecks
 // Each hull: how long it is in tiles, half its width from the stern (0) to the bow (1), and how wide its rooms are.
 const WRECKS = {
   gunboat: { length: 36, half: (t) => (t < 0.55 ? 8 : 8 - (t - 0.55) * 11), rooms: [6, 8] },
   hull: { length: 52, half: (t) => (t < 0.6 ? 7 + 3 * Math.min(1, t * 4) : 10 - (t - 0.6) * 17), rooms: [7, 10] },
-  freighter: { length: 78, half: (t) => (t < 0.14 ? 8 : t < 0.84 ? 7 : 4), rooms: [10, 14] },
 };
 
 // A wreck lies along the screen with its bow to the right: a corridor along its spine, rooms on both sides,
@@ -205,171 +149,11 @@ function wreckPlan(state, hull) {
 // The wreck is drawn one column in from the edge of its grid.
 const boxShift = (box) => ({ ...box, c0: box.c0 + 1, c1: box.c1 + 1 });
 
-// ---------------------------------------------------------------- stations
-const SIZE = 73;
-const MID = 36;
-// How far a tile is from the middle of the station, measured so that the station comes out eight-sided.
-const reach = (x, y) => Math.max(Math.abs(x - MID), Math.abs(y - MID), (Math.abs(x - MID) + Math.abs(y - MID)) * 0.72);
-// The four docking arms, in the order of the ports of a station in kinds.js: up, down, left, right.
-const ARMS = [
-  [0, -1],
-  [0, 1],
-  [-1, 0],
-  [1, 0],
-];
-
-// A station is a ring round a hub, with four docking arms. The crew comes in through the arm they docked at.
-// Rooms lie between the ring and the hub. The hub is the vault, behind a locked door at the end of one spoke.
-function stationPlan(state) {
-  const grid = makeGrid(SIZE, SIZE);
-  for (let y = 0; y < SIZE; y++) {
-    for (let x = 0; x < SIZE; x++) {
-      const d = reach(x, y);
-      if (d <= 27) grid.set(x, y, '#');
-      if (d >= 21 && d <= 23) grid.set(x, y, ',');
-      if (d <= 7) grid.set(x, y, '.');
-    }
-  }
-  // The docking arms: a corridor out from the ring to an airlock at the tip.
-  const airlocks = ARMS.map(([dx, dy]) => {
-    // The airlock is the last tile of the arm, with nothing outside it, so that the tunnel from the frigate
-    // reaches it.
-    for (let k = 24; k <= 35; k++) {
-      for (let side = -2; side <= 2; side++) {
-        grid.set(MID + dx * k + dy * side, MID + dy * k + dx * side, Math.abs(side) === 2 ? '#' : k === 35 ? 'A' : ',');
-      }
-    }
-    return { x: px(MID + dx * 35) + TILE / 2, y: px(MID + dy * 35) + TILE / 2, nx: -dx, ny: -dy };
-  });
-  // One spoke leads from the ring in to the hub. Which one it is differs from station to station.
-  const [sx, sy] = pickOf(state, ARMS);
-  for (let k = 8; k <= 20; k++) {
-    for (let side = -1; side <= 1; side++)
-      grid.set(MID + sx * k + sy * side, MID + sy * k + sx * side, k === 8 ? 'L' : ',');
-  }
-  const hubDoor = { x: px(MID + sx * 8) + TILE / 2, y: px(MID + sy * 8) + TILE / 2 };
-
-  // The four blocks between the ring and the hub are cut into rooms, differently each time. Each block is
-  // split once or twice into boxes, in its own measure: u and v count tiles out from the two spokes beside it.
-  const cut = (box, axis, at) => {
-    const [u0, v0, u1, v1] = box;
-    return axis === 'u'
-      ? [
-          [u0, v0, at, v1],
-          [at, v0, u1, v1],
-        ]
-      : [
-          [u0, v0, u1, at],
-          [u0, at, u1, v1],
-        ];
-  };
-  const rooms = [];
-  const owner = new Map();
-  for (const qx of [-1, 1]) {
-    for (const qy of [-1, 1]) {
-      const axis = rand(state) < 0.5 ? 'u' : 'v';
-      let boxes = cut([3, 3, 20, 20], axis, pickInt(state, 9, 13));
-      boxes = boxes.flatMap((box) =>
-        rand(state) < 0.6 ? cut(box, axis === 'u' ? 'v' : 'u', pickInt(state, 9, 13)) : [box],
-      );
-      for (const [u0, v0, u1, v1] of boxes) {
-        const tiles = [];
-        for (let u = u0 + 1; u < u1; u++) {
-          for (let v = v0 + 1; v < v1; v++) {
-            const d = reach(MID + u, MID + v);
-            if (d >= 9 && d <= 19) tiles.push([MID + qx * u, MID + qy * v]);
-          }
-        }
-        if (tiles.length < 12) continue;
-        const room = { tiles, open: false, door: null };
-        rooms.push(room);
-        for (const [x, y] of tiles) owner.set(y * SIZE + x, room);
-      }
-    }
-  }
-  // Cut a door from a room straight through its wall to a tile that `wanted` says yes to, at most `far` away.
-  // The door is two tiles wide where there is room for that.
-  const doorFrom = (room, far, wanted) => {
-    const fits = [];
-    for (const [x, y] of room.tiles) {
-      for (const [dx, dy] of AROUND) {
-        const walls = [];
-        for (let k = 1; k <= far; k++) {
-          const p = [x + dx * k, y + dy * k];
-          if (grid.get(p[0], p[1]) === '#' && !owner.has(p[1] * SIZE + p[0])) {
-            walls.push(p);
-            continue;
-          }
-          if (walls.length && wanted(p[0], p[1])) fits.push({ walls, dx, dy });
-          break;
-        }
-      }
-    }
-    if (!fits.length) return null;
-    const { walls, dx, dy } = pickOf(state, fits);
-    for (const [x, y] of walls) grid.set(x, y, '.');
-    // The same again one tile to the side, if that is wall all the way too.
-    const beside = walls.map(([x, y]) => [x + dy, y + dx]);
-    const before = [beside[0][0] - dx, beside[0][1] - dy];
-    const after = [beside[beside.length - 1][0] + dx, beside[beside.length - 1][1] + dy];
-    const clear = beside.every(([x, y]) => grid.get(x, y) === '#' && !owner.has(y * SIZE + x));
-    if (clear && owner.get(before[1] * SIZE + before[0]) === room && wanted(after[0], after[1])) {
-      for (const [x, y] of beside) grid.set(x, y, '.');
-    }
-    const [mx, my] = walls[Math.floor(walls.length / 2)];
-    return { x: px(mx) + TILE / 2, y: px(my) + TILE / 2 };
-  };
-  // Rooms open onto the ring. A room that cannot reach the ring opens into a neighbour that can.
-  const carve = (room, c) => room.tiles.forEach(([x, y]) => grid.set(x, y, c));
-  for (const room of rooms) {
-    carve(room, '.');
-    room.door = doorFrom(room, 5, (x, y) => grid.get(x, y) === ',' && reach(x, y) >= 21);
-    room.open = !!room.door;
-    if (!room.open) carve(room, '#');
-  }
-  for (let again = true; again; ) {
-    again = false;
-    for (const room of rooms) {
-      if (room.open) continue;
-      carve(room, '.');
-      room.door = doorFrom(room, 2, (x, y) => {
-        const other = owner.get(y * SIZE + x);
-        return !!other && other !== room && other.open;
-      });
-      room.open = !!room.door;
-      if (room.open) again = true;
-      else carve(room, '#');
-    }
-  }
-  const whole = rooms.filter((r) => r.open);
-  const hub = {
-    c0: MID - 8,
-    c1: MID + 8,
-    r0: MID - 8,
-    r1: MID + 8,
-    door: hubDoor,
-    mid: { x: px(MID) + TILE / 2, y: px(MID) + TILE / 2 },
-  };
-  return {
-    w: SIZE,
-    h: SIZE,
-    tiles: grid.cells,
-    rooms: [...whole.map((r) => ({ ...boxOf(r.tiles), door: r.door, mid: midOf(r.tiles) })), hub],
-    vault: whole.length,
-    // The ring is cut into the four straight runs it has, for whatever is to stand in a corridor.
-    halls: ARMS.map(([dx, dy]) =>
-      dx === 0
-        ? { c0: MID - 9, c1: MID + 9, r0: MID + dy * 22 - 2, r1: MID + dy * 22 + 2 }
-        : { c0: MID + dx * 22 - 2, c1: MID + dx * 22 + 2, r0: MID - 9, r1: MID + 9 },
-    ),
-    airlocks,
-    far: { x: px(MID + sx * 12) + TILE / 2, y: px(MID + sy * 12) + TILE / 2 },
-  };
-}
-
 // `place` is the wreck or the station that is boarded.
 export function layOut(state, place) {
-  return place.kind === 'station' ? stationPlan(state) : wreckPlan(state, place.hull);
+  if (place.kind === 'station') return basePlan(state, place);
+  // A freighter has a plan of its own, see freighter.js.
+  return place.hull === 'freighter' ? freighterPlan(state) : wreckPlan(state, place.hull);
 }
 
 // Whether every airlock of a plan has an open way to the vault, counting its locked door as open.
@@ -384,7 +168,7 @@ export function planHolds(plan) {
   if (!vault || !vault.door) return false;
   const inVault = [Math.floor(vault.mid.x / TILE), Math.floor(vault.mid.y / TILE)];
   return plan.airlocks.every((a) => {
-    const steps = stepsFrom(grid, Math.floor(a.x / TILE), Math.floor(a.y / TILE));
+    const steps = stepsFrom(grid, Math.floor(a.x / TILE), Math.floor(a.y / TILE), plan.jumps);
     return steps.has(inVault[1] * plan.w + inVault[0]);
   });
 }

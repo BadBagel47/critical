@@ -5,7 +5,7 @@
 // when it is hurt. When there are several, one of them goes round another way to come at the intruder from
 // the side.
 import { B } from './balance.js';
-import { TILE, tileAt, solidTile, move, los, waysFrom, wayTo, middleOf } from './floor.js';
+import { TILE, tileAt, solidTile, move, los, waysFrom, wayTo, middleOf, deckOf } from './floor.js';
 import { forward, headingTo, angleDiff, turnToward, dist, rand, randRange, TAU } from './util.js';
 
 // The kinds of guard (F-126). Each is a share of what a plain guard has:
@@ -62,6 +62,9 @@ export function inStaff(it, p) {
   if (!it.trade || !it.staff) return false;
   const tx = Math.floor(p.x / TILE),
     ty = Math.floor(p.y / TILE);
+  // On a base the basement and the top are the staff's altogether, and so are the service corridors.
+  if (it.decks && deckOf(it, p.x) !== 1) return true;
+  if (it.halls.some((h) => h.staff && tx > h.c0 && tx < h.c1 && ty > h.r0 && ty < h.r1)) return true;
   return it.staff.some((i) => {
     const r = it.rooms[i];
     return tx > r.c0 && tx < r.c1 && ty > r.r0 && ty < r.r1;
@@ -221,6 +224,16 @@ function follow(it, g, dt, pace = 1) {
   while (g.path.length && dist(g.x, g.y, g.path[0].x, g.path[0].y) < 3) g.path.shift();
   if (!g.path.length) return false;
   const to = g.path[0];
+  // The next step is on another floor: the guard stands in a lift, on the stairs or at a ladder, and takes it.
+  if (it.jumps && dist(g.x, g.y, to.x, to.y) > TILE * 3) {
+    const here = Math.floor(g.y / TILE) * it.w + Math.floor(g.x / TILE);
+    if (it.jumps[here] !== undefined) {
+      g.x = to.x;
+      g.y = to.y;
+      g.path.shift();
+      return true;
+    }
+  }
   g.heading = turnToward(g.heading, headingTo(to.x - g.x, to.y - g.y), 8 * dt);
   const d = dist(g.x, g.y, to.x, to.y);
   const sp = Math.min(d, B.GUARD_SPEED * kindOf(g).speed * pace * dt);

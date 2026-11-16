@@ -224,6 +224,36 @@ export const B = {
   ROLE_HACK: 1.5,
   // How long the Engineer takes to switch off an alarmed door, and how many of them a station has at most.
   DISARM_TIME: 2.5,
+  // The standard base (F-209, F-210, F-250). How much floor there is to each guard while a place is on its
+  // guard and while all is calm, and to each turning light of an alarm, in tiles (R-1182).
+  GUARD_AREA: 500,
+  GUARD_AREA_CALM: 1200,
+  BEACON_AREA: 300,
+  // An airlock: how near its inner door a button is worked from, and how long it takes to turn round.
+  LOCK_REACH: 26,
+  LOCK_CYCLE: 1.5,
+  // The consoles of a base: how near one is worked from, and how long the switchgear, the drone hangar and the
+  // comms take. A guard is sent to look at switchgear that was put out quietly after BREAKER_CHECK seconds,
+  // and sees what is wrong from BREAKER_SEEN pixels away.
+  CONSOLE_REACH: 20,
+  BREAKER_TIME: 5,
+  HANGAR_TIME: 4,
+  COMMS_TIME: 4,
+  BREAKER_CHECK: 45,
+  BREAKER_SEEN: 56,
+  // With the power out things get worse in steps, this many seconds in: the guards fall back to the ways up,
+  // drones are let out, and the base calls for help (R-1168). The numbers are a start, to be set by playing.
+  PRESSURE: [30, 60, 90],
+  DRONE_WAVE: 2,
+  DRONE_EVERY: 25,
+  DRONE_MAX: 4,
+  // The help: how long until it docks once it is called, how many guards it brings, how long it stays, how far
+  // out it jumps in, and how far from the middle of a base a ship lies at a cargo arm.
+  RELIEF_TIME: 90,
+  RELIEF_GUARDS: 3,
+  RELIEF_STAY: 40,
+  RELIEF_FROM: 900,
+  BASE_BERTH: 300,
   ALARMED_DOORS: 3,
   // How long the Engineer takes to steady the reactor of a wreck, and how much time that buys, once.
   STEADY_TIME: 3,

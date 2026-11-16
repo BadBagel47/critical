@@ -6,7 +6,8 @@ import { CREW, PIRATE, ownSide, moodOf, enemies, changeStanding, provoke, isAngr
 import { thingsOf, findThing, findDock, mapInfo } from './things.js';
 import { makeVessel } from './vessels.js';
 import { currentSector } from './sectors.js';
-import { teleportAllHome } from './boarding.js';
+import { teleportAllHome, setMood } from './boarding.js';
+import { restorePower, openCommand } from './pressure.js';
 import {
   buyUpgrade,
   installPart,
@@ -162,8 +163,10 @@ export function takeOver(state, st) {
     it.alarmed = [];
     it.hack = null;
     it.seize = false;
-    it.mood = null;
-    it.dark = false;
+    // The power is back, and the command room stays open to the crew.
+    restorePower(st);
+    openCommand(it);
+    setMood(it, null);
     it.desks = [];
   }
   state.events.push({ type: 'stationTaken', name: st.name });
