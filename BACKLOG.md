@@ -57,6 +57,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
 **N** – strong model, high level – Slå ut och borda
+- D-248 – Se över hur man slår ut ett skepp för att borda det, så att Gunner har ett tydligt sätt att göra det i stället för att skeppet exploderar
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
 **O** – strong model, high level – Missiler och raketer
@@ -149,6 +150,8 @@ Väntar på användaren: elva krockar i regelboken (docs/rules.md, överst), fri
 | F-245 | Lockdown och larm ska synas olika: lockdown som ett stilla rött filter utan roterande ljus, larm med roterande ljus och blink, och fönstren utanpå stilla röda i lockdown och långsamt pulserande vid larm. Regler R-1149 till R-1151 | Ej påbörjad |
 | F-246 | Runda ytterväggar inne i standardbasen, både i bilden och när man går och krockar, så att golvet ute vid väggen går att nå. Regel R-1165 | Ej påbörjad |
 | F-247 | Höga föremål och stängda dörrar skymmer också synfälten, och kameror sitter bara på riktiga väggar. Regel R-1166 | Ej påbörjad |
+| D-248 | Se över hur man slår ut ett skepp för att borda det. Användaren 2026-11-16: i dag exploderar skeppen. Hör till F-081 och R-590, R-591 | Ej påbörjad |
+| D-249 | Designtest: genererad insida för fraktskepp som följer skeppets form (ryggrad med containrar). Användaren 2026-11-16: en stor öppen yta för eldstrider kombinerad med korridorer och ställen att gömma sig, banorna ska vara roliga att spela. Förslag: lastrum med containrar som skydd, ryggraden som snabb men öppen väg, servicegångar längs skrovet för att flankera, rum vid ändarna, lägena normal, lockdown och vrak | Pågår 2026-11-16 |
 | F-211 | Skeppet medan man bordar: vapen rakt fram skjuter inte dockat, försvar dockad kräver köpta kanontorn. Skeppet får lämna dockan men inte hoppa så länge någon är kvar i basen, och ingen teleporteras tillbaka. Vid nästan slut skrov backar det ut om en spelare i skeppet väljer det, eller av sig självt om datorn sköter Captain, och kommer tillbaka när någon kallar från luftslussen. Annars ligger det kvar under dockningsskölden. Ersätter D-043. Datorns del hänger ihop med D-186 | Ej påbörjad |
 | F-212 | Baserna anpassas efter antalet spelare, så att det inte blir för svårt ensam: vakter, drönare, tid till förstärkning, hur fort läget skärps och bossens liv. Förslag på nivåer i docs/proposal-bases.md, siffrorna sätts vid provspel | Ej påbörjad |
 | F-214 | Startkanonen: en enkel fast kanon rakt fram som alltid sitter kvar och går att uppgradera billigt. Används mest för att bryta malm. Kanontorn är inte standard utan köps. Förslag: tar ingen plats, uppgraderingar för skada, värme och malm per asteroid, och Heavy Laser klart starkare | Ej påbörjad |
