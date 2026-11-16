@@ -41,7 +41,6 @@ Funna när boken sattes ihop. Varje punkt har en rekommendation. Tills ett beslu
 
 Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är byggt. Det är inte fel, men det ska byggas. Reglerna står med status `bestämd`, och de gamla som `ersatt av`.
 - Slutet är piraternas slutbas med en boss. I dag är det Cruisern i The Maw.
-- Standardbasen har tre våningar, och övertagandet kräver först ett steg i källaren och sedan mainframen överst. I dag har stationerna en våning, och mainframen står i rummet längst in.
 - Ingen flyttas tillbaka till skeppet av sig själv, och skeppet får inte hoppa medan någon är inne. I dag kallas alla hem när skeppet lägger ut.
 - En övertagen bas får inget varv, utan det köps. I dag får en övertagen station shipyard.
 - Faktioner kan vara i krig med varandra. I dag slåss de bara i omstridda system.
@@ -49,9 +48,6 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 - Medan besättningen är inne anfalls det dockade skeppet aldrig när en spelar, och sällan när två eller tre spelar (R-1191). I dag anfaller bounty hunters det dockade skeppet efter ungefär en minut.
 - Anseendet förbättras inte av sig självt med tiden. I dag gör det det, fram till avvaktande, tills uppdragen finns.
 - Kanontorn köps, och skeppet börjar med en fast kanon rakt fram. I dag har skeppet ett torn i nosen och torn på vingarna.
-- Standardbasens utsida är bestämd efter designtestet D-217: kupoler, en ring som vrids till bron, lampor som visar hållningen, ST8 på en egen bas och tio tornplatser. I dag har stationerna sin gamla utsida.
-- Lockdown är ett stilla rött filter utan roterande ljus. I dag är lockdown mörkt med roterande röda ljus.
-- Fraktskeppets insida genereras med samma form som skeppet, ett stort lastrum och tre vägar längs skeppet (R-1183 till R-1186). I dag är den en ryggrad med rum på båda sidor, 80 gånger 21 rutor.
 
 ## Bränsle och färd
 
@@ -251,7 +247,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-156 | Att lägga ut kallar hem dem som är ombord på en station, utan teleport och utan kostnad. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-157 | En station som blir fientlig får en ny insida. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-158 | En övertagen station får diskar nästa gång någon går in. | byggd | HANDOFF beslut 2026-11-14 | saknas |
-| R-159 | En station har fyra kanontorn. | byggd | HANDOFF beslut 2026-11-14 | saknas |
+| R-159 | En station har fyra kanontorn. | ersatt av: R-1163 | HANDOFF beslut 2026-11-14 | saknas |
 | R-160 | En stations sköld är 200 och börjar laddas efter fem sekunder utan träffar. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-161 | En stations skrov är 1500 och lagas efter tjugo sekunder utan träffar. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-162 | En träff på ett kanontorn slår ut tornet. | byggd | HANDOFF beslut 2026-11-14 | saknas |
@@ -264,7 +260,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-169 | En neutral bas ska gå att ta över inifrån, med stor risk: red alert, bounty hunters som anfaller skeppet och sjunkande anseende. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-170 | Stationer kan falla till angripare även när besättningen är i ett annat system (på prov). | byggd | HANDOFF beslut 2026-11-14; station-boarding.md §14 | saknas |
 | R-171 | En station som anfalls varnar i tre nivåer, low, medium och high, efter hur stor risken är att den faller. | byggd | HANDOFF beslut 2026-11-14 | saknas |
-| R-172 | Ljusen på dockningsarmarnas spetsar visar hållningen: grönt vänlig, vitt neutral, gult avvaktande, släckt stängd och rött fientlig. | byggd | HANDOFF beslut 2026-11-14 | saknas |
+| R-172 | Ljusen på dockningsarmarnas spetsar visar hållningen: grönt vänlig, vitt neutral, gult avvaktande, släckt stängd och rött fientlig. | byggd | HANDOFF beslut 2026-11-14 | tests/base.test.js |
 | R-173 | Dockningsarmarna är infällda och fälls ut när ett skepp är inom 150 punkter och rör sig långsamt. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-174 | Spelet börjar vid den egna varvsstationen och inte i systemets mitt. | byggd | HANDOFF beslut 2026-11-15 | saknas |
 | R-175 | Skeppet startar så nära varvsstationen att ett F-tryck kan börja docka. | byggd | HANDOFF beslut 2026-11-15 | saknas |
@@ -317,7 +313,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-222 | En egen station lagas från mainframen del för del, även från ett annat system, och lagar sig inte själv. | byggd | BACKLOG F-110 | saknas |
 | R-223 | Ett lagat kanontorn står avslaget tills man slår på det i panelen. | byggd | BACKLOG F-110 | saknas |
 | R-224 | Uppgraderingar i HULL och SYSTEMS kräver shipyard, och ARMORY säljs på alla stationer som handlar. | byggd | proposal-economy.md 1.2 | saknas |
-| R-225 | Alla stationer har en mainframe längst in i det rum som ligger längst från luftslussen. | byggd | BACKLOG F-109 | saknas |
+| R-225 | Alla stationer har en mainframe längst in i det rum som ligger längst från luftslussen. | ersatt av: R-563 | BACKLOG F-109 | saknas |
 | R-226 | Hos en fiende hackar man mainframen i tre nivåer, och varje nivå fyller en spårningsmätare som utlöser larmet när den är full. | byggd | BACKLOG F-109 | saknas |
 | R-227 | Nivå 1 visar planritningen för alla, nivå 2 låter Engineer stänga av kameror och turrets i 60 sekunder och öppna valvet, och nivå 3 tar över stationen. | byggd | BACKLOG F-109 | saknas |
 | R-228 | Alla poster kan ta över en station, så den som spelar ensam är aldrig utelåst. | byggd | BACKLOG F-109 | saknas |
@@ -413,24 +409,24 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-316 | Besättningens egen varvsstation i första sektorn kan aldrig anfallas, tas över eller bli fientlig. | ersatt av: ett senare beslut, se källan | station-boarding.md §11, §14 (ersatt av fristaden, proposal-bases.md §1, §5) | – |
 | R-317 | Små stationer får en våning och större två (D-072), och stora baser är 1,5 gånger större (F-103). | ersatt av: ett senare beslut, se källan | proposal-bases.md §1 (ersatt av en vanlig bastyp, standardbasen med tre våningar, plus piraternas slutbas) | – |
 | R-318 | En övertagen station får shipyard. | ersatt av: ett senare beslut, se källan | proposal-bases.md §1 (ersatt av att varvet köps som permanent uppgradering, §7); proposal-economy.md 1.1 | – |
-| R-1152 | Mellan basen och ringen är en sluten skiva: källaren går ända ut till ringen, och ringen glider runt på dess kant. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1153 | Ringen har fyra portar för skepp, på diagonalerna. Fraktskepp dockar vid lastarmar som går rakt ut från källaren åt fyra håll, under ringen. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1154 | Ett skepp dockar vid en ledig port, och sedan vrids ringen ett kvarts varv åt gången tills porten står vid bron. Vid byggdockan vrids ringen inte. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1155 | En fast bro går från luftslussen på mittvåningen rakt ut till ringen, och porten har en dockningstub som fälls ut när ett skepp kommer och in när det har åkt. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1156 | Våningarna syns utifrån som låga, runda kupoler ovanpå varandra, källaren bredast och toppen minst, med ljus och skuggor från stjärnans håll. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1157 | Utsidan stämmer med insidan där det spelar roll: bron går från luftslussen, byggdockan ligger utanför varvsrummet och tornen sitter på sina rum. Fönster och andra detaljer är bara utseende. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1158 | Fönster finns runt om på alla våningar. De flesta lyser, några är släckta, och blandningen slumpas vid varje ankomst. Toppen har breda utsiktsfönster. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1159 | Utsidans lampor visar hållningen som dockningsarmarna (R-172): 48 lampor runt ringen, portarnas ljus, fyren på toppen och tornens ljus. En dämpad lampa går runt ringen ett varv på åtta sekunder. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1160 | En egen bas lyser blåturkos utanpå, så att den inte går att ta för en vänlig. Det som är målat på en egen bas har besättningens turkos. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1161 | När besättningen har tagit en bas målas ST8 på mittens kupol, mellan två portar på andra sidan från bron. Andra baser har inget namn målat. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1162 | Utanpå står varje bas vriden i en slumpad vinkel. Inne vrids planen bara i kvarts varv, och bron och luftslussen ska ändå passa ihop. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1152 | Mellan basen och ringen är en sluten skiva: källaren går ända ut till ringen, och ringen glider runt på dess kant. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1153 | Ringen har fyra portar för skepp, på diagonalerna. Fraktskepp dockar vid lastarmar som går rakt ut från källaren åt fyra håll, under ringen. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1154 | Ett skepp dockar vid en ledig port, och sedan vrids ringen ett kvarts varv åt gången tills porten står vid bron. Vid byggdockan vrids ringen inte. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/layout.test.js |
+| R-1155 | En fast bro går från luftslussen på mittvåningen rakt ut till ringen, och porten har en dockningstub som fälls ut när ett skepp kommer och in när det har åkt. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1156 | Våningarna syns utifrån som låga, runda kupoler ovanpå varandra, källaren bredast och toppen minst, med ljus och skuggor från stjärnans håll. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1157 | Utsidan stämmer med insidan där det spelar roll: bron går från luftslussen, byggdockan ligger utanför varvsrummet och tornen sitter på sina rum. Fönster och andra detaljer är bara utseende. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1158 | Fönster finns runt om på alla våningar. De flesta lyser, några är släckta, och blandningen slumpas vid varje ankomst. Toppen har breda utsiktsfönster. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1159 | Utsidans lampor visar hållningen som dockningsarmarna (R-172): 48 lampor runt ringen, portarnas ljus, fyren på toppen och tornens ljus. En dämpad lampa går runt ringen ett varv på åtta sekunder. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1160 | En egen bas lyser blåturkos utanpå, så att den inte går att ta för en vänlig. Det som är målat på en egen bas har besättningens turkos. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1161 | När besättningen har tagit en bas målas ST8 på mittens kupol, mellan två portar på andra sidan från bron. Andra baser har inget namn målat. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1162 | Utanpå står varje bas vriden i en slumpad vinkel. Inne vrids planen bara i kvarts varv, och bron och luftslussen ska ändå passa ihop. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
 | R-1163 | Basen har tio platser för kanontorn: fyra på källaren, fyra på mittens kant mellan portarna och två tunga på toppen. Lätt försvar ger två torn, medel sex och sköld, fullt alla tio och en starkare sköld. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1164 | En stor kanon kan köpas för sig, oberoende av försvarsnivån, och står mitt på toppens kupol. Utan den är platsen en stängd lucka. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1165 | Ytterväggarna inne följer basens runda form, både i bilden och när man går och krockar. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1166 | Höga föremål och stängda dörrar skymmer också synfälten, och kameror sitter bara på riktiga väggar, inte i dörröppningar eller bakom höga föremål. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1167 | Strömmen kan slås ut tyst vid ställverket eller högljutt genom att spränga det. Tyst ändrar inte läget, men efter en stund skickas en vakt för att se efter. Högljutt går fort, men larmet går direkt. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1168 | Efter källaren skärps läget i steg ju längre man dröjer: vakterna drar sig upp mot hissen och trapporna till toppen, drönare släpps från hangaren om den är hel, basen ropar på förstärkning med en synlig nedräkning som kommunikationsrummet kan stoppa, och förstärkningen dockar med fler vakter. Takten sätts vid provspel. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1169 | Varvet syns utifrån som en byggdocka med balkar, kranar och strålkastare, och en gångbro över ringen till varvsrummet. Utan varv är rummet en utsiktssalong. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1164 | En stor kanon kan köpas för sig, oberoende av försvarsnivån, och står mitt på toppens kupol. Utan den är platsen en stängd lucka. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1165 | Ytterväggarna inne följer basens runda form, både i bilden och när man går och krockar. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1166 | Höga föremål och stängda dörrar skymmer också synfälten, och kameror sitter bara på riktiga väggar, inte i dörröppningar eller bakom höga föremål. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1167 | Strömmen kan slås ut tyst vid ställverket eller högljutt genom att spränga det. Tyst ändrar inte läget, men efter en stund skickas en vakt för att se efter. Högljutt går fort, men larmet går direkt. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1168 | Efter källaren skärps läget i steg ju längre man dröjer: vakterna drar sig upp mot hissen och trapporna till toppen, drönare släpps från hangaren om den är hel, basen ropar på förstärkning med en synlig nedräkning som kommunikationsrummet kan stoppa, och förstärkningen dockar med fler vakter. Takten sätts vid provspel. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1169 | Varvet syns utifrån som en byggdocka med balkar, kranar och strålkastare, och en gångbro över ringen till varvsrummet. Utan varv är rummet en utsiktssalong. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
 
 ## Faktioner och anseende
 
@@ -608,7 +604,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-482 | Skeppet bär en sprängladdning åt gången. | byggd | HANDOFF beslut 2026-11-15 | saknas |
 | R-483 | Bara Gunner tar med sprängladdningen in. | byggd | HANDOFF beslut 2026-11-15 | saknas |
 | R-484 | Ett fraktskepp som förstörs lämnar ett vrak. | byggd | HANDOFF beslut 2026-11-14 | saknas |
-| R-485 | Insidans storlek i rutor är Gunboat 38 gånger 21, okänt skrov 54 gånger 25, fraktskepp 80 gånger 21 och station 73 gånger 73. | byggd | HANDOFF beslut 2026-11-14 | saknas |
+| R-485 | Insidans storlek i rutor är Gunboat 38 gånger 21, okänt skrov 54 gånger 25, fraktskepp 80 gånger 21 och station 73 gånger 73. | ersatt av: R-1186 och R-1206 | HANDOFF beslut 2026-11-14 | saknas |
 | R-486 | Vrak har ibland rum som är uppslitna mot rymden och inte går att gå in i. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-487 | Valvet är rummet längst från luftslussen. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-488 | En station har tills vidare en enda väg in till navet, som är valvet, genom en låst dörr. | byggd | HANDOFF beslut 2026-11-14 | saknas |
@@ -687,7 +683,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-560 | Captain öppnar bordningsradarn med B när skeppet ligger dockat och någon har varit inne, och ett klick sätter en markering som bordarna ser. | byggd | BACKLOG F-140 | saknas |
 | R-561 | Går Captain själv in bär hen en radar som visar fiender inom åtta rutor. | byggd | BACKLOG F-140 | saknas |
 | R-562 | Granater är gratis, tre per bordning. | byggd | proposal-items.md 1; proposal-items.md fråga 2 | saknas |
-| R-563 | Mainframen står längst in, på översta våningen där det finns flera. | bestämd | HANDOFF beslut 2026-11-14 | – |
+| R-563 | Mainframen står längst in, på översta våningen där det finns flera. | byggd | HANDOFF beslut 2026-11-14 | tests/base.test.js |
 | R-564 | Man måste alltid ta sig förbi vakterna för att nå mainframen. | bestämd | HANDOFF beslut 2026-11-14 | – |
 | R-565 | Vakter ska finnas i flera typer, lättare i början och svårare längre fram. | bestämd | HANDOFF beslut 2026-11-14 | – |
 | R-566 | Ett skepp som besättningen själv slagit ut har besättning och ström kvar och är i lockdown, med röda ljus och smygande. | bestämd | HANDOFF beslut 2026-11-15 | – |
@@ -727,15 +723,19 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-599 | Gevär, lampa och teleporter kostar aldrig något. | förslag | proposal-items.md sammanfattning och 3 | – |
 | R-600 | Captain ger överblick vid bordning genom att se vakter och kameror en bit genom väggar, och hela gruppen får se det. | ersatt av: ett senare beslut, se källan | HANDOFF beslut 2026-11-14 (ersatt samma dag av Captains bärbara radar, F-140) | – |
 | R-601 | Lägger skeppet ut medan någon är kvar inne teleporteras alla hem (D-043). | ersatt av: ett senare beslut, se källan | proposal-bases.md §1 (ersatt av att ingen flyttas tillbaka av sig själv, §4) | – |
-| R-1149 | Lockdown har ett stilla rött filter över ljuset och stilla röda dörrlampor, med stängda dörrar och utan roterande ljus. På en egen bas är det gult i stället för rött. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1150 | Rött ljus betyder alltid att stället räknar besättningen som fiende: stilla i lockdown, roterande och blinkande vid larm. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1151 | Fönstren utanpå lyser stilla rött i lockdown och pulserar långsamt rött vid larm. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
-| R-1182 | Antalet vakter och roterande larmljus följer hur stor ytan är, så att det känns lika tätt överallt, och larmljusen sprids jämnt i gångar och lastrum. Utgångsläge: ett larmljus per 300 rutor golv och en vakt per 500 rutor i lockdown och larm (en per 1200 i lugnt läge), justeras vid provspel. | bestämd | Användaren 2026-11-16 (designtest D-249) | – |
-| R-1183 | Ett fraktskepps insida genereras varje gång och följer skeppets form: aktern med motorerna, fyra rader containrar på båda sidor om en ryggrad och fören med bryggan. | bestämd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | – |
-| R-1184 | Varje fraktskepp har minst ett stort lastrum för eldstrider, och tre vägar längs skeppet: ryggraden, lastrummen och servicegångar längs skrovet, med tvärgångar emellan och inga återvändsgränder utom rummen. | bestämd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | – |
-| R-1185 | Ett fraktskeppsvrak är samma skepp med en eller två containrar bortslitna. | bestämd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | – |
-| R-1186 | Fraktskeppets insida blir ungefär 92 gånger 31 rutor, större än i dag (R-485). | bestämd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | – |
-| R-1188 | Vid larm tänds alla lampor fullt, som om stället vaknar och letar. Det röda filtret finns bara i lockdown. | bestämd | Användaren 2026-11-16 (designtest D-217 och D-249) | – |
+| R-1149 | Lockdown har ett stilla rött filter över ljuset och stilla röda dörrlampor, med stängda dörrar och utan roterande ljus. På en egen bas är det gult i stället för rött. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1150 | Rött ljus betyder alltid att stället räknar besättningen som fiende: stilla i lockdown, roterande och blinkande vid larm. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1151 | Fönstren utanpå lyser stilla rött i lockdown och pulserar långsamt rött vid larm. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
+| R-1182 | Antalet vakter och roterande larmljus följer hur stor ytan är, så att det känns lika tätt överallt, och larmljusen sprids jämnt i gångar och lastrum. Utgångsläge: ett larmljus per 300 rutor golv och en vakt per 500 rutor i lockdown och larm (en per 1200 i lugnt läge), justeras vid provspel. | byggd | Användaren 2026-11-16 (designtest D-249) | tests/base.test.js |
+| R-1183 | Ett fraktskepps insida genereras varje gång och följer skeppets form: aktern med motorerna, fyra rader containrar på båda sidor om en ryggrad och fören med bryggan. | byggd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | tests/layout.test.js |
+| R-1184 | Varje fraktskepp har minst ett stort lastrum för eldstrider, och tre vägar längs skeppet: ryggraden, lastrummen och servicegångar längs skrovet, med tvärgångar emellan och inga återvändsgränder utom rummen. | byggd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | tests/layout.test.js |
+| R-1185 | Ett fraktskeppsvrak är samma skepp med en eller två containrar bortslitna. | byggd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | tests/layout.test.js |
+| R-1186 | Fraktskeppets insida blir ungefär 92 gånger 31 rutor, större än i dag (R-485). | byggd | BACKLOG D-249; Användaren 2026-11-16 (designtestet godkänt) | tests/layout.test.js |
+| R-1188 | Vid larm tänds alla lampor fullt, som om stället vaknar och letar. Det röda filtret finns bara i lockdown. | byggd | Användaren 2026-11-16 (designtest D-217 och D-249) | tests/base.test.js |
+| R-1205 | Mellan två våningar finns alltid tre vägar: hissen genom säkerhetskontrollen, som hörs, trappan från en servicegång, som är tyst, och en stege bakom en larmad dörr. | byggd | Designtest D-217 (godkänt 2026-11-16) | tests/base.test.js |
+| R-1206 | Insidan av en Gunboat är 38 gånger 21 rutor och av ett okänt skrov 54 gånger 25. | byggd | HANDOFF beslut 2026-11-14 (R-485, utan fraktskeppet och stationen) | tests/layout.test.js |
+| R-1207 | En bas som inte är besättningens har alltid minst de fyra kanontornen på källaren, som den alltid har haft, så att den kan försvara sig. Besättningens egen bas har bara de torn som är köpta. | förslag | Agentens tolkning av R-1163 och R-159 2026-11-16 (F-244) | – |
+| R-1208 | Kanontornen på basens tio platser följer köpt försvar: inget köpt ger inga torn, sedan två, sex och alla tio (delen av R-1163 som gäller tornen). Skölden köps fortfarande för sig. | byggd | Användaren 2026-11-16 (designtest D-217, R-1163) | tests/base.test.js |
 | R-1189 | Ingen markering visar vägen ut, varken spår i golvet eller pilar. | bestämd | Användaren 2026-11-16 (D-216 skippad) | – |
 
 ## Lås och inbrott

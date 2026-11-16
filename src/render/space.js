@@ -1,7 +1,7 @@
 // The space view: world, ships, shots and effects. Used by the Captain and Gunner posts.
 import { VIEW_W, VIEW_H, ZOOM, COL } from '../config.js';
 import { B, SHIP_GEOM, WING_MOUNTS } from '../sim/balance.js';
-import { SHIPS } from '../sim/kinds.js';
+import { SHIPS, BASE } from '../sim/kinds.js';
 import { nodeStatus, dockCandidate, shipNose, speedOf } from '../sim/ship.js';
 import { dockTargets, portsOf } from '../sim/things.js';
 import { isVisible, visionSources } from '../sim/map.js';
@@ -447,7 +447,7 @@ function drawSpaceLights(ctx, state, env, near) {
       const lamp = podLamp(t, state.time + (t.id % 7) * 0.13);
       if (lamp) shine(ctx, t.x, t.y, 30, rgbOf(lamp), 0.5);
     }
-    if (t.kind !== 'station' || !near(t, 140)) continue;
+    if (t.kind !== 'station' || !near(t, 300)) continue;
     const { color, tips } = armLights(t, env);
     if (color === '#1c1c28') continue;
     for (const p of tips) shine(ctx, p.x, p.y, 58, rgbOf(color), 0.5);
@@ -473,13 +473,15 @@ function shapeOf(img) {
 }
 function drawShadow(ctx, state, v, env) {
   const under = state.things.find(
-    (t) => (t.kind === 'station' || t.kind === 'wreck') && dist(t.x, t.y, v.x, v.y) < (t.kind === 'station' ? 150 : 90),
+    (t) =>
+      (t.kind === 'station' || t.kind === 'wreck') &&
+      dist(t.x, t.y, v.x, v.y) < (t.kind === 'station' ? BASE.ring[1] : 90),
   );
   if (!under) return;
   const own = v === state.ship;
   const img = own ? env.img.frigate : spriteOfVessel(v, env.img);
   ctx.save();
-  circle(ctx, under.x, under.y, under.kind === 'station' ? 112 : 70);
+  circle(ctx, under.x, under.y, under.kind === 'station' ? BASE.ring[1] : 70);
   ctx.clip();
   ctx.globalAlpha = 0.4;
   // The frigate's picture turns about a point that is not its middle.

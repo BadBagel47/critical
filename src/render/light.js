@@ -16,7 +16,7 @@ const SHINE = 0.07;
 const INTO_FRONT = 10;
 const INTO_TOP = 6;
 const INTO_SIDE = 8;
-const stops = (c) => c === '#' || c === 'L';
+const stops = (c) => c === '#' || c === 'L' || c === 'D';
 
 // How far a ray from x, y gets, at most r: to the first wall and a little way into it.
 function reach(it, x, y, dx, dy, r) {

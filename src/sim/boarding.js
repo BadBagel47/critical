@@ -793,7 +793,7 @@ export function useTarget(it, av) {
   if (lock >= 0) return { type: 'lock', lock, busy: it.locks[lock].busy > 0 };
   // A way to another floor: the lift, the stairs or the ladder.
   const link = linkAt(it, av);
-  if (link) return { type: 'link', ...link };
+  if (link) return { type: 'link', link: link.link, to: link.to, up: link.up };
   if (it.breaker && !it.breaker.out && dist(av.x, av.y, it.breaker.x, it.breaker.y) < B.CONSOLE_REACH)
     return { type: 'breaker' };
   if (it.hangar && !it.hangar.out && !it.trade && dist(av.x, av.y, it.hangar.x, it.hangar.y) < B.CONSOLE_REACH)

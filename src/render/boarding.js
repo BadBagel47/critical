@@ -13,6 +13,8 @@ import { shade, litArea, flareLevel, lampLevel } from './light.js';
 import { forward, dist } from '../sim/util.js';
 import { hunters, roomName } from './radar.js';
 import { awake } from '../sim/guards.js';
+import { deckOf } from '../sim/floor.js';
+import { DECK, DECK_NAMES } from '../sim/base.js';
 import { drawFigure } from './figures.js';
 import { likeOf } from '../sim/furnish.js';
 import { shownPurse, ROLE_NAME } from '../sim/purses.js';
@@ -27,7 +29,18 @@ export function insideOrigin(it, me) {
     if (size + 2 * OUTSIDE <= room) return lo + (room - size) / 2;
     return Math.round(Math.max(view - hi - size - OUTSIDE, Math.min(lo + OUTSIDE, view / 2 - pos)));
   };
-  return { x: along(VIEW_W, it.w * TILE, at.x, 0, 0), y: along(VIEW_H, it.h * TILE, at.y, 28, 30) };
+  // A base has its floors side by side: the camera keeps to the floor the player is on.
+  const d = deckBox(it, at);
+  return {
+    x: along(VIEW_W, d.w * TILE, at.x - d.x0 * TILE, 0, 0) - d.x0 * TILE,
+    y: along(VIEW_H, it.h * TILE, at.y, 28, 30),
+  };
+}
+// Where the floor that a spot is on lies in the grid, in tiles: all of it in a place with one floor.
+export function deckBox(it, at) {
+  if (!it.decks) return { x0: 0, w: it.w, deck: null };
+  const deck = it.decks[deckOf(it, at.x)];
+  return { x0: deck.x0, w: DECK, deck };
 }
 const OUTSIDE = 96;
 const FLOOR = new Set(['.', ',', 'A']);
@@ -132,7 +145,7 @@ function shadow(ctx, x, y, r) {
 const fmt = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 
 // The tiles that are on the screen, given where the place is drawn.
-function drawTiles(ctx, it, origin, style) {
+function drawTiles(ctx, it, origin, style, time = 0) {
   const wall = style.wall;
   const tx0 = Math.max(0, Math.floor(-origin.x / TILE) - 1);
   const ty0 = Math.max(0, Math.floor(-origin.y / TILE) - 1);
@@ -148,8 +161,8 @@ function drawTiles(ctx, it, origin, style) {
         if ((tx * 3 + ty * 5) % 4 === 0) rect(ctx, x + 2, y + 3, TILE - 5, TILE - 6, '#14141c', '#22232d');
         continue;
       }
-      if (!FLOOR.has(c) && c !== 'K') continue;
-      rect(ctx, x, y, TILE, TILE, style.floor[(c === ',' ? 2 : 0) + ((tx + ty) % 2)]);
+      if (!FLOOR.has(c) && c !== 'K' && c !== 'D') continue;
+      rect(ctx, x, y, TILE, TILE, style.floor[(c === ',' || c === 'D' ? 2 : 0) + ((tx + ty) % 2)]);
       ctx.fillStyle = style.floor[4];
       ctx.fillRect(x, y + TILE - 1, TILE, 1);
       ctx.fillRect(x + TILE - 1, y, 1, TILE);
@@ -213,7 +226,7 @@ function drawTiles(ctx, it, origin, style) {
       if (open(1, 0)) ctx.fillRect(x + TILE - 1, y, 1, TILE);
     }
   drawThings(ctx, it, tx0, ty0, tx1, ty1);
-  drawDoors(ctx, it);
+  drawDoors(ctx, it, time);
 }
 
 // What each tile of furniture belongs to: the use of the room it stands in. Worked out once for each place.
@@ -281,11 +294,28 @@ function drawThings(ctx, it, tx0, ty0, tx1, ty1) {
     }
 }
 
-// The doors of the rooms: shut, a slab with a green lamp, and open, two halves slid into the frame.
-function drawDoors(ctx, it) {
+// The lamp on a door. Green where all is calm. In lockdown every door lamp is red and still, and in an alarm it
+// blinks, once a second at most (R-1149, R-1150, R-1193). The doors of an airlock are yellow while it turns, and
+// those of the command room red while they are sealed.
+export function doorLamp(it, d, closed, time) {
+  if (it.mood === 'alarm') return time % 1 < 0.5 ? COL.ember[2] : COL.ember[0];
+  if (it.mood === 'lockdown') return it.power === false ? '#ff9a46' : '#ff5a48';
+  if (d.kind === 'lock') {
+    const lock = it.locks && it.locks[it.airlocks.findIndex((a) => a.room === d.room)];
+    return lock && lock.busy > 0 ? COL.ochre[2] : COL.acid[2];
+  }
+  if (d.kind === 'command' && closed) return '#ff5a48';
+  return COL.acid[2];
+}
+// The doors of the rooms: shut, a slab with a lamp, and open, two halves slid into the frame. A sealed door (of an
+// airlock or the command room) is shut while its tiles are sealed.
+function drawDoors(ctx, it, time = 0) {
   const shut = new Set(it.shut || []);
   for (const d of it.doors || []) {
-    const closed = d.tiles.some((i) => shut.has(i));
+    const sealed = d.tiles.some((i) => it.tiles[i] === 'D');
+    const closed = sealed || d.tiles.some((i) => shut.has(i));
+    const lamp = doorLamp(it, d, closed, time);
+    const heavy = d.kind === 'lock' || d.kind === 'command';
     for (const i of d.tiles) {
       const tx = i % it.w,
         ty = (i - tx) / it.w;
@@ -294,9 +324,16 @@ function drawDoors(ctx, it) {
       // Which way the doorway runs: across a wall above and below it, or one to its left and right.
       const across = solid(tileAt(it, tx - 1, ty)) || solid(tileAt(it, tx + 1, ty));
       if (closed) {
-        if (across) rect(ctx, x, y + 5, TILE, 6, '#2c2d3b', COL.out);
-        else rect(ctx, x + 5, y, 6, TILE, '#2c2d3b', COL.out);
-        ctx.fillStyle = COL.acid[2];
+        const t = heavy ? 4 : 5;
+        if (across) rect(ctx, x, y + t, TILE, TILE - 2 * t, heavy ? '#3a3b4c' : '#2c2d3b', COL.out);
+        else rect(ctx, x + t, y, TILE - 2 * t, TILE, heavy ? '#3a3b4c' : '#2c2d3b', COL.out);
+        // Hazard stripes on the heavy doors.
+        if (heavy) {
+          ctx.fillStyle = '#8a7234';
+          if (across) for (let k = 1; k < TILE; k += 4) ctx.fillRect(x + k, y + t + 1, 2, 1);
+          else for (let k = 1; k < TILE; k += 4) ctx.fillRect(x + t + 1, y + k, 1, 2);
+        }
+        ctx.fillStyle = lamp;
         ctx.fillRect(x + 7, y + 7, 2, 2);
       } else {
         ctx.fillStyle = '#434557';
@@ -315,7 +352,13 @@ function drawDoors(ctx, it) {
 // A small plan of the whole place in the corner, since it no longer fits on the screen. It is drawn once and
 // kept, and drawn again when a door has opened.
 const plans = new WeakMap();
+// The name of the floor under the small plan. Set by drawBoarding, which has the font.
+let planFont = null;
+const font2 = (ctx, text, x, y) => planFont && planFont.draw(ctx, text, x, y, COL.dim, { align: 'c' });
 function drawPlan(ctx, it, me, x, y, radar = []) {
+  // On a base only the floor the player is on.
+  const box = deckBox(it, me || it.entry);
+  const ox = box.x0;
   let kept = plans.get(it);
   if (!kept || kept.tiles !== it.tiles) {
     const canvas = document.createElement('canvas');
@@ -343,10 +386,17 @@ function drawPlan(ctx, it, me, x, y, radar = []) {
     kept = { canvas, tiles: it.tiles };
     plans.set(it, kept);
   }
-  rect(ctx, x - 3, y - 3, it.w + 6, it.h + 6, COL.panel, COL.line);
+  rect(ctx, x - 3, y - 3, box.w + 6, it.h + 6, COL.panel, COL.line);
   ctx.globalAlpha = 0.9;
-  ctx.drawImage(kept.canvas, x, y);
+  ctx.drawImage(kept.canvas, ox, 0, box.w, it.h, x, y, box.w, it.h);
   ctx.globalAlpha = 1;
+  if (box.deck) font2(ctx, box.deck.name, x + box.w / 2, y + it.h + 5);
+  // Everything below is placed on the floor that is shown, and what is on other floors is left out.
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, box.w, it.h);
+  ctx.clip();
+  x -= ox;
   ctx.fillStyle = COL.acid[2];
   ctx.fillRect(x + Math.floor(it.entry.x / TILE) - 1, y + Math.floor(it.entry.y / TILE) - 1, 2, 2);
   if (it.pin) {
@@ -374,9 +424,11 @@ function drawPlan(ctx, it, me, x, y, radar = []) {
     ctx.fillStyle = COL.ember[2];
     ctx.fillRect(x + Math.floor(e.x / TILE) - 1, y + Math.floor(e.y / TILE) - 1, 2, 2);
   }
-  if (!me) return;
-  ctx.fillStyle = COL.white;
-  ctx.fillRect(x + Math.floor(me.x / TILE) - 1, y + Math.floor(me.y / TILE) - 1, 3, 3);
+  if (me) {
+    ctx.fillStyle = COL.white;
+    ctx.fillRect(x + Math.floor(me.x / TILE) - 1, y + Math.floor(me.y / TILE) - 1, 3, 3);
+  }
+  ctx.restore();
 }
 
 // Enemies that are after someone and are not on the screen: an arrow at the edge says where they come from.
@@ -567,7 +619,10 @@ const COLD = '196,214,236';
 const RED = '255,74,52';
 // Every light in a dark place: the few lamps that still work, the way home, what the crew carries and
 // throws, and the small lights that guards and turrets carry themselves, so that nothing shoots unseen.
-function lightsOf(state, it, style, origin) {
+const EMERGENCY = '255,150,70';
+// The colour of a place that has shut itself in: red at an enemy, yellow at a base of the crew's own (R-1149).
+export const lockColour = (place) => (place.side === 'crew' ? '255,200,90' : '255,96,74');
+function lightsOf(state, place, it, style, origin) {
   const time = state.time;
   const lights = [];
   const round = (x, y, r, rgb, power) => lights.push({ x, y, r, rgb, power, area: litArea(it, x, y, r) });
@@ -582,15 +637,14 @@ function lightsOf(state, it, style, origin) {
         y = ty * TILE;
       if (tileAt(it, tx, ty) === 'L') small(x, y + 9, 20, '219,164,69', 0.5);
       else if (lampAt(it, style, tx, ty)) {
-        if (!it.mood) round(x, y + TILE + 2, 40, COLD, 0.5 * lampLevel(scatter(tx, ty), time));
-        else {
-          // In lockdown the lamps are red and their light turns slowly. In an alarm it turns fast.
-          const n = scatter(tx, ty);
-          const way = time * (it.mood === 'alarm' ? 3.2 : 1.1) + (n % 63) / 10;
-          const area = litArea(it, x, y + TILE + 2, 96, way, 0.55);
-          lights.push({ x, y: y + TILE + 2, r: 96, rgb: RED, power: 0.6, area, far: true });
-          round(x, y + TILE + 2, 26, RED, 0.35);
+        const n = scatter(tx, ty);
+        if (it.wreck) round(x, y + TILE + 2, 40, COLD, 0.5 * lampLevel(n, time));
+        // With the power out only the emergency lamps burn, one in three, weak and orange.
+        else if (!it.power) {
+          if (n % 3 === 0) round(x, y + TILE + 2, 46, EMERGENCY, 0.42);
         }
+        // In lockdown every lamp burns red, and still (R-1149). On a base of the crew's own it is yellow.
+        else round(x, y + TILE + 2, 58, lockColour(place), 0.5);
       }
     }
   round(it.entry.x, it.entry.y, 46, '190,236,200', 0.55);
@@ -817,13 +871,157 @@ function drawStaffDoors(ctx, font, it) {
   }
 }
 
+// How thick the round outer wall of a floor of a base is drawn, in pixels.
+const HULL = 9;
+// The round outer wall: a band along the circle, lit a little on its inner edge.
+function drawHull(ctx, deck, style) {
+  ctx.lineWidth = HULL;
+  ctx.strokeStyle = style.wall[1];
+  ctx.beginPath();
+  ctx.arc(deck.cx, deck.cy, deck.r + HULL / 2, 0, 7);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = style.wall[2];
+  ctx.beginPath();
+  ctx.arc(deck.cx, deck.cy, deck.r + 0.5, 0, 7);
+  ctx.stroke();
+  ctx.strokeStyle = COL.out;
+  ctx.beginPath();
+  ctx.arc(deck.cx, deck.cy, deck.r + HULL - 0.5, 0, 7);
+  ctx.stroke();
+}
+
+// The ways between floors: the floor of the lift, the steps of the stairs and the rungs of a ladder, and a sign
+// that says where they go.
+const LINK_NAME = { lift: 'LIFT', stairs: 'STAIRS', ladder: 'LADDER' };
+function drawLinks(ctx, font, it) {
+  for (const l of it.links || []) {
+    l.at.forEach((p, k) => {
+      const up = k === 0;
+      if (l.kind === 'lift') {
+        rect(ctx, p.x - 22, p.y - 14, 44, 28, '#23252f', COL.out);
+        ctx.fillStyle = '#3a3d4e';
+        for (let i = -18; i < 20; i += 6) ctx.fillRect(p.x + i, p.y - 12, 1, 24);
+      } else if (l.kind === 'stairs') {
+        for (let i = 0; i < 6; i++)
+          rect(ctx, p.x - 14, p.y - 30 + i * 10, 28, 8, i % 2 ? '#2e303c' : '#363846', COL.out);
+      } else {
+        ctx.fillStyle = '#6a6e80';
+        ctx.fillRect(p.x - 6, p.y - 12, 1, 24);
+        ctx.fillRect(p.x + 5, p.y - 12, 1, 24);
+        for (let i = -10; i < 12; i += 5) ctx.fillRect(p.x - 6, p.y + i, 12, 1);
+      }
+      const where = DECK_NAMES[l.decks[up ? 1 : 0]];
+      font.draw(ctx, `${LINK_NAME[l.kind]}  ${up ? 'UP' : 'DOWN'} TO ${where}`, p.x, p.y - 28, COL.ion[2], {
+        align: 'c',
+      });
+    });
+  }
+}
+
+// What stands in a base besides the mainframe: the switchgear in the basement, the drone hangar and the comms.
+function drawConsoles(ctx, font, it, time, me) {
+  const near = (p) => me && dist(me.x, me.y, p.x, p.y) < 90;
+  const b = it.breaker;
+  if (b) {
+    rect(ctx, b.x - 10, b.y - 8, 20, 16, '#24262f', COL.out);
+    for (let i = 0; i < 4; i++) {
+      const on = !b.out && Math.floor(time * 2 + i) % 3 !== 0;
+      rect(ctx, b.x - 8 + i * 4, b.y - 6, 3, 5, on ? COL.acid[1] : '#1a1b22');
+    }
+    ctx.fillStyle = b.out ? COL.ember[0] : COL.ochre[2];
+    ctx.fillRect(b.x - 8, b.y + 2, 16, 2);
+    if (b.out && b.loud && Math.floor(time * 6) % 3 === 0) {
+      ctx.fillStyle = COL.ochre[3];
+      ctx.fillRect(b.x + ((time * 37) % 14) - 7, b.y - 9, 1, 1);
+    }
+    if (near(b))
+      font.draw(ctx, b.out ? 'SWITCHGEAR  ·  OUT' : 'SWITCHGEAR', b.x, b.y - 20, COL.ochre[2], { align: 'c' });
+  }
+  const h = it.hangar;
+  if (h) {
+    rect(ctx, h.x - 16, h.y - 16, 32, 32, '#1e2028', COL.out);
+    ctx.fillStyle = h.out ? '#3a2a22' : COL.ochre[1];
+    for (let k = -14; k < 14; k += 6) {
+      ctx.fillRect(h.x + k, h.y - 15, 3, 2);
+      ctx.fillRect(h.x + k, h.y + 13, 3, 2);
+    }
+    if (h.out) {
+      ctx.fillStyle = COL.out;
+      ctx.fillRect(h.x - 10, h.y - 2, 20, 4);
+    }
+    if (near(h))
+      font.draw(ctx, h.out ? 'DRONE HANGAR  ·  WRECKED' : 'DRONE HANGAR', h.x, h.y - 26, COL.ochre[2], { align: 'c' });
+  }
+  const c = it.comms;
+  if (c) {
+    rect(ctx, c.x - 9, c.y - 6, 18, 12, '#24262f', COL.out);
+    const calling = !!it.call;
+    rect(ctx, c.x - 7, c.y - 4, 14, 5, calling && time % 1 < 0.5 ? COL.ember[2] : COL.acid[1]);
+    if (near(c) || calling) {
+      const text = calling ? 'COMMS  ·  CALLING FOR HELP' : 'COMMS';
+      font.draw(ctx, text, c.x, c.y - 18, calling ? COL.ember[2] : COL.acid[2], { align: 'c' });
+    }
+  }
+}
+
+// The turning lights of an alarm, spread over the floor (R-1182): each a red beam that goes round.
+function drawBeacons(ctx, it, time, origin) {
+  if (it.mood !== 'alarm') return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  it.beacons.forEach((b, i) => {
+    const sx = b.x + origin.x,
+      sy = b.y + origin.y;
+    if (sx < -120 || sy < -120 || sx > VIEW_W + 120 || sy > VIEW_H + 120) return;
+    const way = time * 2.6 + i * 1.7;
+    const area = litArea(it, b.x, b.y, 110, way, 0.42);
+    const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 110);
+    g.addColorStop(0, 'rgba(255,60,40,0.42)');
+    g.addColorStop(1, 'rgba(255,60,40,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(area[0][0], area[0][1]);
+    for (let k = 1; k < area.length; k++) ctx.lineTo(area[k][0], area[k][1]);
+    ctx.closePath();
+    ctx.fill();
+  });
+  ctx.restore();
+  for (const b of it.beacons) {
+    rect(ctx, b.x - 3, b.y - 3, 6, 6, '#5a1a16', COL.out);
+    ctx.fillStyle = COL.ember[2];
+    ctx.fillRect(b.x - 1, b.y - 1, 2, 2);
+  }
+}
+
+// Lockdown: a still red filter over the whole floor, and no light that moves (R-1149). Yellow on the crew's own.
+function lockdownFilter(ctx, place, it, origin) {
+  if (it.mood !== 'lockdown' || it.wreck || !it.power) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = place.side === 'crew' ? '#ffe0a0' : '#ffaa9c';
+  ctx.fillRect(-origin.x, -origin.y, VIEW_W, VIEW_H);
+  ctx.restore();
+}
+
 // Everything on the floor, in the interior's own pixels.
 function drawFloor(ctx, state, place, me, assets, fx, origin) {
   const { img, font } = assets;
   const it = place.interior;
   const style = styleOf(place);
   drawTunnel(ctx, img, it);
-  drawTiles(ctx, it, origin, style);
+  // A base is seen one floor at a time, round, inside its outer wall (R-1165).
+  const box = deckBox(it, me || it.entry);
+  ctx.save();
+  if (box.deck) {
+    ctx.beginPath();
+    ctx.arc(box.deck.cx, box.deck.cy, box.deck.r + HULL, 0, 7);
+    ctx.clip();
+  }
+  drawTiles(ctx, it, origin, style, state.time);
+  if (box.deck) drawHull(ctx, box.deck, style);
+  drawLinks(ctx, font, it);
+  drawConsoles(ctx, font, it, state.time, me);
   for (const desk of it.desks) drawDesk(ctx, img, font, place, desk);
   if (it.trade) drawStaffDoors(ctx, font, it);
   for (const c of it.civilians) {
@@ -874,9 +1072,11 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
   }
   if (it.dark) {
     const off = fx ? fx.offset : { x: 0, y: 0 };
-    shade(ctx, it, origin.x + off.x, origin.y + off.y, lightsOf(state, it, style, origin));
+    shade(ctx, it, origin.x + off.x, origin.y + off.y, lightsOf(state, place, it, style, origin));
     drawGlows(ctx, state, it, style, origin);
   }
+  lockdownFilter(ctx, place, it, origin);
+  drawBeacons(ctx, it, state.time, origin);
   // What is drawn from here on is not dimmed by the dark.
   drawWatch(ctx, font, state, it, me);
   ctx.fillStyle = COL.ember[2];
@@ -921,6 +1121,7 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
   for (const f of it.flares) drawFlare(ctx, f, state.time);
   for (const f of it.fx) effect(ctx, f);
   if (fx) fx.inside.draw(ctx);
+  ctx.restore();
 }
 
 // The line at the top that says where the player is and what is going on there.
@@ -940,7 +1141,11 @@ function drawPlaceLine(ctx, font, state, place) {
     label(ctx, font, x, 8, text, { anchor: 'c', fg: place.align === 'friendly' ? COL.engineer : COL.text });
   } else if (place.kind === 'station') {
     const mine = place.side === 'crew';
-    const text = mine ? `${place.name} IS YOURS` : `${place.name}  ·  THE MAINFRAME IS FURTHEST IN`;
+    const text = mine
+      ? `${place.name} IS YOURS`
+      : it.power
+        ? `${place.name}  ·  POWER FIRST, THEN THE MAINFRAME`
+        : `${place.name}  ·  POWER OUT`;
     const col = mine ? COL.acid : COL.ember;
     label(ctx, font, x, 8, text, { anchor: 'c', fg: col[2], border: col[0] });
     // How the place takes the crew: on its guard, or hunting them.
@@ -956,6 +1161,13 @@ function drawPlaceLine(ctx, font, state, place) {
         fg: COL.ochre[2],
         border: COL.ochre[0],
       });
+    // The call for help, with the time until help docks (R-1168).
+    if (it.call) {
+      const text = `HELP CALLED  ·  DOCKS IN ${fmt(Math.max(0, it.call.left))}  ·  STOP IT IN COMMS ON TOP`;
+      label(ctx, font, x, 40, text, { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
+    } else if (it.pressure && it.pressure.relief) {
+      label(ctx, font, x, 40, 'HELP IS COMING IN TO DOCK', { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
+    }
   } else {
     const col = it.timer < 30 ? COL.ember : COL.ochre;
     const text = 'REACTOR UNSTABLE   ' + fmt(Math.max(0, it.timer));
@@ -1024,6 +1236,7 @@ function drawBoarderHud(ctx, font, state, view, player, place, me, origin) {
 
 export function drawBoarding(ctx, state, view, assets) {
   const { font } = assets;
+  planFont = font;
   const player = playerById(state, view.playerId);
   const place = findDock(state, player.inside);
   const it = place.interior;
@@ -1071,7 +1284,7 @@ export function drawBoarding(ctx, state, view, assets) {
   // The plan of the place sits under the lines in the corner.
   const carries = me && player.backTo === 'captain' && !it.trade;
   const near = carries ? hunters(it).filter((e) => dist(e.x, e.y, me.x, me.y) < B.RADAR_REACH * TILE) : [];
-  drawPlan(ctx, it, me, VIEW_W - 11 - it.w, it.trade ? 28 : 42, near);
+  drawPlan(ctx, it, me, VIEW_W - 11 - deckBox(it, me || it.entry).w, it.trade ? 28 : 42, near);
   if (!it.trade) drawHunters(ctx, it, origin);
   if (it.trade) drawVisitorHud(ctx, font);
   else drawBoarderHud(ctx, font, state, view, player, place, me, origin);

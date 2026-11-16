@@ -207,3 +207,13 @@ test('R-1185: a freighter wreck has lost one or two of its containers', () => {
   }
   assert.equal(counts.size, 2, 'sometimes one and sometimes two');
 });
+
+test('R-1206: the inside of a gunboat is 38 by 21 tiles, and of an old hull 54 by 25', () => {
+  const s = createState(4);
+  const size = (hull) => {
+    const plan = layOut(s, { kind: 'wreck', hull });
+    return [plan.w, plan.h];
+  };
+  assert.deepEqual(size('gunboat'), [38, 21]);
+  assert.deepEqual(size('hull'), [54, 25]);
+});

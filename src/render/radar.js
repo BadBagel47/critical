@@ -8,6 +8,8 @@ import { findDock, nameOf } from '../sim/things.js';
 import { playerById } from '../sim/players.js';
 import { crewHpMax } from '../sim/upgrades.js';
 import { dist } from '../sim/util.js';
+import { deckOf } from '../sim/floor.js';
+import { DECK } from '../sim/base.js';
 import { rect, bar } from './draw.js';
 
 const GREEN = ['#0a2a14', '#145a28', '#2fae52', '#9cf7b0'];
@@ -28,10 +30,19 @@ export function hunters(it) {
   return [...it.guards.filter((g) => g.mode === 'alert'), ...it.turrets.filter(tracking)];
 }
 
-// How the plan lies on the screen: its corner and how many pixels a tile is.
+// The part of the plan the radar shows: all of it, or on a base the floor that the first boarder is on.
+function shown(it) {
+  if (!it.decks) return { x0: 0, w: it.w, name: '' };
+  const a = it.avatars[0];
+  const d = it.decks[a ? deckOf(it, a.x) : 1];
+  return { x0: d.x0, w: DECK, name: d.name };
+}
+// How the plan lies on the screen: its corner and how many pixels a tile is. `x` is where tile 0 would be.
 function frame(it) {
-  const k = Math.max(2, Math.min(5, Math.floor(Math.min((VIEW_W - SIDE - 24) / it.w, (VIEW_H - 60) / it.h))));
-  return { k, x: Math.round((VIEW_W - SIDE - it.w * k) / 2), y: Math.round(34 + (VIEW_H - 60 - it.h * k) / 2) };
+  const part = shown(it);
+  const k = Math.max(2, Math.min(5, Math.floor(Math.min((VIEW_W - SIDE - 24) / part.w, (VIEW_H - 60) / it.h))));
+  const left = Math.round((VIEW_W - SIDE - part.w * k) / 2);
+  return { k, x: left - part.x0 * k, y: Math.round(34 + (VIEW_H - 60 - it.h * k) / 2), part };
 }
 // The spot inside the place that a point on the radar screen stands for, or null outside the plan.
 export function radarPoint(state, mx, my) {
@@ -41,7 +52,7 @@ export function radarPoint(state, mx, my) {
     f = frame(it);
   const tx = (mx - f.x) / f.k,
     ty = (my - f.y) / f.k;
-  if (tx < 0 || ty < 0 || tx >= it.w || ty >= it.h) return null;
+  if (tx < f.part.x0 || ty < 0 || tx >= f.part.x0 + f.part.w || ty >= it.h) return null;
   const c = tileAt(it, Math.floor(tx), Math.floor(ty));
   return c === '.' || c === ',' || c === 'A' ? { x: tx * TILE, y: ty * TILE } : null;
 }
@@ -56,13 +67,15 @@ export function drawRadar(ctx, state, view, assets) {
     f = frame(it);
   const at = (p) => ({ x: f.x + (p.x / TILE) * f.k, y: f.y + (p.y / TILE) * f.k });
   for (let ty = 0; ty < it.h; ty++)
-    for (let tx = 0; tx < it.w; tx++) {
+    for (let tx = f.part.x0; tx < f.part.x0 + f.part.w; tx++) {
       const c = tileAt(it, tx, ty);
       if (c === ' ' || c === 'X') continue;
       ctx.fillStyle = c === '#' || c === 'K' ? GREEN[1] : c === 'L' ? GREEN[3] : c === 'A' ? GREEN[2] : GREEN[0];
       ctx.fillRect(f.x + tx * f.k, f.y + ty * f.k, f.k, f.k);
     }
+  const onShown = (p) => p.x >= f.part.x0 * TILE && p.x < (f.part.x0 + f.part.w) * TILE;
   it.rooms.forEach((r, i) => {
+    if (!onShown(r.mid)) return;
     const p = at(r.mid);
     font.draw(ctx, roomName(i), p.x, p.y - 3, GREEN[2], { align: 'c' });
     // What the room is for, under its letter, where there is room for it.
@@ -76,18 +89,18 @@ export function drawRadar(ctx, state, view, assets) {
   };
   // Enemies show only once they are after someone. They blink slowly.
   const lit = state.time % 1 < 0.6;
-  for (const e of hunters(it)) {
+  for (const e of hunters(it).filter(onShown)) {
     const p = at(e);
     dot(p, 3, lit ? RED : '#7a2a22');
   }
-  for (const a of it.avatars) {
+  for (const a of it.avatars.filter(onShown)) {
     const p = at(a);
     dot(p, 3.5, GREEN[3]);
     font.draw(ctx, playerById(state, a.player).name, p.x, p.y - 12, GREEN[3], { align: 'c' });
   }
   // Doors with an alarm on them, which the boarders only see from close by.
   for (const d of it.alarmed) {
-    if (d.off) continue;
+    if (d.off || !onShown(d)) continue;
     const p = at(d);
     ctx.fillStyle = '#e8c04a';
     ctx.fillRect(Math.round(p.x) - 2, Math.round(p.y) - 2, 5, 5);
@@ -105,7 +118,7 @@ export function drawRadar(ctx, state, view, assets) {
   for (let y = 0; y < VIEW_H; y += 3) ctx.fillRect(0, y, VIEW_W - SIDE, 1);
   ctx.globalAlpha = 1;
   font.draw(ctx, 'BOARDING RADAR', 12, 10, GREEN[3]);
-  font.draw(ctx, nameOf(place), 12, 22, GREEN[2]);
+  font.draw(ctx, nameOf(place) + (f.part.name ? '  ·  ' + f.part.name : ''), 12, 22, GREEN[2]);
   if (it.timer !== null) {
     const t = Math.max(0, it.timer);
     const text = 'REACTOR  ' + Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');

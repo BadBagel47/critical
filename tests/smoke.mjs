@@ -321,21 +321,31 @@ await page.evaluate(() => {
 
 // Buttons for what can be done right here: in position to dock, a button says so, and a click does it.
 await page.keyboard.press('Digit1');
-await page.evaluate(() => {
+// The port on the ring of the base that is at its bridge, where the ship lies when it is docked (R-1154).
+const portAt = () =>
+  page.evaluate(async () => {
+    const { portsOf } = await import(new URL('src/sim/things.js', document.baseURI).href);
+    const c = window.__critical,
+      st = c.stations.find((x) => x.home || x.sanctuary);
+    const p = portsOf(st)[0];
+    return { x: p.x, y: p.y, out: Math.atan2(p.x - st.x, -(p.y - st.y)) };
+  });
+const port = await portAt();
+await page.evaluate((port) => {
   const c = window.__critical,
-    s = c.state,
-    st = c.stations.find((x) => x.home || x.sanctuary);
+    s = c.state;
   s.spawn.timer = s.raidTimer = s.traffic.timer = 1e9;
   s.vessels = [];
   s.bolts = [];
   s.ship.docked = null;
   // Off to the side and turned: further from the port than docking used to allow.
-  s.ship.x = st.x + 24;
-  s.ship.y = st.y + 96 + 44 + 28;
-  s.ship.heading = -0.3;
+  const f = { x: Math.sin(port.out), y: -Math.cos(port.out) };
+  s.ship.x = port.x + f.x * (44 + 28) - f.y * 24;
+  s.ship.y = port.y + f.y * (44 + 28) + f.x * 24;
+  s.ship.heading = port.out + Math.PI - 0.3;
   s.ship.vx = s.ship.vy = 0;
   s.ship.throttle = 0;
-});
+}, port);
 await page.waitForTimeout(150);
 const offered = () =>
   get("window.__critical.buttons().filter((b) => b.name.startsWith('action.')).map((b) => b.name).join(' ')");
@@ -343,14 +353,14 @@ check((await offered()) === 'action.dock', 'a button offers to dock when the shi
 await shot('09a-dock-button');
 await clickOn('action.dock');
 await page.waitForTimeout(2000);
-const noseOff = await page.evaluate(() => {
+const noseOff = await page.evaluate((port) => {
   const c = window.__critical,
     s = c.state,
     st = c.stations.find((x) => x.home || x.sanctuary);
   const nx = s.ship.x + Math.sin(s.ship.heading) * 44;
   const ny = s.ship.y - Math.cos(s.ship.heading) * 44;
-  return s.ship.docked === st.id ? Math.hypot(nx - st.x, ny - (st.y + 96)) : 999;
-});
+  return s.ship.docked === st.id ? Math.hypot(nx - port.x, ny - port.y) : 999;
+}, port);
 check(noseOff < 1, 'a click on it docks, and the ship is pulled in to the port');
 check((await offered()) === 'action.aboard action.undock', 'docked, the buttons offer to go aboard and to undock');
 await shot('09a-docked-buttons');
@@ -649,6 +659,12 @@ check(
   await settles(async () => (await get("v.panel === 'mainframe'")) === true),
   'F at the mainframe of a hostile station opens the hack',
 );
+// A base is not given up while it has power: it is put out in the basement first (R-1167).
+await page.evaluate(async () => {
+  const { cutPower } = await import(new URL('src/sim/pressure.js', document.baseURI).href);
+  const st = window.__critical.stations.find((x) => x.name === 'FREE TEST POST');
+  cutPower(window.__critical.state, st, false);
+});
 await clickOn('mf.hack.2');
 await page.waitForTimeout(300);
 await shot('12d-hack');

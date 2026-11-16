@@ -42,6 +42,15 @@ const WHO = {
     'FASTER',
   ],
   takedown: [ALL, 'A SLEEPING GUARD THAT IS TAKEN DOWN IS OUT FOR THE REST OF THE BOARDING'],
+  airlock: [ALL, 'ONLY ONE DOOR OF AN AIRLOCK IS EVER OPEN. THE BUTTON SHUTS ONE AND OPENS THE OTHER'],
+  floor: [ALL, 'THE LIFT IS HEARD. THE STAIRS ARE QUIET. THE LADDER IS BEHIND AN ALARMED DOOR'],
+  power: [
+    best('engineer'),
+    'THE BASE CANNOT BE TAKEN WHILE IT HAS POWER. QUIET TAKES TIME, AND A GUARD COMES TO LOOK LATER',
+    'FASTER',
+  ],
+  hangar: [best('engineer'), 'NO MORE DRONES COME FROM A HANGAR THAT IS PUT OUT OF USE', 'FASTER'],
+  comms: [best('engineer'), 'STOPS THE CALL FOR HELP, FOR GOOD', 'FASTER'],
 };
 // Every action has the same shape. `more` holds what differs from a plain press of a key.
 const act = (name, code, label, short, more = {}) => ({
@@ -115,6 +124,21 @@ function away(state, me) {
   if (at.type === 'reactor')
     return [use('steady', 'STEADY THE REACTOR', 'STEADY', { hold: true, progress: it.turning })];
   if (at.type === 'airlock') return [use('leave', 'BACK TO THE SHIP', 'LEAVE')];
+  if (at.type === 'lock')
+    return [use('airlock', at.busy ? 'THE AIRLOCK IS TURNING' : 'AIRLOCK BUTTON', 'BUTTON', { off: at.busy })];
+  if (at.type === 'link') {
+    const kind = { lift: 'LIFT', stairs: 'STAIRS', ladder: 'LADDER' }[at.link.kind];
+    return [use('floor', `${kind} ${at.up ? 'UP' : 'DOWN'}`, at.up ? 'UP' : 'DOWN')];
+  }
+  if (at.type === 'breaker') {
+    const list = [use('power', 'SWITCH OFF THE POWER  ·  QUIET', 'POWER', { hold: true, progress: it.turning })];
+    if (av.charges > 0) list.push(act('blow', 'KeyC', 'BLOW IT  ·  LOUD', 'BLOW'));
+    return list;
+  }
+  if (at.type === 'hangar')
+    return [use('hangar', 'PUT THE DRONE HANGAR OUT', 'HANGAR', { hold: true, progress: it.turning })];
+  if (at.type === 'comms')
+    return [use('comms', 'STOP THE CALL FOR HELP', 'COMMS', { hold: true, progress: it.turning })];
   if (at.type === 'desk') return [use('trade', DESK[at.desk.type], 'TRADE')];
   if (at.type === 'mainframe') {
     const working = it.hack ? { progress: it.work[it.hack.level], hold: true } : {};

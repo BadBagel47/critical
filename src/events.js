@@ -168,6 +168,28 @@ const TOAST = {
   postTaken: (e) => [`${e.post.toUpperCase()} IS HELD BY ${e.by}  ·  THEY CAN SWAP BY ASKING FOR YOUR POST`, WARM],
   playerJoined: (e) => [`${e.name} JOINED THE CREW`, TECH],
   playerLeft: (e) => [`${e.name} LEFT THE CREW`, COL.dim],
+  // A standard base (F-244, F-209, F-210).
+  ringTurning: () => ['THE RING IS TURNING YOU TO THE BRIDGE', TECH],
+  lockWait: () => ['THE AIRLOCK IS OPENING  ·  A MOMENT', TECH],
+  lockBlocked: () => ['SOMEONE IS IN THE DOORWAY', WARM],
+  floor: (e) => [['DOWN IN THE BASEMENT', 'ON THE MIDDLE FLOOR', 'ON THE TOP FLOOR'][e.deck], COL.dim],
+  powerOut: (e) => [
+    e.loud ? 'SWITCHGEAR BLOWN  ·  POWER OUT  ·  THEY HEARD IT' : 'POWER OUT  ·  QUIETLY',
+    e.loud ? BAD : GOOD,
+  ],
+  powerFound: () => ['A GUARD FOUND THE SWITCHGEAR OFF', BAD],
+  pressure: (e) =>
+    [
+      null,
+      ['THE GUARDS FALL BACK TO THE WAYS UP', WARM],
+      [e.drones ? 'DRONES ARE LET OUT OF THE HANGAR' : 'NO DRONES  ·  THE HANGAR IS OUT', e.drones ? BAD : GOOD],
+      ['THE BASE IS CALLING FOR HELP  ·  STOP IT IN COMMS ON TOP', BAD],
+    ][e.stage] || null,
+  callStopped: () => ['THE CALL FOR HELP IS STOPPED', GOOD],
+  hangarOut: () => ['THE DRONE HANGAR IS OUT OF USE', GOOD],
+  reliefComing: () => ['HELP JUMPED IN  ·  IT MAKES FOR A CARGO ARM', BAD],
+  reliefDocked: () => ['HELP HAS DOCKED  ·  MORE GUARDS INSIDE', BAD],
+  reliefLost: () => ['THE SHIP WITH THE HELP IS GONE', GOOD],
 };
 // Things that only concern the player they happened to.
 const PERSONAL = new Set([
@@ -180,6 +202,9 @@ const PERSONAL = new Set([
   'postTaken',
   'stationClosed',
   'cannotHack',
+  'ringTurning',
+  'lockWait',
+  'floor',
 ]);
 
 export function toast(view, state, text, color = COL.text, seconds = 3.5) {
