@@ -201,6 +201,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-113 | Det finns lika många tomma system som bebodda, alltså 16, 24 eller 36 totalt, och fler tomma ju längre ut man kommer. | ersatt av: R-1197 | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
 | R-1197 | 40 procent av systemen är bebodda, alltså 10, 16 eller 22, och resten är tomma, fler ju längre ut man kommer. | bestämd | Användaren 2026-11-16 (F-258, kartsimuleringen), K7 | – |
 | R-1198 | Piraterna håller ungefär en femtedel av de bebodda systemen, de som ligger längst ut, och slutet räknas in. | bestämd | Användaren 2026-11-16 (F-258, kartsimuleringen) | – |
+| R-1202 | Tomma system väljs ett i taget, oftare längre ut, men mer sällan bredvid ett system som redan är tomt, så att tomma system inte ligger i klumpar. | bestämd | Användaren 2026-11-16 (F-258, kartsimuleringen) | – |
+| R-1203 | På den kortaste vägen från fristaden till slutet ligger högst ett tomt system i rad. | bestämd | Användaren 2026-11-16 (F-258, kartsimuleringen) | – |
 | R-114 | Antalet system avgör hur många uppdrag det finns före slutet. | bestämd | proposal-world.md steg 3, BACKLOG D-052 | – |
 | R-115 | Man upptäcker system genom att hoppa dit, och stjärnkartan visar närliggande obesökta system som outforskade. | byggd | proposal-world.md steg 3, BACKLOG D-089 | tests/sim.test.js |
 | R-116 | En sond skickas till ett närliggande system, ett hopp bort, och visar vad som finns där. | byggd | proposal-world.md steg 3 | tests/world.test.js |
@@ -371,6 +373,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-276 | En övertagen bas får inget varv, utan varvet är en permanent uppgradering som köps till basen. | bestämd | proposal-bases.md §1, §7 | – |
 | R-277 | Alla standardbaser kan köpa varv. | bestämd | proposal-bases.md §7 | – |
 | R-1194 | Ungefär en fjärdedel av baserna har varv, räknat för varje sida för sig: en fjärdedel av de neutrala baserna, en fjärdedel av THE DRIFTERS baser och så vidare, också piraternas. Varv på neutrala baser är öppna mot betalning. | bestämd | Användaren 2026-11-16 (krock 2, K1, K5) | – |
+| R-1201 | Varje gruppering som har baser som kan få varv har minst ett varv, också när en fjärdedel avrundas till noll. Fristaden och piraternas slutbas får aldrig varv. | bestämd | Användaren 2026-11-16 (K8) | – |
 | R-278 | Försvaret köps i mainframen (sköld, kanontorn och inre säkerhet), och fullt utbyggt ska risken att basen tas över vara mycket låg. | bestämd | proposal-bases.md §7 | – |
 | R-279 | Basens utsida i rymden ska bli större än i dag, men inte i skala 1:1. | bestämd | proposal-bases.md §8 | – |
 | R-280 | Utsidan ska hänga ihop med hur basen är byggd med våningar. | bestämd | proposal-bases.md §8 | – |
