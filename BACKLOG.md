@@ -7,84 +7,89 @@ Prioritet: Hög, Medel, Låg.
 
 Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först (A, med design före bild), sedan uppdragen (B). Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
 
-**A** – strong model, medium level – Butik med bilder
-- F-237 – Tjänsterna betalas av den som beställer
-- D-238 – Gå igenom alla saker i butiken, så att det syns vad som ska göras med var och en
-- F-080 – En första skiss av butiken med filterknappar per roll, där alla saker har samma färdiga platshållarikon, så att det blir roligare att handla
+**A** – strong model, high level – Design av butik, förråd och varv (godkänns innan något byggs)
+- D-243 – En gemensam design för butiken, förrådet och varvet med samma lista, filter per roll och panel vid sidan, och samma platshållarikon för allt
 
-**B** – strong model, high level – Världen steg 4: uppdrag och story
+**B** – strong model, high level – Bygga butiken, förrådet och varven efter designen
+- F-237 – Tjänsterna betalas av den som beställer
+- F-242 – Ändringarna i sakerna: tanken, fighter bay, sprängladdningen, kanontornen och verktygen
+- F-240 – Förråd och varv: köpta delar installeras på varvet av den som köpte dem, platser per roll
+- F-239 – Skölden slås på och av för hand av Gunner
+- F-080 – Den nya butiken med filterknappar per roll och platshållarikon
+
+**C** – strong model, high level – Världen steg 4: uppdrag och story
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 
-**C** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
+**D** – strong model, high level – Standardbaser: design först (plan i docs/proposal-bases.md, ändrad 2026-11-16)
 - D-217 – Designskiss av varvet utifrån och inifrån, och en större utsida som hänger ihop med basens tre våningar (ersätter designen i F-103)
 - D-216 – Designtest av markeringar som visar snabbaste vägen ut genom de dörrar man har öppnat
 - D-218 – Demo med full design av dockningsringen som vrids i fasta lägen
 
-**D** – strong model, medium level – Provspelslista med testlägen
+**E** – strong model, medium level – Provspelslista med testlägen
 - F-222 – En lista över det som väntar på provspel, med länkar som startar rätt situation direkt, så att varje sak går att prova på några minuter
 
-**E** – strong model, medium level – Förfina rollerna
+**F** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 - F-236 – Primära roller och tillfälligt övertagande: den som lämnar skeppet lämnar sina roller lediga, de kvar kan ta en av dem, och ägaren får tillbaka den direkt
 - F-235 – Bordarnas utrustning per roll, så att varje roll köper och har sin egen
 
-**F** – strong model, medium level – Innehållskatalog
+**G** – strong model, medium level – Innehållskatalog
 - D-223 – En lista ur koden över allt som finns i spelet med sina siffror, så att överblicken alltid stämmer
 
-**G** – strong model, medium level – Verktyg för backloggen
+**H** – strong model, medium level – Verktyg för backloggen
 - F-228 – Markera, flytta till klart och ge nya bokstäver med ett verktyg, så att agenterna gör färre misstag
 
-**H** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
+**I** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
 - D-227 – Dela upp de två stora filerna efter ämne, så att två agenter krockar mer sällan
 
-**I** – strong model, high level – Pekskärm
+**J** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**J** – strong model, high level – Viewer på en extra skärm
+**K** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 
-**K** – strong model, high level – Sällsynta skepp
+**L** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**L** – strong model, high level – Värme
+**M** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**M** – strong model, high level – Slå ut och borda
+**N** – strong model, high level – Slå ut och borda
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**N** – strong model, high level – Missiler och raketer
+**O** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**O** – strong model, high level – Kontakt med andra skepp
+**P** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**P** – strong model, high level – Anomalier
+**Q** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**Q** – strong model, high level – En värld som förändras
+**R** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**R** – strong model, high level – Ljudeffekter
+**S** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**S** – strong model, high level – Visuella effekter och feedback
+**T** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 
-**T** – strong model, high level – Förslag: ekonomi och belöningar
+**U** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**U** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**V** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**V** – strong model, high level – Handel
+**W** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
@@ -95,6 +100,7 @@ Väntar på användaren: elva krockar i regelboken (docs/rules.md, överst), fri
 
 | ID | Vad | Status |
 |---|---|---|
+| D-243 | Gemensam design för butiken, förrådet och varvet. Användaren 2026-11-16: butiken och förrådet designas samtidigt så att de får liknande upplägg. Tre vyer med samma grund: en lista med platshållarikoner, filterknappar per roll med den egna förvald, och en fast panel vid sidan med alla nivåer och före och efter i siffror. Butiken har pris, köp och sälj, och en rad med tjänster som alla kan köpa. Förrådet visar vad som finns, vem som styr över vad, och vad som är installerat. Varvet installerar och tar bort, utan köp eller försäljning. Godkänns av användaren innan något byggs (R-1107, R-1122, R-1123, R-1128, R-1130–R-1142) | Ej påbörjad |
 | F-240 | Förråd och varv. Köpta delar hamnar i ett förråd som ser ut som butiken, och installeras gratis på ett varv av den som köpte dem. Platserna är per roll, och varje roll köper sina egna. Varje nivå av en uppgradering installeras på varvet, och kan också hittas som loot. Delar säljs i butiken för hälften, och för tre fjärdedelar på en egen bas. Användaren 2026-11-16 (R-1135–R-1141) | Ej påbörjad |
 | F-242 | Ändringar i sakerna: skeppet börjar med bränsle för ett hopp och tanken uppgraderas ett hopp i taget högst fem gånger, fighter bay med en dart som uppgraderas till tre, darts bara för hand, sprängladdningen till Gunner, och kanontorn och verktyg in i butiken. Användaren 2026-11-16 (R-1125–R-1127, R-1133, R-1134) | Ej påbörjad |
 | F-239 | Skölden slås på och av för hand och drar lite bränsle när den är på (R-1129). Användaren 2026-11-16: Gunner sköter den, den är av när spelet startar, och den slås inte på av sig själv vid en träff | Ej påbörjad |
