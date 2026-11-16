@@ -964,14 +964,26 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1122 | Butiken visar tydligt att tjänsterna kan köpas av alla. | bestämd | Användaren 2026-11-16 | – |
 | R-1123 | Butiken har filterknappar som visar vad varje roll kan köpa, med den egna rollen som förval. | bestämd | Användaren 2026-11-16 (F-080) | – |
 | R-1124 | Fighter bay hör till Captain, som skjuter ut dartsen. | ersatt av: R-1126 | Användaren 2026-11-16 | – |
-| R-1125 | Bränsletanken ger ett extra hopp när den köps, och varje uppgradering ger ett hopp till, upp till fem extra. | bestämd | Användaren 2026-11-16 (D-238) | – |
+| R-1125 | Skeppet börjar med bränsle för ett hopp. Bränsletanken ger ett hopp till när den köps, och den uppgraderas ett hopp i taget, högst fem gånger, så att skeppet kan ha högst sex hopp. | bestämd | Användaren 2026-11-16 (D-238) | – |
 | R-1126 | Fighter bay hör till Gunner. Den har plats för en dart och uppgraderas en dart i taget till högst tre. | bestämd | Användaren 2026-11-16 (D-238) | – |
 | R-1127 | Darts skjuts bara ut för hand. Uppgraderingen som skjuter ut dem av sig själv tas bort. | bestämd | Användaren 2026-11-16 (D-238) | – |
 | R-1128 | Butiken visar vad varje nivå av en uppgradering ger, både de man har och de man inte har än. | bestämd | Användaren 2026-11-16 (D-238) | – |
-| R-1129 | Skölden slås på och av för hand, och den drar lite bränsle medan den är på. Vilken roll som sköter den är inte bestämt. | bestämd | Användaren 2026-11-16 | – |
+| R-1129 | Skölden slås på och av för hand, och den drar lite bränsle medan den är på. Gunner sköter den, den är av när spelet startar, och den slås inte på av sig själv vid en träff. | bestämd | Användaren 2026-11-16 | – |
 | R-1130 | Informationen om en vald sak i butiken visas i en fast panel vid sidan av listan. | bestämd | Användaren 2026-11-16 (D-238) | – |
 | R-1131 | Saker kan både köpas och säljas i butiken, redan nu. | bestämd | Användaren 2026-11-16 (D-238) | – |
 | R-1132 | Delar som hör till skeppet installeras på ett varv. På varvet går det varken att köpa eller sälja. | bestämd | Användaren 2026-11-16 (D-238) | – |
+| R-1133 | Sprängladdningen hör till Gunner. | bestämd | Användaren 2026-11-16 (D-238, B2) | – |
+| R-1134 | Kanontornen och Engineers verktyg (scannerpuls, sonder och radarbojar) läggs in i butiken nu. | bestämd | Användaren 2026-11-16 (D-238, B3) | – |
+| R-1135 | Köpta delar till skeppet hamnar i ett förråd som ser ut som butiken: alla ser vad som finns och vilken roll som styr över vad. | bestämd | Användaren 2026-11-16 (D-238, V1) | – |
+| R-1136 | Bara den som köpt en del installerar den eller tar bort den. | bestämd | Användaren 2026-11-16 (D-238, V1) | – |
+| R-1137 | Platserna att installera i är inte gemensamma: varje roll köper sina egna. | bestämd | Användaren 2026-11-16 (D-238, V1) | – |
+| R-1138 | Installationen på varvet är gratis. | bestämd | Användaren 2026-11-16 (D-238, V2) | – |
+| R-1139 | En del som säljs ger hälften av priset tillbaka i en vanlig butik, och tre fjärdedelar i butiken på en egen bas. | bestämd | Användaren 2026-11-16 (D-238, V3) | – |
+| R-1140 | I fristaden kan man köpa delar men inte installera dem, eftersom det inte finns något varv där. | bestämd | Användaren 2026-11-16 (D-238, V4) | – |
+| R-1141 | Varje nivå av en uppgradering är en del som installeras på varvet, så att uppgraderingar också kan hittas som loot. | bestämd | Användaren 2026-11-16 (D-238, V5) | – |
+| R-1142 | Allt man bär, som bordarnas utrustning och varor, gäller direkt när man köper det, utan varv. | bestämd | Användaren 2026-11-16 (D-238, V6) | – |
+| R-1143 | Varor köps och säljs i butiken, så att det går att ha handelsrutter. I början är priserna fasta. | bestämd | Användaren 2026-11-16 (D-238, V6) | – |
+| R-1144 | Senare blir varupriserna rörliga, så att man inte blir rik på att köra samma rutt fram och tillbaka. | bestämd | Användaren 2026-11-16 (D-238, V6) | – |
 | R-834 | Neutrala shipyards är alltid öppna mot betalning. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-835 | Neutrala shipyards har samma priser som vänliga så länge spelet testas. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-836 | Stationer säljer kartan till nästa sektor. | byggd | HANDOFF beslut 2026-11-14 | saknas |
