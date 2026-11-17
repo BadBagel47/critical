@@ -100,8 +100,20 @@ Varje sorts steg har en väg ut om något går fel (R-1214). Det följer de regl
 
 Tiden är bara stegen och hoppen, utan sidouppdrag och utan det man gör på vägen.
 
-## Frågor innan storyn byggs i spelet
+## Besked efter första läsningen (2026-11-17)
 
-- **US7:** Captain får nästan hälften av jobbet, eftersom det är Captain som pratar och lämnar saker. Ska samtalen ske inne på basen, så att någon går dit till fots? Rekommendation: ja, för en del av samtalen. Då får bordarna mer att göra, och baserna används till mer än handel.
-- **US8:** Hur ska texterna låta? Rekommendation: läs några storys i testaren och säg vad som känns fel. Texterna är korta mallar med luckor, och fler varianter läggs till när tonen är bestämd.
-- **US9:** Ska sidouppdragen också visas i testaren innan de byggs? Rekommendation: ja, när uppdragen (D-073) tas fram.
+- Sidouppdragen byggs först som frakt, prisjakt och räddning (UP2). De väljs i baren på en bas, i ett gränssnitt som butikens (US9).
+- En del av samtalen sker inne på basen, så att någon går dit till fots (US7).
+- Smuggelgods kan upptäckas av en patrull. Engineer kan undvika det med ett minispel på tid: två rattar vrids tills skeppets våg ligger ovanpå skanningens (UP3).
+- Storyn blev mest beskrivning och sedan "gör det här nu", inte så mycket berättande som användaren hade hoppats (US8). Förslaget till lösning är F-276:
+  - **En dold sanning.** Varje omgång bestämmer i början vem som ligger bakom, varför och hur. Varje steg avslöjar en bit, och bitarna samlas som ledtrådar i loggen tills slutet visar hela bilden.
+  - **Personer med egen röst.** Kontakten, rivalen och skurken har var sitt sätt att prata och var sitt eget mål. De talar i repliker och hör av sig över radion mellan stegen, till exempel kontakten som oroar sig eller skurken som hånar efter en vändning.
+  - **Scener i stället för uppgifter.** Varje steg har en början (varför man är där), något som händer på plats (en logg, ett anrop, någon som dyker upp) och ett efteråt (vad det betyder). Själva uppgiften står bara i loggen.
+  - **Följder.** Den sida man valde bort i ett val dyker upp igen senare, och personerna minns vad besättningen har gjort.
+  - **Handskrivna texter.** Texterna skrivs för hand för varje premiss och akt, inte som gemensamma mallar för varje sorts steg. Först konvojen fullt ut i testaren, så att den kan bedömas innan de andra skrivs.
+
+## Frågor innan storyn byggs i spelet (besvarade 2026-11-17)
+
+- **US7 (ja):** Captain får nästan hälften av jobbet, eftersom det är Captain som pratar och lämnar saker. Ska samtalen ske inne på basen, så att någon går dit till fots? Rekommendation: ja, för en del av samtalen. Då får bordarna mer att göra, och baserna används till mer än handel.
+- **US8 (se ovan):** Hur ska texterna låta? Rekommendation: läs några storys i testaren och säg vad som känns fel. Texterna är korta mallar med luckor, och fler varianter läggs till när tonen är bestämd.
+- **US9 (se ovan):** Ska sidouppdragen också visas i testaren innan de byggs? Rekommendation: ja, när uppdragen (D-073) tas fram.

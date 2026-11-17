@@ -1160,7 +1160,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-937 | På den minsta kartan ska slutet gå att nå utan att ta en enda bas. | förslag | proposal-bases.md §2 | – |
 | R-938 | Tre pyloner håller uppe bossens sköld och måste slås ut. | förslag | proposal-bases.md §10 | – |
 | R-939 | Bossen byter fas vid 60 och 25 procent liv, och i sista fasen kommer drönare. | förslag | proposal-bases.md §10 | – |
-| R-940 | Fraktjobb och passagerare med tidsgräns finns på en anslagstavla, och uppdrag med berättelse fås av folk i baren. | förslag | BACKLOG D-073 (från D-075) | – |
+| R-940 | Fraktjobb och passagerare med tidsgräns finns på en anslagstavla, och uppdrag med berättelse fås av folk i baren. | ersatt av: R-1220 | BACKLOG D-073 (från D-075) | – |
 | R-941 | Patrullskepp skannar lasten, och olaglig last ger böter och sämre anseende. | förslag | BACKLOG D-074 (från D-075) | – |
 | R-942 | Händelser ändrar världen: en station byter ägare, priser rör sig och en sektor blir farligare. | förslag | BACKLOG F-087 | – |
 | R-1209 | Huvudstoryn har ett skelett i akter: krok, utredning, vändning, upptrappning och slut. Akterna fylls med genererade steg. Storyn börjar med kontakten i fristaden och slutar med att besättningen tar slutets stjärnkarta ur valvet på en piratbas. | bestämd | Användaren 2026-11-17 (D-274, US1); början och slutet är agentens förslag i docs/proposal-missions.md | – |
@@ -1172,6 +1172,10 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1215 | Ett val ger +10 i anseende hos sidan som får saken och -5 hos den andra. | förslag | docs/proposal-missions.md (D-274) | – |
 | R-1216 | Uppdragsloggen har en egen tangent och är gemensam för besättningen. Huvudstoryn står överst, med nuvarande steg, avklarade steg och de ledtrådar man fått, sidouppdragen under, och det valda uppdragets mål markeras på stjärnkartan och systemkartan. | bestämd | Användaren 2026-11-17 (D-274, US3) | – |
 | R-1217 | Saker som hör till storyn finns bara medan storyn pågår, till exempel en sak som säljs på en bas eller ligger i ett vrak. De kan inte säljas eller tappas. | förslag | Användaren 2026-11-17 (D-274), docs/proposal-missions.md | – |
+| R-1218 | En patrull kan skanna skeppet efter smuggelgods. Skanningen går på tid, och Engineer kan undvika att bli upptäckt genom att vrida två rattar tills skeppets våg ligger ovanpå skanningens. Den som åker fast förlorar godset och lite anseende. | bestämd | Användaren 2026-11-17 (UP3, D-074); vågen är förslag A för Engineers hack 2026-11-15; preciserar R-935 och R-941 | – |
+| R-1219 | En del av samtalen i storyn sker inne på basen, så att någon går dit till fots. | bestämd | Användaren 2026-11-17 (US7, D-274) | – |
+| R-1220 | Sidouppdragen väljs i baren på en bas, i ett gränssnitt som butikens. | bestämd | Användaren 2026-11-17 (US9, D-073); ersätter förslaget om en anslagstavla i R-940 för valet av uppdrag | – |
+| R-1221 | De första sidouppdragen är frakt, prisjakt och räddning. Eskort kommer när eskortskeppen finns, och passagerare sist. | bestämd | Användaren 2026-11-17 (UP2, D-073) | – |
 | R-943 | Skepp i nöd ber om bränsle eller reparation och betalar eller minns det. | förslag | BACKLOG F-083 | – |
 | R-944 | Captain kan anropa skepp och stationer för att be om bränsle, muta eller kräva tribut. | förslag | BACKLOG F-082 | – |
 
