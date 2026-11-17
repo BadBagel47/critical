@@ -35,7 +35,7 @@ Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra för
 ## Nästa steg
 
 1. Användaren provspelar standardbasen och fraktskeppet. Öppen fråga:
-   - SB2 (öppen 2026-11-17): andra sidors baser har i dag alltid de fyra tornen på källaren (R-1207, förslag), medan en bas som besättningen tar har de torn den hade. Användaren vill att man ska bygga upp försvaret själv, och undrar hur det blir logiskt. Agentens förslag (väntar på svar): andra sidors baser får försvar efter hur farligt systemet är, och när besättningen tar en bas spränger basens säkerhetssystem sina egna torn, så att fästena står tomma. En egen bas som tas tillbaka får fortfarande tillbaka det besättningen själv köpt (R-218).
+   - SB2 (besvarad 2026-11-17, byggs i F-279): andra sidors baser hade alltid de fyra tornen på källaren (R-1207, förslag), medan en bas som besättningen tar hade de torn den hade. Användaren ville att man ska bygga upp försvaret själv. Användaren sa ja till agentens förslag (R-1230, R-1231): andra sidors baser får försvar efter hur farligt systemet är, och när besättningen tar en bas spränger basens säkerhetssystem sina egna torn, så att fästena står tomma. En egen bas som tas tillbaka får fortfarande tillbaka det besättningen själv köpt (R-218).
 2. Användaren provar designtestet för pekskärm (D-262) på iPad och svarar på frågorna på sidan. Sedan byggs pekstyrningen (F-090, grupp H).
 3. Nästa körning annars är grupp A i BACKLOG.md (uppdrag och story). Den bygger på uppdragsstrukturen i docs/proposal-missions.md (D-274, 2026-11-17), som väntar på att användaren läser storys i uppdragstestaren och svarar på US7–US9. Starta gärna en ny session för varje körning. Allt som behövs står i repot.
 4. Användaren fortsätter provspela och ger synpunkter.
