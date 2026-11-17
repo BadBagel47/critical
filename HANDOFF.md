@@ -39,8 +39,9 @@ Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra för
 2. Användaren provar designtestet för pekskärm (D-262) på iPad och svarar på frågorna på sidan. Sedan byggs pekstyrningen (F-090, grupp H).
 3. Nästa körning annars är grupp A i BACKLOG.md (uppdrag och story). Starta gärna en ny session för varje körning. Allt som behövs står i repot.
 4. Användaren fortsätter provspela och ger synpunkter.
-5. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073) och eskortskepp (D-071). Baserna (D-072) har en plan i docs/proposal-bases.md, med designuppgifter som görs före bygge.
-6. Onlineläget (F-040) väntar på användarens motor.
+5. Onlineläget med network-kit (F-040) är uppdelat i steg, D-263 till D-270, F-271 och F-272, efter agentens granskning 2026-11-17. Det som kan göras innan network-kit är klart ligger som en egen grupp i körförslaget.
+6. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073) och eskortskepp (D-071). Baserna (D-072) har en plan i docs/proposal-bases.md, med designuppgifter som görs före bygge.
+7. Onlineläget (F-040) väntar på network-kit.
 
 ## Mål
 
@@ -421,6 +422,7 @@ Grafik
 - Klar 2026-11-14: användaren slog på GitHub Pages för repot (Deploy from a branch, main, rot).
 - Klar 2026-11-14: automatisk merge enligt agentreglernas mall (`.github/workflows/auto-merge.yml`), vald av användaren. Grenar som börjar med claude/ slås ihop med main av sig själva.
 - Klar 2026-11-14: tester körs automatiskt på GitHub vid varje push. Det krävde ingen åtgärd från användaren.
+- Väntar (2026-11-17, D-269): inför onlineläget behövs en Cloudflare-nyckel som hemlighet i critical, ett flöde som publicerar spelet till en Worker, och uppdateringsflödet från network-kit. Föreslås när D-269 är bestämd.
 
 ## Teknisk bedömning
 
@@ -440,6 +442,7 @@ Grafik
 
 ## Lagar och regler
 
+- Onlineläget (2026-11-17, F-271): network-kit låter Cloudflare behandla spelarnas namn och IP-adresser, och spelet behöver en integritetstext som säger det, vad som sparas och hur länge, innan onlineläget öppnas (GDPR). Agenten är ingen jurist. Se IMY:s sidor om personuppgifter.
 - Namn att se över (2026-11-15, flaggat i docs/proposal-world.md): Kestrel, som hemsektorn och varvsstationen heter, är också namnet på kända skepp i andra rymdspel, och Drifters används som faktionsnamn i minst ett annat spel. Båda är vanliga ord och risken bedöms som liten, men de går emot beslutet att inget innehåll ska likna förebilderna. Agenten är ingen jurist. Tas upp i D-095 (faktionernas namn).
 - Blinkande ljus (2026-11-14): larmet vid bordning blinkar rött. Blinkande rött ljus kan utlösa anfall hos personer med ljuskänslig epilepsi. Gängse riktlinje för webben (WCAG 2.3.1) är högst tre blinkningar per sekund. Spelet håller sig till högst två, och larmet till högst en gång i sekunden (användaren 2026-11-16, R-1193). Det bör få en inställning som dämpar blinkandet när larmet byggs (F-102). Tillägg 2026-11-15: samma gräns gäller flares och nödlampor i mörka vrak. En flare skimrar bara svagt, och när den falnar dippar ljuset högst 1,4 gånger i sekunden. En nödlampa som flimrar gör det med två korta dippar var 2,5 sekund, och lamporna är små. Se `flareLevel()` och `lampLevel()` i `src/render/light.js`. Tillägg 2026-11-15 om larmet som byggdes: lamporna blinkar inte. Ljusen vrider sig fortare och en röd ram sväller och avtar långsamt. Inställningen för att dämpa det är inte byggd.
 
