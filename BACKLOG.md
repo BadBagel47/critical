@@ -8,7 +8,7 @@ Prioritet: Hög, Medel, Låg.
 Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först, sedan uppdragen. Butiken och standardbasen är byggda, så uppdragen är nästa. Användaren 2026-11-17: först uppdragsstrukturen och en uppdragstestare, sedan uppdragen och storyn (A). Strukturen och testaren är klara 2026-11-17 (D-274, F-275), och D-274 väntar på att användaren läser storys i testaren. Frågorna under varje grupp har fasta etiketter efter projektregeln om frågeserier, så de byter inte namn när grupperna får nya bokstäver (agentregler v1.10). Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
 
 **A** – strong model, high level – Hitta rätt i storyn: områden, kartan och rutterna
-- F-278 – Dela kartan i områden med namn, visa storyns mål och vägen dit på stjärnkartan, och sprid storyns rutt över hela kartan
+- F-278 – Dela kartan i områden med namn, markera var storyns mål ligger (men inte vägen), låt besättningen ibland hitta målet själv, och sprid storyns rutt över hela kartan
 
 **B** – strong model, high level – Världen steg 4: uppdrag och story
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
