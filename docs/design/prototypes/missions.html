@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uppdragstestare för Critical ST8</title>
+<style>
+/* The mission tester (F-275, D-274). System fonts only: the page loads nothing from other services. */
+:root{
+  --bg:#f2f3f8; --panel:#ffffff; --ink:#1b1f38; --muted:#565c7c; --rule:#d3d7e5; --accent:#2c5fae; --soft:#e8ebf5;
+  --display:"Arial Black",Impact,"Helvetica Neue",sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#0f1122; --panel:#181b34; --ink:#e9ebf7; --muted:#a4aac8; --rule:#2b3054; --accent:#7db4ff; --soft:#21254a; color-scheme:dark}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5}
+main{max-width:1120px;margin:0 auto;padding:32px 16px 80px;display:flex;flex-direction:column;gap:24px}
+h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(2rem,6vw,3.4rem);line-height:1}
+h2{margin:0;font-size:1.3rem;font-weight:800}
+h3{margin:0;font-size:1rem;font-weight:800}
+p{margin:0;max-width:70ch}
+.muted{color:var(--muted)}
+.eyebrow{margin:0;font-size:.8rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:end;background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:14px}
+label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;font-weight:700;color:var(--muted)}
+select,input,button{font:inherit;font-size:1rem;min-height:44px;border-radius:8px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);padding:0 12px}
+input{width:9ch}
+button{cursor:pointer;font-weight:700;background:var(--accent);color:#fff;border-color:transparent}
+button.ghost{background:var(--soft);color:var(--ink);border-color:var(--rule)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{background:var(--soft);color:var(--ink);border:1px solid var(--rule)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.summary{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:.95rem}
+.summary b{font-weight:800}
+.act{display:flex;flex-direction:column;gap:10px}
+.act > h3{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-top:8px}
+.card{background:var(--panel);border:1px solid var(--rule);border-left:6px solid var(--c,#888);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.card .top{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.num{font-weight:800;font-size:1.05rem;min-width:2ch}
+.badge{display:inline-block;font-size:.78rem;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--c,#888);color:#fff}
+.badge.twist{background:#b8326b}
+.where{font-size:.9rem;color:var(--muted)}
+.flow{font-family:var(--mono);font-size:.82rem;color:var(--muted)}
+.goal{font-weight:700}
+.text{font-family:var(--mono);font-size:.86rem;background:var(--soft);border-radius:6px;padding:8px 10px}
+.fallback{font-size:.85rem;color:var(--muted)}
+.fork{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.fork .card{border-style:dashed;border-left-style:solid}
+.fork-label{font-size:.8rem;font-weight:800;color:var(--muted)}
+.options{display:flex;flex-direction:column;gap:6px}
+.options button{text-align:left;min-height:44px;padding:8px 12px;background:var(--soft);color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.options button[aria-pressed="true"]{outline:3px solid var(--accent)}
+.story{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:18px}
+.story .entry{display:flex;flex-direction:column;gap:6px}
+.story .entry .text{font-size:.95rem}
+svg{width:100%;height:auto;background:#0a0c18;border-radius:12px;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem;color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+table{border-collapse:collapse;width:100%;background:var(--panel);border:1px solid var(--rule);border-radius:10px;overflow:hidden;font-size:.92rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:800}
+.bar{height:10px;border-radius:5px;background:var(--c,#888);display:inline-block;vertical-align:middle;margin-right:6px}
+.ok{color:#1d8a4b;font-weight:800}
+.bad{color:#c0392b;font-weight:800}
+[hidden]{display:none !important}
+</style>
+</head>
+<body>
+<main>
+<header style="display:flex;flex-direction:column;gap:10px">
+  <p class="eyebrow">Designverktyg, D-274 och F-275</p>
+  <h1>Uppdragstestare</h1>
+  <p class="muted">Huvudstoryn som spelet skulle skapa för en karta och ett frö. Den görs med spelets egen kod och på samma karta som spelet, så det du ser här är det spelet skulle göra. Inget av det finns i spelet än. Texterna är på engelska, som i spelet.</p>
+</header>
+
+<div class="controls">
+  <label>Kartstorlek
+    <select id="size">
+      <option value="short">Liten, 25 system, 8 steg</option>
+      <option value="medium">Mellan, 40 system, 12 steg</option>
+      <option value="long">Stor, 55 system, 16 steg</option>
+    </select>
+  </label>
+  <label>Frö
+    <input id="seed" type="number" min="1" step="1" value="1" inputmode="numeric">
+  </label>
+  <button id="show">Visa</button>
+  <button id="roll" class="ghost">Slumpa frö</button>
+</div>
+
+<div class="summary" id="summary"></div>
+
+<div class="tabs" role="tablist">
+  <button role="tab" data-tab="flow" aria-selected="true">Flöde</button>
+  <button role="tab" data-tab="read" aria-selected="false">Berättelse</button>
+  <button role="tab" data-tab="map" aria-selected="false">Karta</button>
+  <button role="tab" data-tab="stats" aria-selected="false">Sammanställning</button>
+</div>
+
+<section id="flow"></section>
+<section id="read" hidden></section>
+<section id="map" hidden></section>
+<section id="stats" hidden>
+  <p class="muted">Hundra frön för varje kartstorlek. Tiden är ungefärlig: stegen och hoppen mellan dem, utan sidouppdrag. Varje story kontrolleras på alla vägar genom valen: att den börjar i fristaden, slutar med stjärnkartan, aldrig har samma sorts steg två gånger i rad, att varje steg får det det behöver, och att inget steg ligger i slutet eller där det inte går att nå.</p>
+  <button id="run">Räkna hundra omgångar per storlek</button>
+  <div id="statsOut"></div>
+</section>
+</main>
+
+<script type="module">
+import { sectorsFor, createStory, checkStory, pathsOf, minutesOf, summarize, SORTS, TWISTS, ACT_NAMES, TOKEN_NAMES, PREMISES, MAIN_STEPS } from '../../../src/sim/story.js';
+import { FACTIONS } from '../../../src/sim/sides.js';
+
+const COLORS = { talk:'#2c7be5', acquire:'#d68910', search:'#7d3c98', scan:'#138d75', fight:'#c0392b', board:'#a04000', deliver:'#2e86c1', choose:'#5d6d7e', raid:'#922b21' };
+const ROLE_NAMES = { captain:'Captain', gunner:'Gunner', engineer:'Engineer', boarders:'Bordarna' };
+const TIER_NAMES = ['lugnt', 'lite fara', 'farligt', 'mycket farligt'];
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
+
+let current = null;
+// Which option of each choice is read: the index of the choice step → 0 or 1.
+let picked = {};
+
+function make() {
+  const size = $('size').value;
+  const seed = Math.max(1, Math.floor(Number($('seed').value) || 1));
+  $('seed').value = seed;
+  const sectors = sectorsFor(seed, size);
+  const story = createStory(sectors, seed, size);
+  current = { story, sectors };
+  picked = {};
+  const url = new URL(location.href);
+  url.searchParams.set('size', size);
+  url.searchParams.set('seed', seed);
+  history.replaceState(null, '', url);
+  draw();
+}
+
+function pathNow() {
+  const out = [];
+  for (const st of current.story.steps) {
+    if (st.branches) {
+      const choice = current.story.steps[st.index - 1];
+      out.push(st.branches[picked[choice.index] || 0]);
+    } else out.push(st);
+  }
+  return out;
+}
+
+function sysLine(st) {
+  const sys = current.sectors[st.system];
+  const owner = sys.owner === 'contested' ? 'omstritt' : sys.owner === 'pirate' ? 'pirater' : sys.owner ? FACTIONS[sys.owner].short : sys.kind === 'sanctuary' ? 'fristaden' : 'tomt';
+  return `${esc(sys.name)} · ${TIER_NAMES[sys.tier]} · ${owner}${st.base ? ' · ' + esc(st.base) : ''}`;
+}
+
+function card(st, n) {
+  const sort = SORTS[st.sort];
+  const gives = Array.isArray(st.gives) ? st.gives.map((g) => TOKEN_NAMES[g]).join(' eller ') : TOKEN_NAMES[st.gives];
+  const twist = st.twist ? `<span class="badge twist">${esc(TWISTS[st.twist].name)}</span>` : '';
+  const options = st.options ? `<div class="options">${st.options.map((o, k) => `<div class="text">${esc(o.text)}</div>`).join('')}</div>` : '';
+  return `<article class="card" style="--c:${COLORS[st.sort]}">
+    <div class="top"><span class="num">${n}</span><span class="badge">${esc(sort.name)}</span>${twist}<span class="where">${sysLine(st)}</span></div>
+    <div class="flow">behöver ${st.needs ? TOKEN_NAMES[st.needs] : 'inget'} → ger ${gives} · ${sort.minutes} min · ${sort.roles.map((r) => ROLE_NAMES[r]).join(', ')}</div>
+    <div class="goal">${esc(st.goal)}</div>
+    <div class="text">${esc(st.text)}</div>
+    ${options}
+    <div class="fallback">Om något går fel: ${esc(st.fallback)}</div>
+  </article>`;
+}
+
+function drawSummary() {
+  const { story, sectors } = current;
+  const path = pathNow();
+  const t = minutesOf(path, sectors);
+  const problems = checkStory(story, sectors);
+  const c = story.cast;
+  $('summary').innerHTML = [
+    `<span>Premiss: <b>${esc(PREMISES[story.premise].name)}</b></span>`,
+    `<span>Kontakt: <b>${esc(c.contact.name)}</b> (${esc(FACTIONS[c.contact.side].short)})</span>`,
+    `<span>Rival: <b>${esc(c.rival.ship)}</b></span>`,
+    `<span>Skurk: <b>${esc(c.villain.name)}</b></span>`,
+    `<span>Steg: <b>${path.length}</b> av ${MAIN_STEPS[story.size]}</span>`,
+    `<span>Ungefär <b>${t.minutes} min</b>, ${t.jumps} hopp</span>`,
+    problems.length ? `<span class="bad">${problems.length} fel: ${esc(problems[0])}</span>` : `<span class="ok">Går att klara på alla vägar</span>`,
+  ].join('');
+}
+
+function drawFlow() {
+  let html = '';
+  let act = null;
+  for (const st of current.story.steps) {
+    if (st.act !== act) {
+      if (act) html += '</div>';
+      act = st.act;
+      html += `<div class="act"><h3>${ACT_NAMES[act]}</h3>`;
+    }
+    if (st.branches) {
+      const choice = current.story.steps[st.index - 1];
+      html += `<div class="fork">${st.branches.map((b, k) => `<div style="display:flex;flex-direction:column;gap:6px"><span class="fork-label">Om ${esc(FACTIONS[choice.sides[k]].name)} får saken</span>${card(b, st.index + 1)}</div>`).join('')}</div>`;
+    } else html += card(st, st.index + 1);
+  }
+  $('flow').innerHTML = html + '</div>';
+}
+
+function drawRead() {
+  let html = '<div class="story">';
+  for (const st of pathNow()) {
+    html += `<div class="entry"><span class="eyebrow">${st.index + 1}. ${ACT_NAMES[st.act]}</span><div class="goal">${esc(st.goal)}</div><div class="text">${esc(st.text)}</div>`;
+    if (st.options) {
+      html += `<div class="options">${st.options.map((o, k) => `<button data-choice="${st.index}" data-k="${k}" aria-pressed="${(picked[st.index] || 0) === k}">${esc(o.text)}</button>`).join('')}</div>`;
+    }
+    html += '</div>';
+  }
+  $('read').innerHTML = html + '</div><p class="muted">Välj ett alternativ vid ett val för att läsa den vägen.</p>';
+  $('read').querySelectorAll('[data-choice]').forEach((b) =>
+    b.addEventListener('click', () => {
+      picked[b.dataset.choice] = Number(b.dataset.k);
+      draw();
+    }),
+  );
+}
+
+function drawMap() {
+  const { sectors, story } = current;
+  const W = 1000, H = 700, pad = 40;
+  const X = (x) => pad + x * (W - 2 * pad);
+  const Y = (y) => pad + y * (H - 2 * pad);
+  const fill = (s) => s.boss ? '#ff4d4d' : s.kind === 'sanctuary' ? '#ffffff' : s.kind === 'empty' ? '#3a3f66' : s.owner === 'pirate' ? '#c0392b' : s.owner === 'contested' ? '#e0a030' : { charter:'#4aa3ff', wardens:'#9fd36b', drifters:'#c58cff' }[s.owner] || '#888';
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Stjärnkartan med storyns steg">`;
+  for (const s of sectors) for (const j of s.links) if (j > s.id) svg += `<line x1="${X(s.x)}" y1="${Y(s.y)}" x2="${X(sectors[j].x)}" y2="${Y(sectors[j].y)}" stroke="#2b3054" stroke-width="2"/>`;
+  const path = pathNow();
+  for (let k = 1; k < path.length; k++) {
+    const a = sectors[path[k - 1].system], b = sectors[path[k].system];
+    svg += `<line x1="${X(a.x)}" y1="${Y(a.y)}" x2="${X(b.x)}" y2="${Y(b.y)}" stroke="#ffd166" stroke-width="2.5" stroke-dasharray="6 5" opacity=".75"/>`;
+  }
+  for (const s of sectors) svg += `<circle cx="${X(s.x)}" cy="${Y(s.y)}" r="${s.kind === 'empty' ? 6 : 9}" fill="${fill(s)}"/>`;
+  // The numbers of the steps in each system, beside it.
+  const at = {};
+  path.forEach((st, k) => (at[st.system] = [...(at[st.system] || []), k + 1]));
+  for (const [id, nums] of Object.entries(at)) {
+    const s = sectors[id];
+    svg += `<text x="${X(s.x) + 12}" y="${Y(s.y) - 10}" fill="#ffd166" font-family="system-ui,sans-serif" font-size="20" font-weight="800">${nums.join(', ')}</text>`;
+  }
+  const end = sectors[story.end];
+  if (end) svg += `<text x="${X(end.x) + 12}" y="${Y(end.y) + 22}" fill="#ff8080" font-family="system-ui,sans-serif" font-size="16" font-weight="700">SLUTET</text>`;
+  svg += '</svg>';
+  const legend = [['#ffffff','Fristaden'],['#4aa3ff','Charter'],['#9fd36b','Wardens'],['#c58cff','Drifters'],['#e0a030','Omstritt'],['#c0392b','Pirater'],['#ff4d4d','Slutet'],['#3a3f66','Tomt']];
+  $('map').innerHTML = svg + `<div class="legend">${legend.map(([c, t]) => `<span><span class="dot" style="background:${c}"></span>${t}</span>`).join('')}<span>Gula siffror: storyns steg i ordning, på den valda vägen</span></div>`;
+}
+
+function draw() {
+  drawSummary();
+  drawFlow();
+  drawRead();
+  drawMap();
+}
+
+function runStats() {
+  const sizes = [['short', 'Liten'], ['medium', 'Mellan'], ['long', 'Stor']];
+  const rows = sizes.map(([size, name]) => {
+    const list = [];
+    for (let seed = 1; seed <= 100; seed++) {
+      const sectors = sectorsFor(seed, size);
+      list.push({ story: createStory(sectors, seed, size), sectors });
+    }
+    return { name, size, sum: summarize(list) };
+  });
+  const sorts = Object.keys(SORTS);
+  const pct = (n, total) => Math.round((100 * n) / total);
+  let html = '<table><tr><th></th>' + rows.map((r) => `<th>${r.name} (${MAIN_STEPS[r.size]} steg)</th>`).join('') + '</tr>';
+  html += '<tr><td>Tid</td>' + rows.map((r) => `<td>${Math.round(r.sum.minutes.avg)} min (${r.sum.minutes.min}–${r.sum.minutes.max})</td>`).join('') + '</tr>';
+  html += '<tr><td>Hopp</td>' + rows.map((r) => `<td>${Math.round(r.sum.jumps)}</td>`).join('') + '</tr>';
+  html += '<tr><td>Fel</td>' + rows.map((r) => `<td class="${r.sum.problems ? 'bad' : 'ok'}">${r.sum.problems ? r.sum.problems + ' av 100<br>' + r.sum.examples.map(esc).join('<br>') : 'inga'}</td>`).join('') + '</tr>';
+  for (const sort of sorts) {
+    html += `<tr><td>${SORTS[sort].name}</td>` + rows.map((r) => {
+      const total = Object.values(r.sum.sorts).reduce((a, b) => a + b, 0);
+      const p = pct(r.sum.sorts[sort] || 0, total);
+      return `<td><span class="bar" style="--c:${COLORS[sort]};width:${p * 2}px"></span>${p} %</td>`;
+    }).join('') + '</tr>';
+  }
+  for (const role of Object.keys(ROLE_NAMES)) {
+    html += `<tr><td>Jobb för ${ROLE_NAMES[role]}</td>` + rows.map((r) => {
+      const total = Object.values(r.sum.roles).reduce((a, b) => a + b, 0);
+      return `<td>${pct(r.sum.roles[role] || 0, total)} %</td>`;
+    }).join('') + '</tr>';
+  }
+  html += '<tr><td>Vändningar</td>' + rows.map((r) => `<td>${Object.entries(r.sum.twists).map(([t, n]) => `${esc(TWISTS[t].name)}: ${n}`).join('<br>')}</td>`).join('') + '</tr>';
+  $('statsOut').innerHTML = html + '</table>';
+}
+
+document.querySelectorAll('[role="tab"]').forEach((tab) =>
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('[role="tab"]').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+    for (const id of ['flow', 'read', 'map', 'stats']) $(id).hidden = id !== tab.dataset.tab;
+  }),
+);
+$('show').addEventListener('click', make);
+$('size').addEventListener('change', make);
+$('seed').addEventListener('change', make);
+$('roll').addEventListener('click', () => {
+  $('seed').value = 1 + Math.floor(Math.random() * 99999);
+  make();
+});
+$('run').addEventListener('click', () => {
+  $('statsOut').textContent = 'Räknar …';
+  setTimeout(runStats, 20);
+});
+const params = new URL(location.href).searchParams;
+if (params.get('size')) $('size').value = params.get('size');
+if (params.get('seed')) $('seed').value = params.get('seed');
+make();
+</script>
+</body>
+</html>

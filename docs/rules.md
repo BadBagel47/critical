@@ -1163,6 +1163,15 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-940 | Fraktjobb och passagerare med tidsgräns finns på en anslagstavla, och uppdrag med berättelse fås av folk i baren. | förslag | BACKLOG D-073 (från D-075) | – |
 | R-941 | Patrullskepp skannar lasten, och olaglig last ger böter och sämre anseende. | förslag | BACKLOG D-074 (från D-075) | – |
 | R-942 | Händelser ändrar världen: en station byter ägare, priser rör sig och en sektor blir farligare. | förslag | BACKLOG F-087 | – |
+| R-1209 | Huvudstoryn har ett skelett i akter: krok, utredning, vändning, upptrappning och slut. Akterna fylls med genererade steg. Storyn börjar med kontakten i fristaden och slutar med att besättningen tar slutets stjärnkarta ur valvet på en piratbas. | bestämd | Användaren 2026-11-17 (D-274, US1); början och slutet är agentens förslag i docs/proposal-missions.md | – |
+| R-1210 | Huvudstoryn har 8 steg på den lilla kartan, 12 på den mellersta och 16 på den stora, så att en stor värld inte känns tom. Den stora kartan har två vändningar. | bestämd | Användaren 2026-11-17 (D-274, US1 och US5) | – |
+| R-1211 | Ett steg är en sak besättningen gör, på en plats, av ett skäl: prata, skaffa, leta, spana, strida, borda, leverera, välja och plundra. Varje steg säger vad det behöver och vad det ger (en person, en butik, ett vrak, en signal, ett mål, en sak eller valvet), och nästa steg behöver det som steget före gav. | förslag | docs/proposal-missions.md (D-274) | – |
+| R-1212 | Ett val delar storyn på den lilla kartan och två på de andra. Två sidor vill ha samma sak, och båda vägarna leder vidare till slutet. | bestämd | Användaren 2026-11-17 (D-274, US2) | – |
+| R-1213 | Samma sorts steg kommer aldrig två gånger i rad, och stegen flyttar ut mot farligare system ju längre storyn har kommit. | förslag | docs/proposal-missions.md (D-274) | – |
+| R-1214 | Varje sorts steg har en väg ut om något går fel, så att besättningen aldrig fastnar: en person på en stängd bas möter besättningen i fristaden, ett mål som flyr dyker upp i ett system bredvid, och det man skulle hämta finns kvar i vraket om ett skepp sprängs. | förslag | docs/proposal-missions.md (D-274); följer R-928 och R-929 | – |
+| R-1215 | Ett val ger +10 i anseende hos sidan som får saken och -5 hos den andra. | förslag | docs/proposal-missions.md (D-274) | – |
+| R-1216 | Uppdragsloggen har en egen tangent och är gemensam för besättningen. Huvudstoryn står överst, med nuvarande steg, avklarade steg och de ledtrådar man fått, sidouppdragen under, och det valda uppdragets mål markeras på stjärnkartan och systemkartan. | bestämd | Användaren 2026-11-17 (D-274, US3) | – |
+| R-1217 | Saker som hör till storyn finns bara medan storyn pågår, till exempel en sak som säljs på en bas eller ligger i ett vrak. De kan inte säljas eller tappas. | förslag | Användaren 2026-11-17 (D-274), docs/proposal-missions.md | – |
 | R-943 | Skepp i nöd ber om bränsle eller reparation och betalar eller minns det. | förslag | BACKLOG F-083 | – |
 | R-944 | Captain kan anropa skepp och stationer för att be om bränsle, muta eller kräva tribut. | förslag | BACKLOG F-082 | – |
 
