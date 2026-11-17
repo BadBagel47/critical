@@ -108,7 +108,7 @@ Flera agenter arbetar i repot samtidigt. För att det inte ska krocka:
 - Varje sektor har en egen färg: ljusare och lugnare i början, mörkare, råare och lite snabbare längre in.
 - Larmet under bordning är en jakt som höjer pulsen utan larmljud. En version med siren prövades och valdes bort (2026-11-14).
 - Introlåten är ungefär en och en halv minut innan den börjar om (2026-11-14).
-- Introlåten ska vara melodisk och inte bara upprepa samma fras. De lugna delarna ska finnas kvar (2026-11-17). Temat Signal får därför sällskap av egna melodier: ett svar, en mellandel och ett slut.
+- Introlåten ska vara melodisk och inte bara upprepa samma fras. De lugna delarna ska finnas kvar (2026-11-17). Temat Signal får därför sällskap av egna melodier: ett svar, en mellandel och ett slut. Användaren godkände den nya introlåten samma dag.
 - Vinsten har ett eget stycke som knyter an till introt. Förlusten har den korta mollvarianten.
 
 ## Öppna frågor till användaren
