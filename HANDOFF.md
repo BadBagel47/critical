@@ -36,10 +36,11 @@ Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra för
 
 1. Användaren provspelar standardbasen och fraktskeppet. Öppen fråga:
    - SB2 (öppen 2026-11-17): andra sidors baser har i dag alltid de fyra tornen på källaren (R-1207, förslag), medan en bas som besättningen tar har de torn den hade. Användaren vill att man ska bygga upp försvaret själv, och undrar hur det blir logiskt. Agentens förslag (väntar på svar): andra sidors baser får försvar efter hur farligt systemet är, och när besättningen tar en bas spränger basens säkerhetssystem sina egna torn, så att fästena står tomma. En egen bas som tas tillbaka får fortfarande tillbaka det besättningen själv köpt (R-218).
-2. Nästa körning är grupp A i BACKLOG.md (uppdrag och story). Starta gärna en ny session för varje körning. Allt som behövs står i repot.
-3. Användaren fortsätter provspela och ger synpunkter.
-4. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073) och eskortskepp (D-071). Baserna (D-072) har en plan i docs/proposal-bases.md, med designuppgifter som görs före bygge.
-5. Onlineläget (F-040) väntar på användarens motor.
+2. Användaren provar designtestet för pekskärm (D-262) på iPad och svarar på frågorna på sidan. Sedan byggs pekstyrningen (F-090, grupp H).
+3. Nästa körning annars är grupp A i BACKLOG.md (uppdrag och story). Starta gärna en ny session för varje körning. Allt som behövs står i repot.
+4. Användaren fortsätter provspela och ger synpunkter.
+5. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073) och eskortskepp (D-071). Baserna (D-072) har en plan i docs/proposal-bases.md, med designuppgifter som görs före bygge.
+6. Onlineläget (F-040) väntar på användarens motor.
 
 ## Mål
 
@@ -82,6 +83,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 - [docs/proposal-bases.md](docs/proposal-bases.md): plan (mest beslutad 2026-11-16, standardbasen byggd samma dag) för standardbasen i tre våningar, tryck under bordning, skeppet medan man bordar, fristaden som startsystem, startkanonen, varvet som köps, en större utsida och dockningsringen. Säger vad som är bestämt och vad som är förslag, och slutar med öppna frågor.
 - [docs/design/prototypes/](docs/design/prototypes/): fristående designtester. `interior-ship.html`, `interior-station.html` och `interior-pirate-base.html` hör till docs/proposal-bases.md (tunna väggar, figurer, ljussättning, en genererad piratbas med boss). De används inte av spelet.
   - `standard-base.html` är designtestet för standardbasens utsida och insida (D-217): Utsidan, Inflygning med ringen som vrids, de tre våningarna, lägena och försvaret. Den byggs av delarna i `docs/design/tools/standard-base/` med `python3 build.py`, som också tar rader ur `interior-pirate-base.html` (radnumren står i delarna) och skeppsbilderna i `assets/sprites/`.
+  - `touch.html` är designtestet för pekskärm på iPad (D-262, F-090): spelets typsnitt och bilder med styrspakar och knappar för varje post och för bordning, tre sätt för Gunner att sikta, och val för spakar, storlek och tryckytor under bilden. Inget av spelet körs i den. Adress: https://badbagel47.github.io/critical/docs/design/prototypes/touch.html
   - `freighter.html` är designtestet för fraktskeppets insida (D-249): genererad, med samma form som skeppet i rymden, ett stort lastrum, tre vägar längs skeppet och lägena normal, lockdown, larm och vrak. Den byggs av delarna i `docs/design/tools/freighter/` med `python3 build.py`, på samma sätt som standardbasen.
 
 ## Kod

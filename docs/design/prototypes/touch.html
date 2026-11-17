@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Pekskärm på iPad: designtest</title>
+<style>
+/* A design test of touch controls (D-262, F-090), drawn with the game's own font, colours and pictures on a screen
+   of the game's size. Nothing of the game runs: the ships, the room and the guards are made up for the test. */
+:root {
+  color-scheme: dark;
+  --bg: #0b0c16;
+  --panel: #14162a;
+  --line: #2f3350;
+  --text: #c9ccd8;
+  --dim: #8a8ea6;
+  --accent: #dba445;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.5 ui-monospace, Menlo, Consolas, monospace; padding: 0 0 40px; }
+.stage { position: relative; width: 100vw; max-width: calc(100vh * 16 / 9); margin: 0 auto; }
+canvas { display: block; width: 100%; aspect-ratio: 16 / 9; image-rendering: pixelated; background: #090911;
+  touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+main { max-width: 1100px; margin: 0 auto; padding: 14px 16px; display: grid; gap: 12px; }
+h1 { font: 600 1.5rem 'Trebuchet MS', 'Segoe UI', sans-serif; margin: 0; }
+h2 { font: 600 1.1rem 'Trebuchet MS', 'Segoe UI', sans-serif; margin: 10px 0 0; color: var(--accent); }
+p, li { margin: 0; max-width: 92ch; }
+ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.lede { color: var(--dim); }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bar span { color: var(--dim); min-width: 11ch; }
+button { font: 600 1rem 'Trebuchet MS', 'Segoe UI', sans-serif; background: var(--panel); color: var(--text);
+  border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; cursor: pointer; }
+button[aria-pressed='true'] { background: var(--accent); color: #15120a; border-color: var(--accent); }
+.note { color: var(--dim); font-size: .9rem; }
+</style>
+</head>
+<body>
+<div class="stage"><canvas id="screen" width="1280" height="720"></canvas></div>
+<main>
+  <h1>Pekskärm på iPad: designtest</h1>
+  <p class="lede">Designtest för D-262 och F-090, inte byggt i spelet. Håll iPaden liggande och tryck på <b>Fullskärm</b>. Byt post med flikarna överst i bilden. Allt i bilden är påhittat för testet: skeppen, rummet och vakterna finns bara här. Knapparna överst till höger (MAP, STARS, STORES, MENU) visar bara var de skulle sitta.</p>
+  <div class="bar"><button id="full">Fullskärm</button><button id="reset">Börja om siffrorna</button></div>
+  <div class="bar" id="aim"><span>Gunners sikte:</span></div>
+  <div class="bar" id="stick"><span>Spakarna:</span></div>
+  <div class="bar" id="size"><span>Storlek:</span></div>
+  <div class="bar" id="throttle"><span>Gasen:</span></div>
+  <div class="bar" id="hit"><span>Tryckytor:</span></div>
+  <div class="bar" id="dots"><span>Visa fingrar:</span></div>
+
+  <h2>Vad som provas</h2>
+  <ul>
+    <li><b>Captain (P3):</b> en spak till vänster. Upp och ner är gas, åt sidorna svänger skeppet. Flyg genom ringarna i ordning. Tiden för ett varv står uppe till höger. Knapparna till höger: BOOST, BURN (efterbrännare, håll in), STOP och DOCK, som tänds när skeppet är nära den gröna porten.</li>
+    <li><b>Gunner (P4):</b> tre sätt att sikta, som du väljer under bilden. Skjut ner fighterna och jämför träffar och tid per fighter för varje sätt.
+      <ul>
+        <li><b>A – Dra på rymden:</b> sätt fingret var som helst i rymden. Tornet vrider sig dit och skjuter så länge fingret ligger kvar.</li>
+        <li><b>B – Höger spak:</b> spaken till höger siktar, och tornet skjuter när spaken är dragen mer än halvvägs.</li>
+        <li><b>C – Tryck på målet:</b> tryck på en fighter så låser tornet på den, och håll FIRE för att skjuta. Tryck i tomma rymden för att släppa målet.</li>
+      </ul>
+      Knapparna SHIELD, WEAPON, DARTS och MARK sitter till vänster, så att högerhanden är fri för siktet.</li>
+    <li><b>Engineer:</b> panelen styrs redan med klick och tryck. Prova om prickarna för kraft går att träffa med fingret, med och utan större tryckytor.</li>
+    <li><b>Bordning (P5):</b> två spakar. Vänster går, höger siktar och skjuter när den är dragen mer än halvvägs. Knapparna sitter i en båge ovanför höger spak: GRENADE kastas åt det håll du siktar, FLARE likaså, LAMP tänder och släcker, TRANQ byter vapen. USE ovanför vänster spak plockar upp lådor och slår på konsolen. Skjut vakterna, plocka lådorna och prova i mörkret.</li>
+  </ul>
+
+  <h2>Frågor att svara på efter provet</h2>
+  <ul>
+    <li>Vilket sikte för Gunner kändes bäst: A, B eller C?</li>
+    <li>Fasta eller flytande spakar? Flytande spakar dyker upp där tummen landar på sin halva av skärmen.</li>
+    <li>Vilken storlek på spakar och knappar?</li>
+    <li>Gasen: ska den ligga kvar när du släpper spaken, som med W och S i dag, eller följa spaken och gå tillbaka till noll?</li>
+    <li>Sitter något i vägen för det du vill se, eller för långt bort för tummen?</li>
+  </ul>
+  <p class="note" id="status"></p>
+</main>
+<script type="module">
+import { BitmapFont } from '../../../src/font.js';
+import { COL } from '../../../src/config.js';
+import { rect, sprite } from '../../../src/render/draw.js';
+
+const W = 640, H = 360;
+const canvas = document.getElementById('screen');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+// Headings as in the game: 0 is up, and clockwise is positive.
+const fwd = (h) => ({ x: Math.sin(h), y: -Math.cos(h) });
+const headingTo = (dx, dy) => Math.atan2(dx, -dy);
+const turnToward = (h, want, step) => {
+  const d = ((want - h + Math.PI * 3) % TAU) - Math.PI;
+  return h + clamp(d, -step, step);
+};
+
+// ---------- settings ----------
+const opt = { aim: 'A', stick: 'fixed', size: 'M', throttle: 'hold', big: false, dots: false };
+const SIZE = { S: 28, M: 36, L: 46 };
+const choices = (id, key, list) => {
+  const bar = document.getElementById(id);
+  for (const [value, text] of list) {
+    const b = document.createElement('button');
+    b.textContent = text;
+    b.onclick = () => {
+      opt[key] = value;
+      for (const x of bar.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+      layout();
+    };
+    b.setAttribute('aria-pressed', String(opt[key] === value));
+    bar.append(b);
+  }
+};
+choices('aim', 'aim', [['A', 'A – Dra på rymden'], ['B', 'B – Höger spak'], ['C', 'C – Tryck på målet']]);
+choices('stick', 'stick', [['fixed', 'Fasta'], ['float', 'Flytande']]);
+choices('size', 'size', [['S', 'Liten'], ['M', 'Mellan'], ['L', 'Stor']]);
+choices('throttle', 'throttle', [['hold', 'Ligger kvar (som W/S)'], ['follow', 'Följer spaken']]);
+choices('hit', 'big', [[false, 'Som de syns'], [true, 'Större än de syns']]);
+choices('dots', 'dots', [[false, 'Nej'], [true, 'Ja']]);
+document.getElementById('full').onclick = () => {
+  const el = document.querySelector('.stage');
+  (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el);
+};
+document.getElementById('reset').onclick = () => resetStats();
+
+// ---------- the controls on the screen ----------
+// A stick: where it rests, how far it reaches, and which part of the screen a floating one takes its first touch
+// from. `v` is where it is pushed, from -1 to 1 on each axis.
+const stick = (side) => ({ side, home: { x: 0, y: 0 }, at: { x: 0, y: 0 }, v: { x: 0, y: 0 }, id: null });
+const sticks = { left: stick('left'), right: stick('right') };
+// Buttons: where they are, how large, what they say and whether they are held.
+let buttons = [];
+const btn = (name, x, y, r, text, o = {}) => ({ name, x, y, r, text, held: false, id: null, ...o });
+const TABS = ['CAPTAIN', 'GUNNER', 'ENGINEER', 'BOARDING'];
+// Each tab is as wide as this, from the left edge.
+let mode = 'CAPTAIN';
+function layout() {
+  const R = SIZE[opt.size];
+  sticks.left.home = { x: 18 + R * 1.5, y: H - 18 - R * 1.5 };
+  sticks.right.home = { x: W - 18 - R * 1.5, y: H - 18 - R * 1.5 };
+  for (const s of Object.values(sticks)) if (s.id === null) s.at = { ...s.home };
+  const b = R * 0.55,
+    big = R * 0.75;
+  const rx = W - 18 - R * 1.5;
+  if (mode === 'CAPTAIN')
+    buttons = [
+      btn('boost', rx, H - 18 - R * 1.5, big, 'BOOST'),
+      btn('burn', rx - big * 2.6, H - 18 - b, b, 'BURN', { hold: true }),
+      btn('stop', rx - big * 0.4, H - 18 - R * 1.5 - big * 2.4, b, 'STOP'),
+      btn('dock', rx - big * 2.6, H - 18 - R * 1.5 - big * 1.9, big, 'DOCK', { off: true }),
+    ];
+  else if (mode === 'GUNNER') {
+    const lx = 18 + b * 1.4;
+    buttons = [
+      btn('shield', lx, H - 18 - b * 1.2, b, 'SHIELD', { toggle: true }),
+      btn('weapon', lx + b * 2.6, H - 18 - b * 1.2, b, 'WEAPON'),
+      btn('darts', lx, H - 18 - b * 3.8, b, 'DARTS'),
+      btn('mark', lx + b * 2.6, H - 18 - b * 3.8, b, 'MARK'),
+    ];
+    if (opt.aim === 'C') buttons.push(btn('fire', rx, H - 18 - R * 1.5, big * 1.15, 'FIRE', { hold: true }));
+  } else if (mode === 'ENGINEER') buttons = [];
+  else {
+    const c = sticks.right.home;
+    const arc = (k, n) => {
+      const a = Math.PI + 0.25 + (k / (n - 1)) * (Math.PI / 2 - 0.25);
+      return { x: c.x + Math.cos(a) * R * 2.35, y: c.y + Math.sin(a) * R * 2.35 };
+    };
+    const names = [['grenade', 'GRENADE'], ['flare', 'FLARE'], ['lamp', 'LAMP'], ['tranq', 'TRANQ']];
+    buttons = names.map(([n, t], k) => {
+      const p = arc(k, names.length);
+      return btn(n, p.x, p.y, b, t, n === 'lamp' || n === 'tranq' ? { toggle: true } : {});
+    });
+    const l = sticks.left.home;
+    buttons.push(btn('use', l.x + R * 0.4, l.y - R * 2.5, big, 'USE'));
+    buttons.push(btn('charge', l.x + R * 2.3, l.y - R * 1.4, b, 'CHARGE'));
+  }
+  // What the four corner buttons stand for, on every screen.
+  // Long and flat, along the top, where the game has its lines of text.
+  let x = W - 6;
+  for (const t of ['MENU', 'STORES', 'STARS', 'MAP']) {
+    const w = 52;
+    buttons.push(btn('top' + t, x - w / 2, 15, 11, t, { box: { w, h: 22 } }));
+    x -= w + 6;
+  }
+}
+
+// ---------- touches ----------
+// Each finger is held by one thing: a stick, a button, a tab, or the aim (A and C).
+const fingers = new Map();
+const toGame = (e) => {
+  const r = canvas.getBoundingClientRect();
+  return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H };
+};
+const usesSticks = () => (mode === 'CAPTAIN' ? ['left'] : mode === 'GUNNER' && opt.aim === 'B' ? ['right'] : mode === 'BOARDING' ? ['left', 'right'] : []);
+const reach = (b) => b.r * (opt.big ? 1.45 : 1);
+// Whether a point is on a button: inside its circle, or its box for the flat ones.
+const onButton = (b, p) => {
+  const k = opt.big ? 1.45 : 1;
+  if (b.box) return Math.abs(p.x - b.x) < (b.box.w / 2) * k && Math.abs(p.y - b.y) < (b.box.h / 2) * k;
+  return dist(p.x, p.y, b.x, b.y) <= reach(b);
+};
+function grab(p, id) {
+  // The tabs along the top.
+  if (p.y < 26 && p.x < 300) {
+    const k = Math.floor((p.x - 4) / 72);
+    if (k >= 0 && k < TABS.length) {
+      mode = TABS[k];
+      layout();
+      return { what: 'tab' };
+    }
+  }
+  for (const b of buttons) {
+    if (!onButton(b, p)) continue;
+    b.id = id;
+    if (b.toggle) b.on = !b.on;
+    else b.held = true;
+    press(b);
+    return { what: 'button', b };
+  }
+  if (mode === 'ENGINEER') {
+    tapPip(p);
+    return { what: 'none' };
+  }
+  for (const side of usesSticks()) {
+    const s = sticks[side];
+    if (s.id !== null) continue;
+    const mine = side === 'left' ? p.x < W / 2 : p.x >= W / 2;
+    const onIt = dist(p.x, p.y, s.home.x, s.home.y) < SIZE[opt.size] * 1.6;
+    if (opt.stick === 'fixed' ? !onIt : !mine || p.y < 90) continue;
+    s.id = id;
+    if (opt.stick === 'float') s.home = { ...p };
+    s.at = { ...p };
+    moveStick(s, p);
+    return { what: 'stick', s };
+  }
+  if (mode === 'GUNNER' && opt.aim === 'A') {
+    gun.aim = { ...p };
+    gun.firing = true;
+    return { what: 'aim' };
+  }
+  if (mode === 'GUNNER' && opt.aim === 'C') {
+    const w = toWorld(p);
+    const hit = enemies.find((e) => dist(e.x, e.y, w.x, w.y) < 22 * (opt.big ? 1.5 : 1));
+    gun.lock = hit || null;
+    return { what: 'none' };
+  }
+  return { what: 'none' };
+}
+function moveStick(s, p) {
+  const R = SIZE[opt.size];
+  const dx = p.x - s.home.x,
+    dy = p.y - s.home.y;
+  const d = Math.hypot(dx, dy);
+  const k = d > R ? R / d : 1;
+  s.at = { x: s.home.x + dx * k, y: s.home.y + dy * k };
+  const v = { x: (dx * k) / R, y: (dy * k) / R };
+  // A small dead zone in the middle.
+  const m = Math.hypot(v.x, v.y);
+  s.v = m < 0.12 ? { x: 0, y: 0 } : v;
+}
+canvas.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  // Keep the finger's moves coming here even if it slides off the picture. Not every browser allows it.
+  try {
+    canvas.setPointerCapture(e.pointerId);
+  } catch {
+    /* the moves still come while the finger is on the picture */
+  }
+  const p = toGame(e);
+  fingers.set(e.pointerId, { ...grab(p, e.pointerId), p });
+});
+canvas.addEventListener('pointermove', (e) => {
+  const f = fingers.get(e.pointerId);
+  if (!f) return;
+  e.preventDefault();
+  f.p = toGame(e);
+  if (f.what === 'stick') moveStick(f.s, f.p);
+  if (f.what === 'aim') gun.aim = { ...f.p };
+});
+const lift = (e) => {
+  const f = fingers.get(e.pointerId);
+  if (!f) return;
+  fingers.delete(e.pointerId);
+  if (f.what === 'stick') {
+    f.s.id = null;
+    f.s.v = { x: 0, y: 0 };
+    f.s.home = opt.stick === 'float' ? f.s.home : f.s.home;
+    layout();
+  }
+  if (f.what === 'button') {
+    f.b.held = false;
+    f.b.id = null;
+  }
+  if (f.what === 'aim') gun.firing = false;
+};
+canvas.addEventListener('pointerup', lift);
+canvas.addEventListener('pointercancel', lift);
+// iPad Safari zooms and scrolls on its own unless it is told not to.
+for (const t of ['touchstart', 'touchmove', 'gesturestart', 'dblclick'])
+  canvas.addEventListener(t, (e) => e.preventDefault(), { passive: false });
+
+let toast = { text: '', until: 0 };
+const say = (text) => (toast = { text, until: now + 2 });
+function press(b) {
+  if (b.name.startsWith('top')) say(b.text + ' WOULD OPEN HERE');
+  else if (b.name === 'boost') ship.boost = 1.6;
+  else if (b.name === 'stop') ship.throttle = 0;
+  else if (b.name === 'dock') {
+    if (!b.off) say(ship.docked ? 'UNDOCKED' : 'DOCKED'), (ship.docked = !ship.docked);
+  } else if (b.name === 'weapon') (gun.weapon = (gun.weapon + 1) % 2), say(gun.weapon ? 'HEAVY LASER' : 'PULSE CANNON');
+  else if (b.name === 'darts') say('DARTS OUT');
+  else if (b.name === 'mark') say('MARKED FOR THE CAPTAIN');
+  else if (b.name === 'shield') say(b.on ? 'SHIELD OFF' : 'SHIELD ON');
+  else if (b.name === 'grenade') throwThing('grenade');
+  else if (b.name === 'flare') throwThing('flare');
+  else if (b.name === 'lamp') say(b.on ? 'LAMP OFF' : 'LAMP ON');
+  else if (b.name === 'tranq') say(b.on ? 'TRANQ GUN' : 'RIFLE');
+  else if (b.name === 'use') useNear();
+  else if (b.name === 'charge') say('NOTHING TO BLOW HERE');
+}
+
+// ---------- the Captain: fly through the rings ----------
+const ship = { x: 0, y: 0, vx: 0, vy: 0, heading: 0, throttle: 0, boost: 0, docked: false };
+const RINGS = [
+  { x: 0, y: -380 },
+  { x: 420, y: -560 },
+  { x: 700, y: -150 },
+  { x: 380, y: 260 },
+  { x: -120, y: 120 },
+];
+const PORT = { x: -260, y: -120 };
+let ringAt = 0,
+  lapStart = 0,
+  laps = [];
+function stepCaptain(dt) {
+  const s = sticks.left;
+  if (ship.docked) return;
+  // Up on the stick is more throttle.
+  if (opt.throttle === 'hold') ship.throttle = clamp(ship.throttle - s.v.y * 0.9 * dt, -0.3, 1);
+  else ship.throttle = clamp(-s.v.y, -0.3, 1);
+  const burn = buttons.find((b) => b.name === 'burn');
+  ship.heading += s.v.x * 2.6 * dt;
+  ship.boost = Math.max(0, ship.boost - dt);
+  const push = 160 * ship.throttle * (ship.boost > 0 ? 1.8 : 1) * (burn && burn.held ? 1.5 : 1);
+  const f = fwd(ship.heading);
+  ship.vx = (ship.vx + f.x * push * dt) * Math.exp(-0.9 * dt);
+  ship.vy = (ship.vy + f.y * push * dt) * Math.exp(-0.9 * dt);
+  ship.x += ship.vx * dt;
+  ship.y += ship.vy * dt;
+  const r = RINGS[ringAt];
+  if (dist(ship.x, ship.y, r.x, r.y) < 34) {
+    if (ringAt === 0 && lapStart) laps.push(now - lapStart);
+    if (ringAt === 0) lapStart = now;
+    ringAt = (ringAt + 1) % RINGS.length;
+  }
+  const dock = buttons.find((b) => b.name === 'dock');
+  if (dock) dock.off = dist(ship.x, ship.y, PORT.x, PORT.y) > 60 || Math.hypot(ship.vx, ship.vy) > 50;
+}
+
+// ---------- the Gunner: shoot the fighters ----------
+const gun = { heading: 0, aim: null, firing: false, lock: null, cool: 0, weapon: 0 };
+let enemies = [];
+let bolts = [];
+let stats = { shots: 0, hits: 0, kills: 0, since: 0 };
+const killTimes = [];
+function spawnEnemy() {
+  const a = Math.random() * TAU;
+  return { x: Math.cos(a) * 260, y: Math.sin(a) * 160, a, r: 120 + Math.random() * 110, sp: (0.4 + Math.random() * 0.5) * (Math.random() < 0.5 ? -1 : 1), hp: 3, flash: 0, heading: 0 };
+}
+function resetStats() {
+  stats = { shots: 0, hits: 0, kills: 0, since: now };
+  killTimes.length = 0;
+  laps = [];
+  lapStart = 0;
+  ringAt = 0;
+  crates.forEach((c) => (c.taken = false));
+  boarding.downed = 0;
+}
+function stepGunner(dt) {
+  const turret = { x: ship.x, y: ship.y };
+  let want = null;
+  let fire = false;
+  if (opt.aim === 'A' && gun.aim) {
+    const w = toWorld(gun.aim);
+    want = headingTo(w.x - turret.x, w.y - turret.y);
+    fire = gun.firing;
+  } else if (opt.aim === 'B') {
+    const v = sticks.right.v;
+    if (Math.hypot(v.x, v.y) > 0.15) want = headingTo(v.x, v.y);
+    fire = Math.hypot(v.x, v.y) > 0.5;
+  } else if (opt.aim === 'C') {
+    if (gun.lock && !enemies.includes(gun.lock)) gun.lock = null;
+    if (gun.lock) {
+      // Aim a little ahead of where it is going, as the game's turrets do.
+      const e = gun.lock;
+      want = headingTo(e.x + e.vx * 0.3 - turret.x, e.y + e.vy * 0.3 - turret.y);
+    }
+    const f = buttons.find((b) => b.name === 'fire');
+    fire = !!(f && f.held);
+  }
+  if (want !== null) gun.heading = turnToward(gun.heading, want, 5 * dt);
+  gun.cool -= dt;
+  if (fire && gun.cool <= 0) {
+    const f = fwd(gun.heading);
+    bolts.push({ x: turret.x + f.x * 12, y: turret.y + f.y * 12, vx: f.x * 420, vy: f.y * 420, t: 0.9 });
+    gun.cool = gun.weapon ? 0.5 : 0.16;
+    stats.shots++;
+  }
+  for (const e of enemies) {
+    e.a += e.sp * dt * 0.8;
+    const nx = ship.x + Math.cos(e.a) * e.r,
+      ny = ship.y + Math.sin(e.a) * e.r * 0.75;
+    e.vx = (nx - e.x) / dt;
+    e.vy = (ny - e.y) / dt;
+    e.heading = headingTo(e.vx, e.vy);
+    e.x = nx;
+    e.y = ny;
+    e.flash = Math.max(0, e.flash - dt);
+  }
+  for (const b of bolts) {
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+    b.t -= dt;
+    const e = enemies.find((x) => dist(x.x, x.y, b.x, b.y) < 11);
+    if (e) {
+      b.t = 0;
+      e.hp -= gun.weapon ? 3 : 1;
+      e.flash = 0.1;
+      stats.hits++;
+      if (e.hp <= 0) {
+        stats.kills++;
+        killTimes.push(now);
+        sparks.push({ x: e.x, y: e.y, t: 0.4 });
+        enemies = enemies.filter((x) => x !== e);
+        enemies.push(spawnEnemy());
+      }
+    }
+  }
+  bolts = bolts.filter((b) => b.t > 0);
+}
+let sparks = [];
+
+// ---------- the Engineer: power pips ----------
+const SYSTEMS = ['WEAPONS', 'SHIELD', 'ENGINES', 'SENSORS'];
+const power = [2, 2, 1, 1];
+const pipAt = (s, k) => ({ x: 250 + k * 14, y: 120 + s * 30 });
+function tapPip(p) {
+  const slack = opt.big ? 10 : 4;
+  for (let s = 0; s < SYSTEMS.length; s++)
+    for (let k = 0; k < 4; k++) {
+      const q = pipAt(s, k);
+      if (Math.abs(p.x - q.x) < 5 + slack && Math.abs(p.y - q.y) < 5 + slack) {
+        power[s] = power[s] === k + 1 ? k : k + 1;
+        say(SYSTEMS[s] + '  ' + power[s]);
+        return;
+      }
+    }
+  say('MISSED  ·  TRY AGAIN');
+}
+
+// ---------- boarding: a room with guards and crates ----------
+const T = 16;
+const MAP = [
+  '########################################',
+  '#......#..............#................#',
+  '#......#..............#................#',
+  '#..KK..#....KKK.......#.......K........#',
+  '#......#..............,................#',
+  '#......,..............#.......K........#',
+  '#......#......................K........#',
+  '###,####..............#................#',
+  '#......#####,##########.....KK.........#',
+  '#......................................#',
+  '#......................................#',
+  '#....KK.........KK..........#####,######',
+  '#...........................#..........#',
+  '#.......................K...#..........#',
+  '####,#####..................,....K.....#',
+  '#........#..................#..........#',
+  '#........#.........KK.......#..........#',
+  '#........,..................#..........#',
+  '#........#..................#..........#',
+  '#........#..................#..........#',
+  '#........#..................#..........#',
+  '########################################',
+];
+const BW = MAP[0].length * T,
+  BH = MAP.length * T;
+const solid = (x, y) => {
+  const r = MAP[Math.floor(y / T)];
+  const c = r ? r[Math.floor(x / T)] : '#';
+  return c === '#' || c === 'K' || c === undefined;
+};
+const boarding = { x: 3 * T, y: 10 * T, heading: Math.PI / 2, aim: Math.PI / 2, cool: 0, downed: 0 };
+const crates = [
+  { x: 4 * T, y: 3 * T + 8 },
+  { x: 34 * T, y: 15 * T },
+  { x: 14 * T, y: 3 * T + 8 },
+  { x: 5 * T, y: 18 * T },
+];
+const guards = [
+  { route: [{ x: 12 * T, y: 9 * T }, { x: 26 * T, y: 10 * T }], leg: 0, x: 12 * T, y: 9 * T, heading: 0, hp: 3, flash: 0, down: 0 },
+  { route: [{ x: 31 * T, y: 13 * T }, { x: 37 * T, y: 19 * T }], leg: 0, x: 31 * T, y: 13 * T, heading: 0, hp: 3, flash: 0, down: 0 },
+  { route: [{ x: 26 * T, y: 3 * T }, { x: 37 * T, y: 3 * T }], leg: 0, x: 26 * T, y: 3 * T, heading: 0, hp: 3, flash: 0, down: 0 },
+];
+const consoleAt = { x: 37 * T, y: 9 * T + 8, on: false };
+let thrown = [];
+let shots = [];
+const lampOn = () => {
+  const b = buttons.find((x) => x.name === 'lamp');
+  return b ? !b.on : true;
+};
+function throwThing(kind) {
+  if (mode !== 'BOARDING') return;
+  const f = fwd(boarding.aim);
+  thrown.push({ kind, x: boarding.x, y: boarding.y, vx: f.x * 160, vy: f.y * 160, left: 0.6, life: kind === 'flare' ? 12 : 1.6 });
+}
+function useNear() {
+  const c = crates.find((x) => !x.taken && dist(x.x, x.y, boarding.x, boarding.y) < 26);
+  if (c) return (c.taken = true), say('CRATE TAKEN');
+  if (dist(consoleAt.x, consoleAt.y, boarding.x, boarding.y) < 30) return (consoleAt.on = !consoleAt.on), say(consoleAt.on ? 'LIGHTS ON' : 'LIGHTS OFF');
+  say('NOTHING TO USE HERE');
+}
+function moveIn(o, dx, dy, r) {
+  if (!solid(o.x + dx + Math.sign(dx) * r, o.y) ) o.x += dx;
+  if (!solid(o.x, o.y + dy + Math.sign(dy) * r)) o.y += dy;
+}
+function stepBoarding(dt) {
+  const l = sticks.left.v,
+    r = sticks.right.v;
+  moveIn(boarding, l.x * 70 * dt, l.y * 70 * dt, 5);
+  if (Math.hypot(r.x, r.y) > 0.15) boarding.aim = headingTo(r.x, r.y);
+  else if (Math.hypot(l.x, l.y) > 0.15) boarding.aim = headingTo(l.x, l.y);
+  boarding.cool -= dt;
+  if (Math.hypot(r.x, r.y) > 0.5 && boarding.cool <= 0) {
+    const f = fwd(boarding.aim);
+    const tranq = buttons.find((b) => b.name === 'tranq');
+    shots.push({ x: boarding.x + f.x * 7, y: boarding.y + f.y * 7, vx: f.x * 300, vy: f.y * 300, t: 0.8, tranq: tranq && tranq.on });
+    boarding.cool = tranq && tranq.on ? 0.8 : 0.3;
+  }
+  for (const s of shots) {
+    s.x += s.vx * dt;
+    s.y += s.vy * dt;
+    s.t -= dt;
+    if (solid(s.x, s.y)) s.t = 0;
+    const g = guards.find((x) => !x.down && dist(x.x, x.y, s.x, s.y) < 7);
+    if (g) {
+      s.t = 0;
+      g.flash = 0.1;
+      g.hp -= s.tranq ? 3 : 1;
+      if (g.hp <= 0) (g.down = 6), boarding.downed++;
+    }
+  }
+  shots = shots.filter((s) => s.t > 0);
+  for (const g of guards) {
+    g.flash = Math.max(0, g.flash - dt);
+    if (g.down > 0) {
+      g.down -= dt;
+      if (g.down <= 0) g.hp = 3;
+      continue;
+    }
+    const to = g.route[g.leg];
+    const d = dist(g.x, g.y, to.x, to.y);
+    if (d < 3) g.leg = (g.leg + 1) % g.route.length;
+    else {
+      g.heading = headingTo(to.x - g.x, to.y - g.y);
+      g.x += ((to.x - g.x) / d) * 28 * dt;
+      g.y += ((to.y - g.y) / d) * 28 * dt;
+    }
+  }
+  for (const t of thrown) {
+    if (t.left > 0) {
+      const nx = t.x + t.vx * dt,
+        ny = t.y + t.vy * dt;
+      if (solid(nx, ny)) t.left = 0;
+      else (t.x = nx), (t.y = ny), (t.left -= dt);
+    }
+    t.life -= dt;
+    if (t.kind === 'grenade' && t.life <= 0) {
+      sparks.push({ x: t.x, y: t.y, t: 0.45, big: true });
+      for (const g of guards) if (!g.down && dist(g.x, g.y, t.x, t.y) < 40) (g.down = 6), boarding.downed++;
+    }
+  }
+  thrown = thrown.filter((t) => t.life > 0);
+  const use = buttons.find((b) => b.name === 'use');
+  if (use) {
+    const near = crates.some((c) => !c.taken && dist(c.x, c.y, boarding.x, boarding.y) < 26) || dist(consoleAt.x, consoleAt.y, boarding.x, boarding.y) < 30;
+    use.off = !near;
+  }
+}
+
+// ---------- drawing ----------
+const img = {};
+let font = null;
+let now = 0;
+let cam = { x: 0, y: 0 };
+const toWorld = (p) => ({ x: p.x - W / 2 + cam.x, y: p.y - H / 2 + cam.y });
+const stars = Array.from({ length: 160 }, () => ({ x: Math.random() * 2000 - 1000, y: Math.random() * 2000 - 1000, k: Math.random() }));
+function drawStars() {
+  for (const s of stars) {
+    const x = (((s.x - cam.x * (0.3 + s.k * 0.4)) % 640) + 640) % 640,
+      y = (((s.y - cam.y * (0.3 + s.k * 0.4)) % 360) + 360) % 360;
+    ctx.fillStyle = s.k > 0.8 ? COL.white : COL.dim;
+    ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+  }
+}
+function drawSpace() {
+  cam = { x: ship.x, y: ship.y };
+  drawStars();
+  ctx.save();
+  ctx.translate(Math.round(W / 2 - cam.x), Math.round(H / 2 - cam.y));
+  if (mode === 'CAPTAIN') {
+    RINGS.forEach((r, k) => {
+      ctx.strokeStyle = k === ringAt ? COL.acid[2] : COL.steel[1];
+      ctx.lineWidth = k === ringAt ? 2 : 1;
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, 30, 0, TAU);
+      ctx.stroke();
+      font.draw(ctx, String(k + 1), r.x, r.y - 4, k === ringAt ? COL.acid[2] : COL.dim, { align: 'c' });
+    });
+    rect(ctx, PORT.x - 10, PORT.y - 10, 20, 20, '#1c2a22', COL.acid[1]);
+    font.draw(ctx, 'PORT', PORT.x, PORT.y - 20, COL.acid[2], { align: 'c' });
+  }
+  for (const e of enemies) {
+    if (mode !== 'GUNNER') continue;
+    sprite(ctx, img.fighter, e.x, e.y, e.heading);
+    if (e.flash) {
+      ctx.fillStyle = COL.white;
+      ctx.fillRect(e.x - 3, e.y - 3, 6, 6);
+    }
+    if (gun.lock === e) {
+      ctx.strokeStyle = COL.ember[2];
+      ctx.strokeRect(e.x - 14, e.y - 14, 28, 28);
+    }
+  }
+  for (const b of bolts) {
+    ctx.fillStyle = COL.ochre[3];
+    ctx.fillRect(b.x - 1.5, b.y - 1.5, 3, 3);
+  }
+  for (const s of sparks) {
+    ctx.globalAlpha = s.t / 0.4;
+    ctx.fillStyle = COL.ember[2];
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 14 * (1 - s.t), 0, TAU);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  sprite(ctx, img.frigate, ship.x, ship.y, ship.heading);
+  if (mode === 'GUNNER') {
+    const f = fwd(gun.heading);
+    ctx.strokeStyle = COL.gunner;
+    ctx.beginPath();
+    ctx.moveTo(ship.x, ship.y);
+    ctx.lineTo(ship.x + f.x * 16, ship.y + f.y * 16);
+    ctx.stroke();
+    if (opt.aim === 'A' && gun.aim) {
+      const w = toWorld(gun.aim);
+      ctx.strokeStyle = COL.ochre[2];
+      ctx.strokeRect(w.x - 5, w.y - 5, 10, 10);
+    }
+  }
+  ctx.restore();
+}
+function drawBoarding() {
+  const o = { x: Math.round(clamp(W / 2 - boarding.x, W - BW, 0)), y: Math.round(clamp(H / 2 - boarding.y, H - BH, 0)) };
+  ctx.save();
+  ctx.translate(o.x, o.y);
+  for (let y = 0; y < MAP.length; y++)
+    for (let x = 0; x < MAP[0].length; x++) {
+      const c = MAP[y][x];
+      if (c === '#') rect(ctx, x * T, y * T, T, T, '#44475a', COL.out);
+      else {
+        rect(ctx, x * T, y * T, T, T, (x + y) % 2 ? '#1a1b26' : '#1d1e2a');
+        if (c === 'K') rect(ctx, x * T + 1, y * T + 1, T - 2, T - 3, COL.ochre[1], COL.out);
+        if (c === ',') rect(ctx, x * T + 2, y * T + 2, T - 4, T - 4, '#2c2d3b');
+      }
+    }
+  for (const c of crates) if (!c.taken) rect(ctx, c.x - 5, c.y - 5, 10, 10, COL.ochre[2], COL.out);
+  rect(ctx, consoleAt.x - 7, consoleAt.y - 6, 14, 12, '#24262f', COL.out);
+  rect(ctx, consoleAt.x - 5, consoleAt.y - 4, 10, 4, consoleAt.on ? COL.acid[2] : COL.ember[1]);
+  for (const g of guards) {
+    ctx.globalAlpha = g.down > 0 ? 0.45 : 1;
+    sprite(ctx, img.guard, g.x, g.y, g.heading);
+    if (g.flash) rect(ctx, g.x - 3, g.y - 3, 6, 6, COL.white);
+    ctx.globalAlpha = 1;
+  }
+  for (const s of shots) rect(ctx, s.x - 1.5, s.y - 1.5, 3, 3, s.tranq ? COL.ion[2] : COL.ochre[3]);
+  for (const t of thrown) rect(ctx, t.x - 2, t.y - 2, 4, 4, t.kind === 'flare' ? '#fff6e0' : COL.ember[2]);
+  for (const s of sparks) {
+    ctx.globalAlpha = s.t / 0.45;
+    ctx.fillStyle = COL.ember[2];
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 40 * (1 - s.t), 0, TAU);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  sprite(ctx, img.boarder, boarding.x, boarding.y, boarding.aim);
+  // The dark: the lamp lights a cone in front, flares light round them, and the console puts the lights on.
+  if (!consoleAt.on) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    const dark = document.createElement('canvas');
+    dark.width = W;
+    dark.height = H;
+    const g = dark.getContext('2d');
+    g.fillStyle = '#1f2338';
+    g.fillRect(0, 0, W, H);
+    g.translate(o.x, o.y);
+    g.globalCompositeOperation = 'lighter';
+    const glow = (x, y, r, a0 = 0, a1 = TAU) => {
+      const gr = g.createRadialGradient(x, y, 0, x, y, r);
+      gr.addColorStop(0, 'rgba(255,240,214,0.95)');
+      gr.addColorStop(1, 'rgba(255,240,214,0)');
+      g.fillStyle = gr;
+      g.beginPath();
+      if (a1 - a0 < TAU) g.moveTo(x, y);
+      g.arc(x, y, r, a0, a1);
+      g.fill();
+    };
+    glow(boarding.x, boarding.y, 26);
+    if (lampOn()) {
+      const a = boarding.aim - Math.PI / 2;
+      glow(boarding.x, boarding.y, 150, a - 0.5, a + 0.5);
+    }
+    for (const t of thrown) if (t.kind === 'flare') glow(t.x, t.y, 110);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(dark, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+function drawEngineer() {
+  drawStars();
+  rect(ctx, 180, 80, 280, 170, COL.panel, COL.line);
+  font.draw(ctx, 'POWER  ·  TAP A PIP', 190, 90, COL.engineer);
+  SYSTEMS.forEach((s, i) => {
+    font.draw(ctx, s, 190, 117 + i * 30, COL.text);
+    for (let k = 0; k < 4; k++) {
+      const p = pipAt(i, k);
+      rect(ctx, p.x - 4, p.y - 4, 8, 8, k < power[i] ? COL.engineer : '#1c1c28', COL.out);
+      if (opt.big) {
+        ctx.strokeStyle = 'rgba(88,176,160,0.3)';
+        ctx.strokeRect(p.x - 7, p.y - 14, 14, 28);
+      }
+    }
+  });
+  font.draw(ctx, 'THE PIPS ARE AS SMALL AS IN THE GAME', 190, 232, COL.dim);
+}
+const DRAW = { CAPTAIN: drawSpace, GUNNER: drawSpace, ENGINEER: drawEngineer, BOARDING: drawBoarding };
+function drawControls() {
+  // The tabs.
+  TABS.forEach((t, k) => {
+    const on = t === mode;
+    rect(ctx, 4 + k * 72, 4, 68, 18, on ? COL.white : COL.panel, on ? null : COL.line);
+    font.draw(ctx, t, 4 + k * 72 + 34, 10, on ? COL.out : COL.dim, { align: 'c' });
+  });
+  const R = SIZE[opt.size];
+  for (const side of usesSticks()) {
+    const s = sticks[side];
+    const active = s.id !== null;
+    if (opt.stick === 'float' && !active) {
+      font.draw(ctx, side === 'left' ? 'THUMB ANYWHERE HERE' : 'THUMB ANYWHERE HERE', side === 'left' ? W / 4 : (W * 3) / 4, H - 30, COL.faint, { align: 'c' });
+      continue;
+    }
+    ctx.globalAlpha = active ? 0.55 : 0.35;
+    ctx.fillStyle = '#0f1424';
+    ctx.beginPath();
+    ctx.arc(s.home.x, s.home.y, R, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = COL.ion[1];
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.globalAlpha = active ? 0.9 : 0.6;
+    ctx.fillStyle = COL.ion[1];
+    ctx.beginPath();
+    ctx.arc(s.at.x, s.at.y, R * 0.42, 0, TAU);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    const name = mode === 'CAPTAIN' ? 'THROTTLE · TURN' : side === 'left' ? 'MOVE' : 'AIM · FIRE';
+    font.draw(ctx, name, s.home.x, s.home.y + R * 0.62, COL.dim, { align: 'c' });
+  }
+  for (const b of buttons) {
+    const lit = b.held || b.on;
+    if (b.box) {
+      rect(ctx, b.x - b.box.w / 2, b.y - b.box.h / 2, b.box.w, b.box.h, lit ? COL.ion[1] : COL.panel, COL.ion[0]);
+      font.draw(ctx, b.text, b.x, b.y - 2, COL.ion[3], { align: 'c' });
+      continue;
+    }
+    ctx.globalAlpha = b.off ? 0.35 : 0.85;
+    ctx.fillStyle = lit ? COL.ion[1] : '#0f1424';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = b.off ? COL.faint : COL.ion[2];
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    font.draw(ctx, b.text, b.x, b.small ? b.y - 2 : b.y - 2, b.off ? COL.faint : lit ? COL.out : COL.ion[3], { align: 'c' });
+    if (opt.big) {
+      ctx.strokeStyle = 'rgba(155,228,238,0.2)';
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, reach(b), 0, TAU);
+      ctx.stroke();
+    }
+  }
+  if (opt.dots)
+    for (const f of fingers.values()) {
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.beginPath();
+      ctx.arc(f.p.x, f.p.y, 6, 0, TAU);
+      ctx.fill();
+    }
+}
+function drawInfo() {
+  let text = '';
+  if (mode === 'CAPTAIN') {
+    const best = laps.length ? Math.min(...laps).toFixed(1) + ' S' : '-';
+    text = `RING ${ringAt + 1}  ·  LAST LAP ${laps.length ? laps[laps.length - 1].toFixed(1) + ' S' : '-'}  ·  BEST ${best}  ·  THROTTLE ${Math.round(ship.throttle * 100)}%`;
+  } else if (mode === 'GUNNER') {
+    const acc = stats.shots ? Math.round((stats.hits / stats.shots) * 100) : 0;
+    const per = stats.kills ? ((now - stats.since) / stats.kills).toFixed(1) + ' S' : '-';
+    text = `AIM ${opt.aim}  ·  KILLS ${stats.kills}  ·  HITS ${acc}%  ·  ${per} PER FIGHTER`;
+  } else if (mode === 'BOARDING') {
+    text = `CRATES ${crates.filter((c) => c.taken).length} / ${crates.length}  ·  GUARDS DOWN ${boarding.downed}`;
+  }
+  if (text) {
+    const w = font.width(text) + 10;
+    rect(ctx, W - 6 - w, 32, w, 14, COL.panel, COL.line);
+    font.draw(ctx, text, W - 6 - w + 5, 36, COL.text);
+  }
+  if (toast.until > now) {
+    const w = font.width(toast.text) + 10;
+    rect(ctx, W / 2 - w / 2, 56, w, 14, COL.panel, COL.acid[0]);
+    font.draw(ctx, toast.text, W / 2, 60, COL.acid[2], { align: 'c' });
+  }
+}
+
+let last = 0;
+function frame(t) {
+  const dt = Math.min(0.05, (t - last) / 1000 || 0);
+  last = t;
+  now += dt;
+  if (mode === 'CAPTAIN') stepCaptain(dt);
+  if (mode === 'GUNNER') {
+    ship.heading += 0.05 * dt;
+    stepGunner(dt);
+  }
+  if (mode === 'BOARDING') stepBoarding(dt);
+  for (const s of sparks) s.t -= dt;
+  sparks = sparks.filter((s) => s.t > 0);
+  ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
+  ctx.fillStyle = COL.bg;
+  ctx.fillRect(0, 0, W, H);
+  DRAW[mode]();
+  ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
+  drawControls();
+  drawInfo();
+  requestAnimationFrame(frame);
+}
+
+const load = (n) =>
+  new Promise((ok) => {
+    const i = new Image();
+    i.onload = () => ok((img[n] = i));
+    i.src = `../../../assets/sprites/${n}.png`;
+  });
+await Promise.all(['frigate', 'fighter', 'boarder', 'guard'].map(load));
+const fimg = new Image();
+fimg.src = '../../../assets/font.png';
+const meta = await fetch('../../../assets/font.json').then((r) => r.json());
+await fimg.decode();
+font = new BitmapFont(fimg, meta);
+enemies = [spawnEnemy(), spawnEnemy(), spawnEnemy()];
+layout();
+window.__touch = { opt, sticks, buttons: () => buttons, setMode: (m) => ((mode = m), layout()), stats: () => stats, ship, boarding };
+document.getElementById('status').textContent = 'Klart att prova.';
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
