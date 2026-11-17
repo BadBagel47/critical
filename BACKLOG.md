@@ -167,6 +167,7 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | D-270 | Skärmarna för onlineläget: skapa rum, namn, länk och QR, ange kod, vem som har vilken post, väntar på värden, återanslutning, och om menyn (O) pausar för alla. Designskiss först. Agentens granskning av network-kit 2026-11-17 | Ej påbörjad |
 | F-271 | Integritetstext för onlineläget: network-kit säger att varje spels text ska nämna att Cloudflare behandlar spelarnas namn och IP-adresser (GDPR), och vad som sparas och hur länge. Critical har ingen sådan text än. Agentens granskning av network-kit 2026-11-17. Agenten är ingen jurist | Ej påbörjad |
 | F-272 | Tester med flera spelare: kör spelet mot network-kit i en lokal kopia av Cloudflares servermiljö (som network-kits egna tester), med två eller tre webbläsare, också för övertagande av värden och den som går med mitt i. Agentens granskning av network-kit 2026-11-17 | Ej påbörjad |
+| F-273 | Verktyget för backloggen (F-228) ska klara frågor under grupperna i körförslaget, med rekommendationer och "väntar på svar", om utkastet AR-023 i agentreglerna publiceras. I dag tar verktyget bara bort ID-raderna när en grupp är klar, så frågeraderna skulle bli kvar. Frågornas etiketter ("Fråga A1") följer gruppens bokstav och behöver då också bytas när grupperna får nya bokstäver. Agentens koll av agentreglerna 2026-11-17 | Väntar på att AR-023 publiceras |
 
 ## Låg
 
