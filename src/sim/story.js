@@ -13,11 +13,18 @@
 //     story goes on (R-1213).
 //   - The crew can never get stuck: every step has a way out if something goes wrong (R-1214).
 //
-// The story draws its own random numbers from the seed, so the game's own random numbers are left as they were.
+// The chain itself is made by the quest engine's core (src/quest/core.js), which knows nothing of this game. This
+// file holds what is the game's own: the sorts of steps, where they happen, the people and the checks. The texts
+// are in storytext.js. The story draws its own random numbers from the seed, so the game's own random numbers are
+// left as they were.
 import { FACTIONS, PIRATE } from './sides.js';
 import { hopsFrom } from './world.js';
 import { createSectors } from './sectors.js';
 import { rand } from './util.js';
+import { planChain, pathsOf as chainPaths, checkChain, pick as corePick } from '../quest/core.js';
+import { PREMISES, LOSSES, VOICES, FALLBACKS, writeTexts } from './storytext.js';
+
+export { PREMISES, FALLBACKS };
 
 // How many steps the main story has for each size of map (R-1210), and how many choices split it (R-1212).
 export const MAIN_STEPS = { short: 8, medium: 12, long: 16 };
@@ -29,16 +36,16 @@ const inv = (n) => Array.from({ length: n }, () => slot('investigation'));
 const esc = (n) => Array.from({ length: n }, () => slot('escalation'));
 export const SKELETON = {
   short: [
-    slot('hook', 'hook'),
+    slot('hook', 'start'),
     ...inv(1),
     slot('investigation', 'choose'),
     ...inv(1),
     slot('twist', 'twist'),
     ...esc(2),
-    slot('finale', 'finale'),
+    slot('finale', 'end'),
   ],
   medium: [
-    slot('hook', 'hook'),
+    slot('hook', 'start'),
     ...inv(3),
     slot('investigation', 'choose'),
     ...inv(1),
@@ -46,10 +53,10 @@ export const SKELETON = {
     ...esc(1),
     slot('escalation', 'choose'),
     ...esc(2),
-    slot('finale', 'finale'),
+    slot('finale', 'end'),
   ],
   long: [
-    slot('hook', 'hook'),
+    slot('hook', 'start'),
     ...inv(3),
     slot('investigation', 'choose'),
     ...inv(1),
@@ -59,7 +66,7 @@ export const SKELETON = {
     ...esc(2),
     slot('twist', 'twist'),
     ...esc(3),
-    slot('finale', 'finale'),
+    slot('finale', 'end'),
   ],
 };
 export const ACT_NAMES = {
@@ -235,7 +242,18 @@ const TRADES = [
   'A MECHANIC',
   'A PREACHER',
 ];
-const EPITHETS = ['THE KNIFE', 'REDHAND', 'THE COLD', 'SIXFINGERS', 'THE LAUGH', 'BLACKSTAR', 'THE TALLY'];
+const EPITHETS = [
+  'THE KNIFE',
+  'REDHAND',
+  'THE COLD',
+  'SIXFINGERS',
+  'THE LAUGH',
+  'BLACKSTAR',
+  'THE TALLY',
+  'GLASSJAW',
+  'THE QUIET',
+  'LUCKY',
+];
 const GANG_WORDS = ['RUST', 'HOLLOW', 'ASH', 'GLASS', 'NINE', 'TALLOW', 'GRIN'];
 const GANG_KINDS = ['GANG', 'PACK', 'CREW', 'KNIVES'];
 const SHIP_NAMES = [
@@ -261,32 +279,7 @@ const SIGNALS = [
   'A VOICE READING NAMES',
   'A TRANSPONDER THAT SHOULD BE DEAD',
 ];
-// What the story is about. Each one has its own things to find and its own opening.
-export const PREMISES = {
-  cruiser: {
-    name: 'Den försvunna kryssaren',
-    items: ['THE FLIGHT RECORDER', 'A NAV CORE', 'A CIPHER KEY', 'THE CREW MANIFEST', 'A HULL TAG'],
-    opening:
-      'A Warden cruiser vanished with all hands, and now its parts are turning up for sale. ' +
-      '{contact} wants to know who is selling them, and who is buying.',
-  },
-  convoy: {
-    name: 'Konvojen',
-    items: ['THE CONVOY CODES', 'A LEDGER', 'A SEALED CRATE', 'A PAY CHIT', 'A SIGNET RING'],
-    opening:
-      'A Charter convoy was taken whole, and the pirates had its codes before it left the dock. ' +
-      '{contact} thinks someone inside sold them, and wants a name.',
-  },
-  signal: {
-    name: 'Signalen',
-    items: ['A BEACON SHARD', 'A DATA SPIKE', 'A CHART FRAGMENT', 'A RELAY CORE', 'A BLACK BOX'],
-    opening:
-      'Something out in the dark is sending, and every time it does, the pirates move. ' +
-      '{contact} has heard it on an old band and wants it found.',
-  },
-};
-
-const pick = (s, list) => list[Math.floor(rand(s) * list.length)];
+const pick = (s, list) => corePick(() => rand(s), list);
 function shuffle(s, list) {
   const out = [...list];
   for (let i = out.length - 1; i > 0; i--) {
@@ -295,121 +288,22 @@ function shuffle(s, list) {
   }
   return out;
 }
-// A pick where each entry has a weight.
-function weighted(s, list, weight) {
-  const total = list.reduce((sum, x) => sum + weight(x), 0);
-  let r = rand(s) * total;
-  for (const x of list) {
-    r -= weight(x);
-    if (r <= 0) return x;
-  }
-  return list[list.length - 1];
-}
 
 // ---------- the chain ----------
-// What may stand in a slot, for a crew that knows or has `need`: a list of { sort, twist, gives }.
-function candidates(kind, need) {
-  if (kind === 'hook') return [{ sort: 'talk', twist: null, gives: SORTS.talk.gives.filter((g) => g !== 'vault') }];
-  if (kind === 'finale') return need === 'vault' ? [{ sort: 'raid', twist: null, gives: ['map'] }] : [];
-  if (kind === 'choose') return need === 'item' ? [{ sort: 'choose', twist: null, gives: SORTS.choose.gives }] : [];
-  if (kind === 'twist')
-    return Object.entries(TWISTS)
-      .filter(([, t]) => SORTS[t.sort].needs === need)
-      .map(([id, t]) => ({ sort: t.sort, twist: id, gives: t.gives }));
-  return Object.entries(SORTS)
-    .filter(([id, c]) => id !== 'choose' && id !== 'raid' && c.needs === need)
-    .map(([id, c]) => ({ sort: id, twist: null, gives: c.gives.filter((g) => g !== 'vault') }));
-}
-// Whether the slot `next` can take `token`, with a sort other than those in `not`. The vault is only for the
-// finale, and the finale only takes the vault.
-function canTake(next, token, not) {
-  if (!next) return token === 'map';
-  if (token === 'vault') return next.kind === 'finale';
-  return candidates(next.kind, token).some((c) => !not.includes(c.sort));
-}
-// The gives that a candidate may use here: for the step before the finale only the vault.
-const givesHere = (c, next) =>
-  next && next.kind === 'finale' ? SORTS[c.sort].gives.filter((g) => g === 'vault') : c.gives;
-
-// How much each sort and each lead is wanted, so that the story is not mostly talk (R-1213).
-const SORT_WEIGHT = { talk: 0.7, acquire: 1.4, deliver: 1.1 };
-const GIVE_WEIGHT = { shop: 1.6, item: 1.2, person: 0.8 };
-
-// The plan of the story: for each slot, the sort, the twist and what it needs and gives. A choice has two
-// options, and the slot after it two branches, which both give the same thing, so that the story goes on as one.
-// The plan is searched for depth first, in a random order, so that a slot that cannot be filled sends the search
-// back to try something else before it.
-function planChain(s, skeleton) {
-  const weight = (c, used) =>
-    ((SORT_WEIGHT[c.sort] || 1) / (1 + (used[c.sort] || 0))) * (c.twist ? 1.5 : 1) * (GIVE_WEIGHT[c.give] || 1);
-  // The entries of `list` in a random order, those with more weight more often first.
-  const order = (list, w) => {
-    const left = [...list];
-    const out = [];
-    while (left.length) {
-      const x = weighted(s, left, w);
-      out.push(x);
-      left.splice(left.indexOf(x), 1);
-    }
-    return out;
-  };
-  const bump = (used, sorts) => {
-    const next = { ...used };
-    for (const x of sorts) next[x] = (next[x] || 0) + 1;
-    return next;
-  };
-  let budget = 4000;
-  const go = (i, need, not, used) => {
-    if (i === skeleton.length) return need === 'map' ? [] : null;
-    if (--budget < 0) return null;
-    const here = skeleton[i];
-    const next = skeleton[i + 1];
-    if (here.kind === 'choose') {
-      if (need !== 'item') return null;
-      const after = skeleton[i + 2];
-      const pairs = [];
-      for (const ta of SORTS.choose.gives)
-        for (const tb of SORTS.choose.gives) {
-          if (ta >= tb) continue;
-          for (const a of candidates(next.kind, ta))
-            for (const b of candidates(next.kind, tb)) {
-              if (a.sort === b.sort || not.includes(a.sort) || not.includes(b.sort)) continue;
-              for (const g of givesHere(a, after))
-                if (givesHere(b, after).includes(g) && canTake(after, g, [a.sort, b.sort]))
-                  pairs.push({ ta, tb, a, b, g, give: g });
-            }
-        }
-      for (const p of order(pairs, (x) => weight(x.a, used) * weight(x.b, used) * (GIVE_WEIGHT[x.g] || 1))) {
-        const rest = go(i + 2, p.g, [p.a.sort, p.b.sort], bump(used, ['choose', p.a.sort, p.b.sort]));
-        if (!rest) continue;
-        return [
-          { ...here, sort: 'choose', twist: null, needs: need, gives: [p.ta, p.tb] },
-          {
-            ...next,
-            branches: [
-              { sort: p.a.sort, twist: p.a.twist, needs: p.ta, gives: p.g },
-              { sort: p.b.sort, twist: p.b.twist, needs: p.tb, gives: p.g },
-            ],
-          },
-          ...rest,
-        ];
-      }
-      return null;
-    }
-    const options = [];
-    for (const c of candidates(here.kind, need)) {
-      if (not.includes(c.sort)) continue;
-      for (const g of givesHere(c, next))
-        if (canTake(next, g, [c.sort]) && (next?.kind !== 'choose' || g === 'item')) options.push({ ...c, give: g });
-    }
-    for (const c of order(options, (x) => weight(x, used))) {
-      const rest = go(i + 1, c.give, [c.sort], bump(used, [c.sort]));
-      if (rest) return [{ ...here, sort: c.sort, twist: c.twist, needs: need, gives: c.give }, ...rest];
-    }
-    return null;
-  };
-  return go(0, null, [], {});
-}
+// What the quest engine needs to know of the sorts (src/quest/core.js). Talk opens the story and the raid ends it,
+// and the vault is only given by the step before the raid. How much each sort and each lead is wanted, so that the
+// story is not mostly talk (R-1213).
+export const CATALOG = {
+  sorts: SORTS,
+  twists: TWISTS,
+  start: 'talk',
+  choice: 'choose',
+  end: 'raid',
+  finalToken: 'vault',
+  endToken: 'map',
+  sortWeight: { talk: 0.7, acquire: 1.4, deliver: 1.1 },
+  giveWeight: { shop: 1.6, item: 1.2, person: 0.8 },
+};
 
 // ---------- the places ----------
 const stationsIn = (sys, ok) =>
@@ -457,6 +351,7 @@ function placeStep(s, world, sort, progress, from, usedSystems) {
 // A new name that the story has not used.
 function namer(s) {
   const taken = new Set();
+  const bynames = new Set();
   const fresh = (make) => {
     let n = make();
     for (let k = 0; k < 40 && taken.has(n); k++) n = make();
@@ -465,32 +360,60 @@ function namer(s) {
   };
   return {
     person: () => fresh(() => `${pick(s, GIVEN)} ${pick(s, FAMILY)}`),
-    pirate: () => fresh(() => `${pick(s, GIVEN)} '${pick(s, EPITHETS)}' ${pick(s, FAMILY)}`),
+    // A pirate's byname is never used twice in a story, so that two pirates are not mixed up.
+    pirate: () => {
+      const free = EPITHETS.filter((e) => !bynames.has(e));
+      const byname = pick(s, free.length ? free : EPITHETS);
+      bynames.add(byname);
+      return fresh(() => `${pick(s, GIVEN)} '${byname}' ${pick(s, FAMILY)}`);
+    },
     gang: () => fresh(() => `THE ${pick(s, GANG_WORDS)} ${pick(s, GANG_KINDS)}`),
     ship: () => fresh(() => `THE ${pick(s, SHIP_NAMES)}`),
     signal: () => fresh(() => pick(s, SIGNALS)),
     item: (premise) => fresh(() => pick(s, PREMISES[premise].items)),
+    word: () => fresh(() => pick(s, SHIP_NAMES)),
   };
 }
 
 // The story for a game: `sectors` is the map of the game (state.sectors), `seed` the game's seed and `size` the
-// size of the map. Returns { size, premise, cast, steps }, where a step is either one step or, after a choice,
-// { branches: [a, b] }.
-export function createStory(sectors, seed, size = 'short') {
+// size of the map. `options.premise` picks what the story is about, for the tester. Returns { size, premise, cast,
+// truth, steps, clues }, where a step is either one step or, after a choice, { branches: [a, b] }.
+export function createStory(sectors, seed, size = 'short', options = {}) {
   const s = { rng: (Math.imul(seed >>> 0, 2654435761) ^ 0x51a7) >>> 0 };
+  const random = () => rand(s);
   const skeleton = SKELETON[size] || SKELETON.short;
   let plan = null;
-  for (let tries = 0; tries < 5 && !plan; tries++) plan = planChain(s, skeleton);
+  for (let tries = 0; tries < 5 && !plan; tries++) plan = planChain(random, skeleton, CATALOG);
   if (!plan) throw new Error('no story could be made for seed ' + seed);
   const world = { systems: sectors, hops: sectors.map((x) => hopsFrom(sectors, x.id)) };
   const end = sectors.find((x) => x.boss);
   const names = namer(s);
-  const premise = pick(s, Object.keys(PREMISES));
+  const premise = PREMISES[options.premise] ? options.premise : pick(s, Object.keys(PREMISES));
   const factions = Object.keys(FACTIONS);
   const cast = {
-    contact: { name: names.person(), trade: pick(s, TRADES), side: pick(s, factions) },
-    rival: { name: names.person(), ship: names.ship() },
-    villain: { name: names.pirate(), base: end ? end.plan[0][3] : 'THE BASTION', system: end ? end.id : null },
+    contact: {
+      name: names.person(),
+      trade: pick(s, TRADES),
+      side: pick(s, factions),
+      voice: pick(s, Object.keys(VOICES.contact)),
+    },
+    rival: { name: names.person(), ship: names.ship(), voice: pick(s, Object.keys(VOICES.rival)) },
+    villain: {
+      name: names.pirate(),
+      base: end ? end.plan[0][3] : 'THE BASTION',
+      system: end ? end.id : null,
+      voice: pick(s, Object.keys(VOICES.villain)),
+    },
+  };
+  // The hidden truth (R-1222): who is behind it, how and why, and the base the money went through.
+  const towns = sectors.filter((x) => x.kind === 'inhabited' && !x.boss && x.plan.some(([side]) => side !== PIRATE));
+  const town = pick(s, towns);
+  const truth = {
+    culprit: pick(s, Object.keys(PREMISES[premise].culprits)),
+    method: pick(s, Object.keys(PREMISES[premise].methods)),
+    motive: pick(s, ['debt', 'revenge', 'war', 'hostage']),
+    name: names.person(),
+    base: town.plan.find(([side]) => side !== PIRATE)[3],
   };
   const usedSystems = {};
   const n = plan.length;
@@ -498,11 +421,13 @@ export function createStory(sectors, seed, size = 'short') {
   const steps = [];
   let from = 0;
   let carried = null;
+  // The contact is gone from the step where a twist kills them or shows them to be a traitor.
+  let contactOut = Infinity;
   // The thing a step is about, made when the step is placed: who to see, what to buy, which wreck, and so on.
   const make = (p, i, at, item) => {
     const progress = i / (n - 1);
     const where =
-      p.sort === 'talk' && p.act === 'hook'
+      p.kind === 'start'
         ? { system: 0, base: stationsIn(sectors[0], () => true)[0].name }
         : placeStep(s, world, p.sort, progress, at, usedSystems);
     /** @type {Record<string, any>} */
@@ -516,10 +441,17 @@ export function createStory(sectors, seed, size = 'short') {
       ...where,
     };
     if (p.sort === 'talk' || p.sort === 'deliver' || p.sort === 'choose') {
-      const again = p.act === 'hook' || p.twist === 'betrayed' || (i > 2 && rand(s) < 0.3);
+      const here = i < contactOut;
+      const again =
+        here &&
+        (p.kind === 'start' ||
+          p.twist === 'betrayed' ||
+          (p.twist === 'dead' && rand(s) < 0.5) ||
+          (i > 2 && rand(s) < 0.3));
       step.who = again ? cast.contact.name : names.person();
       step.trade = again ? null : pick(s, TRADES);
       step.isContact = again;
+      if (again && (p.twist === 'betrayed' || p.twist === 'dead')) contactOut = i;
     }
     // The rival comes in once the story is under way, not as the first target.
     const rivalHere = p.act === 'escalation' && !p.twist && rand(s) < 0.35;
@@ -545,7 +477,7 @@ export function createStory(sectors, seed, size = 'short') {
   for (let i = 0; i < n; i++) {
     const p = plan[i];
     if (p.branches) {
-      const two = p.branches.map((b) => make({ ...p, ...b, branches: undefined }, i, from, carried));
+      const two = p.branches.map((b) => make(b, i, from, carried));
       steps.push({ index: i, act: p.act, branches: two });
       from = two[0].system;
       carried = two[0].item || null;
@@ -560,180 +492,27 @@ export function createStory(sectors, seed, size = 'short') {
   // The items given in a branch are the same in both, so that the rest of the story reads the same.
   for (const st of steps)
     if (st.branches && st.branches[0].item && st.branches[1].item) st.branches[1].item = st.branches[0].item;
-  const story = { seed, size, premise, cast, end: end ? end.id : null, steps };
+  const story = {
+    seed,
+    size,
+    premise,
+    cast,
+    truth,
+    thing: names.word(),
+    loss: pick(s, LOSSES),
+    standing: CHOICE_STANDING,
+    contactOut,
+    end: end ? end.id : null,
+    steps,
+    clues: [],
+    reveal: '',
+  };
   writeTexts(story, sectors);
   return story;
 }
 
 // Every way through the story, as lists of steps: one for each combination of the choices (R-1212).
-export function pathsOf(story) {
-  let paths = [[]];
-  for (const st of story.steps) {
-    if (st.branches) paths = paths.flatMap((p) => st.branches.map((b) => [...p, b]));
-    else paths = paths.map((p) => [...p, st]);
-  }
-  return paths;
-}
-
-// ---------- the texts ----------
-// The texts are in English, as in the game. `{name}` is filled from the story.
-const OPENERS = {
-  talk: [
-    '{intro} keeps a corner table at {base}.',
-    '{intro} only talks once the drinks are paid for.',
-    '{intro} looks around twice before saying anything.',
-  ],
-  acquire: [
-    'The trader at {base} has one of these and knows exactly what it is worth.',
-    '{item} sits behind the counter at {base}, under a cloth.',
-  ],
-  search: [
-    '{wreck} lies dark and cold. Its last log is still running.',
-    'The hold of {wreck} has been picked over, but not well.',
-  ],
-  scan: [
-    'The scan finds {signal}, strongest near the edge of the system.',
-    '{signal} cuts in and out, but it is there.',
-  ],
-  fight: ['{target} turns to fight instead of running.', '{target} has been waiting for someone to come asking.'],
-  board: [
-    'With the engines out, {targetLong} drifts. Someone aboard is still shooting.',
-    'The crew of {target} locks the doors and waits for the boarders.',
-  ],
-  deliver: [
-    '{intro} takes {carries} without a word, and then talks.',
-    '{intro} has been waiting for {carries} for a long time.',
-  ],
-  choose: ['{whoA} and {whoB} both want {carries}. Whoever gets it owes the crew. The other will remember.'],
-  raid: ['The vault of {base} is behind three decks of pirates.'],
-};
-const TWIST_OPENERS = {
-  dead: '{who} is dead. Nobody at {base} wants to say how, but {who} left something behind.',
-  betrayed: '{who} sold the crew out. The pirates knew they were coming, and the money came from {next}.',
-  fake: '{carries} is a fake. The real one never left the hands of {next}.',
-  ambush: 'As soon as {item} is aboard, the crew of {rivalShip} opens fire at the dock.',
-  trap: '{wreck} is bait. Pirates come out of the dust the moment the boarders are inside.',
-};
-// A ship to board with its owner, if it has one: "THE CANDLE, THE SHIP OF ...,".
-const longTarget = (n) =>
-  n.owner ? `${n.target}, THE SHIP OF ${n.owner},` : n.sort === 'board' ? `${n.target}, A COURIER,` : n.target;
-// The lead at the end of a step: where the thing it gives can be found. `n` is the step that takes it.
-function lead(token, n, w) {
-  switch (token) {
-    case 'person':
-      return `Ask for ${n.who} at ${n.base} in ${w(n.system)}.`;
-    case 'shop':
-      return `${n.base} in ${w(n.system)} has ${n.item} for sale, but only for as long as this lasts.`;
-    case 'wreck':
-      return `${n.wreck} went down in ${w(n.system)}. What the crew wants is still aboard.`;
-    case 'signal':
-      return `Something is sending from ${w(n.system)}. Scan for it.`;
-    case 'target':
-      return `${longTarget(n)} is out in ${w(n.system)}.`;
-    case 'item':
-      return n.sort === 'choose'
-        ? `The crew now has ${n.carries}, and more than one side wants it.`
-        : `The crew now has ${n.carries}. ${n.who} at ${n.base} in ${w(n.system)} is waiting for it.`;
-    case 'vault':
-      return `The star map that opens the way to the end lies in the vault of ${n.base} in ${w(n.system)}.`;
-    default:
-      return '';
-  }
-}
-const GOALS = {
-  talk: 'Talk to {who} at {base} in {system}.',
-  acquire: 'Buy {item} at {base} in {system}.',
-  search: 'Search {wreck} in {system}.',
-  scan: 'Scan {system} for {signal}.',
-  fight: 'Shoot down {target} in {system}.',
-  board: 'Disable {target} in {system} and board her.',
-  deliver: 'Bring {carries} to {who} at {base} in {system}.',
-  choose: 'Decide who gets {carries}: {sideA} or {sideB}.',
-  raid: 'Take the star map from the vault of {base} in {system}.',
-};
-// The way out if something goes wrong, so that the crew never gets stuck (R-1214).
-export const FALLBACKS = {
-  talk: 'If the base is closed to the crew, the person meets them in the sanctuary instead.',
-  acquire: 'The price is never more than the crew has. With no credits, the trader takes ore or a favour.',
-  search: 'The wreck cannot be blown up while the story needs it, and what is in it is never lost.',
-  scan: 'The signal shows on the system map once the crew is there, also without a bought sensor.',
-  fight:
-    'If the target gets away, it turns up again in a system next to this one. What it carries drops when it is shot down.',
-  board: 'If the ship is destroyed instead of disabled, what the crew wanted is found in the wreck it leaves.',
-  deliver: 'If the base is closed to the crew, the person meets them in the sanctuary instead.',
-  choose: 'Either choice leads on to the end.',
-  raid: 'The star map cannot be destroyed. If the crew loses, it is still in the vault for the next try.',
-};
-const fill = (text, values) => text.replace(/\{(\w+)\}/g, (all, key) => (values[key] != null ? values[key] : all));
-
-function writeTexts(story, sectors) {
-  const w = (id) => sectors[id].name;
-  const side = (f) => FACTIONS[f].name;
-  // The step that comes after the step at index i on the way through `branch` (0 or 1).
-  const nextOf = (i, branch) => {
-    const n = story.steps[i + 1];
-    if (!n) return null;
-    return n.branches ? n.branches[branch] : n;
-  };
-  const write = (st, i, branch, s) => {
-    const values = {
-      who: st.who,
-      intro: st.trade ? `${st.who}, ${st.trade},` : st.who,
-      targetLong: st.sort === 'board' ? longTarget(st) : st.target,
-      base: st.base,
-      system: st.system != null ? w(st.system) : '',
-      item: st.item,
-      carries: st.carries,
-      wreck: st.wreck,
-      signal: st.signal,
-      target: st.target,
-      contact: story.cast.contact.name,
-      rivalShip: story.cast.rival.ship,
-    };
-    if (st.sort === 'choose') {
-      values.sideA = side(st.sides[0]);
-      values.sideB = side(st.sides[1]);
-      values.whoA = values.sideA;
-      values.whoB = values.sideB;
-    }
-    st.goal = fill(GOALS[st.sort], values);
-    st.fallback = FALLBACKS[st.sort];
-    const parts = [];
-    if (st.act === 'hook')
-      parts.push(
-        `${story.cast.contact.name}, ${story.cast.contact.trade}, is waiting at ${st.base}.`,
-        fill(PREMISES[story.premise].opening, values),
-      );
-    else if (st.twist) {
-      const n = nextOf(i, branch);
-      values.next = n ? n.owner || n.target || n.who || n.base || '' : '';
-      parts.push(fill(TWIST_OPENERS[st.twist], values));
-    } else parts.push(fill(OPENERS[st.sort][s % OPENERS[st.sort].length], values));
-    if (st.sort === 'choose') {
-      st.options = st.sides.map((f, k) => {
-        const n = story.steps[i + 1].branches[k];
-        return {
-          side: f,
-          text:
-            `Give it to ${side(f)}: +${CHOICE_STANDING.gain} with them, ` +
-            `-${CHOICE_STANDING.loss} with ${side(st.sides[1 - k])}. ${lead(st.gives[k], n, w)}`,
-        };
-      });
-    } else if (st.sort === 'raid') {
-      parts.push(
-        `With the map, the way to ${w(story.end)} is open. ${story.cast.villain.name} is waiting at ${story.cast.villain.base}.`,
-      );
-    } else {
-      const n = nextOf(i, branch);
-      if (n) parts.push(lead(st.gives, n, w));
-    }
-    st.text = parts.join(' ');
-  };
-  story.steps.forEach((st, i) => {
-    if (st.branches) st.branches.forEach((b, k) => write(b, i, k, i + k));
-    else write(st, i, 0, i);
-  });
-}
+export const pathsOf = (story) => chainPaths(story.steps);
 
 // The map of a game without the rest of the game: the same systems as createState(seed, { size }) makes, since the
 // map is the first thing a new game draws random numbers for (checked in tests/story.test.js). Much quicker, for
@@ -744,18 +523,17 @@ export const sectorsFor = (seed, size) => createSectors({ rng: seed >>> 0, nextI
 // What is wrong with a story: an empty list when it can be played from the start to the end on every way through
 // it (R-1209 to R-1214).
 export function checkStory(story, sectors) {
-  const problems = [];
+  const problems = checkChain(story.steps, CATALOG);
   const paths = pathsOf(story);
   const want = MAIN_STEPS[story.size];
   const choices = story.steps.filter((st) => st.sort === 'choose').length;
   if (choices !== CHOICES[story.size]) problems.push(`${choices} choices, not ${CHOICES[story.size]}`);
+  if (story.clues.length !== 4) problems.push(`${story.clues.length} clues, not 4`);
   const hops = hopsFrom(sectors, 0);
+  const broken = (t) => !t || /\{\w+\}|undefined|null/.test(t);
   for (const path of paths) {
     if (path.length !== want) problems.push(`a way through has ${path.length} steps, not ${want}`);
-    const first = path[0];
-    if (first.sort !== 'talk' || first.system !== 0) problems.push('the story does not start in the sanctuary');
-    const last = path[path.length - 1];
-    if (last.sort !== 'raid' || last.gives !== 'map') problems.push('the story does not end with the star map');
+    if (path[0].system !== 0) problems.push('the story does not start in the sanctuary');
     path.forEach((st, k) => {
       const sys = sectors[st.system];
       if (!sys) return problems.push(`step ${k + 1} has no system`);
@@ -766,16 +544,12 @@ export function checkStory(story, sectors) {
       if (['bar', 'shop', 'pirate'].includes(SORTS[st.sort].place) && !st.base)
         problems.push(`step ${k + 1} has no base`);
       for (const key of ['goal', 'text', 'fallback'])
-        if (!st[key] || /\{\w+\}|undefined|null/.test(st[key])) problems.push(`step ${k + 1} has a broken ${key}`);
-      const prev = path[k - 1];
-      if (!prev) return;
-      if (prev.sort === st.sort) problems.push(`steps ${k} and ${k + 1} are both ${st.sort}`);
-      const gave = prev.sort === 'choose' ? prev.gives : [prev.gives];
-      if (!gave.includes(st.needs))
-        problems.push(`step ${k + 1} needs ${st.needs}, but step ${k} gives ${gave.join(' or ')}`);
+        if (broken(st[key])) problems.push(`step ${k + 1} has a broken ${key}`);
       if (st.needs === 'item' && !st.carries) problems.push(`step ${k + 1} needs an item that has no name`);
+      if (k > story.contactOut && st.isContact) problems.push(`step ${k + 1} has the contact, who is gone`);
     });
   }
+  if (broken(story.reveal)) problems.push('the truth is not told at the end');
   return [...new Set(problems)];
 }
 

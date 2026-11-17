@@ -1178,6 +1178,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1221 | De första sidouppdragen är frakt, prisjakt och räddning. Eskort kommer när eskortskeppen finns, och passagerare sist. | bestämd | Användaren 2026-11-17 (UP2, D-073) | – |
 | R-1222 | Varje omgång har en dold sanning: vem som ligger bakom, varför och hur. Varje steg i huvudstoryn avslöjar en bit, och bitarna samlas som ledtrådar i uppdragsloggen. | bestämd | Användaren 2026-11-17 (US10, F-276) | – |
 | R-1223 | Kontakten, rivalen och skurken talar med egen röst, i repliker, och hör av sig över radion mellan stegen. | bestämd | Användaren 2026-11-17 (US11, F-276) | – |
+| R-1224 | Den sida som valdes bort i ett val kommer tillbaka: på dess baser senare i storyn blir besättningen kyligt mottagen, och kontakten säger vad den tycker om valet. | förslag | docs/proposal-missions.md (F-276) | – |
 | R-943 | Skepp i nöd ber om bränsle eller reparation och betalar eller minns det. | förslag | BACKLOG F-083 | – |
 | R-944 | Captain kan anropa skepp och stationer för att be om bränsle, muta eller kräva tribut. | förslag | BACKLOG F-082 | – |
 

@@ -13,6 +13,7 @@ import {
   CHOICES,
   SORTS,
   FALLBACKS,
+  PREMISES,
 } from '../src/sim/story.js';
 
 const SIZES = ['short', 'medium', 'long'];
@@ -96,4 +97,74 @@ test('making a story leaves the random numbers of the game alone', () => {
   const before = s.rng;
   createStory(s.sectors, 3, 'short');
   assert.equal(s.rng, before);
+});
+
+test('R-1222: the hidden truth is told in four clues spread over the story, and in full at the end', () => {
+  for (const size of SIZES)
+    for (const seed of SEEDS.slice(0, 10)) {
+      const { story } = storyOf(seed, size);
+      assert.deepEqual(
+        story.clues.map((c) => c.kind),
+        ['method', 'motive', 'side', 'name'],
+      );
+      const at = story.clues.map((c) => c.index);
+      assert.deepEqual(
+        [...at].sort((a, b) => a - b),
+        at,
+        'in order',
+      );
+      for (const i of at) assert.notEqual(story.steps[i].sort, 'choose', 'a choice tells no clue');
+      assert.ok(story.reveal.length > 20);
+    }
+});
+
+test('R-1223: the contact, the villain and the rival call over the radio, and the contact goes quiet once gone', () => {
+  let rivalCalls = 0;
+  for (const seed of SEEDS) {
+    const { story } = storyOf(seed, 'long');
+    const path = pathsOf(story)[0];
+    const calls = path.flatMap((st) => st.radio.map((r) => ({ from: r.from, at: st.index })));
+    assert.ok(
+      calls.some((c) => c.from === story.cast.villain.name),
+      `seed ${seed}: the villain speaks`,
+    );
+    if (story.contactOut === Infinity)
+      assert.ok(
+        calls.some((c) => c.from === story.cast.contact.name),
+        `seed ${seed}`,
+      );
+    else
+      assert.ok(
+        calls.every((c) => c.from !== story.cast.contact.name || c.at <= story.contactOut),
+        `seed ${seed}: the contact is quiet after ${story.contactOut}`,
+      );
+    if (calls.some((c) => c.from === story.cast.rival.ship)) rivalCalls++;
+  }
+  assert.ok(rivalCalls > 0, 'the rival calls in some stories');
+});
+
+test('R-1224: after a choice, a base of the side left out is cool to the crew, only if it was left out', () => {
+  let found = 0;
+  for (const seed of SEEDS) {
+    const { story } = storyOf(seed, 'long');
+    for (const path of pathsOf(story))
+      for (const st of path)
+        if (st.cooled) {
+          found++;
+          const choice = story.steps[st.cooled.choice];
+          assert.equal(choice.sort, 'choose');
+          assert.ok(choice.sides.includes(st.cooled.side));
+        }
+  }
+  assert.ok(found > 0);
+});
+
+test('the tester can pick the premise, and the convoy is written in full', () => {
+  const sectors = sectorsFor(4, 'medium');
+  for (const premise of Object.keys(PREMISES)) {
+    const story = createStory(sectors, 4, 'medium', { premise });
+    assert.equal(story.premise, premise);
+    assert.deepEqual(checkStory(story, sectors), []);
+  }
+  assert.ok(PREMISES.convoy.full);
 });

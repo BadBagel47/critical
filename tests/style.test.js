@@ -19,11 +19,16 @@ test('no line is longer than 140 characters', () => {
   }
 });
 
-test('the game logic only depends on itself', () => {
+test('the game logic only depends on itself, and on the quest engine core (D-277)', () => {
   for (const file of filesIn('src/sim/')) {
     for (const line of read(file)) {
       const from = /^import .* from '(.*)';$/.exec(line);
-      if (from) assert.ok(/^\.\/[\w-]+\.js$/.test(from[1]), `${file} imports ${from[1]}`);
+      if (from) assert.ok(/^(\.\/|\.\.\/quest\/)[\w-]+\.js$/.test(from[1]), `${file} imports ${from[1]}`);
     }
   }
+});
+
+test('the quest engine core depends on nothing, so that it can move to a library of its own (D-277)', () => {
+  for (const file of filesIn('src/quest/'))
+    for (const line of read(file)) assert.ok(!/^import /.test(line), `${file} imports: ${line}`);
 });

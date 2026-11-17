@@ -112,6 +112,21 @@ Tiden är bara stegen och hoppen, utan sidouppdrag och utan det man gör på vä
   - **Följder.** Den sida man valde bort i ett val dyker upp igen senare, och personerna minns vad besättningen har gjort.
   - **Handskrivna texter.** Texterna skrivs för hand för varje premiss och akt, inte som gemensamma mallar för varje sorts steg. Först konvojen fullt ut i testaren, så att den kan bedömas innan de andra skrivs.
 
+## Berättandet, prövat i testaren (F-276, 2026-11-17)
+
+Besked: ja till en dold sanning (US10) och till personer med egen röst (US11). Texterna skrivs för hand som byggstenar (US12), så att omgångarna fortfarande varierar.
+
+- **Den dolda sanningen.** I början bestäms vem som ligger bakom, hur och varför. Fyra steg berättar var sin del i ordning: hur, varför, en ledtråd om vem, och namnet. Delarna samlas som ledtrådar i loggen, och slutet berättar hela sanningen. Konvojen har fyra möjliga skyldiga, tre sätt och fyra skäl.
+- **Rösterna.** Kontakten är orolig, butter eller torr. Skurken är kall eller hånfull, och rivalen kaxig eller trött. De hör av sig över radion: kontakten efter första steget, efter varje val och före slutet, skurken efter första vändningen och i slutet, rivalen första gången den dyker upp. En kontakt som dör eller förråder besättningen tystnar.
+- **Scener.** Varje steg börjar med en scen, har sedan en ledtråd eller något om fallet, och slutar med var det leder. Uppgiften står bara i loggen.
+- **Följder.** Kontakten säger vad den tycker om ett val. Den sida som valdes bort hör av sig, och på dess baser senare blir besättningen kyligt mottagen.
+- **Variation.** Kedjan, kartan, personerna, rösterna och sanningen kombineras fritt. Varje text har två till tre varianter, och raderna om fallet upprepas aldrig i samma story.
+- **Status.** Konvojen är fullt skriven. Kryssaren och signalen är utkast med en text av varje sort.
+
+## Questmotorn (D-277)
+
+Motorns kärna är skild från spelet och hämtar ingen annan kod. Den kedjar steg som behöver och ger, söker en kedja som håller, hanterar val och vändningar, fyller texter och kontrollerar att man aldrig fastnar. Handskrivna quester går igenom samma kontroller, så samma kärna kan bära både genererade och skrivna quester. Critical's egen del är stegens sorter, platserna, personerna och texterna. Kärnan flyttas till ett eget repo, som network-kit, när det andra spelet behöver den.
+
 ## Frågor innan storyn byggs i spelet (besvarade 2026-11-17)
 
 - **US7 (ja):** Captain får nästan hälften av jobbet, eftersom det är Captain som pratar och lämnar saker. Ska samtalen ske inne på basen, så att någon går dit till fots? Rekommendation: ja, för en del av samtalen. Då får bordarna mer att göra, och baserna används till mer än handel.
