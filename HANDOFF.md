@@ -41,7 +41,7 @@ Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra för
 4. Användaren fortsätter provspela och ger synpunkter.
 5. Onlineläget med network-kit (F-040) är uppdelat i steg, D-263 till D-270, F-271 och F-272, efter agentens granskning 2026-11-17. Det som kan göras innan network-kit är klart ligger som en egen grupp i körförslaget.
 6. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073) och eskortskepp (D-071). Baserna (D-072) har en plan i docs/proposal-bases.md, med designuppgifter som görs före bygge.
-7. Onlineläget (F-040) väntar på network-kit.
+7. Onlineläget (F-040) väntar på network-kit. Version 0.5.0 (2026-11-17) delar stora lägen själv och skickar alltid det senaste siktet, så D-265 behövs inte och D-263 gör nu bara sparningarna mindre. Spelet och servern måste båda ha 0.5.0, som har ett nytt protokoll.
 
 ## Mål
 
