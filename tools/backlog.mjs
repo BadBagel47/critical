@@ -1,7 +1,8 @@
 // A tool for the backlog (F-228): the steps that the agent rules ask for, done the same way every time, so that
 // nothing is forgotten or mistyped when they are done by hand.
 //
-//   node tools/backlog.mjs start F-090 D-223      mark as in progress today ("Pågår YYYY-MM-DD")
+//   node tools/backlog.mjs start F-090 D-223      mark as in progress today, with the agent's branch
+//                                                 ("Pågår YYYY-MM-DD (branch)", agent rules v1.12)
 //   node tools/backlog.mjs done D-223 "what was done"
 //                                                 move to the done section with today's date, and take it out of
 //                                                 the proposed runs. Without a text the row keeps its own
@@ -10,9 +11,11 @@
 //   node tools/backlog.mjs next F                 the next free ID of a kind (B bug, F feature, D design)
 //   node tools/backlog.mjs check                  say what is out of order, and exit with 1 if anything is
 //
-// `--date YYYY-MM-DD` sets the date instead of today. Every change writes BACKLOG.md and runs the check after.
+// `--date YYYY-MM-DD` sets the date instead of today, and `--by <branch or session>` who started, instead of the
+// current git branch. Every change writes BACKLOG.md and runs the check after.
 // The functions take and give the text of the backlog, so that the tests can use them without a file.
 import { readFileSync, writeFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 
 const ID = /^[BFD]-\d{3,}$/;
 const ROW = /^\| ([BFD]-\d{3,}) \|(.*)\| ([^|]*) \|$/;
@@ -123,15 +126,16 @@ function addRow(lines, name, row) {
   lines.splice(at, 0, row);
 }
 
-// Mark as in progress, with the date (agent rules, "Several agents in the same repo"). One that is already in
-// progress is left alone: it may be another agent's.
-export function start(text, ids, date) {
+// Mark as in progress, with the date and the branch or session of the agent that started (agent rules, "Several
+// agents in the same repo"). One that is already in progress is left alone: it may be another agent's.
+export function start(text, ids, date, by = null) {
   const lines = text.split('\n');
   for (const id of ids) {
     const r = rowFor(text, id);
     if (!OPEN.includes(r.section)) throw new Error(`${id} is under ${r.section}, not among the work to do`);
     if (r.status.startsWith('Pågår')) throw new Error(`${id} is already marked: ${r.status}`);
-    lines[r.line] = `| ${id} |${lines[r.line].split('|').slice(2, -2).join('|')}| Pågår ${date} |`;
+    lines[r.line] =
+      `| ${id} |${lines[r.line].split('|').slice(2, -2).join('|')}| Pågår ${date}${by ? ` (${by})` : ''} |`;
   }
   return lines.join('\n');
 }
@@ -176,7 +180,11 @@ export function check(text) {
     if (seen.has(r.id)) problems.push(`${r.id} is in the backlog twice, under ${seen.get(r.id)} and ${r.section}`);
     seen.set(r.id, r.section);
     if (r.section === DONE && !/^\d{4}-\d{2}-\d{2}/.test(r.status)) problems.push(`${r.id} is done but has no date`);
-    if (OPEN.includes(r.section) && r.status.startsWith('Pågår') && !/^Pågår \d{4}-\d{2}-\d{2}$/.test(r.status))
+    if (
+      OPEN.includes(r.section) &&
+      r.status.startsWith('Pågår') &&
+      !/^Pågår \d{4}-\d{2}-\d{2}( \(.+\))?$/.test(r.status)
+    )
       problems.push(`${r.id} is in progress without a date`);
   }
   groups(text).forEach((g, k) => {
@@ -194,15 +202,29 @@ export function check(text) {
 
 // ---------- the command ----------
 const today = () => new Date().toISOString().slice(0, 10);
+// The git branch the agent works on, or null outside git.
+function branch() {
+  try {
+    return (
+      execSync('git rev-parse --abbrev-ref HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+        .toString()
+        .trim() || null
+    );
+  } catch {
+    return null;
+  }
+}
 function main(argv) {
   const file = new URL('../BACKLOG.md', import.meta.url);
   const args = [...argv];
   const at = args.indexOf('--date');
   const date = at >= 0 ? args.splice(at, 2)[1] : today();
+  const byAt = args.indexOf('--by');
+  const by = byAt >= 0 ? args.splice(byAt, 2)[1] : branch();
   const [command, ...rest] = args;
   const text = readFileSync(file, 'utf8');
   let next = null;
-  if (command === 'start') next = start(text, rest, date);
+  if (command === 'start') next = start(text, rest, date, by);
   else if (command === 'done') {
     const ids = rest.filter((x) => ID.test(x));
     const what = rest.filter((x) => !ID.test(x)).join(' ') || null;

@@ -132,6 +132,12 @@ test('the next ID follows the highest of the shared series, whatever its kind', 
   assert.equal(nextId(SMALL, 'D'), 'D-005');
 });
 
+test('agent rules v1.12: the mark says who started, and an older mark without it is still in order', () => {
+  const next = start(SMALL, ['F-002'], '2026-11-17', 'claude/some-branch');
+  assert.ok(next.includes('| F-002 | The first thing | Pågår 2026-11-17 (claude/some-branch) |'));
+  assert.deepEqual(check(next), []);
+});
+
 test('the checks find what is out of order', () => {
   const twice = SMALL.replace('| F-004 | The fourth thing | Väntar på användaren |', '| F-002 | Again | Ej påbörjad |');
   assert.ok(check(twice).some((p) => p.includes('F-002 is in the backlog twice')));
