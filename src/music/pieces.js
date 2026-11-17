@@ -36,44 +36,89 @@ function tense(pos, step, { kicks = [0, 3, 8, 10], hats = 2, fill = false, g = 1
   return out;
 }
 
-// Title: the theme, so that the game has a tune of its own. 36 bars, about a minute and a half, before it loops:
+// Title: the theme Signal, so that the game has a tune of its own, and around it melodies of its own so that it does
+// not just repeat. 40 bars, about a minute and a half, before it loops:
 //   0-3    build-up: chords and an arpeggio
 //   4-7    the theme
-//   8-11   the theme an octave up, with drums
-//   12-19  a bridge: the theme's opening, moved step by step through new chords, on a brighter voice
-//   20-23  the theme with a second voice a third below
-//   24-27  a quiet break: the theme's opening, slow and far away
-//   28-31  the theme at its fullest
-//   32-35  winding down to the start
+//   8-11   an answer: a new, singing melody that climbs through new chords and leads back
+//   12-19  a bridge with a melody of its own, livelier, on a brighter voice
+//   20-23  a quiet break: the theme's opening, slow and far away
+//   24-27  the theme again, with a second voice a third below
+//   28-31  the answer at its fullest
+//   32-35  an ending that falls back home to the root
+//   36-39  winding down to the start
 /** @type {[number, string][]} */
 const SECTIONS = [
   [0, 'build'],
   [4, 'theme'],
-  [8, 'up'],
+  [8, 'answer'],
   [12, 'bridge'],
-  [20, 'harmony'],
-  [24, 'break'],
-  [28, 'full'],
-  [32, 'outro'],
+  [20, 'break'],
+  [24, 'harmony'],
+  [28, 'soar'],
+  [32, 'coda'],
+  [36, 'outro'],
 ];
-// The bridge, bar by bar: [bar of the theme to play, steps up or down the scale to move it, degree of the chord].
-/** @type {[number | null, number, number | string][]} */
-const BRIDGE = [
-  [0, -2, 5],
-  [0, -1, 6],
-  [1, 0, 0],
-  [3, 0, 4],
-  [0, -2, 5],
-  [0, -1, 6],
-  [2, 2, 2],
-  [null, 0, 'dominant'],
-];
+// The melodies besides the theme, written like the themes in theory.js: [semitones from the root, length in steps].
+const ANSWER = {
+  // prettier-ignore
+  notes: [
+    [15, 6], [12, 2], [10, 4], [8, 4],
+    [10, 4], [14, 4], [17, 6], [14, 2],
+    [15, 6], [19, 2], [17, 4], [15, 4],
+    [19, 6], [14, 2], [11, 4], [14, 4],
+  ],
+  chords: [
+    [-4, 'maj'],
+    [-2, 'maj'],
+    [3, 'maj'],
+    [7, 'maj'],
+  ],
+};
+const TUNE = {
+  // prettier-ignore
+  notes: [
+    [8, 2], [10, 2], [12, 4], [15, 3], [12, 3], [10, 2],
+    [10, 6], [14, 2], [12, 2], [10, 2], [14, 4],
+    [15, 4], [14, 2], [12, 6], [null, 4],
+    [7, 2], [10, 2], [12, 2], [14, 6], [12, 2], [10, 2],
+    [12, 4], [15, 4], [20, 6], [19, 2],
+    [17, 6], [15, 2], [14, 4], [12, 4],
+    [10, 4], [12, 2], [15, 6], [19, 4],
+    [19, 8], [14, 4], [11, 4],
+  ],
+  chords: [
+    [-4, 'maj'],
+    [-2, 'maj'],
+    [0, 'min'],
+    [7, 'min'],
+    [-4, 'maj'],
+    [-2, 'maj'],
+    [3, 'maj'],
+    [7, 'maj'],
+  ],
+};
+const CODA = {
+  // prettier-ignore
+  notes: [
+    [24, 4], [22, 4], [19, 4], [17, 4],
+    [17, 4], [14, 4], [12, 4], [10, 4],
+    [8, 4], [12, 4], [15, 6], [12, 2],
+    [14, 4], [12, 12],
+  ],
+  chords: [
+    [0, 'min'],
+    [-2, 'maj'],
+    [-4, 'maj'],
+    [0, 'min'],
+  ],
+};
 const ARPS = [
   [0, 1, 2, 3],
   [0, 2, 1, 3],
   [3, 2, 1, 0],
 ];
-// Moves a note of the theme along the minor scale, so that it fits the new chord.
+// Moves a note along the minor scale, so that a second voice stays in the key.
 function shift(semi, by) {
   const aeolian = SCALES.aeolian;
   const oct = Math.floor(semi / 12);
@@ -87,60 +132,48 @@ const title = {
   fixedColour: true,
   notes(step, { colour, theme }) {
     const { bar: abs, pos } = at(step);
-    const bar = abs % 36;
+    const bar = abs % 40;
     const [start, part] = SECTIONS.filter(([b]) => b <= bar).pop();
     const inPart = bar - start;
     const root = colour.root;
     const out = [];
-    // The chord of this bar.
-    let ch;
-    if (part === 'bridge') {
-      const d = BRIDGE[inPart][2];
-      ch = d === 'dominant' ? triad([7, 'maj']) : chordOn(SCALES.aeolian, Number(d));
-    } else if (part === 'break') ch = triad(theme.chords[inPart >> 1]);
-    else ch = triad(theme.chords[bar % 4]);
+    // Which melody this part plays, if any, and the chord of this bar.
+    const tune = { theme, harmony: theme, answer: ANSWER, soar: ANSWER, bridge: TUNE, coda: CODA }[part] || null;
+    let c = theme.chords[bar % 4];
+    if (part === 'break') c = theme.chords[inPart >> 1];
+    else if (tune && tune !== theme) c = tune.chords[inPart];
+    const ch = triad(c);
     const tones = [...ch, ch[0] + 12];
     if (pos === 0 && (part !== 'break' || inPart % 2 === 0)) {
       out.push(...chord('pad', ch, root + 12, part === 'break' ? 2 * BAR : BAR, part === 'break' ? 0.45 : 0.55));
     }
-    // The arpeggio, quieter while the melody plays, and changing shape from section to section.
+    // The arpeggio, quieter while a melody plays, and changing shape from section to section.
     const quiet = part === 'build' || part === 'outro';
     if (part !== 'break' && pos % 2 === 0 && (quiet || pos % 4 === 0 || part !== 'theme')) {
       const arp = ARPS[(Math.floor(abs / 4) + (rand(abs, 5) < 0.3 ? 1 : 0)) % ARPS.length];
       const fade = part === 'outro' ? 1 - inPart / 5 : 1;
-      out.push({
-        v: 'pluck',
-        m: root + 24 + tones[arp[(pos / 2) % 4]],
-        d: 2,
-        g: (quiet ? 0.35 : 0.22) * fade,
-        e: true,
-      });
+      out.push({ v: 'pluck', m: root + 24 + tones[arp[(pos / 2) % 4]], d: 2, g: (quiet ? 0.35 : 0.2) * fade, e: true });
     }
     // The melody.
-    if (['theme', 'up', 'harmony', 'full'].includes(part)) {
-      const n = themeNote(theme, inPart * BAR + pos);
-      const high = part === 'up' || part === 'full';
-      if (n) {
-        out.push({ v: 'lead', m: root + (high ? 24 : 12) + n.semi, d: n.len, g: 0.75, e: true });
-        if (high) out.push({ v: 'soft', m: root + 12 + n.semi, d: n.len, g: 0.5 });
-        if (part === 'harmony') out.push({ v: 'soft', m: root + 12 + shift(n.semi, -2), d: n.len, g: 0.45 });
-      }
-    } else if (part === 'bridge') {
-      const [from, by] = BRIDGE[inPart];
-      const n = from === null ? (pos === 0 ? { semi: 7, len: BAR } : null) : themeNote(theme, from * BAR + pos);
-      if (n) {
-        const semi = from === null ? n.semi : shift(n.semi, by);
-        out.push({ v: 'keys', m: root + 24 + semi, d: n.len, g: 0.55, e: true });
-        out.push({ v: 'soft', m: root + 12 + semi, d: n.len, g: 0.3 });
-      }
-    } else if (part === 'break') {
-      const n = themeNote(theme, inPart * BAR + pos, 2);
-      if (n) out.push({ v: 'soft', m: root + 12 + n.semi, d: n.len, g: 0.5, e: true });
+    const n = tune && themeNote(tune, inPart * BAR + pos);
+    if (n && part === 'bridge') {
+      out.push({ v: 'keys', m: root + 12 + n.semi, d: n.len, g: 0.6, e: true });
+      out.push({ v: 'soft', m: root + n.semi, d: n.len, g: 0.3 });
+    } else if (n) {
+      out.push({ v: 'lead', m: root + 12 + n.semi, d: n.len, g: 0.75, e: true });
+      if (part === 'harmony') out.push({ v: 'soft', m: root + 12 + shift(n.semi, -2), d: n.len, g: 0.45 });
+      if (part === 'soar') out.push({ v: 'soft', m: root + 24 + n.semi, d: n.len, g: 0.3 });
+      if (part === 'coda') out.push({ v: 'soft', m: root + n.semi, d: n.len, g: 0.4 });
+    }
+    if (part === 'break') {
+      const slow = themeNote(theme, inPart * BAR + pos, 2);
+      if (slow) out.push({ v: 'soft', m: root + 12 + slow.semi, d: slow.len, g: 0.5, e: true });
       if (pos === 0 && inPart % 2 === 0) out.push({ v: 'sub', m: root - 12 + ch[0], d: 2 * BAR, g: 0.45 });
     }
     // Bass and drums.
     if (part !== 'build' && part !== 'outro' && part !== 'break') {
-      const busy = part === 'harmony' || part === 'full';
+      const busy = part === 'harmony' || part === 'soar';
+      /** @type {number[][]} */
       const line = busy
         ? [
             [0, 3, 0],
@@ -156,14 +189,20 @@ const title = {
             [8, 4, 0],
             [12, 4, 12],
           ];
-      for (const [p, d, o] of line) if (pos === p) out.push({ v: 'bass', m: root - 12 + ch[0] + o, d, g: 0.75 });
+      const last = part === 'coda' && inPart === 3;
+      for (const [p, d, o] of line) {
+        if (pos === p && (!last || p === 0))
+          out.push({ v: 'bass', m: root - 12 + ch[0] + o, d: last ? BAR : d, g: 0.75 });
+      }
       if (part === 'theme' || part === 'bridge') {
         if (pos % 4 === 2) out.push({ v: 'hat', m: 42, d: 1, g: 0.3 });
         if (part === 'bridge' && pos === 8) out.push({ v: 'snare', m: 38, d: 1, g: 0.35 });
+      } else if (last) {
+        if (pos === 0) out.push({ v: 'kick', m: 36, d: 1, g: 0.7 }, { v: 'crash', m: 49, d: 8, g: 0.3 });
       } else {
-        out.push(...drums(pos, bar, { fill: inPart === 3, busy: part === 'full', g: 0.8 }));
+        out.push(...drums(pos, bar, { fill: inPart === 3 && part !== 'coda', busy, g: 0.8 }));
       }
-      if (part === 'full' && inPart === 0 && pos === 0) out.push({ v: 'crash', m: 49, d: 8, g: 0.4 });
+      if (part === 'soar' && inPart === 0 && pos === 0) out.push({ v: 'crash', m: 49, d: 8, g: 0.4 });
     }
     if (part === 'bridge' && inPart === 7 && pos >= 8) out.push({ v: 'snare', m: 38, d: 1, g: 0.2 + pos / 40 });
     return out;
