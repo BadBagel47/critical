@@ -67,7 +67,8 @@ export function groups(text) {
 }
 
 // A, B … Z, AA, AB … (agent rules, "Proposed runs").
-export const letterOf = (k) => (k < 26 ? String.fromCharCode(65 + k) : letterOf(Math.floor(k / 26) - 1) + letterOf(k % 26));
+export const letterOf = (k) =>
+  k < 26 ? String.fromCharCode(65 + k) : letterOf(Math.floor(k / 26) - 1) + letterOf(k % 26);
 
 // Give the groups new letters from A, in the order they stand.
 export function reletter(text) {

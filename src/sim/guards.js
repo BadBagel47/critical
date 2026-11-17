@@ -47,7 +47,7 @@ export const GUARD_KINDS = {
   heavy: { name: 'HEAVY', hp: 2.6, speed: 0.6, dmg: 1.5, notice: 1.2, cover: false, range: 80, sleep: 0.5, from: 4 },
 };
 // Which kinds can be met where: in a wreck, on a pirate station, and on the stations of everyone else.
-const KINDS_AT = {
+export const KINDS_AT = {
   wreck: ['soldier', 'soldier', 'drone', 'heavy'],
   pirate: ['soldier', 'soldier', 'drone', 'heavy'],
   other: ['watchman', 'soldier', 'soldier', 'tech', 'heavy'],

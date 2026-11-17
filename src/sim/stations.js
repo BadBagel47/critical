@@ -30,10 +30,11 @@ import { forward, headingTo, turnToward, angleDiff, toWorld, dist, rand, randRan
 // that is not the crew's has the four on its basement at least, as it always has had, to defend itself with.
 // The large gun is bought on its own (R-1164). `off` is a gun of the crew's own station that has been mended and
 // waits to be switched on at the mainframe. Guns that are already there keep how they are.
-const GUNS_AT = [0, 2, 6, 10];
+export const GUNS_AT = [0, 2, 6, 10];
+export const OTHERS_GUNS = 4;
 export function gunSlots(st) {
   const d = defenseOf(st);
-  const n = st.side === CREW ? GUNS_AT[d.guns] : Math.max(4, GUNS_AT[d.guns]);
+  const n = st.side === CREW ? GUNS_AT[d.guns] : Math.max(OTHERS_GUNS, GUNS_AT[d.guns]);
   const list = BASE.guns.slice(0, n);
   return d.cannon ? [...list, BASE.cannon] : list;
 }
