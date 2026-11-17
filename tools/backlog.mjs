@@ -48,20 +48,30 @@ export function rows(text) {
   return list;
 }
 
-// The run groups in "Proposed runs": the heading line of each, its ID lines, and where it is.
+// The run groups in "Proposed runs": the heading line of each, its ID lines, its questions (agent rules v1.10,
+// "Fråga …" lines with a recommendation), and where it is. A group is its heading and the "- " lines right under it;
+// `end` is the line after its last.
 export function groups(text) {
   const { lines, out } = sections(text);
   const runs = out.find((s) => s.name === 'Proposed runs');
   if (!runs) return [];
   const list = [];
+  let open = null;
   for (let i = runs.start; i < runs.end; i++) {
     const m = /^\*\*([A-Z]{1,2})\*\* – (.*)$/.exec(lines[i]);
     if (m) {
-      list.push({ letter: m[1], rest: m[2], line: i, ids: [] });
+      open = { letter: m[1], rest: m[2], line: i, end: i + 1, ids: [], questions: [] };
+      list.push(open);
       continue;
     }
+    if (!open || !lines[i].startsWith('- ')) {
+      open = null;
+      continue;
+    }
+    open.end = i + 1;
     const item = /^- ([BFD]-\d{3,}) – /.exec(lines[i]);
-    if (item && list.length) list[list.length - 1].ids.push({ id: item[1], line: i });
+    if (item) open.ids.push({ id: item[1], line: i });
+    else if (/^- Fråga /.test(lines[i])) open.questions.push({ line: i, text: lines[i].slice(2) });
   }
   return list;
 }
@@ -87,9 +97,10 @@ export function unpropose(text, ids) {
   for (const g of groups(text)) {
     const gone = g.ids.filter((x) => ids.includes(x.id));
     for (const x of gone) drop.add(x.line);
+    // A group with no IDs left goes, with its questions and the blank line after it.
     if (gone.length && gone.length === g.ids.length) {
-      drop.add(g.line);
-      if (lines[g.line + g.ids.length + 1] === '') drop.add(g.line + g.ids.length + 1);
+      for (let i = g.line; i < g.end; i++) drop.add(i);
+      if (lines[g.end] === '') drop.add(g.end);
     }
   }
   return reletter(lines.filter((_, i) => !drop.has(i)).join('\n'));

@@ -1,6 +1,6 @@
 # HANDOFF
 
-Rules version: v1.9
+Rules version: v1.11
 Inventory: 2026-11-14
 Project language: English (all text in the game and README)
 
@@ -414,6 +414,7 @@ Grafik
 - 2026-11-14, senare session: GitHub-kopplingen fungerar för att läsa pull requests och issues. Kommandot gh finns inte. Sessionen fick bara pusha till sin egen gren (claude/), inte direkt till main. Därför finns nu automatisk merge, se Engångsåtgärder.
 - 2026-11-15: Sessionen fick en egen gren som inte börjar med claude/ och ska inte pusha till andra grenar utan uttryckligt lov. Det som pushas dit slås inte ihop automatiskt.
 - 2026-11-15: Anpassat till agentregler v1.9: `auto-merge.yml` hoppar över commits märkta [wip] (oavslutat arbete).
+- 2026-11-17: Anpassat till agentregler v1.11: kortare rapporter, val som knappar, och frågor med rekommendation under varje grupp i körförslaget. Frågorna har fasta etiketter enligt projektregeln om frågeserier, så de byter inte namn när grupperna får nya bokstäver. Verktyget för backloggen klarar frågorna (F-273).
 - 2026-11-16: Sessionen fick inte starta en server i bakgrunden (`npm run serve`). Provkörningen i webbläsaren och skärmbilderna kördes i stället med ett litet skript som startar en server i samma process och stänger den när testet är klart.
 
 ## Engångsåtgärder

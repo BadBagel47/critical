@@ -145,3 +145,23 @@ test('the real backlog is in order (run node tools/backlog.mjs check)', () => {
   const text = readFileSync(new URL('../BACKLOG.md', import.meta.url), 'utf8');
   assert.deepEqual(check(text), []);
 });
+
+test('F-273: a group with questions loses them with its last ID, and keeps them while it has IDs', () => {
+  const asked = SMALL.replace(
+    '- B-003 – Mend the second\n',
+    '- B-003 – Mend the second\n- Fråga XY1: Red or blue? Rekommendation: red.\n',
+  );
+  assert.deepEqual(
+    groups(asked).map((g) => [g.letter, g.questions.map((q) => q.text)]),
+    [
+      ['A', ['Fråga XY1: Red or blue? Rekommendation: red.']],
+      ['B', []],
+    ],
+  );
+  const one = finish(asked, ['F-002'], '2026-11-17');
+  assert.ok(one.includes('- B-003 – Mend the second\n- Fråga XY1: Red or blue?'), 'the question stays with its group');
+  const both = finish(asked, ['F-002', 'B-003'], '2026-11-17');
+  assert.ok(!both.includes('Fråga XY1'), 'and goes with it');
+  assert.ok(both.includes('## Proposed runs\n\n**A** – strong model, medium level – Second\n- F-004'));
+  assert.deepEqual(check(both), []);
+});

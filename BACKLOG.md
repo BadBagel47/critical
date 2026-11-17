@@ -5,76 +5,112 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först, sedan uppdragen. Butiken och standardbasen är byggda, så uppdragen (A) är nästa. Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
+Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först, sedan uppdragen. Butiken och standardbasen är byggda, så uppdragen (A) är nästa. Frågorna under varje grupp har fasta etiketter efter projektregeln om frågeserier, så de byter inte namn när grupperna får nya bokstäver (agentregler v1.10). Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
 
 **A** – strong model, high level – Världen steg 4: uppdrag och story
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 - D-257 – Smuggeluppdrag från skumt folk på baser, som man pratar med
+- Fråga UP1: Hur lång är den röda tråden i varje omgång? Rekommendation: tre till fem steg, där varje steg är en ledtråd som leder till en karta över ett dolt system och till sist till piraternas slutbas.
+- Fråga UP2: Vilka sorters uppdrag byggs först? Rekommendation: frakt, prisjakt och räddning. Eskort väntar på eskortskeppen (D-071) och passagerare kommer sist.
+- Fråga UP3: Kan smuggelgods upptäckas? Rekommendation: ja, en patrull från den faktion som förbjuder varan kan skanna skeppet, och den som åker fast förlorar godset och lite anseende.
 
 **B** – strong model, medium level – Meddelanden från skeppet
 - D-256 – Inventera alla meddelanden som kan dyka upp, när, för vem och var
 - D-187 – Se över hur spelet och skeppet visar meddelanden, så att det viktiga syns först
 - F-255 – Visa Gunner när dartsen är hela igen, genom skeppets meddelanden
+- Fråga MD1: Ska fara ha en egen plats på skärmen som aldrig trängs undan? Rekommendation: ja.
+- Fråga MD2: Var ska sensorremsan sitta? Rekommendation: uppe till höger under krediterna, där minikartan är.
+- Fråga MD3: Ska det mesta i sensorremsan kräva köpta sensorer? Rekommendation: ja, men det som syns på skärmen visas alltid.
+- Fråga MD4: Ska det finnas en logg över meddelanden? Rekommendation: ja, på en egen tangent, eftersom L redan är lampan vid bordning.
+- Fråga MD5: Ska ett meddelande som bara gäller en post bara visas för den? Rekommendation: ja, för läge och status. Fara och händelser visas för alla.
 
 
 **C** – strong model, medium level – Provspelslista med testlägen
 - F-222 – En lista över det som väntar på provspel, med länkar som startar rätt situation direkt, så att varje sak går att prova på några minuter
+- Fråga PS1: Var ska listan ligga? Rekommendation: en egen sida bredvid spelet, med en länk per sak som startar rätt situation.
+- Fråga PS2: Hur lämnar du synpunkter? Rekommendation: i chatten med sakens ID, så för agenten in dem i regelboken och backloggen.
 
 **D** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 - F-236 – Primära roller och tillfälligt övertagande: den som lämnar skeppet lämnar sina roller lediga, de kvar kan ta en av dem, och ägaren får tillbaka den direkt
 - F-235 – Bordarnas utrustning per roll, så att varje roll köper och har sin egen
+- Fråga RO1: Gäller ryggsäcken både utrustning och byte, och ersätter den CARGO PACK? Rekommendation: ja, en ryggsäck per roll som rymmer både och, och den ersätter CARGO PACK.
+- Fråga RO2: Hur många nivåer har ryggsäcken? Rekommendation: tre, där den första ger det man får med sig i dag.
 
-**E** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262)
+**E** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262) – väntar på svar
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på iPad och sedan mobil i liggande format
+- Fråga P6: Vilket sikte för Gunner kändes bäst i designtestet, A, B eller C? Ingen rekommendation förrän du har provat.
+- Fråga P7: Fasta eller flytande spakar, och vilken storlek? Ingen rekommendation förrän du har provat.
+- Fråga P8: Ska gasen ligga kvar när spaken släpps, eller följa spaken tillbaka till noll? Ingen rekommendation förrän du har provat.
 
 **F** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
+- Fråga VW1: Byggs viewern först som ett andra fönster på samma dator, innan onlineläget finns? Rekommendation: ja.
+- Fråga VW2: Vem väljer vad viewern visar? Rekommendation: alla kan skicka dit, och den senaste som skickade syns.
 
 **G** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
+- Fråga SS1: Hur ofta dyker Juggernauten upp? Rekommendation: högst en per omgång hos varje faktion, i de farligare systemen, och som pirat bara nära slutet.
+- Fråga SS2: Vad ger en namngiven pirat? Rekommendation: en prissumma och en unik del som loot, och en eller två sådana per omgång.
 
 **H** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
+- Fråga VÄ1: Vad händer när något blir för varmt? Rekommendation: det stängs av en stund, vapnen slutar skjuta och motorerna tappar fart, men skrovet tar ingen skada.
+- Fråga VÄ2: Hur kyler Engineer? Rekommendation: med kraft till kylning i samma panel som kraften i dag, och med uppgraderingar som kyler bättre. En skiss först.
 
 **I** – strong model, high level – Slå ut och borda
 - D-248 – Se över hur man slår ut ett skepp för att borda det, så att Gunner har ett tydligt sätt att göra det i stället för att skeppet exploderar
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
+- Fråga SL1: Hur slår Gunner ut ett skepp i stället för att spränga det? Rekommendation: ett eget vapen som tar sköld och motorer men nästan inte skrovet, och ett skepp utan motorer driver och kan bordas.
+- Fråga SL2: Vilka skepp kan slås ut och bordas? Rekommendation: fraktskepp och gunboats, som har insidor. Fighters inte.
 
 **J** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
+- Fråga MI1: Är missiler och raketer två olika delar? Rekommendation: ja, två delar som köps för sig, med ammunition vid disken som raketerna i dag.
 
 **K** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
+- Fråga KO1: Hur anropar Captain? Rekommendation: en knapp när ett skepp eller en station är nära, med en kort lista att välja ur: be om bränsle, muta, kräva tribut.
+- Fråga KO2: Hur många eskorter kan man ha? Rekommendation: en åt gången, hyrd på baser.
 
 **L** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
+- Fråga AN1: Vilka sorters anomalier först? Rekommendation: tre: ett fält där man flyger och skjuter långsammare, strålning som skadar skölden, och moln som stör sensorerna.
+- Fråga AN2: Syns de på stjärnkartan? Rekommendation: ja, när man har varit i systemet eller har systemradar.
 
 **M** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
+- Fråga VF1: Hur ofta händer något i världen? Rekommendation: ungefär var tionde till femtonde minut, med ett meddelande när det händer.
+- Fråga VF2: Ska två faktioner vara i krig i varje omgång? Rekommendation: ja, ett krig per omgång, där uppdrag för den ena sänker anseendet hos den andra.
 
 **N** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
+- Fråga LJ1: Görs ljuden som i dag, av spelets egen ljudmotor, eller som inspelade filer? Rekommendation: som i dag, så slipper vi licensfrågor och stora filer.
 
 **O** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
+- Fråga VE1: Ska skärmen skaka och blinka mer vid träffar? Rekommendation: lite mer, med ett val i menyn som stänger av skakningar och blixtar, av hänsyn till ljuskänsliga.
 
 **P** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
+- Fråga EK1: Förslaget om ekonomin skrevs innan den nya världen, butiken och kassorna per roll. Ska det skrivas om innan du svarar på frågorna i det? Rekommendation: ja.
 
 **Q** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
+- Fråga SV1: Ska nivåerna justeras först när ekonomin är bestämd? Rekommendation: ja, efter gruppen om ekonomi och belöningar, eftersom priserna och nivåerna hänger ihop.
 
 **R** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
+- Fråga HA1: Var handlar man varor? Rekommendation: i en egen flik i butiken, med en priskarta på stjärnkartan.
+- Fråga HA2: Delar varorna lastrum med malmen? Rekommendation: ja, samma lastrum, som byggs ut.
 
 **S** – strong model, high level – Förberedelser för onlineläget (kan göras innan network-kit är klart)
 - D-263 – Ta insidorna ur tillståndet och spara bara det som ändrats, så att hela spelet ryms i network-kits meddelanden och sparningarna blir mindre
@@ -82,6 +118,9 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - D-267 – Koppla network-kits deltagare till spelets spelare, roller och kassor, så att den som kommer tillbaka får sina igen
 - D-268 – Bestäm var besättningens sparning ligger, så att man kan fortsätta en annan dag
 - D-270 – Designskiss av skärmarna för att skapa och gå med i ett rum
+- Fråga ON1: Får gamla sparningar sluta fungera när insidorna tas ur tillståndet? Rekommendation: ja, som vid andra ändringar av sparningarna.
+- Fråga ON2: Vad händer när någon tappar anslutningen? Rekommendation: posten blir ledig direkt, rollens kassa behålls, en bordare inne teleporteras hem när väntetiden är slut, och svårigheten räknar bara de som är anslutna.
+- Fråga ON3: Var ligger besättningens sparning? Rekommendation: hos den som skapade rummet, i webbläsaren som i dag, och den går att exportera som fil.
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
 
@@ -167,7 +206,6 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | D-270 | Skärmarna för onlineläget: skapa rum, namn, länk och QR, ange kod, vem som har vilken post, väntar på värden, återanslutning, och om menyn (O) pausar för alla. Designskiss först. Agentens granskning av network-kit 2026-11-17 | Ej påbörjad |
 | F-271 | Integritetstext för onlineläget: network-kit säger att varje spels text ska nämna att Cloudflare behandlar spelarnas namn och IP-adresser (GDPR), och vad som sparas och hur länge. Critical har ingen sådan text än. Agentens granskning av network-kit 2026-11-17. Agenten är ingen jurist | Ej påbörjad |
 | F-272 | Tester med flera spelare: kör spelet mot network-kit i en lokal kopia av Cloudflares servermiljö (som network-kits egna tester), med två eller tre webbläsare, också för övertagande av värden och den som går med mitt i. Agentens granskning av network-kit 2026-11-17 | Ej påbörjad |
-| F-273 | Verktyget för backloggen (F-228) ska klara frågor under grupperna i körförslaget, med rekommendationer och "väntar på svar", om utkastet AR-023 i agentreglerna publiceras. I dag tar verktyget bara bort ID-raderna när en grupp är klar, så frågeraderna skulle bli kvar. Frågornas etiketter ("Fråga A1") följer gruppens bokstav och behöver då också bytas när grupperna får nya bokstäver. Agentens koll av agentreglerna 2026-11-17 | Väntar på att AR-023 publiceras |
 
 ## Låg
 
@@ -384,3 +422,4 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | D-227 | De två stora filerna för bordning delade efter ämne: logiken i interior.js, boarders.js, firearms.js, defences.js och loot.js runt boarding.js, och ritningen i inside-tiles.js, inside-things.js, inside-light.js och inside-hud.js runt render/boarding.js. Spelet beter sig och ser ut precis som förut (testerna och skärmbilderna är oförändrade) | 2026-11-17 |
 | D-223 | Innehållskatalog skapad ur koden: docs/catalog.md med skeppsklasser, vrak, baser, vakter, sidor, fregattens vapen, uppgraderingar, bordarnas utrustning och lås med sina viktigaste siffror. npm run catalog skriver den, och tests/catalog.test.js säger till när den inte stämmer med koden | 2026-11-17 |
 | F-228 | Verktyg för backloggen: tools/backlog.mjs (npm run backlog) markerar pågående, flyttar till klart, parkerar, ger körförslaget nya bokstäver, ger nästa lediga ID och kontrollerar att backloggen är i ordning. Testat i tests/backlog.test.js | 2026-11-17 |
+| F-273 | Verktyget för backloggen klarar frågor under grupperna i körförslaget: en grupp som blir klar tas bort med sina frågor, och en grupp som har ID kvar behåller dem. Testat i tests/backlog.test.js | 2026-11-17 |
