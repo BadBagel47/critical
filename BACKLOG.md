@@ -33,56 +33,53 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 **F** – strong model, medium level – Verktyg för backloggen
 - F-228 – Markera, flytta till klart och ge nya bokstäver med ett verktyg, så att agenterna gör färre misstag
 
-**G** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
-- D-227 – Dela upp de två stora filerna efter ämne, så att två agenter krockar mer sällan
-
-**H** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262)
+**G** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262)
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på iPad och sedan mobil i liggande format
 
-**I** – strong model, high level – Viewer på en extra skärm
+**H** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 
-**J** – strong model, high level – Sällsynta skepp
+**I** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**K** – strong model, high level – Värme
+**J** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**L** – strong model, high level – Slå ut och borda
+**K** – strong model, high level – Slå ut och borda
 - D-248 – Se över hur man slår ut ett skepp för att borda det, så att Gunner har ett tydligt sätt att göra det i stället för att skeppet exploderar
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**M** – strong model, high level – Missiler och raketer
+**L** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**N** – strong model, high level – Kontakt med andra skepp
+**M** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**O** – strong model, high level – Anomalier
+**N** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**P** – strong model, high level – En värld som förändras
+**O** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**Q** – strong model, high level – Ljudeffekter
+**P** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**R** – strong model, high level – Visuella effekter och feedback
+**Q** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 
-**S** – strong model, high level – Förslag: ekonomi och belöningar
+**R** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**T** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**S** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**U** – strong model, high level – Handel
+**T** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
@@ -97,7 +94,6 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | D-261 | Snabbare grafik. Användaren 2026-11-17: hur stort jobb är hårdvaruaccelererad grafik för dator, mobil och surfplatta, och hur mycket ger det? Agentens svar i chatten: canvas ritas redan delvis av grafikkortet. Mät först på iPad (?fps), gör sedan billiga förbättringar (spara det som inte ändras, som golvet inne och ljusens former, och rita i lägre upplösning på svagare enheter), och byt till WebGL bara om det inte räcker. Hänger ihop med B-259 | Ej påbörjad |
 | F-222 | Provspelslista med testlägen. En lista över det som är byggt men inte provspelat, med en direktlänk per sak, och adresser som startar rätt situation direkt (till exempel anfall på egen station, bas med personaldel, tom tank vid asteroider). Synpunkterna förs in i regelboken. Användaren 2026-11-16: ja | Ej påbörjad |
 | D-223 | Innehållskatalog som skapas ur koden: skeppsklasser, vakttyper, stationer, faktioner, uppgraderingar, utrustning och låsspel med sina viktigaste siffror, så att det alltid finns en överblick som stämmer. Användaren 2026-11-16: ja | Ej påbörjad |
-| D-227 | Dela upp de stora filerna för bordning (src/sim/boarding.js och src/render/boarding.js, runt 1 000 rader var) efter ämne: vakter, lås, mainframe, inredning och ritning, så att två agenter krockar mer sällan. Körs när den andra agenten är klar med insidorna. Användaren 2026-11-16: ja | Pågår 2026-11-17 |
 | F-228 | Ett verktyg för backloggen som markerar pågående, flyttar till klart och ger körförslaget nya bokstäver, så att agenterna inte skriver om backloggen för hand. Användaren 2026-11-16: ja | Ej påbörjad |
 | F-050 | Justerade nivåer för vapen, sköld, motorer och engineering så att det känns att det är svårt i början och att det ska vara värt att uppgradera | Ej påbörjad |
 
@@ -375,3 +371,4 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | F-250 | Vakter och roterande larmljus efter ytan: ett larmljus per 300 rutor golv och en vakt per 500 rutor i lockdown och larm (en per 1200 i lugnt läge), även i vrak. Regel R-1182 | 2026-11-16 |
 | F-254 | Fraktskeppets genererade insida enligt designtestet D-249: aktern med motorerna, fyra rader containrar på båda sidor om ryggraden, ett stort lastrum, servicegångar och tvärgångar, rum i fören, och vrak med en eller två containrar bortslitna. Regler R-1183 till R-1186 | 2026-11-16 |
 | D-262 | Designtest för pekskärm på iPad (F-090, P1): docs/design/prototypes/touch.html. Captains spak, tre sätt för Gunner att sikta sida vid sida (A dra på rymden, B höger spak, C tryck på målet), Engineers kraftprickar, bordning med två spakar och knappar, fasta eller flytande spakar, tre storlekar och större tryckytor. Väntar på att användaren provar på iPad | 2026-11-17 |
+| D-227 | De två stora filerna för bordning delade efter ämne: logiken i interior.js, boarders.js, firearms.js, defences.js och loot.js runt boarding.js, och ritningen i inside-tiles.js, inside-things.js, inside-light.js och inside-hud.js runt render/boarding.js. Spelet beter sig och ser ut precis som förut (testerna och skärmbilderna är oförändrade) | 2026-11-17 |
