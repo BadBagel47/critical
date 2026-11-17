@@ -5,99 +5,89 @@ Prioritet: Hög, Medel, Låg.
 
 ## Proposed runs
 
-Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först, sedan uppdragen. Butiken är byggd, så uppdragen (A) är nästa. Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
+Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först, sedan uppdragen. Butiken och standardbasen är byggda, så uppdragen (A) är nästa. Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
 
-**A** – strong model, high level – Bygga standardbasen och fraktskeppet efter designtesterna (D-217, D-249)
-- F-244 – Standardbasens utsida: kupoler, ringen som vrids till bron, lampor som visar hållningen, ST8 på en egen bas, tornplatser och stor kanon
-- F-209 – Entré och övertagande: luftslussen, ställverket som slås ut tyst eller högljutt, mainframen överst
-- F-210 – Trycket efter källaren: vakterna drar sig upp, drönare, anrop med nedräkning och förstärkning
-- F-245 – Lockdown som stilla rött filter och larm med alla lampor tända, så att lägena syns olika
-- F-246 – Runda ytterväggar inne, också när man krockar
-- F-247 – Höga föremål och stängda dörrar skymmer synfälten, kameror bara på riktiga väggar
-- F-250 – Vakter och larmljus efter ytan, så att det känns lika tätt överallt
-- F-254 – Fraktskeppets genererade insida med lastrum, ryggrad och servicegångar
-
-**B** – strong model, high level – Världen steg 4: uppdrag och story
+**A** – strong model, high level – Världen steg 4: uppdrag och story
 - D-052 – Ta fram ett förslag på en röd tråd som genereras för varje nytt spel, så att det finns ett mål utan att allt är upplevt efter första gången
 - D-073 – Ta fram ett förslag på uppdragen: sorter, vilken faktion de tillhör och hur de ändrar anseendet, högst fem samtidigt, tidsgräns mot högre lön, och vad som händer vid misslyckande
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 - D-257 – Smuggeluppdrag från skumt folk på baser, som man pratar med
 
-**C** – strong model, medium level – Meddelanden från skeppet
+**B** – strong model, medium level – Meddelanden från skeppet
 - D-256 – Inventera alla meddelanden som kan dyka upp, när, för vem och var
 - D-187 – Se över hur spelet och skeppet visar meddelanden, så att det viktiga syns först
 - F-255 – Visa Gunner när dartsen är hela igen, genom skeppets meddelanden
 
 
-**D** – strong model, medium level – Provspelslista med testlägen
+**C** – strong model, medium level – Provspelslista med testlägen
 - F-222 – En lista över det som väntar på provspel, med länkar som startar rätt situation direkt, så att varje sak går att prova på några minuter
 
-**E** – strong model, medium level – Förfina rollerna
+**D** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 - F-236 – Primära roller och tillfälligt övertagande: den som lämnar skeppet lämnar sina roller lediga, de kvar kan ta en av dem, och ägaren får tillbaka den direkt
 - F-235 – Bordarnas utrustning per roll, så att varje roll köper och har sin egen
 
-**F** – strong model, medium level – Innehållskatalog
+**E** – strong model, medium level – Innehållskatalog
 - D-223 – En lista ur koden över allt som finns i spelet med sina siffror, så att överblicken alltid stämmer
 
-**G** – strong model, medium level – Verktyg för backloggen
+**F** – strong model, medium level – Verktyg för backloggen
 - F-228 – Markera, flytta till klart och ge nya bokstäver med ett verktyg, så att agenterna gör färre misstag
 
-**H** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
+**G** – strong model, high level – Dela upp bordningsfilerna (när insidorna är klara)
 - D-227 – Dela upp de två stora filerna efter ämne, så att två agenter krockar mer sällan
 
-**I** – strong model, high level – Pekskärm
+**H** – strong model, high level – Pekskärm
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på mobil och surfplatta i liggande format
 
-**J** – strong model, high level – Viewer på en extra skärm
+**I** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 
-**K** – strong model, high level – Sällsynta skepp
+**J** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 
-**L** – strong model, high level – Värme
+**K** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 
-**M** – strong model, high level – Slå ut och borda
+**L** – strong model, high level – Slå ut och borda
 - D-248 – Se över hur man slår ut ett skepp för att borda det, så att Gunner har ett tydligt sätt att göra det i stället för att skeppet exploderar
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 
-**N** – strong model, high level – Missiler och raketer
+**M** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 
-**O** – strong model, high level – Kontakt med andra skepp
+**N** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 
-**P** – strong model, high level – Anomalier
+**O** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 
-**Q** – strong model, high level – En värld som förändras
+**P** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 
-**R** – strong model, high level – Ljudeffekter
+**Q** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 
-**S** – strong model, high level – Visuella effekter och feedback
+**R** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 
-**T** – strong model, high level – Förslag: ekonomi och belöningar
+**S** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 
-**U** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**T** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 
-**V** – strong model, high level – Handel
+**U** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
 
-Väntar på användaren: förslagen D-187 (meddelanden), D-193 (permanenta prylar), D-186 (skeppets dator) och de kvarvarande frågorna i D-172 (straff i låsspel). F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
+Väntar på användaren: frågorna SB1 och SB2 om standardbasen (se Nästa steg i HANDOFF.md), förslagen D-187 (meddelanden), D-193 (permanenta prylar), D-186 (skeppets dator) och de kvarvarande frågorna i D-172 (straff i låsspel). F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
 
 ## Hög
 
@@ -148,15 +138,7 @@ Väntar på användaren: förslagen D-187 (meddelanden), D-193 (permanenta pryla
 | F-103 | Stora baser med två våningar: 1,5 gånger större än dagens stationer, med annan design, mer vapen och starkare sköld till försvar. Dagens storlek är bra för små stationer. Design visas först Besked 2026-11-16: ersatt av standardbasen i tre våningar och en större utsida som byggs av samma data som insidan, se docs/proposal-bases.md, F-208 och D-217 | Ersatt |
 | D-104 | Utredning om hur rewards, priser, ekonomi, händelser, reputation etc hänger ihop och påverkar världen och skeppet Förslaget är framtaget 2026-11-15 i docs/proposal-economy.md och väntar på användarens svar på frågorna där. Mätt 2026-11-16 med den simulerade spelaren (docs/economy.md): ensam i första sektorn ger en timme ungefär 8 700 krediter, mest från vrak, och de tolv vanligaste uppgraderingarna går att köpa inom 16 minuter. Vraken ger ungefär 45 gånger mer bränsle än flygningen drar, så bränslet betyder i praktiken ingenting så länge det finns vrak | Väntar på användaren |
 | F-208 | Standardbasen (docs/proposal-bases.md avsnitt 3): genereras varje gång, tre våningar med var sin stil, ljus och ren mitt med entré och det lagliga (services, shipyard om basen har det, armory, bar), smutsig industri med dockor och ett stort lastutrymme med vakter i källaren, kall kommandodel med mainframen överst. Föremål har samma form som i rymden. Öppna ytor med skydd, inga för små rum, flera vägar att välja, rum som fyller ut. Bränsletunnor bara där de passar. Ersätter D-072:s två våningar och F-103 | Ej påbörjad |
-| F-209 | Entré och övertagande i standardbasen: luftsluss i mitten där båda dörrarna aldrig är öppna samtidigt, styrd med knappar. Övertagandet kräver något i källaren först (förslag: slå ut strömmen) och sedan mainframen överst. Efter källaren går det inte på tid, läget skärps steg för steg. Besked 2026-11-16: strömmen slås ut tyst vid ställverket eller högljutt genom att spränga det (R-1167) | Pågår 2026-11-16 |
-| F-210 | Tryck under bordning: drönare fylls på vid larm och vakter kommer med ett skepp som dockar, så att det finns ett hot även när vakterna är nedskjutna. Förstärkningsskeppet anfaller inte ett dockat skepp som ingen sitter i. Förslag: drönarhangar och kommunikationsrum som går att slå ut, synlig nedräkning, inget dyker upp från ingenstans. Besked 2026-11-16: stegen efter källaren står i R-1168 (vakterna drar sig upp, drönare, anrop med nedräkning som kommunikationsrummet kan stoppa, förstärkning) | Pågår 2026-11-16 |
-| F-244 | Standardbasens utsida enligt designtestet D-217 (docs/design/prototypes/standard-base.html): kupoler, sluten skiva, fyra portar och lastarmar, en ring som vrids till bron, en bro från luftslussen, fönster som slumpas vid ankomst, lampor som visar hållningen, blåturkost på en egen bas, ST8 på en övertagen bas, fri vinkel utanpå, tio tornplatser och en stor kanon som köps. Regler R-1152 till R-1164 och R-1169 | Pågår 2026-11-16 |
-| F-245 | Lockdown och larm ska synas olika: lockdown som ett stilla rött filter utan roterande ljus, larm med roterande ljus och blink, och fönstren utanpå stilla röda i lockdown och långsamt pulserande vid larm. Regler R-1149 till R-1151. Vid larm tänds alla lampor fullt (R-1188) | Pågår 2026-11-16 |
-| F-246 | Runda ytterväggar inne i standardbasen, både i bilden och när man går och krockar, så att golvet ute vid väggen går att nå. Regel R-1165 | Pågår 2026-11-16 |
-| F-247 | Höga föremål och stängda dörrar skymmer också synfälten, och kameror sitter bara på riktiga väggar. Regel R-1166 | Pågår 2026-11-16 |
 | D-248 | Se över hur man slår ut ett skepp för att borda det. Användaren 2026-11-16: i dag exploderar skeppen. Hör till F-081 och R-590, R-591 | Ej påbörjad |
-| F-250 | Vakter och roterande larmljus efter ytan i spelet, så att det känns lika tätt överallt: larmljusen jämnt i gångar och lastrum. Regel R-1182, siffrorna sätts vid provspel | Pågår 2026-11-16 |
-| F-254 | Fraktskeppets insida enligt designtestet D-249 (docs/design/prototypes/freighter.html): genererad med samma form som skeppet, minst ett stort lastrum, ryggraden, servicegångar längs skrovet och tvärgångar, rum vid ändarna, och vrak med bortslitna containrar. Regler R-1183 till R-1186. Gäller både vrak och utslagna skepp (F-081) | Pågår 2026-11-16 |
 | B-251 | Webbläsartestet "the boarder walks" misslyckas ibland hos GitHub men inte lokalt: 2026-11-16 föll det två gånger i rad på en ändring som bara rörde dokument och gick igenom tredje gången. Troligen tidsberoende eller slump i vrakets planlösning | Ej påbörjad |
 | F-211 | Skeppet medan man bordar: vapen rakt fram skjuter inte dockat, försvar dockad kräver köpta kanontorn. Skeppet får lämna dockan men inte hoppa så länge någon är kvar i basen, och ingen teleporteras tillbaka. Vid nästan slut skrov backar det ut om en spelare i skeppet väljer det, eller av sig självt om datorn sköter Captain, och kommer tillbaka när någon kallar från luftslussen. Annars ligger det kvar under dockningsskölden. Ersätter D-043. Datorns del hänger ihop med D-186 | Ej påbörjad |
 | F-212 | Baserna anpassas efter antalet spelare, så att det inte blir för svårt ensam: vakter, drönare, tid till förstärkning, hur fort läget skärps och bossens liv. Förslag på nivåer i docs/proposal-bases.md, siffrorna sätts vid provspel | Ej påbörjad |
@@ -383,3 +365,11 @@ Väntar på användaren: förslagen D-187 (meddelanden), D-193 (permanenta pryla
 | D-218 | Dockningsringen som vrids: visat i designtestet för D-217, där skeppet dockar vid en ledig port och ringen vrids ett kvarts varv till bron (R-1154) | 2026-11-16 |
 | D-249 | Designtest av fraktskeppets insida: docs/design/prototypes/freighter.html, godkänt 2026-11-16, besluten i R-1182 till R-1188, bygget i F-254 och F-250 | 2026-11-16 |
 | F-258 | Större kartor efter kartsimuleringen (artefakten "Kartsimulering Critical ST8", användarens värden 2026-11-16): 25, 40 eller 55 system (R-1196), 40 procent bebodda (R-1197), piraterna en femtedel av de bebodda (R-1198), slutet minst 5, 6 eller 7 hopp bort (R-1199), systemen 3000, 4000 eller 5000 från mitten till kanten (R-1200), och varv på ungefär en fjärdedel av varje grupperings baser, också neutrala och piraternas (R-1194). Spridning: tomma system ska inte ligga i klumpar eller bilda återvändsgränder utan något i, och vägen till slutet ska inte bli en lång svans av tomma system. I simuleringen väljs de tomma ett i taget och undviker varandra, och högst ett tomt system i rad på vägen till slutet. Spridningen ska gälla spelet, och varje gruppering har minst ett varv (användaren 2026-11-16, K8). Större system påverkar flygtider, bränsle och ekonomibladet. Användaren 2026-11-16 Byggd 2026-11-16. Två baser i samma system får inte längre samma namn (R-1204). | 2026-11-16 |
+| F-244 | Standardbasens utsida enligt designtestet D-217: tre kupoler med ljus och skugga från stjärnan, sluten skiva ut till ringen, fyra portar på diagonalerna, ringen som vrids ett kvarts varv åt gången till bron, bron från luftslussen, lastarmar för fraktskepp, varvets byggdocka, fönster som slumpas vid ankomst, 48 lampor som visar hållningen, ST8 på en egen bas, fri vinkel utanpå, tio tornplatser och en stor kanon som köps. Regler R-1152 till R-1162, R-1164, R-1169 och R-1208. Skölden i R-1163 köps fortfarande för sig (fråga SB1) | 2026-11-16 |
+| F-209 | Entré och övertagande i standardbasen: tre våningar, luftsluss med knappar där båda dörrarna aldrig är öppna samtidigt, strömmen slås ut tyst vid ställverket eller högljutt med sprängladdning eller granat, och först därefter ger mainframen överst upp basen. Regler R-1155, R-1167, R-563 och R-1205 | 2026-11-16 |
+| F-210 | Trycket efter källaren: vakterna drar sig upp mot vägarna till toppen, drönare från hangaren (som går att slå ut), anrop om hjälp med synlig nedräkning som kommunikationsrummet stoppar, och ett skepp med fler vakter som dockar vid en lastarm. Regel R-1168. Takten är startvärden i balance.js | 2026-11-16 |
+| F-245 | Lockdown och larm syns olika: lockdown är dämpat med stilla rött filter och stilla röda dörrlampor (gult på en egen bas), larm har alla lampor tända, roterande ljus och dörrlampor som blinkar en gång i sekunden. Fönstren utanpå lyser stilla rött i lockdown och pulserar vid larm. Regler R-1149 till R-1151 och R-1188 | 2026-11-16 |
+| F-246 | Runda ytterväggar inne i standardbasen, både i bilden och när man går, skjuter och tittar. Regel R-1165 | 2026-11-16 |
+| F-247 | Höga föremål och stängda dörrar skymmer synfälten, och kameror sitter bara på riktiga väggar. Regel R-1166 | 2026-11-16 |
+| F-250 | Vakter och roterande larmljus efter ytan: ett larmljus per 300 rutor golv och en vakt per 500 rutor i lockdown och larm (en per 1200 i lugnt läge), även i vrak. Regel R-1182 | 2026-11-16 |
+| F-254 | Fraktskeppets genererade insida enligt designtestet D-249: aktern med motorerna, fyra rader containrar på båda sidor om ryggraden, ett stort lastrum, servicegångar och tvärgångar, rum i fören, och vrak med en eller två containrar bortslitna. Regler R-1183 till R-1186 | 2026-11-16 |

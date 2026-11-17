@@ -1,6 +1,6 @@
 # Standardbaser, fristaden och varvet
 
-**Plan, inte byggt.** Skriven 2026-11-16 efter en lång genomgång med användaren i chatten. Det mesta här är besked från användaren och står som **Bestämt**. Det som är agentens förslag står som **Förslag**. Öppna frågor står sist.
+**Plan. Standardbasen (avsnitt 3, 4 om trycket, 8 och 9) är byggd 2026-11-16, se regelboken. Fristaden är byggd sedan tidigare. Varvet som köps, skeppet medan man bordar, anpassningen efter antal spelare och piraternas slutbas är inte byggda.** Skriven 2026-11-16 efter en lång genomgång med användaren i chatten. Det mesta här är besked från användaren och står som **Bestämt**. Det som är agentens förslag står som **Förslag**. Öppna frågor står sist.
 
 Ett ja här är ett ja till designen, inte klartecken att bygga (se Arbetssätt i HANDOFF.md). Uppgifterna ligger i BACKLOG.md.
 

@@ -47,6 +47,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 - En station som har blivit fientlig av träffar är det inte för gott, utan anseendet kan återtas (R-1190). I dag är den fientlig för gott efter åtta träffar.
 - Medan besättningen är inne anfalls det dockade skeppet aldrig när en spelar, och sällan när två eller tre spelar (R-1191). I dag anfaller bounty hunters det dockade skeppet efter ungefär en minut.
 - Anseendet förbättras inte av sig självt med tiden. I dag gör det det, fram till avvaktande, tills uppdragen finns.
+- Medel och fullt försvar ger också sköld (R-1163). I dag köps skölden för sig, och bara tornen följer försvarsnivån (R-1208). Fråga SB1 till användaren.
 - Kanontorn köps, och skeppet börjar med en fast kanon rakt fram. I dag har skeppet ett torn i nosen och torn på vingarna.
 
 ## Bränsle och färd
