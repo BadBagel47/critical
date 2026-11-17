@@ -175,3 +175,16 @@ test('the alarm raises the pulse without any alarm sounds, and keeps changing', 
   assert.ok(new Set(bars.map((b) => JSON.stringify(b))).size >= 20);
   assert.ok(PIECES.alarm.bpm > PIECES.boarding.bpm);
 });
+
+test('the title of set A has melodies of its own besides the theme, so it does not just repeat one phrase', () => {
+  const c = { colour: colourOf(0), theme: SETS.A.theme };
+  const melody = (from, bars) =>
+    Array.from({ length: bars * BAR }, (_, s) => PIECES.title.notes(from * BAR + s, c))
+      .flat()
+      .filter((n) => n.v === 'lead' || n.v === 'keys')
+      .map((n) => n.m)
+      .join(' ');
+  const parts = [4, 8, 12, 16, 32].map((b) => melody(b, 4));
+  assert.ok(parts.every(Boolean), 'every melodic part plays something');
+  assert.equal(new Set(parts).size, parts.length, 'the theme, the answer, the bridge and the ending all differ');
+});
