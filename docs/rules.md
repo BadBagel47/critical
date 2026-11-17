@@ -47,7 +47,6 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 - En station som har blivit fientlig av träffar är det inte för gott, utan anseendet kan återtas (R-1190). I dag är den fientlig för gott efter åtta träffar.
 - Medan besättningen är inne anfalls det dockade skeppet aldrig när en spelar, och sällan när två eller tre spelar (R-1191). I dag anfaller bounty hunters det dockade skeppet efter ungefär en minut.
 - Anseendet förbättras inte av sig självt med tiden. I dag gör det det, fram till avvaktande, tills uppdragen finns.
-- Medel och fullt försvar ger också sköld (R-1163). I dag köps skölden för sig, och bara tornen följer försvarsnivån (R-1208). Fråga SB1 till användaren.
 - Kanontorn köps, och skeppet börjar med en fast kanon rakt fram. I dag har skeppet ett torn i nosen och torn på vingarna.
 
 ## Bränsle och färd
@@ -421,7 +420,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1160 | En egen bas lyser blåturkos utanpå, så att den inte går att ta för en vänlig. Det som är målat på en egen bas har besättningens turkos. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
 | R-1161 | När besättningen har tagit en bas målas ST8 på mittens kupol, mellan två portar på andra sidan från bron. Andra baser har inget namn målat. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
 | R-1162 | Utanpå står varje bas vriden i en slumpad vinkel. Inne vrids planen bara i kvarts varv, och bron och luftslussen ska ändå passa ihop. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
-| R-1163 | Basen har tio platser för kanontorn: fyra på källaren, fyra på mittens kant mellan portarna och två tunga på toppen. Lätt försvar ger två torn, medel sex och sköld, fullt alla tio och en starkare sköld. | bestämd | Användaren 2026-11-16 (designtest D-217) | – |
+| R-1163 | Basen har tio platser för kanontorn: fyra på källaren, fyra på mittens kant mellan portarna och två tunga på toppen. Lätt försvar ger två torn, medel sex och sköld, fullt alla tio och en starkare sköld. | ersatt av: R-1208 | Användaren 2026-11-16 (designtest D-217) | – |
 | R-1164 | En stor kanon kan köpas för sig, oberoende av försvarsnivån, och står mitt på toppens kupol. Utan den är platsen en stängd lucka. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
 | R-1165 | Ytterväggarna inne följer basens runda form, både i bilden och när man går och krockar. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
 | R-1166 | Höga föremål och stängda dörrar skymmer också synfälten, och kameror sitter bara på riktiga väggar, inte i dörröppningar eller bakom höga föremål. | byggd | Användaren 2026-11-16 (designtest D-217) | tests/base.test.js |
@@ -736,7 +735,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1205 | Mellan två våningar finns alltid tre vägar: hissen genom säkerhetskontrollen, som hörs, trappan från en servicegång, som är tyst, och en stege bakom en larmad dörr. | byggd | Designtest D-217 (godkänt 2026-11-16) | tests/base.test.js |
 | R-1206 | Insidan av en Gunboat är 38 gånger 21 rutor och av ett okänt skrov 54 gånger 25. | byggd | HANDOFF beslut 2026-11-14 (R-485, utan fraktskeppet och stationen) | tests/layout.test.js |
 | R-1207 | En bas som inte är besättningens har alltid minst de fyra kanontornen på källaren, som den alltid har haft, så att den kan försvara sig. Besättningens egen bas har bara de torn som är köpta. | förslag | Agentens tolkning av R-1163 och R-159 2026-11-16 (F-244) | – |
-| R-1208 | Kanontornen på basens tio platser följer köpt försvar: inget köpt ger inga torn, sedan två, sex och alla tio (delen av R-1163 som gäller tornen). Skölden köps fortfarande för sig. | byggd | Användaren 2026-11-16 (designtest D-217, R-1163) | tests/base.test.js |
+| R-1208 | Kanontornen på basens tio platser följer köpt försvar: inget köpt ger inga torn, sedan två, sex och alla tio (delen av R-1163 som gäller tornen). Skölden köps fortfarande för sig. | byggd | Användaren 2026-11-16 (designtest D-217, R-1163); Användaren 2026-11-17 (SB1) | tests/base.test.js |
 | R-1189 | Ingen markering visar vägen ut, varken spår i golvet eller pilar. | bestämd | Användaren 2026-11-16 (D-216 skippad) | – |
 
 ## Lås och inbrott

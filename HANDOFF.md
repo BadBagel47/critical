@@ -34,9 +34,8 @@ Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra för
 
 ## Nästa steg
 
-1. Användaren provspelar standardbasen och fraktskeppet. Öppna frågor (2026-11-16):
-   - SB1: R-1163 säger att medel och fullt försvar också ger sköld. I dag köps skölden för sig, som förut, och bara tornen följer försvarsnivån (R-1208). Ska skölden följa med nivån? Agentens rekommendation: köp den för sig som i dag, så att varje köp gör en sak.
-   - SB2: R-1207 (agentens tolkning, förslag): andra sidors baser har alltid minst de fyra tornen på källaren, som stationerna alltid har haft, medan besättningens egen bas bara har köpta torn. Ska det gälla?
+1. Användaren provspelar standardbasen och fraktskeppet. Öppen fråga:
+   - SB2 (öppen 2026-11-17): andra sidors baser har i dag alltid de fyra tornen på källaren (R-1207, förslag), medan en bas som besättningen tar har de torn den hade. Användaren vill att man ska bygga upp försvaret själv, och undrar hur det blir logiskt. Agentens förslag väntar på svar, se chatten 2026-11-17 och nedan under Decisions.
 2. Nästa körning är grupp A i BACKLOG.md (uppdrag och story). Starta gärna en ny session för varje körning. Allt som behövs står i repot.
 3. Användaren fortsätter provspela och ger synpunkter.
 4. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073) och eskortskepp (D-071). Baserna (D-072) har en plan i docs/proposal-bases.md, med designuppgifter som görs före bygge.
@@ -157,6 +156,7 @@ Arbetssätt
 - Regelboken (2026-11-16): alla spelregler ska samlas i docs/rules.md med nummer, status och källa, och kontrolleras mot varje nytt beslut. Projektregeln står i AGENTS.md. Regelboken finns sedan 2026-11-16 i docs/rules.md.
 
 Spelet
+- Basens sköld (2026-11-17, SB1, användaren valde rekommendationen): skölden köps för sig i mainframen som förut, och bara kanontornen följer försvarsnivån (R-1208). Delen av R-1163 som ger sköld med medel och fullt försvar gäller inte.
 - Bränsle och färd (2026-11-16, användaren sa ja till rekommendationerna i docs/proposal-world.md steg 2): överladdningen av vapen och sköld är borttagen, en träff på skölden nollställer boosten och ett hopp som laddas, bränslet är gratis bara på den egna varvsstationen, och solcellerna tar en slot och fyller ett hopp på ungefär fem minuter.
 - Namn: Critical ST8.
 - Upp till tre spelare online. Går också att spela ensam, och då börjar spelaren som Captain.
