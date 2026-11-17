@@ -1,0 +1,174 @@
+{
+ "about": "Röstprov D-280 (2026-11-17): en inspelad story för uppdragstestaren, inte för spelet. Ta bort den här mappen för att ta bort rösterna.",
+ "story": {
+  "premise": "convoy",
+  "size": "medium",
+  "seed": 4,
+  "choices": "den första vägen vid båda valen"
+ },
+ "model": "eleven_v4",
+ "voices": {
+  "narrator": "Berättaren (Jax)",
+  "contact": "Mara Quint, kontakten (helenrzz)",
+  "villain": "Vesna Sixfingers Kade, skurken (Brittney)",
+  "faction": "The Drifters (Dominic)"
+ },
+ "clips": [
+  {
+   "file": "01-a.mp3",
+   "step": 0,
+   "who": "narrator",
+   "text": "Mara Quint, an old pilot, is waiting at Low Haven. Eleven ships left port together as the Kestrel convoy... None of them arrived. Mara lost everything she owned on the third ship, and has been asking questions ever since."
+  },
+  {
+   "file": "01-b.mp3",
+   "step": 0,
+   "who": "contact",
+   "text": "The pirates were waiting at the EXACT jump point. Nobody guesses that. Somebody SOLD it! Please... I can't do this alone. And nobody else will help."
+  },
+  {
+   "file": "01-c.mp3",
+   "step": 0,
+   "who": "narrator",
+   "text": "The Tally Ho went down in Glass Haven. What the crew wants... is still aboard."
+  },
+  {
+   "file": "02-a.mp3",
+   "step": 1,
+   "who": "narrator",
+   "text": "The Tally Ho has been picked over by scavengers... but not well. Every dock worker has a theory about the convoy. None of them are good. Whatever this is, it is being broadcast from Low Strand."
+  },
+  {
+   "file": "02-b.mp3",
+   "step": 1,
+   "who": "contact",
+   "text": "Did you find anything? Sorry! Sorry. I'll stop asking. Call me when you do."
+  },
+  {
+   "file": "03-a.mp3",
+   "step": 2,
+   "who": "narrator",
+   "text": "The sensors sweep Low Strand twice before they find a faint distress beacon, near the edge, where the haze begins. Under the static, a recorded voice repeats the same thing... The convoy codes were not cracked. They were copied. Whole. The night before the convoy left. The Kestrel, a courier, is out in Low Ridge."
+  },
+  {
+   "file": "04-a.mp3",
+   "step": 3,
+   "who": "narrator",
+   "text": "The crew of the Kestrel seals the doors and waits for the boarders. A memorial board by the docks lists the crews of the convoy. Someone has left flowers under the third ship. The crew now has a ledger... and more than one side wants it."
+  },
+  {
+   "file": "05-a.mp3",
+   "step": 4,
+   "who": "narrator",
+   "text": "The Charter and the Drifters both want the ledger, and both have sent someone to Low Hold to say so. Whoever gets it will owe the crew. The other... will remember. Two Charter clerks stop talking when the crew walks past. The word convoy hangs in the air behind them."
+  },
+  {
+   "file": "05-b.mp3",
+   "step": 4,
+   "who": "narrator",
+   "text": "They give it to the Charter. And Low Post, in Low Ridge, has a pay chit for sale... but only for as long as this lasts."
+  },
+  {
+   "file": "05-c.mp3",
+   "step": 4,
+   "who": "contact",
+   "text": "Thank you! Oh, thank you. They'll remember this. So will I."
+  },
+  {
+   "file": "05-d.mp3",
+   "step": 4,
+   "who": "faction",
+   "text": "The Drifters will remember... who you sided with."
+  },
+  {
+   "file": "06-a.mp3",
+   "step": 5,
+   "who": "narrator",
+   "text": "The trader at Low Post has a pay chit in the back, and makes a big show of not wanting to sell. There is a note folded inside the wrapping. It says... The pirates did not keep what they took. They sold it to both sides. Someone wants the factions at each other's throats. Mara Quint, at Deep Post in Deep Gate, is waiting for it."
+  },
+  {
+   "file": "07-a.mp3",
+   "step": 6,
+   "who": "narrator",
+   "text": "Mara turns the pay chit over once... and laughs, without any joy."
+  },
+  {
+   "file": "07-b.mp3",
+   "step": 6,
+   "who": "contact",
+   "text": "It's a copy. A GOOD one. The real one never left the Lantern!"
+  },
+  {
+   "file": "07-c.mp3",
+   "step": 6,
+   "who": "narrator",
+   "text": "The Lantern, a courier, is out in Deep Ridge."
+  },
+  {
+   "file": "07-d.mp3",
+   "step": 6,
+   "who": "villain",
+   "text": "Little crew... big questions. I like you. That's going to make this SO sad."
+  },
+  {
+   "file": "08-a.mp3",
+   "step": 7,
+   "who": "narrator",
+   "text": "The crew of the Lantern seals the doors and waits for the boarders. The prisoner they find in the hold has only one thing to say... The convoy was inspected twice before it left. The second inspection was never logged. The crew now has a sealed crate. And once again, more than one side wants it."
+  },
+  {
+   "file": "09-a.mp3",
+   "step": 8,
+   "who": "narrator",
+   "text": "The Charter and the Drifters both want the sealed crate, and both have sent someone to Tin Hold. Again. Charter and Warden patrols are watching each other now... not the pirates."
+  },
+  {
+   "file": "09-b.mp3",
+   "step": 8,
+   "who": "narrator",
+   "text": "They give it to the Charter. And the Rust Gang is out in Hollow Ridge."
+  },
+  {
+   "file": "09-c.mp3",
+   "step": 8,
+   "who": "contact",
+   "text": "Good! Good. That buys us some friends, at least."
+  },
+  {
+   "file": "09-d.mp3",
+   "step": 8,
+   "who": "faction",
+   "text": "That is twice now. The Drifters do not forget."
+  },
+  {
+   "file": "10-a.mp3",
+   "step": 9,
+   "who": "narrator",
+   "text": "The Rust Gang has been waiting for someone to come asking... and they are not alone. In the debris, a black box is still recording. The last thing on it... The money went through Silent Pier. And it was signed with one name. Tamsin Quint. There is one more name: Wren Brant, at Bright Outpost in Bright Pier."
+  },
+  {
+   "file": "11-a.mp3",
+   "step": 10,
+   "who": "narrator",
+   "text": "Wren Brant, a dock chief, meets them by the cargo lifts at Bright Outpost, where the noise covers everything. Word is out that someone is asking about the convoy. The bar goes quiet when the crew walks in. The star map that opens the way to the end lies in the vault of Broken Exchange, in Broken Strand."
+  },
+  {
+   "file": "11-b.mp3",
+   "step": 10,
+   "who": "contact",
+   "text": "This is it... isn't it? Come back. ALL of you."
+  },
+  {
+   "file": "12-a.mp3",
+   "step": 11,
+   "who": "narrator",
+   "text": "The vault of Broken Exchange lies behind three decks of pirates, and every single one of them knows the crew is coming. Beside the star map lies the rest of the story. Tamsin Quint... a Warden customs officer... copied the convoy codes, to start a war between the factions, and get rich on it. And Vesna Sixfingers Kade paid for all of it. With the map, the way to Narrow Ford is open."
+  },
+  {
+   "file": "12-b.mp3",
+   "step": 11,
+   "who": "villain",
+   "text": "So now you know. Congratulations! Come up... and tell me ALL about it."
+  }
+ ]
+}
