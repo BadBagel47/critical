@@ -180,24 +180,24 @@ export const VOICES = {
     worried: {
       ask: "Please. I can't do this alone, and nobody else will help.",
       early: "Did you find anything? Sorry. I'll stop asking. Call me when you do.",
-      good: "Thank you. They'll remember this. So will I.",
-      bad: "You gave it to them? I hope you know what you're doing.",
+      good: ["Thank you. They'll remember this. So will I.", 'Good. Good. That buys us some friends, at least.'],
+      bad: ["You gave it to them? I hope you know what you're doing.", 'Again? Please tell me you have a plan.'],
       last: "This is it, isn't it? Come back. All of you.",
       betray: "They had my family. I'm sorry. I'm so sorry.",
     },
     gruff: {
       ask: "I'm not asking for pity. I am asking for a name.",
       early: "Don't call me with nothing. Call me with a name.",
-      good: 'Right call. Keep going.',
-      bad: "That wasn't yours to give away.",
+      good: ['Right call. Keep going.', 'Twice now. I owe you a drink.'],
+      bad: ["That wasn't yours to give away.", "You're making this harder than it needs to be."],
       last: 'End it.',
       betray: "You'd have done the same. Don't look at me like that.",
     },
     dry: {
       ask: "I'd do it myself, but I'd like to live.",
       early: 'Still alive? Good. That puts you ahead of the last crew I hired.',
-      good: 'Look at you, making friends.',
-      bad: 'Bold. Stupid, maybe, but bold.',
+      good: ['Look at you, making friends.', 'Careful. People will start to trust you.'],
+      bad: ['Bold. Stupid, maybe, but bold.', 'Well. That should keep things interesting.'],
       last: "If you die in there, I'm not paying.",
       betray: 'Nothing personal. It never is.',
     },
@@ -217,7 +217,11 @@ export const VOICES = {
     weary: { meet: "Turn around. I don't want to do this either." },
   },
 };
-const SNUBBED = ['{side} will remember who you sided with.', 'Noted. {side} has a long memory.'];
+const SNUBBED = [
+  '{side} will remember who you sided with.',
+  'Noted. {side} has a long memory.',
+  'That is twice now. {side} does not forget.',
+];
 const COOLED = [
   'The {short} dock officer at {base} knows what the crew did with {lost}, and makes them wait.',
   'Nobody from {side} at {base} will look the crew in the eye. Word of {lost} has got here first.',
@@ -424,6 +428,8 @@ export function writeTexts(story, sectors) {
   };
   // The latest choice: the side that was left out of it is cool to the crew at its bases from then on.
   let lastChoice = null;
+  // How many choices came before this one, so that the second choice gets lines of its own.
+  let choices = 0;
   let villainSpoke = false;
   let rivalSpoke = false;
   const firstTwist = story.steps.findIndex((st) => st.twist);
@@ -490,9 +496,12 @@ export function writeTexts(story, sectors) {
             `-${story.standing.loss} with ${side(st.sides[1 - j])}. ${lead(st.gives[j], b, k)}`,
           radio: [
             ...(story.contactOut > i
-              ? [{ from: cast.contact.name, text: `"${mine ? contactVoice.good : contactVoice.bad}"` }]
+              ? [{ from: cast.contact.name, text: `"${vary(mine ? contactVoice.good : contactVoice.bad, choices)}"` }]
               : []),
-            { from: side(st.sides[1 - j]), text: `"${fill(vary(SNUBBED, k + j), { side: side(st.sides[1 - j]) })}"` },
+            {
+              from: side(st.sides[1 - j]),
+              text: `"${fill(SNUBBED[(choices + (choices ? 1 : 0)) % SNUBBED.length], { side: side(st.sides[1 - j]) })}"`,
+            },
           ],
         };
       });
@@ -526,7 +535,10 @@ export function writeTexts(story, sectors) {
   story.steps.forEach((st, i) => {
     if (st.branches) st.branches.forEach((b, j) => write(b, i, j));
     else write(st, i, 0);
-    if (st.sort === 'choose') lastChoice = st;
+    if (st.sort === 'choose') {
+      lastChoice = st;
+      choices++;
+    }
   });
   story.reveal = `${culpritFull} ${premise.methods[truth.method].reveal} ${fill(MOTIVES[truth.motive].reveal, common)}.`;
 }

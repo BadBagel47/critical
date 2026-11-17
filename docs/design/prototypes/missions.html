@@ -60,6 +60,9 @@ button.ghost{background:var(--soft);color:var(--ink);border-color:var(--rule)}
 .log ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:4px}
 details{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:10px 14px}
 summary{cursor:pointer;font-weight:800}
+.voicebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.listen{align-self:flex-start;min-height:36px;font-size:.9rem}
+.entry.speaking{outline:3px solid #d68910;outline-offset:6px;border-radius:6px}
 .fork{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
 .fork .card{border-style:dashed;border-left-style:solid}
 .fork-label{font-size:.8rem;font-weight:800;color:var(--muted)}
@@ -242,9 +245,9 @@ function drawRead() {
   const path = pathNow();
   // The side the crew gave the item to at each choice on this way through.
   const gaveTo = {};
-  let html = '<div class="story">';
+  let html = '<div class="voicebar" id="voiceBar"></div><div class="story">';
   for (const st of path) {
-    html += `<div class="entry"><span class="eyebrow">${st.index + 1}. ${ACT_NAMES[st.act]}</span>${sceneOf(st)}`;
+    html += `<div class="entry" data-step="${st.index}"><span class="eyebrow">${st.index + 1}. ${ACT_NAMES[st.act]}</span>${sceneOf(st)}`;
     if (st.cooled && gaveTo[st.cooled.choice] !== st.cooled.side) html += `<div class="scene"><p>${esc(st.cooled.text)}</p></div>`;
     if (st.options) {
       const k = picked[st.index] || 0;
@@ -265,6 +268,57 @@ function drawRead() {
       draw();
     }),
   );
+  addVoices();
+}
+
+// The voice test (D-280): a recorded story in its own folder. Without the folder this does nothing.
+let voices = null;
+import('./voices/player.js')
+  .then((m) => {
+    voices = m;
+    if (current) addVoices();
+  })
+  .catch(() => {});
+async function addVoices() {
+  const box = $('voiceBar');
+  if (!voices || !box) return;
+  const r = await voices.recordingFor(current.story, picked).catch(() => null);
+  if (!r) return;
+  if (!r.match) {
+    box.innerHTML = `<button id="voiceGo" class="ghost">Lyssna på röstprovet</button><span class="muted">En inspelad story med berättare och röster för karaktärerna.</span>`;
+    $('voiceGo').onclick = () => {
+      const st = r.manifest.story;
+      $('size').value = st.size;
+      $('seed').value = st.seed;
+      $('premise').value = st.premise;
+      make();
+    };
+    return;
+  }
+  if (!r.onPath) {
+    box.innerHTML = '<span class="muted">Röstprovet är inspelat för det första alternativet vid båda valen. Välj det för att lyssna.</span>';
+    return;
+  }
+  box.innerHTML = `<button id="voicePlay">▶ Spela hela storyn</button><button id="voiceStop" class="ghost">Stoppa</button><span class="muted">${Object.values(r.manifest.voices).map(esc).join(' · ')}</span>`;
+  const mark = (c) => {
+    document.querySelectorAll('#read .entry').forEach((e) => e.classList.toggle('speaking', !!c && Number(e.dataset.step) === c.step));
+    const on = c && document.querySelector(`#read .entry[data-step="${c.step}"]`);
+    if (on) on.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+  $('voicePlay').onclick = () => voices.play(r.manifest, r.manifest.clips, mark);
+  $('voiceStop').onclick = () => {
+    voices.stop();
+    mark(null);
+  };
+  document.querySelectorAll('#read .entry').forEach((e) => {
+    const clips = voices.clipsOfStep(r.manifest, Number(e.dataset.step));
+    if (!clips.length) return;
+    const b = document.createElement('button');
+    b.className = 'ghost listen';
+    b.textContent = '▶ Lyssna';
+    b.onclick = () => voices.play(r.manifest, clips, mark);
+    e.firstElementChild.after(b);
+  });
 }
 
 function drawMap() {
