@@ -1181,6 +1181,9 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1224 | Den sida som valdes bort i ett val kommer tillbaka: på dess baser senare i storyn blir besättningen kyligt mottagen, och kontakten säger vad den tycker om valet. | förslag | docs/proposal-missions.md (F-276) | – |
 | R-1225 | Oftast visar stjärnkartan vart storyn pekar, men ibland ska besättningen hitta ett system eller en bas själv. | bestämd | Användaren 2026-11-17 (OM2, F-278) | – |
 | R-1226 | När storyn pekar på ett system markeras bara var det ligger på stjärnkartan. Vägen dit visas bara där besättningen själv har upptäckt den, och om systemet visas ingenting förrän besättningen vet mer på vanligt sätt. Loggen säger området, men inte hur många hopp det är. | bestämd | Användaren 2026-11-17 (F-278); loggens del är agentens följd av beslutet | – |
+| R-1227 | Kartan delas i områden runt fristaden: ALPHA, BETA, GAMMA och DELTA, och på den stora kartan också EPSILON. Områdena syns på stjärnkartan och nämns i storyns texter. | bestämd | Användaren 2026-11-17 (OM1, OM4, F-278) | – |
+| R-1228 | Storyns utredning börjar i området runt fristaden, och varje akt flyttar storyn till ett nytt område, så att hela kartan används. Ibland återvänder storyn till ett system den varit i. | bestämd | Användaren 2026-11-17 (OM3, F-278) | – |
+| R-1229 | I ett steg på den lilla kartan och två på de större, aldrig slutet, är målet inte markerat. Ledtråden säger området och något att känna igen, och den som frågar i baren på en bas i området får systemet markerat. | bestämd | Användaren 2026-11-17 (OM5, F-278) | – |
 | R-943 | Skepp i nöd ber om bränsle eller reparation och betalar eller minns det. | förslag | BACKLOG F-083 | – |
 | R-944 | Captain kan anropa skepp och stationer för att be om bränsle, muta eller kräva tribut. | förslag | BACKLOG F-082 | – |
 
