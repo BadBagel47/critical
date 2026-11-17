@@ -35,7 +35,7 @@ Användaren har provspelat lite (2026-11-14) och tycker att det är ett bra för
 ## Nästa steg
 
 1. Användaren provspelar standardbasen och fraktskeppet. Öppen fråga:
-   - SB2 (öppen 2026-11-17): andra sidors baser har i dag alltid de fyra tornen på källaren (R-1207, förslag), medan en bas som besättningen tar har de torn den hade. Användaren vill att man ska bygga upp försvaret själv, och undrar hur det blir logiskt. Agentens förslag väntar på svar, se chatten 2026-11-17 och nedan under Decisions.
+   - SB2 (öppen 2026-11-17): andra sidors baser har i dag alltid de fyra tornen på källaren (R-1207, förslag), medan en bas som besättningen tar har de torn den hade. Användaren vill att man ska bygga upp försvaret själv, och undrar hur det blir logiskt. Agentens förslag (väntar på svar): andra sidors baser får försvar efter hur farligt systemet är, och när besättningen tar en bas spränger basens säkerhetssystem sina egna torn, så att fästena står tomma. En egen bas som tas tillbaka får fortfarande tillbaka det besättningen själv köpt (R-218).
 2. Nästa körning är grupp A i BACKLOG.md (uppdrag och story). Starta gärna en ny session för varje körning. Allt som behövs står i repot.
 3. Användaren fortsätter provspela och ger synpunkter.
 4. Prata igenom vad spelet går ut på (D-052), tillsammans med uppdrag (D-073) och eskortskepp (D-071). Baserna (D-072) har en plan i docs/proposal-bases.md, med designuppgifter som görs före bygge.
