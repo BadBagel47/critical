@@ -1186,6 +1186,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1227 | Kartan delas i områden runt fristaden: ALPHA, BETA, GAMMA och DELTA, och på den stora kartan också EPSILON. Områdena syns på stjärnkartan och nämns i storyns texter. | bestämd | Användaren 2026-11-17 (OM1, OM4, F-278) | – |
 | R-1228 | Storyns utredning börjar i området runt fristaden, och varje akt flyttar storyn till ett nytt område, så att hela kartan används. Ibland återvänder storyn till ett system den varit i. | bestämd | Användaren 2026-11-17 (OM3, F-278) | – |
 | R-1229 | I ett steg på den lilla kartan och två på de större, aldrig slutet, är målet inte markerat. Ledtråden säger området och något att känna igen, och den som frågar i baren på en bas i området får systemet markerat. | bestämd | Användaren 2026-11-17 (OM5, F-278) | – |
+| R-1232 | Om storyn får röster i spelet läser berättaren bara meningar utan genererade namn, och namnen står i texten på skärmen. Karaktärernas repliker är inspelade i förväg. | bestämd | Användaren 2026-11-17 (VO3, D-280) | – |
 | R-943 | Skepp i nöd ber om bränsle eller reparation och betalar eller minns det. | förslag | BACKLOG F-083 | – |
 | R-944 | Captain kan anropa skepp och stationer för att be om bränsle, muta eller kräva tribut. | förslag | BACKLOG F-082 | – |
 

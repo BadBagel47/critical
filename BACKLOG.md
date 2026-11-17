@@ -21,9 +21,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 
 **D** – strong model, medium level – Prova röster till storyn med ElevenLabs
 - D-280 – Spela in en hel konvojstory med en berättare och röster för karaktärerna, och lägg in den i uppdragstestaren
-- Fråga VO1: Ska testet vara en enda story i uppdragstestaren, inte i spelet? Rekommendation: ja, en mellanstor konvojstory, ungefär 30 till 40 repliker.
-- Fråga VO2: Ska rösterna väljas ur ElevenLabs bibliotek eller designas från en beskrivning? Rekommendation: välj ur biblioteket först, och designa bara den röst som saknas. Du får lyssna på förslagen innan storyn spelas in.
-- Fråga VO3: Om rösterna blir kvar i spelet: ska berättaren bara läsa meningar utan genererade namn, med namnen i texten på skärmen? Rekommendation: ja.
+- Fråga VO1: Ska testet vara en enda inspelad story som bara finns i uppdragstestaren, med en spelaknapp vid varje replik, och inte i själva spelet? Rekommendation: ja, en mellanstor konvojstory med ungefär 30 till 40 repliker.
 
 **E** – strong model, medium level – Meddelanden från skeppet
 - D-256 – Inventera alla meddelanden som kan dyka upp, när, för vem och var
@@ -218,7 +216,7 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | D-270 | Skärmarna för onlineläget: skapa rum, namn, länk och QR, ange kod, vem som har vilken post, väntar på värden, återanslutning, och om menyn (O) pausar för alla. Designskiss först. Agentens granskning av network-kit 2026-11-17 | Ej påbörjad |
 | F-271 | Integritetstext för onlineläget: network-kit säger att varje spels text ska nämna att Cloudflare behandlar spelarnas namn och IP-adresser (GDPR), och vad som sparas och hur länge. Critical har ingen sådan text än. Agentens granskning av network-kit 2026-11-17. Agenten är ingen jurist | Ej påbörjad |
 | F-272 | Tester med flera spelare: kör spelet mot network-kit i en lokal kopia av Cloudflares servermiljö (som network-kits egna tester), med två eller tre webbläsare, också för övertagande av värden och den som går med mitt i. Agentens granskning av network-kit 2026-11-17 | Ej påbörjad |
-| D-280 | Röster till storyn med ElevenLabs, som test. Användaren 2026-11-17: en och samma berättare och olika röster för karaktärerna, med känslor i uppläsningen, gärna överdrivna. Användaren vet inte om det ska vara kvar, så det ska vara lätt att ta bort: ljudet i en egen mapp och uppspelningen i en egen liten del som kan stängas av. Agentens förslag: först en hel konvojstory inspelad i uppdragstestaren. I spelet går bara fasta repliker att spela in, eftersom namnen genereras, och uppläsning direkt i spelet avråds (nyckel i webbläsaren, kostnad per spelare, och regeln att spelet inte hämtar något från andra tjänster). Varje generering kostar användarens krediter, och agenten frågar innan något skapas | Ej påbörjad |
+| D-280 | Röster till storyn med ElevenLabs, som test. Användaren 2026-11-17: en och samma berättare och olika röster för karaktärerna, med känslor i uppläsningen, gärna överdrivna. Användaren vet inte om det ska vara kvar, så det ska vara lätt att ta bort: ljudet i en egen mapp och uppspelningen i en egen liten del som kan stängas av. Agentens förslag: först en hel konvojstory inspelad i uppdragstestaren. I spelet går bara fasta repliker att spela in, eftersom namnen genereras, och uppläsning direkt i spelet avråds (nyckel i webbläsaren, kostnad per spelare, och regeln att spelet inte hämtar något från andra tjänster). Varje generering kostar användarens krediter, och agenten frågar innan något skapas. Besked 2026-11-17: agenten söker i ElevenLabs bibliotek och väljer en röst för varje karaktär som passar (VO2). En generering per replik, och användaren behöver inte godkänna varje ljud. Om rösterna blir kvar i spelet läser berättaren bara meningar utan genererade namn, med namnen på skärmen (VO3) | Ej påbörjad |
 
 ## Låg
 
