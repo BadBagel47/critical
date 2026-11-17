@@ -352,16 +352,19 @@ const offered = () =>
 check((await offered()) === 'action.dock', 'a button offers to dock when the ship is in position');
 await shot('09a-dock-button');
 await clickOn('action.dock');
-await page.waitForTimeout(2000);
-const noseOff = await page.evaluate((port) => {
-  const c = window.__critical,
-    s = c.state,
-    st = c.stations.find((x) => x.home || x.sanctuary);
-  const nx = s.ship.x + Math.sin(s.ship.heading) * 44;
-  const ny = s.ship.y - Math.cos(s.ship.heading) * 44;
-  return s.ship.docked === st.id ? Math.hypot(nx - port.x, ny - port.y) : 999;
-}, port);
-check(noseOff < 1, 'a click on it docks, and the ship is pulled in to the port');
+const noseOff = () =>
+  page.evaluate((port) => {
+    const c = window.__critical,
+      s = c.state,
+      st = c.stations.find((x) => x.home || x.sanctuary);
+    const nx = s.ship.x + Math.sin(s.ship.heading) * 44;
+    const ny = s.ship.y - Math.cos(s.ship.heading) * 44;
+    return s.ship.docked === st.id ? Math.hypot(nx - port.x, ny - port.y) : 999;
+  }, port);
+check(
+  await settles(async () => (await noseOff()) < 1, 8000),
+  'a click on it docks, and the ship is pulled in to the port',
+);
 check((await offered()) === 'action.aboard action.undock', 'docked, the buttons offer to go aboard and to undock');
 await shot('09a-docked-buttons');
 await page.keyboard.press('Digit2');
