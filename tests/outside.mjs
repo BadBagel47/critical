@@ -8,7 +8,7 @@ const remote = !/localhost|127\.0\.0\.1/.test(base) && process.env.HTTPS_PROXY;
 const browser = await chromium.launch(remote ? { proxy: { server: process.env.HTTPS_PROXY } } : {});
 const own = new URL(base).host;
 let failed = false;
-for (const path of ['', 'docs/design/']) {
+for (const path of ['', 'docs/design/', 'playtest.html']) {
   const page = await browser.newPage({ ignoreHTTPSErrors: !!remote });
   const outside = [],
     broken = [];

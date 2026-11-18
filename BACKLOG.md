@@ -31,92 +31,87 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Fråga MD5: Ska ett meddelande som bara gäller en post bara visas för den? Rekommendation: ja, för läge och status. Fara och händelser visas för alla.
 
 
-**D** – strong model, medium level – Provspelslista med testlägen
-- F-222 – En lista över det som väntar på provspel, med länkar som startar rätt situation direkt, så att varje sak går att prova på några minuter
-- Fråga PS1: Var ska listan ligga? Rekommendation: en egen sida bredvid spelet, med en länk per sak som startar rätt situation.
-- Fråga PS2: Hur lämnar du synpunkter? Rekommendation: i chatten med sakens ID, så för agenten in dem i regelboken och backloggen.
-
-**E** – strong model, medium level – Förfina rollerna
+**D** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 - F-236 – Primära roller och tillfälligt övertagande: den som lämnar skeppet lämnar sina roller lediga, de kvar kan ta en av dem, och ägaren får tillbaka den direkt
 - F-235 – Bordarnas utrustning per roll, så att varje roll köper och har sin egen
 - Fråga RO1: Gäller ryggsäcken både utrustning och byte, och ersätter den CARGO PACK? Rekommendation: ja, en ryggsäck per roll som rymmer både och, och den ersätter CARGO PACK.
 - Fråga RO2: Hur många nivåer har ryggsäcken? Rekommendation: tre, där den första ger det man får med sig i dag.
 
-**F** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262) – väntar på svar
+**E** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262) – väntar på svar
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på iPad och sedan mobil i liggande format
 - Fråga P6: Vilket sikte för Gunner kändes bäst i designtestet, A, B eller C? Ingen rekommendation förrän du har provat.
 - Fråga P7: Fasta eller flytande spakar, och vilken storlek? Ingen rekommendation förrän du har provat.
 - Fråga P8: Ska gasen ligga kvar när spaken släpps, eller följa spaken tillbaka till noll? Ingen rekommendation förrän du har provat.
 
-**G** – strong model, high level – Viewer på en extra skärm
+**F** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 - Fråga VW1: Byggs viewern först som ett andra fönster på samma dator, innan onlineläget finns? Rekommendation: ja.
 - Fråga VW2: Vem väljer vad viewern visar? Rekommendation: alla kan skicka dit, och den senaste som skickade syns.
 
-**H** – strong model, high level – Sällsynta skepp
+**G** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 - Fråga SS1: Hur ofta dyker Juggernauten upp? Rekommendation: högst en per omgång hos varje faktion, i de farligare systemen, och som pirat bara nära slutet.
 - Fråga SS2: Vad ger en namngiven pirat? Rekommendation: en prissumma och en unik del som loot, och en eller två sådana per omgång.
 
-**I** – strong model, high level – Värme
+**H** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 - Fråga VÄ1: Vad händer när något blir för varmt? Rekommendation: det stängs av en stund, vapnen slutar skjuta och motorerna tappar fart, men skrovet tar ingen skada.
 - Fråga VÄ2: Hur kyler Engineer? Rekommendation: med kraft till kylning i samma panel som kraften i dag, och med uppgraderingar som kyler bättre. En skiss först.
 
-**J** – strong model, high level – Slå ut och borda
+**I** – strong model, high level – Slå ut och borda
 - D-248 – Se över hur man slår ut ett skepp för att borda det, så att Gunner har ett tydligt sätt att göra det i stället för att skeppet exploderar
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 - Fråga SL1: Hur slår Gunner ut ett skepp i stället för att spränga det? Rekommendation: ett eget vapen som tar sköld och motorer men nästan inte skrovet, och ett skepp utan motorer driver och kan bordas.
 - Fråga SL2: Vilka skepp kan slås ut och bordas? Rekommendation: fraktskepp och gunboats, som har insidor. Fighters inte.
 
-**K** – strong model, high level – Missiler och raketer
+**J** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 - Fråga MI1: Är missiler och raketer två olika delar? Rekommendation: ja, två delar som köps för sig, med ammunition vid disken som raketerna i dag.
 
-**L** – strong model, high level – Kontakt med andra skepp
+**K** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 - Fråga KO1: Hur anropar Captain? Rekommendation: en knapp när ett skepp eller en station är nära, med en kort lista att välja ur: be om bränsle, muta, kräva tribut.
 - Fråga KO2: Hur många eskorter kan man ha? Rekommendation: en åt gången, hyrd på baser.
 
-**M** – strong model, high level – Anomalier
+**L** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 - Fråga AN1: Vilka sorters anomalier först? Rekommendation: tre: ett fält där man flyger och skjuter långsammare, strålning som skadar skölden, och moln som stör sensorerna.
 - Fråga AN2: Syns de på stjärnkartan? Rekommendation: ja, när man har varit i systemet eller har systemradar.
 
-**N** – strong model, high level – En värld som förändras
+**M** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 - Fråga VF1: Hur ofta händer något i världen? Rekommendation: ungefär var tionde till femtonde minut, med ett meddelande när det händer.
 - Fråga VF2: Ska två faktioner vara i krig i varje omgång? Rekommendation: ja, ett krig per omgång, där uppdrag för den ena sänker anseendet hos den andra.
 
-**O** – strong model, high level – Ljudeffekter
+**N** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - Fråga LJ1: Görs ljuden som i dag, av spelets egen ljudmotor, eller som inspelade filer? Rekommendation: som i dag, så slipper vi licensfrågor och stora filer.
 
-**P** – strong model, high level – Visuella effekter och feedback
+**O** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 - Fråga VE1: Ska skärmen skaka och blinka mer vid träffar? Rekommendation: lite mer, med ett val i menyn som stänger av skakningar och blixtar, av hänsyn till ljuskänsliga.
 
-**Q** – strong model, high level – Förslag: ekonomi och belöningar
+**P** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 - Fråga EK1: Förslaget om ekonomin skrevs innan den nya världen, butiken och kassorna per roll. Ska det skrivas om innan du svarar på frågorna i det? Rekommendation: ja.
 
-**R** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**Q** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 - Fråga SV1: Ska nivåerna justeras först när ekonomin är bestämd? Rekommendation: ja, efter gruppen om ekonomi och belöningar, eftersom priserna och nivåerna hänger ihop.
 
-**S** – strong model, high level – Handel
+**R** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 - Fråga HA1: Var handlar man varor? Rekommendation: i en egen flik i butiken, med en priskarta på stjärnkartan.
 - Fråga HA2: Delar varorna lastrum med malmen? Rekommendation: ja, samma lastrum, som byggs ut.
 
-**T** – strong model, high level – Förberedelser för onlineläget (kan göras innan network-kit är klart)
+**S** – strong model, high level – Förberedelser för onlineläget (kan göras innan network-kit är klart)
 - D-263 – Ta insidorna ur tillståndet och spara bara det som ändrats, så att sparningarna och trafiken blir mindre (network-kit delar redan stora lägen)
 - D-266 – Bestäm vad som händer när en spelare tappar anslutningen, så att posten, kassan och en bordare inne i en bas inte blir hängande
 - D-267 – Koppla network-kits deltagare till spelets spelare, roller och kassor, så att den som kommer tillbaka får sina igen
@@ -136,7 +131,6 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 |---|---|---|
 | B-259 | Markören blir väldigt långsam när fler skepp med aggro kommer in. Användaren 2026-11-16: "Behöver vi optimera?" Första mätning 2026-11-16, utan ändringar: spelets logik tar under 0,3 ms per steg även med 40 fientliga skepp, så det långsamma är troligen ritandet (ljus, skuggor, skott). I en automatisk webbläsare höll spelet 60 bilder i sekunden med 24 skepp, med en enstaka långsam bild. Det säger lite om en riktig dator. Nästa steg: användaren startar spelet med ?fps i adressen (https://badbagel47.github.io/critical/?fps) när det händer och läser av FPS och SLOWEST FRAME, och säger vilken post och ungefär hur många skepp. Provat igen 2026-11-18 efter B-282 (bilden var 4K-stor på retinaskärmar, troligen orsaken): ungefär 55 bilder i sekunden med piratvågor i automatisk webbläsare med retinaskärm. Användaren provar på sin Mac med ?fps | Väntar på användaren |
 | D-261 | Snabbare grafik. Användaren 2026-11-17: hur stort jobb är hårdvaruaccelererad grafik för dator, mobil och surfplatta, och hur mycket ger det? Agentens svar i chatten: canvas ritas redan delvis av grafikkortet. Mät först på iPad (?fps), gör sedan billiga förbättringar (spara det som inte ändras, som golvet inne och ljusens former, och rita i lägre upplösning på svagare enheter), och byt till WebGL bara om det inte räcker. Hänger ihop med B-259. Användaren 2026-11-17: snabbare grafik känns nödvändig redan nu, det har gått långsamt på användarens Mac (Brave på macOS). Mätt 2026-11-17: se B-282. Ljus, skuggor och effekter som ska bli mer genomarbetade (F-283) behöver troligen WebGL för att glöda på riktigt. Designtestet F-283 är byggt 2026-11-18 och jämför dagens ritsätt (A och B) med WebGL (C). Väntar på att användaren provar på sin Mac och iPad och svarar på GR3 | Väntar på användaren |
-| F-222 | Provspelslista med testlägen. En lista över det som är byggt men inte provspelat, med en direktlänk per sak, och adresser som startar rätt situation direkt (till exempel anfall på egen station, bas med personaldel, tom tank vid asteroider). Synpunkterna förs in i regelboken. Användaren 2026-11-16: ja | Pågår 2026-11-18 (claude/trusting-franklin-4z4ny4) |
 | F-050 | Justerade nivåer för vapen, sköld, motorer och engineering så att det känns att det är svårt i början och att det ska vara värt att uppgradera | Ej påbörjad |
 | D-274 | Uppdragsstrukturen för den genererade storyn: vilka sorters steg uppdrag byggs av (prata, skaffa, leta, strida, borda, leverera, spana, välja), hur stegen kedjas ihop så att berättelsen hänger ihop (varje steg säger vad det behöver och vad det ger), uppdragsloggen, en översikt under utvecklingen och simulerade storys. Användaren 2026-11-17: storyn ska vara engagerande och inte bara "åk dit och docka", till exempel prata med någon på en bas, köpa en sak som bara finns medan uppdraget pågår, skjuta ner en pirat eller ett gäng, eller loota ett bestämt vrak. Besked 2026-11-17: huvudstoryn får ett skelett i akter som fylls med genererade steg, och antalet steg följer kartans storlek, så att en stor värld inte känns tom (US1). Ett eller två val per omgång delar storyn, och alla vägar leder till slutet (US2). Loggen har huvudstoryn överst med steg och ledtrådar, sidouppdragen under, och målen markerade på kartorna (US3). Simulerade storys visas som text som användaren läser innan något byggs i spelet (US4). Besked 2026-11-17: 8 steg på den lilla kartan, 12 på den mellersta och 16 på den stora (US5), och testaren är en sida bredvid spelet som fungerar på iPad (US6). Förslaget är klart 2026-11-17 i docs/proposal-missions.md, med generatorn i src/sim/story.js och testaren F-275. Väntar på att användaren läser storys i testaren och svarar på US7–US9. Görs före D-052 och D-073 Besked 2026-11-17 (US7): en del av samtalen sker inne på basen, så att någon går dit till fots och bordarna får mer att göra. Användaren efter att ha läst storys i testaren (US8): det blev mycket beskrivning och sedan "gör det här nu", inte så mycket berättande som hoppats. Förslag på lösning i F-276. | Väntar på användaren |
 | D-277 | En questmotor som kan användas i flera spel. Användaren 2026-11-17: arbetar på ett annat spel med GTA-liknande upplägg som också ska ha quester, och undrar om motorn bör vara separat. Agentens förslag: håll motorn i Critical uppdelad i en del som inte vet något om spelet (steg som behöver och ger, skelett, sökning av kedjan, val, kontrollen att man aldrig fastnar, texter med luckor, sammanställning och testare) och spelets egen del (sorterna av steg, platserna, kartan och texterna), och flytta ut den till ett eget repo, som network-kit, när det andra spelet börjar använda den. Besked 2026-11-17: motorn byggs uppdelad i Critical och flyttas ut senare (QM1), och det andra spelet kommer också att behöva handskrivna quester (QM2), så kärnan ska klara både genererade och handskrivna. Gjort 2026-11-17 (F-276): kärnan ligger i src/quest/core.js, hämtar ingen annan kod och klarar både genererade och handskrivna quester. Ett test visar den med en påhittad katalog för ett stadsspel. Flyttas ut till ett eget repo när det andra spelet behöver den | Väntar på det andra spelet
@@ -437,3 +431,4 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | F-278 | Områden och storyns rutter: kartan delas i ALPHA, BETA, GAMMA, DELTA och på den stora kartan EPSILON, med lika många system var, och stjärnkartan visar dem (R-1235). I storyn får varje akt ett eget område, och 97–100 procent av storyna använder alla områden. Ett steg på den lilla kartan och två på de andra hittas utan markering, med en ledtråd om område, kännetecken och avstånd, och frågan i baren som utväg. Texterna nämner området. Storyn i spelet, där målet markeras utan väg (R-1226), byggs i uppdragen och storyn. Provat i testaren och på stjärnkartan | 2026-11-18 |
 | B-281 | Musiken: spelet försöker starta ljudet också när en tangent släpps, vid klick och när ett finger lyfts, och startskärmen visar PRESS ANY KEY FOR SOUND så länge ljudet väntar (R-1236). Provat i Chromium med samma regel för ljud som Brave, inte i Brave på användarens Mac | 2026-11-18 |
 | F-279 | Försvar på baser som byggs upp själv: andra sidors baser får försvarsnivå efter faran i systemet, två torn i lugna system och sex längre ut (R-1230), i stället för alltid fyra. En bas som besättningen tar spränger sina torn, så att fästena står tomma, och meddelandet säger det (R-1231). En egen bas som tas tillbaka får det som var kvar av vad besättningen köpt (R-218). Sparversionen höjd, så gamla sparningar fungerar inte. Testat i tests/base.test.js, inte provspelat | 2026-11-18 |
+| F-222 | Provspelslistan: en egen sida bredvid spelet (playtest.html) med det som är byggt men inte provspelat, en länk per sak som startar rätt situation och vad användaren ska säga i chatten med sakens ID (R-1237). Spelets adress tar nu &call= för att kalla in pirater, en räd eller ett anfall på den egna basen och &nofuel för tom tank, och tangenten 6 kallar in ett anfall i testläget. Provat i webbläsare i iPad-storlek, alla länkar svarar | 2026-11-18 |

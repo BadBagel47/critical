@@ -506,9 +506,9 @@ export function viewKeys(game, mode) {
     return;
   }
   if (state.won && !view.wonSeen && keys.hit('Enter', 'NumpadEnter')) view.wonSeen = true;
-  // In a test game the number keys from 7 call in pirates and a raid, and 0 removes them, see sim/testing.js.
+  // In a test game the number keys from 6 call in an attack on the own base, pirates and a raid, and 0 removes them, see sim/testing.js.
   if (state.test) {
-    const calls = { Digit7: 'fighters', Digit8: 'gunboat', Digit9: 'raid', Digit0: 'clear' };
+    const calls = { Digit6: 'siege', Digit7: 'fighters', Digit8: 'gunboat', Digit9: 'raid', Digit0: 'clear' };
     for (const code of Object.keys(calls)) if (keys.hit(code)) game.actions.summon(calls[code]);
   }
   // V folds the Engineer's screen away and brings it back.
