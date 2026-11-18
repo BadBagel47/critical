@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Designtest: ljus, skuggor och effekter</title>
+<style>
+/* Design test F-283 and D-261: the same room, fight and explosion in three versions. System fonts only, nothing
+   is loaded from other services. */
+:root{--bg:#0f1122;--panel:#181b34;--ink:#e9ebf7;--muted:#a4aac8;--rule:#2b3054;--accent:#7db4ff;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1320px;margin:0 auto;padding:20px 14px 60px;display:flex;flex-direction:column;gap:14px}
+h1{margin:0;font:400 clamp(1.8rem,5vw,3rem)/1 "Arial Black",Impact,sans-serif}
+p{margin:0;max-width:80ch;color:var(--muted)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;font-weight:700;min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--rule);background:#21254a;color:var(--ink);cursor:pointer}
+button[aria-pressed="true"]{background:var(--accent);color:#0b1020;border-color:transparent}
+.stage{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;border:1px solid var(--rule)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.meter{position:absolute;left:10px;top:10px;font:700 13px/1.4 ui-monospace,Menlo,monospace;background:rgba(0,0,0,.6);padding:6px 9px;border-radius:6px}
+.meter.slow{color:#ff9a6a}
+ul{margin:0;padding-left:1.2em;color:var(--muted);max-width:90ch}
+li{margin:2px 0}
+b{color:var(--ink)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Ljus, skuggor och effekter</h1>
+  <p>Designtest för F-283 och D-261, inte i spelet. Samma rum, samma strid och samma explosion i tre versioner. Byt version medan det rullar, och prova på datorn och på iPad. Mätaren uppe till vänster visar hur många bilder i sekunden det blir och hur stor bilden är.</p>
+  <div class="bar" role="group" aria-label="Version">
+    <button data-v="a" aria-pressed="false">A · I dag</button>
+    <button data-v="b" aria-pressed="false">B · Bättre, utan grafikkortet</button>
+    <button data-v="c" aria-pressed="true">C · Med grafikkortet</button>
+  </div>
+  <div class="bar">
+    <button id="stress" aria-pressed="false">Många ljus och partiklar</button>
+    <button id="boom">Explosion nu</button>
+    <button id="pause" aria-pressed="false">Pausa</button>
+  </div>
+  <div class="stage" id="stage">
+    <canvas id="out2d"></canvas>
+    <canvas id="outgl" hidden></canvas>
+    <div class="meter" id="meter"></div>
+  </div>
+  <ul>
+    <li><b>A · I dag:</b> som spelet ritar nu. Lamporna lyser upp golvet och väggar stoppar ljuset, men inget glöder, och explosionen är en blixt.</li>
+    <li><b>B · Bättre, utan grafikkortet:</b> mjuka skuggor under saker och figurer, ljus från skott, laser, eld och explosioner, gnistor, rök och skräp, brännmärken som ligger kvar, skakning, och ett enkelt sken kring det som lyser. Ritas som i dag.</li>
+    <li><b>C · Med grafikkortet:</b> samma innehåll, men ljuset räknas ut för varje bildpunkt med väggarnas skuggor, och det som är ljust får ett riktigt sken (glöd). Det är så det skulle ritas om spelet bytte till grafikkortet (WebGL).</li>
+  </ul>
+</main>
+<script>
+'use strict';
+// ---------- the room: 40 × 22 tiles of 16 game pixels, drawn in a 640 × 360 picture as in the game ----------
+const W = 640, H = 360, T = 16;
+const MAP = [
+  'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+  'W..........W...........................W',
+  'W..........W...........................W',
+  'W..C.......W.......C.C........CC.......W',
+  'W..........W...........................W',
+  'W..........W.........WWWWWWW...........W',
+  'W.....................W.....W..........W',
+  'W.........................C.W..........W',
+  'WWWW..WWWWWW..........W.....W....C.....W',
+  'W..........W..........WWW.WWW..........W',
+  'W...C......W...........................W',
+  'W..........W...C.......................W',
+  'W..........W......................C....W',
+  'W.........................WWWWW........W',
+  'W....C....................W...W........W',
+  'W..........W..............W.C.W........W',
+  'WWWWWW..WWWW..............W...W.....C..W',
+  'W..........W...C.C...........CW........W',
+  'W..........W...........................W',
+  'W..C.......W...........................W',
+  'W..........W...........................W',
+  'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+];
+const ROWS = MAP.length, COLS = MAP[0].length;
+const wall = (x, y) => {
+  const tx = Math.floor(x / T), ty = Math.floor(y / T);
+  return tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS || MAP[ty][tx] === 'W';
+};
+const crates = [];
+for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (MAP[y][x] === 'C') crates.push({ x: x * T + 8, y: y * T + 8, alive: true });
+const LAMPS = [
+  [6, 2], [17, 2], [33, 2], [6, 11], [25, 11], [35, 15], [6, 18], [20, 18], [33, 19],
+].map(([x, y], i) => ({ x: x * T + 8, y: y * T + 8, flicker: i === 3 || i === 7 }));
+
+// ---------- the fight: the same for every version ----------
+let rnd = 1;
+const rand = () => ((rnd = (rnd * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+const S = {
+  t: 0, shake: 0,
+  hero: { x: 120, y: 200, a: 0 },
+  guards: [{ x: 300, y: 120, a: Math.PI }, { x: 470, y: 230, a: Math.PI }, { x: 520, y: 90, a: Math.PI }],
+  turret: { x: 560, y: 170, a: Math.PI, next: 1.2, burst: 0 },
+  shots: [], lasers: [], parts: [], scorch: [], fires: [], booms: [], nextBoom: 2.5, nextShot: 0.5,
+};
+const stress = { on: false };
+function spark(x, y, n, speed, life, hot) {
+  for (let i = 0; i < n; i++) {
+    const a = rand() * Math.PI * 2, v = speed * (0.3 + rand());
+    S.parts.push({ k: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: life * (0.5 + rand()), age: 0, hot });
+  }
+}
+function smoke(x, y, n, size) {
+  for (let i = 0; i < n; i++) {
+    const a = rand() * Math.PI * 2, v = 6 + rand() * 18;
+    S.parts.push({ k: 'smoke', x: x + (rand() - 0.5) * 10, y: y + (rand() - 0.5) * 10, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 6, life: 2.5 + rand() * 2, age: 0, size: size * (0.6 + rand() * 0.8) });
+  }
+}
+function debris(x, y, n) {
+  for (let i = 0; i < n; i++) {
+    const a = rand() * Math.PI * 2, v = 60 + rand() * 120;
+    S.parts.push({ k: 'debris', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.8 + rand() * 0.6, age: 0, spin: rand() * 6 });
+  }
+}
+function explode(x, y) {
+  S.booms.push({ x, y, age: 0 });
+  S.shake = Math.max(S.shake, 6);
+  spark(x, y, 60, 160, 0.7, true);
+  debris(x, y, 18);
+  smoke(x, y, 22, 14);
+  S.scorch.push({ x, y, r: 18 + rand() * 6, seed: rand() * 100 });
+  S.fires.push({ x: x + (rand() - 0.5) * 8, y: y + (rand() - 0.5) * 8, life: 4, age: 0 });
+  for (const c of crates) if (c.alive && Math.hypot(c.x - x, c.y - y) < 20) c.alive = false;
+}
+function boomNow() {
+  const live = crates.filter((c) => c.alive);
+  const c = live.length ? live[Math.floor(rand() * live.length)] : { x: 200 + rand() * 300, y: 80 + rand() * 200 };
+  explode(c.x, c.y);
+}
+function fire(from, to, kind) {
+  const a = Math.atan2(to.y - from.y, to.x - from.x) + (rand() - 0.5) * 0.08;
+  // Where the shot stops: the first wall or crate along the way.
+  let d = 12, x = from.x, y = from.y;
+  for (; d < 700; d += 3) {
+    x = from.x + Math.cos(a) * d; y = from.y + Math.sin(a) * d;
+    if (wall(x, y) || crates.some((c) => c.alive && Math.abs(c.x - x) < 7 && Math.abs(c.y - y) < 7)) break;
+  }
+  const mx = from.x + Math.cos(a) * 10, my = from.y + Math.sin(a) * 10;
+  if (kind === 'laser') S.lasers.push({ x0: mx, y0: my, x1: x, y1: y, age: 0, life: 0.18 });
+  else S.shots.push({ x0: mx, y0: my, x1: x, y1: y, age: 0, life: 0.07 });
+  spark(x, y, kind === 'laser' ? 10 : 6, 90, 0.35, kind === 'laser');
+  if (kind !== 'laser') smoke(mx, my, 1, 4);
+  return { mx, my, a };
+}
+function step(dt) {
+  S.t += dt;
+  S.shake = Math.max(0, S.shake - dt * 20);
+  const h = S.hero;
+  h.x = 120 + Math.sin(S.t * 0.6) * 40; h.y = 200 + Math.sin(S.t * 0.9) * 50;
+  const target = S.guards[Math.floor(S.t / 2) % S.guards.length];
+  h.a = Math.atan2(target.y - h.y, target.x - h.x);
+  S.guards.forEach((g, i) => {
+    g.x += Math.sin(S.t * 0.7 + i * 2) * 20 * dt; g.y += Math.cos(S.t * 0.5 + i) * 16 * dt;
+    g.a = Math.atan2(h.y - g.y, h.x - g.x);
+  });
+  S.nextShot -= dt;
+  if (S.nextShot <= 0) { S.nextShot = 0.22 + (Math.floor(S.t) % 3 === 0 ? 0.5 : 0); h.flash = 0.06; fire(h, target, 'rifle'); }
+  const tu = S.turret;
+  tu.a = Math.atan2(h.y - tu.y, h.x - tu.x);
+  tu.next -= dt;
+  if (tu.next <= 0) { tu.burst = 3; tu.next = 1.6; }
+  if (tu.burst > 0 && (tu.cool = (tu.cool || 0) - dt) <= 0) { tu.burst--; tu.cool = 0.14; tu.flash = 0.08; fire(tu, h, 'laser'); }
+  if (h.flash) h.flash = Math.max(0, h.flash - dt);
+  if (tu.flash) tu.flash = Math.max(0, tu.flash - dt);
+  S.nextBoom -= dt;
+  if (S.nextBoom <= 0) { S.nextBoom = 4.5; boomNow(); }
+  if (stress.on && rand() < dt * 10) spark(40 + rand() * 560, 30 + rand() * 300, 14, 120, 0.6, true);
+  for (const p of S.parts) {
+    p.age += dt;
+    const drag = p.k === 'smoke' ? 0.6 : p.k === 'debris' ? 3 : 2.5;
+    p.vx *= Math.exp(-drag * dt); p.vy *= Math.exp(-drag * dt);
+    const nx = p.x + p.vx * dt, ny = p.y + p.vy * dt;
+    if (p.k !== 'smoke' && wall(nx, ny)) { p.vx *= -0.4; p.vy *= -0.4; } else { p.x = nx; p.y = ny; }
+  }
+  S.parts = S.parts.filter((p) => p.age < p.life);
+  for (const list of [S.shots, S.lasers, S.booms, S.fires]) for (const e of list) e.age += dt;
+  S.shots = S.shots.filter((e) => e.age < e.life);
+  S.lasers = S.lasers.filter((e) => e.age < e.life);
+  S.booms = S.booms.filter((e) => e.age < 1.2);
+  S.fires = S.fires.filter((e) => e.age < e.life);
+  for (const f of S.fires) if (rand() < dt * 6) smoke(f.x, f.y, 1, 6);
+  if (S.scorch.length > 12) S.scorch.shift();
+  // Crates come back after a while, so that there is always something to blow up.
+  if (crates.every((c) => !c.alive) || rand() < dt * 0.05) for (const c of crates) c.alive = true;
+}
+
+// ---------- the lights of this moment: the same list for B and C, fewer for A ----------
+function lightsNow(version) {
+  const L = [];
+  for (const l of LAMPS) {
+    const f = l.flicker ? (Math.sin(S.t * 23) > 0.6 || Math.sin(S.t * 3.1) > 0.95 ? 0.2 : 1) : 1;
+    L.push({ x: l.x, y: l.y, r: 120, c: [1, 0.86, 0.66], p: 0.75 * f });
+  }
+  const h = S.hero;
+  // The boarder's lamp: a cone ahead, in the game a light with a heading.
+  L.push({ x: h.x + Math.cos(h.a) * 40, y: h.y + Math.sin(h.a) * 40, r: 90, c: [0.75, 0.88, 1], p: 0.7, from: h });
+  if (stress.on) for (let i = 0; i < 36; i++) L.push({ x: 40 + ((i * 97) % 560), y: 30 + ((i * 53) % 300), r: 60, c: [((i * 37) % 10) / 10, 0.5, 1 - ((i * 37) % 10) / 10], p: 0.55 + 0.3 * Math.sin(S.t * 2 + i) });
+  if (version === 'a') return L;
+  if (h.flash) L.push({ x: h.x + Math.cos(h.a) * 12, y: h.y + Math.sin(h.a) * 12, r: 70, c: [1, 0.85, 0.5], p: 1.4 });
+  const tu = S.turret;
+  if (tu.flash) L.push({ x: tu.x + Math.cos(tu.a) * 12, y: tu.y + Math.sin(tu.a) * 12, r: 80, c: [1, 0.25, 0.2], p: 1.5 });
+  for (const z of S.lasers) {
+    const k = 1 - z.age / z.life;
+    for (let s = 0.2; s <= 1; s += 0.4) L.push({ x: z.x0 + (z.x1 - z.x0) * s, y: z.y0 + (z.y1 - z.y0) * s, r: 50, c: [1, 0.2, 0.15], p: 0.8 * k });
+  }
+  for (const b of S.booms) {
+    const k = Math.max(0, 1 - b.age / 0.7);
+    L.push({ x: b.x, y: b.y, r: 120 + 120 * (1 - k), c: [1, 0.75, 0.4], p: 2.4 * k * k });
+  }
+  for (const f of S.fires) {
+    const k = Math.min(1, (f.life - f.age) / 1.5) * (0.75 + 0.25 * Math.sin(S.t * 31 + f.x) * Math.sin(S.t * 17 + f.y));
+    L.push({ x: f.x, y: f.y, r: 70, c: [1, 0.55, 0.2], p: 0.9 * k });
+  }
+  return L;
+}
+
+// ---------- the pixel picture: floor, walls, crates, figures, smoke ----------
+const albedo = document.createElement('canvas'); albedo.width = W; albedo.height = H;
+const emissive = document.createElement('canvas'); emissive.width = W; emissive.height = H;
+const floorCache = document.createElement('canvas'); floorCache.width = W; floorCache.height = H;
+(function drawFloor() {
+  const c = floorCache.getContext('2d');
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
+    const px = x * T, py = y * T;
+    if (MAP[y][x] === 'W') {
+      c.fillStyle = '#5b5f72'; c.fillRect(px, py, T, T);
+      c.fillStyle = '#7d8296'; c.fillRect(px, py, T, 3);
+      c.fillStyle = '#3c3f50'; c.fillRect(px, py + T - 2, T, 2);
+    } else {
+      const n = (x * 7 + y * 13) % 5;
+      c.fillStyle = n === 0 ? '#3a3036' : '#352c33'; c.fillRect(px, py, T, T);
+      c.fillStyle = '#2a2329'; c.fillRect(px, py, T, 1); c.fillRect(px, py, 1, T);
+      if ((x + y) % 4 === 0) { c.fillStyle = '#43383f'; c.fillRect(px + 6, py + 6, 4, 4); }
+    }
+  }
+  for (const l of LAMPS) { c.fillStyle = '#c9b38a'; c.fillRect(l.x - 5, l.y - 2, 10, 4); }
+})();
+function shadow(c, x, y, rx, ry) {
+  // A soft shadow: a few rings, darkest in the middle, a little down and to the right of the thing.
+  for (let i = 3; i >= 1; i--) {
+    c.fillStyle = `rgba(0,0,0,${0.16})`;
+    c.beginPath(); c.ellipse(x + 3, y + 4, rx + i * 1.5, ry + i * 1.2, 0, 0, Math.PI * 2); c.fill();
+  }
+}
+function figure(c, x, y, a, body, trim) {
+  c.save(); c.translate(Math.round(x), Math.round(y)); c.rotate(a);
+  c.fillStyle = '#20232e'; c.fillRect(2, -1, 9, 3);
+  c.fillStyle = body; c.beginPath(); c.arc(0, 0, 5, 0, Math.PI * 2); c.fill();
+  c.fillStyle = trim; c.fillRect(-2, -2, 4, 4);
+  c.restore();
+}
+function drawAlbedo(version) {
+  const c = albedo.getContext('2d');
+  c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
+  c.drawImage(floorCache, 0, 0);
+  const rich = version !== 'a';
+  if (rich) for (const s of S.scorch) {
+    // A burnt mark that stays: dark in the middle, ragged at the edge.
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * Math.PI * 2, r = s.r * (0.6 + 0.4 * Math.abs(Math.sin(s.seed + i * 1.7)));
+      c.fillStyle = 'rgba(12,8,8,0.28)';
+      c.beginPath(); c.arc(s.x + Math.cos(a) * r * 0.5, s.y + Math.sin(a) * r * 0.5, r * 0.55, 0, Math.PI * 2); c.fill();
+    }
+  }
+  for (const k of crates) if (k.alive) {
+    if (rich) shadow(c, k.x, k.y, 7, 6);
+    c.fillStyle = '#6b4a2b'; c.fillRect(k.x - 7, k.y - 7, 14, 14);
+    c.fillStyle = '#8a6238'; c.fillRect(k.x - 7, k.y - 7, 14, 3);
+    c.fillStyle = '#4a3220'; c.fillRect(k.x - 1, k.y - 7, 2, 14);
+  }
+  const tu = S.turret;
+  if (rich) shadow(c, tu.x, tu.y, 8, 7);
+  c.fillStyle = '#4b4f60'; c.fillRect(tu.x - 8, tu.y - 8, 16, 16);
+  figure(c, tu.x, tu.y, tu.a, '#9a3a33', '#ff6a4a');
+  for (const g of S.guards) { if (rich) shadow(c, g.x, g.y, 5, 4); figure(c, g.x, g.y, g.a, '#a5403a', '#ffb59a'); }
+  if (rich) shadow(c, S.hero.x, S.hero.y, 5, 4);
+  figure(c, S.hero.x, S.hero.y, S.hero.a, '#2f9c93', '#bff3ee');
+  if (rich) for (const d of S.parts) if (d.k === 'debris') {
+    c.fillStyle = '#2b2226'; c.save(); c.translate(d.x, d.y); c.rotate(d.age * d.spin); c.fillRect(-1.5, -1, 3, 2); c.restore();
+  }
+  if (rich) for (const p of S.parts) if (p.k === 'smoke') {
+    // Smoke is part of the picture, so that the light falls on it too.
+    const k = p.age / p.life;
+    c.fillStyle = `rgba(150,150,160,${0.32 * (1 - k)})`;
+    c.beginPath(); c.arc(p.x, p.y, p.size * (0.6 + k * 1.4), 0, Math.PI * 2); c.fill();
+  }
+}
+// What shines by itself: shots, lasers, sparks, flames, the lamps' own glass.
+function drawEmissive(version) {
+  const c = emissive.getContext('2d');
+  c.globalCompositeOperation = 'source-over';
+  c.clearRect(0, 0, W, H);
+  c.globalCompositeOperation = 'lighter';
+  const rich = version !== 'a';
+  for (const l of LAMPS) { c.fillStyle = 'rgba(255,236,190,0.9)'; c.fillRect(l.x - 4, l.y - 1, 8, 2); }
+  for (const z of S.lasers) {
+    const k = 1 - z.age / z.life;
+    if (rich) { c.strokeStyle = `rgba(255,60,40,${0.35 * k})`; c.lineWidth = 5; c.beginPath(); c.moveTo(z.x0, z.y0); c.lineTo(z.x1, z.y1); c.stroke(); }
+    c.strokeStyle = `rgba(255,${rich ? 200 : 90},${rich ? 180 : 70},${k})`; c.lineWidth = rich ? 1.5 : 1;
+    c.beginPath(); c.moveTo(z.x0, z.y0); c.lineTo(z.x1, z.y1); c.stroke();
+  }
+  for (const s of S.shots) {
+    const k = 1 - s.age / s.life;
+    c.strokeStyle = `rgba(255,230,160,${k})`; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(s.x0, s.y0); c.lineTo(s.x0 + (s.x1 - s.x0) * Math.min(1, s.age / s.life * 2 + 0.3), s.y0 + (s.y1 - s.y0) * Math.min(1, s.age / s.life * 2 + 0.3)); c.stroke();
+  }
+  const muzzle = (o, col) => {
+    if (!o.flash) return;
+    const x = o.x + Math.cos(o.a) * 12, y = o.y + Math.sin(o.a) * 12;
+    c.fillStyle = col; c.beginPath(); c.arc(x, y, rich ? 4 : 2, 0, Math.PI * 2); c.fill();
+  };
+  muzzle(S.hero, 'rgba(255,230,170,1)');
+  muzzle(S.turret, 'rgba(255,120,90,1)');
+  for (const b of S.booms) {
+    const k = b.age / 1.2;
+    if (version === 'a') {
+      // Today: a flash that grows and fades.
+      c.fillStyle = `rgba(255,240,200,${Math.max(0, 1 - k * 3)})`;
+      c.beginPath(); c.arc(b.x, b.y, 10 + k * 40, 0, Math.PI * 2); c.fill();
+      continue;
+    }
+    // A fireball, a shock ring and a hot core.
+    const g = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, 8 + k * 34);
+    g.addColorStop(0, `rgba(255,250,220,${Math.max(0, 1 - k * 2.2)})`);
+    g.addColorStop(0.4, `rgba(255,170,60,${Math.max(0, 0.9 - k * 1.6)})`);
+    g.addColorStop(1, 'rgba(255,60,20,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(b.x, b.y, 8 + k * 34, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = `rgba(255,220,180,${Math.max(0, 0.6 - k)})`; c.lineWidth = 2;
+    c.beginPath(); c.arc(b.x, b.y, 6 + k * 90, 0, Math.PI * 2); c.stroke();
+  }
+  if (!rich) return;
+  for (const f of S.fires) {
+    const k = Math.min(1, (f.life - f.age) / 1.5);
+    for (let i = 0; i < 3; i++) {
+      const fl = 0.6 + 0.4 * Math.sin(S.t * 20 + i * 2 + f.x);
+      c.fillStyle = `rgba(255,${120 + i * 40},40,${0.5 * k * fl})`;
+      c.beginPath(); c.arc(f.x + Math.sin(S.t * 9 + i) * 2, f.y - i * 2, 4 - i, 0, Math.PI * 2); c.fill();
+    }
+  }
+  for (const p of S.parts) if (p.k === 'spark') {
+    const k = 1 - p.age / p.life;
+    c.strokeStyle = p.hot ? `rgba(255,${180 + 60 * k},${90 * k},${k})` : `rgba(255,120,90,${k})`;
+    c.lineWidth = 1;
+    c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x - p.vx * 0.03, p.y - p.vy * 0.03); c.stroke();
+  }
+}
+
+// ---------- the size of the picture, as in the game: at most four screen pixels per game pixel ----------
+function scaleNow() {
+  const stage = document.getElementById('stage');
+  const wanted = (stage.clientWidth / W) * (window.devicePixelRatio || 1);
+  return Math.max(2, Math.min(4, 2 * Math.ceil(wanted / 2 - 0.01)));
+}
+
+// ---------- A and B: drawn as today, with a light map at the game's own size ----------
+const out2d = document.getElementById('out2d');
+const lightMap = document.createElement('canvas'); lightMap.width = W; lightMap.height = H;
+const small = document.createElement('canvas'); small.width = W / 4; small.height = H / 4;
+const mid = document.createElement('canvas'); mid.width = W / 2; mid.height = H / 2;
+// Where a light reaches, stopped by walls: rays out to the light's reach.
+function reach(x, y, r) {
+  const pts = [];
+  const n = 72;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2, dx = Math.cos(a), dy = Math.sin(a);
+    let d = 2;
+    for (; d < r; d += 4) if (wall(x + dx * d, y + dy * d)) break;
+    pts.push([x + dx * Math.min(d + 3, r), y + dy * Math.min(d + 3, r)]);
+  }
+  return pts;
+}
+const reachCache = new Map();
+function paint(c, l, strength) {
+  const key = l.x + ',' + l.y + ',' + l.r;
+  let area = reachCache.get(key);
+  if (!area) { area = reach(l.x, l.y, l.r); if (reachCache.size < 400) reachCache.set(key, area); }
+  const p = Math.min(1, l.p * strength);
+  if (p <= 0.004) return;
+  const rgb = l.c.map((v) => Math.round(v * 255)).join(',');
+  const g = c.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
+  g.addColorStop(0, `rgba(${rgb},${p})`); g.addColorStop(0.45, `rgba(${rgb},${p * 0.4})`); g.addColorStop(1, `rgba(${rgb},0)`);
+  c.fillStyle = g;
+  c.beginPath(); c.moveTo(area[0][0], area[0][1]); for (const q of area) c.lineTo(q[0], q[1]); c.closePath(); c.fill();
+}
+function render2d(version) {
+  const s = scaleNow();
+  if (out2d.width !== W * s) { out2d.width = W * s; out2d.height = H * s; }
+  const o = out2d.getContext('2d');
+  const shake = version === 'a' ? 0 : S.shake;
+  const sx = (rand() - 0.5) * shake, sy = (rand() - 0.5) * shake;
+  // The light map: dark, plus every light where it reaches.
+  const m = lightMap.getContext('2d');
+  m.globalCompositeOperation = 'source-over';
+  m.fillStyle = 'rgb(28,24,34)'; m.fillRect(0, 0, W, H);
+  m.globalCompositeOperation = 'lighter';
+  const lights = lightsNow(version);
+  for (const l of lights) paint(m, l, 1);
+  o.setTransform(s, 0, 0, s, sx * s, sy * s);
+  o.imageSmoothingEnabled = false;
+  o.globalCompositeOperation = 'source-over';
+  o.drawImage(albedo, 0, 0);
+  o.imageSmoothingEnabled = true;
+  o.globalCompositeOperation = 'multiply';
+  o.drawImage(lightMap, 0, 0);
+  // A little of the light again on top, as the game does, so that the lit floor shines.
+  o.globalCompositeOperation = 'lighter';
+  o.globalAlpha = version === 'a' ? 0.12 : 0.18;
+  o.drawImage(lightMap, 0, 0);
+  o.globalAlpha = 1;
+  o.imageSmoothingEnabled = false;
+  o.drawImage(emissive, 0, 0);
+  if (version === 'b') {
+    // A simple glow: what shines, made smaller and larger again so that it blurs, laid on top.
+    const sm = small.getContext('2d'), md = mid.getContext('2d');
+    sm.globalCompositeOperation = 'source-over'; sm.clearRect(0, 0, W / 4, H / 4); sm.drawImage(emissive, 0, 0, W / 4, H / 4);
+    md.globalCompositeOperation = 'source-over'; md.clearRect(0, 0, W / 2, H / 2); md.imageSmoothingEnabled = true; md.drawImage(small, 0, 0, W / 2, H / 2);
+    o.imageSmoothingEnabled = true;
+    o.globalAlpha = 0.9; o.drawImage(mid, 0, 0, W, H);
+    o.globalAlpha = 0.6; o.drawImage(small, 0, 0, W, H);
+    o.globalAlpha = 1;
+  }
+  o.globalCompositeOperation = 'source-over';
+  o.setTransform(1, 0, 0, 1, 0, 0);
+  return lights.length;
+}
+
+// ---------- C: drawn by the graphics card (WebGL) ----------
+const outgl = document.getElementById('outgl');
+let G = null;
+function setupGL() {
+  const gl = outgl.getContext('webgl', { antialias: false, premultipliedAlpha: false });
+  if (!gl) return null;
+  const quad = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+  const program = (fs) => {
+    const p = gl.createProgram();
+    const v = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(v, 'attribute vec2 p; varying vec2 uv; void main(){ uv = p * 0.5 + 0.5; gl_Position = vec4(p, 0.0, 1.0); }');
+    gl.compileShader(v);
+    const f = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(f, 'precision mediump float; varying vec2 uv;\n' + fs);
+    gl.compileShader(f);
+    if (!gl.getShaderParameter(f, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(f));
+    gl.attachShader(p, v); gl.attachShader(p, f); gl.linkProgram(p);
+    const u = {};
+    return { p, u: (name) => (u[name] ??= gl.getUniformLocation(p, name)) };
+  };
+  const texture = (w, h, nearest) => {
+    const t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, nearest ? gl.NEAREST : gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, nearest ? gl.NEAREST : gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    if (w) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    return t;
+  };
+  const target = (w, h) => {
+    const tex = texture(w, h, false);
+    const fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    return { tex, fb, w, h };
+  };
+  // The walls as a picture, so that each light can see whether a wall stands between it and a point.
+  const wallsCanvas = document.createElement('canvas'); wallsCanvas.width = W; wallsCanvas.height = H;
+  const wc = wallsCanvas.getContext('2d');
+  wc.fillStyle = '#000'; wc.fillRect(0, 0, W, H); wc.fillStyle = '#fff';
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (MAP[y][x] === 'W') wc.fillRect(x * T, y * T, T, T);
+  // Read smoothly, so that the edges of the shadows are a little soft.
+  const walls = texture(0, 0, false);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, wallsCanvas);
+  const light = program(`
+    uniform sampler2D walls; uniform vec2 pos; uniform float radius; uniform vec3 color; uniform float power;
+    const vec2 SIZE = vec2(${W}.0, ${H}.0);
+    void main(){
+      vec2 px = vec2(uv.x, 1.0 - uv.y) * SIZE;
+      float d = distance(px, pos);
+      if (d > radius) { gl_FragColor = vec4(0.0); return; }
+      // Walk from the point toward the light: a wall on the way puts the point in shadow, softly at the edge.
+      float lit = 1.0;
+      for (int i = 1; i < 16; i++) {
+        vec2 q = mix(px, pos, float(i) / 16.0);
+        float w = texture2D(walls, q / SIZE).r;
+        lit = min(lit, 1.0 - w * 0.95);
+      }
+      float onWall = texture2D(walls, px / SIZE).r;
+      lit = max(lit, onWall * 0.35);
+      // The same fall-off as the light map of today: full in the middle, four tenths at 0.45, nothing at the edge.
+      float v = d / radius;
+      float f = v < 0.45 ? mix(1.0, 0.4, v / 0.45) : mix(0.4, 0.0, (v - 0.45) / 0.55);
+      gl_FragColor = vec4(color * power * f * lit * 0.5, 1.0);
+    }`);
+  const compose = program(`
+    uniform sampler2D albedo; uniform sampler2D lights; uniform sampler2D glow; uniform vec2 shake;
+    void main(){
+      vec2 p = uv + shake;
+      vec3 a = texture2D(albedo, vec2(p.x, 1.0 - p.y)).rgb;
+      vec3 l = texture2D(lights, p).rgb * 2.0 + vec3(0.11, 0.095, 0.13);
+      vec3 e = texture2D(glow, vec2(p.x, 1.0 - p.y)).rgb;
+      vec3 c = a * l + a * l * l * 0.25 + e;
+      gl_FragColor = vec4(c, 1.0);
+    }`);
+  const bright = program(`
+    uniform sampler2D scene;
+    void main(){ vec3 c = texture2D(scene, uv).rgb; float b = max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c * smoothstep(0.45, 0.95, b), 1.0); }`);
+  const blur = program(`
+    uniform sampler2D src; uniform vec2 dir;
+    void main(){
+      vec3 c = texture2D(src, uv).rgb * 0.227;
+      c += (texture2D(src, uv + dir * 1.385).rgb + texture2D(src, uv - dir * 1.385).rgb) * 0.316;
+      c += (texture2D(src, uv + dir * 3.231).rgb + texture2D(src, uv - dir * 3.231).rgb) * 0.070;
+      gl_FragColor = vec4(c, 1.0);
+    }`);
+  const final = program(`
+    uniform sampler2D scene; uniform sampler2D bloom;
+    void main(){ vec3 c = texture2D(scene, uv).rgb + texture2D(bloom, uv).rgb * 1.8; gl_FragColor = vec4(c, 1.0); }`);
+  return {
+    gl, quad, light, compose, bright, blur, final, walls,
+    albedoTex: texture(0, 0, true), glowTex: texture(0, 0, true),
+    lightT: target(W, H), sceneT: null, b1: target(W / 2, H / 2), b2: target(W / 2, H / 2),
+    target,
+  };
+}
+function drawQuad(g, prog) {
+  const gl = g.gl;
+  gl.useProgram(prog.p);
+  gl.bindBuffer(gl.ARRAY_BUFFER, g.quad);
+  const loc = gl.getAttribLocation(prog.p, 'p');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+function bind(g, prog, name, unit, tex) {
+  const gl = g.gl;
+  gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.useProgram(prog.p); gl.uniform1i(prog.u(name), unit);
+}
+function renderGL() {
+  const g = G, gl = g.gl;
+  const s = scaleNow();
+  if (outgl.width !== W * s) { outgl.width = W * s; outgl.height = H * s; g.sceneT = null; }
+  if (!g.sceneT) g.sceneT = g.target(W * s, H * s);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, g.albedoTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, albedo);
+  gl.bindTexture(gl.TEXTURE_2D, g.glowTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, emissive);
+  // The lights, one after the other, added up at the game's own size.
+  gl.bindFramebuffer(gl.FRAMEBUFFER, g.lightT.fb); gl.viewport(0, 0, W, H);
+  gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+  bind(g, g.light, 'walls', 0, g.walls);
+  const lights = lightsNow('c');
+  for (const l of lights) {
+    gl.uniform2f(g.light.u('pos'), l.x, l.y);
+    gl.uniform1f(g.light.u('radius'), l.r);
+    gl.uniform3f(g.light.u('color'), l.c[0], l.c[1], l.c[2]);
+    gl.uniform1f(g.light.u('power'), l.p);
+    drawQuad(g, g.light);
+  }
+  gl.disable(gl.BLEND);
+  // The lit picture at the screen's size.
+  gl.bindFramebuffer(gl.FRAMEBUFFER, g.sceneT.fb); gl.viewport(0, 0, W * s, H * s);
+  bind(g, g.compose, 'albedo', 0, g.albedoTex); bind(g, g.compose, 'lights', 1, g.lightT.tex); bind(g, g.compose, 'glow', 2, g.glowTex);
+  gl.uniform2f(g.compose.u('shake'), ((rand() - 0.5) * S.shake) / W, ((rand() - 0.5) * S.shake) / H);
+  drawQuad(g, g.compose);
+  // The glow: the bright parts, blurred twice each way at half size.
+  gl.bindFramebuffer(gl.FRAMEBUFFER, g.b1.fb); gl.viewport(0, 0, W / 2, H / 2);
+  bind(g, g.bright, 'scene', 0, g.sceneT.tex); drawQuad(g, g.bright);
+  for (let i = 0; i < 3; i++) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, g.b2.fb); bind(g, g.blur, 'src', 0, g.b1.tex); gl.uniform2f(g.blur.u('dir'), (1.5 + i) / (W / 2), 0); drawQuad(g, g.blur);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, g.b1.fb); bind(g, g.blur, 'src', 0, g.b2.tex); gl.uniform2f(g.blur.u('dir'), 0, (1.5 + i) / (H / 2)); drawQuad(g, g.blur);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, W * s, H * s);
+  bind(g, g.final, 'scene', 0, g.sceneT.tex); bind(g, g.final, 'bloom', 1, g.b1.tex);
+  drawQuad(g, g.final);
+  return lights.length;
+}
+
+// ---------- the loop, the buttons and the meter ----------
+let version = 'c';
+let paused = false;
+const meter = document.getElementById('meter');
+const times = [];
+let shown = 0;
+try { G = setupGL(); } catch (e) { G = null; console.error(e); }
+function setVersion(v) {
+  if (v === 'c' && !G) v = 'b';
+  version = v;
+  document.querySelectorAll('[data-v]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+  out2d.hidden = v === 'c'; outgl.hidden = v !== 'c';
+}
+document.querySelectorAll('[data-v]').forEach((b) => b.addEventListener('click', () => setVersion(b.dataset.v)));
+document.getElementById('stress').addEventListener('click', (e) => { stress.on = !stress.on; e.currentTarget.setAttribute('aria-pressed', String(stress.on)); });
+document.getElementById('boom').addEventListener('click', boomNow);
+document.getElementById('pause').addEventListener('click', (e) => { paused = !paused; e.currentTarget.setAttribute('aria-pressed', String(paused)); });
+const asked = new URLSearchParams(location.search);
+if (asked.get('v')) setVersion(asked.get('v'));
+if (asked.has('stress')) document.getElementById('stress').click();
+setVersion(version);
+let last = performance.now();
+function frame(now) {
+  const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
+  last = now;
+  if (!paused) step(dt);
+  drawAlbedo(version);
+  drawEmissive(version);
+  const n = version === 'c' ? renderGL() : render2d(version);
+  times.push(dt); if (times.length > 60) times.shift();
+  if (now - shown > 400) {
+    shown = now;
+    const fps = Math.round(times.length / times.reduce((a, b) => a + b, 0));
+    const s = scaleNow();
+    meter.textContent = `${fps} bilder/s · ${W * s} × ${H * s} · ${n} ljus · ${S.parts.length} partiklar${G ? '' : ' · inget WebGL'}`;
+    meter.classList.toggle('slow', fps < 50);
+    window.__light = { fps, version, lights: n, parts: S.parts.length };
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
