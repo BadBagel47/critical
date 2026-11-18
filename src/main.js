@@ -297,10 +297,14 @@ loadAssets()
     game.assets = assets;
     refreshSaves();
     openPage(game, 'title');
-    // Adding ?test to the address starts straight in test mode.
+    // Adding ?test to the address starts straight in test mode. For the play-test list (F-222, playtest.html):
+    // &at= where to start, &call= what to call in at once (fighters, gunboat, raid, siege, traffic), and
+    // &nofuel an empty tank.
     if (/[?&]test\b/.test(window.location.search)) {
       game.actions.newGame({ test: true });
       startAt(asked.get('at'));
+      if (asked.has('nofuel')) game.state.ship.fuel = 0;
+      for (const what of (asked.get('call') || '').split(',').filter(Boolean)) game.actions.summon(what);
     }
     // A handle for the browser smoke test and for trying things out in the console.
     window['__critical'] = {

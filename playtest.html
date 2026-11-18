@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Provspelslista för Critical ST8</title>
+<style>
+/* The play-test list (F-222): what is built but not yet tried, each with a link that starts the right situation.
+   System fonts only, nothing is loaded from other services. */
+:root{--bg:#0f1122;--panel:#181b34;--ink:#e9ebf7;--muted:#a4aac8;--rule:#2b3054;--accent:#7db4ff;--ok:#7fd49a;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:960px;margin:0 auto;padding:32px 16px 80px;display:flex;flex-direction:column;gap:18px}
+h1{margin:0;font:400 clamp(2rem,6vw,3.2rem)/1 "Arial Black",Impact,sans-serif}
+h2{margin:18px 0 0;font-size:1rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+p{margin:0;max-width:70ch;color:var(--muted)}
+.item{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.top{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+.id{font:800 .85rem ui-monospace,Menlo,monospace;color:var(--accent)}
+.title{font-weight:800;font-size:1.1rem}
+.where{font-size:.85rem;color:var(--muted)}
+ol{margin:0;padding-left:1.3em;color:var(--ink)}
+li{margin:2px 0}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+a.go{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:8px;background:var(--accent);color:#0b1020;font-weight:800;text-decoration:none}
+a.go.ghost{background:#21254a;color:var(--ink);border:1px solid var(--rule)}
+.ask{font-size:.95rem;color:var(--ok)}
+code{font:600 .9rem ui-monospace,Menlo,monospace;background:#0b0d1c;border:1px solid var(--rule);border-radius:6px;padding:2px 6px;color:var(--ink)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Provspelslista</h1>
+  <p>Det som är byggt men inte provspelat, med en länk som startar rätt situation direkt. Prova en sak i taget och skriv vad du tycker i chatten, med sakens ID först, till exempel <code>F-279: tornen sprängdes, men …</code>. Agenten för in det i regelboken och backloggen.</p>
+  <p>Länkarna till spelet startar i testläget, där allt är upplåst. Där kallar tangenterna 6 till 9 in ett anfall på din bas, pirater och en räd, och 0 tar bort piraterna.</p>
+  <div id="list"></div>
+</main>
+<script>
+'use strict';
+// The list. When something is built that should be played, it is added here; when the user has tried it, it goes.
+// where: 'dator' or 'iPad'. links: [text, address]. ask: what the user is asked to say.
+const ITEMS = [
+  { group: 'Spelet', id: 'B-282, B-259', title: 'Snabbare grafik och markören med många skepp', where: 'dator',
+    steps: ['Starta, och vänta tills piraterna kommer.', 'Läs av FPS, SLOWEST FRAME och SCALE uppe till vänster.', 'Flytta markören medan många skepp är nära.'],
+    links: [['Starta med pirater och mätare', './?test&call=fighters,gunboat&fps']],
+    ask: 'Hur många bilder i sekunden, och blir markören fortfarande långsam?' },
+  { group: 'Spelet', id: 'B-281', title: 'Musiken på startskärmen i Brave', where: 'dator',
+    steps: ['Öppna spelet. Startskärmen ska säga PRESS ANY KEY FOR SOUND.', 'Bläddra i menyn med pilarna och släpp tangenten.'],
+    links: [['Öppna spelet', './']],
+    ask: 'Startar musiken, och försvinner texten?' },
+  { group: 'Spelet', id: 'F-278', title: 'Områdena på stjärnkartan', where: 'dator',
+    steps: ['Tryck J för stjärnkartan.', 'Se områdena ALPHA till DELTA och gränserna ut från fristaden.', 'Klicka på ett system: panelen säger vilket område det ligger i.'],
+    links: [['Starta i testläget', './?test']],
+    ask: 'Är områdena lätta att se och förstå?' },
+  { group: 'Spelet', id: 'F-279', title: 'Försvar som byggs upp själv', where: 'dator',
+    steps: ['Tryck 6 för ett anfall på din egen bas, och se hur den försvarar sig.', 'Ta en annan bas genom att borda den och ta mainframen: dess torn ska sprängas, och meddelandet säger det.', 'Köp torn till basen i mainframen.'],
+    links: [['Anfall på din bas', './?test&call=siege'], ['Starta i testläget', './?test']],
+    ask: 'Känns det logiskt att bygga upp försvaret själv? Två torn i lugna system och sex längre ut, är det lagom?' },
+  { group: 'Spelet', id: 'F-244, F-209', title: 'Standardbasen och fraktskeppets insida', where: 'dator',
+    steps: ['Docka vid CHARTER TEST DOCK och gå in i basen.', 'Borda fraktskeppets vrak och gå igenom det.'],
+    links: [['Starta i testläget', './?test']],
+    ask: 'Hur känns basens tre våningar och fraktskeppet?' },
+  { group: 'Spelet', id: 'F-085', title: 'Tom tank vid asteroiderna', where: 'dator',
+    steps: ['Du startar vid asteroiderna med tom tank.', 'Bryt malm och se att den blir bränsle så att du kan hoppa vidare.'],
+    links: [['Starta med tom tank', './?test&at=rocks&nofuel']],
+    ask: 'Går det att ta sig vidare utan att fastna?' },
+  { group: 'Designtester', id: 'F-283, D-261', title: 'Ljus, skuggor och effekter', where: 'dator och iPad',
+    steps: ['Växla mellan A, B och C.', 'Tryck Många ljus och partiklar, och läs av bilder i sekunden i B och C.'],
+    links: [['Öppna designtestet', 'docs/design/prototypes/light.html']],
+    ask: 'GR3: vilken version känns bäst, och hur många bilder i sekunden på din Mac och iPad?' },
+  { group: 'Designtester', id: 'D-262', title: 'Pekskärmen', where: 'iPad',
+    steps: ['Öppna i liggande läge på iPad.', 'Prova spakarna och de tre sätten för Gunner att sikta.'],
+    links: [['Öppna designtestet', 'docs/design/prototypes/touch.html']],
+    ask: 'P6–P8: vilket sikte, fasta eller flytande spakar, och ska gasen ligga kvar?' },
+  { group: 'Designtester', id: 'D-274, F-276', title: 'Storyn i uppdragstestaren', where: 'dator eller iPad',
+    steps: ['Välj Berättelse och läs en story.', 'Byt frö och kartstorlek. Titta på kartan: storyn ska gå genom alla områden.'],
+    links: [['Öppna testaren', 'docs/design/prototypes/missions.html?premise=convoy']],
+    ask: 'Hur känns berättelsen, och är ledtrådarna till mål man hittar själv lagom svåra?' },
+  { group: 'Designtester', id: 'D-280', title: 'Röstprovet', where: 'dator eller iPad',
+    steps: ['Välj Berättelse och tryck Spela hela storyn.'],
+    links: [['Lyssna på röstprovet', 'docs/design/prototypes/missions.html?size=medium&seed=4&premise=convoy']],
+    ask: 'VO4: ska storyn ha röster i spelet?' },
+];
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+let html = '';
+let group = null;
+for (const it of ITEMS) {
+  if (it.group !== group) { group = it.group; html += `<h2>${esc(group)}</h2>`; }
+  html += `<section class="item">
+    <div class="top"><span class="id">${esc(it.id)}</span><span class="title">${esc(it.title)}</span><span class="where">${esc(it.where)}</span></div>
+    <ol>${it.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
+    <div class="links">${it.links.map(([t, href], k) => `<a class="go${k ? ' ghost' : ''}" href="${esc(href)}">${esc(t)}</a>`).join('')}</div>
+    <div class="ask">Säg i chatten: ${esc(it.ask)}</div>
+  </section>`;
+}
+document.getElementById('list').innerHTML = html;
+</script>
+</body>
+</html>

@@ -3,6 +3,8 @@
 import { PIRATE } from './sides.js';
 import { makeVessel } from './vessels.js';
 import { startRaid } from './stations.js';
+import { startSiege } from './siege.js';
+import { thingsOf } from './things.js';
 import { rand, randRange, TAU } from './util.js';
 
 // Pirates of the given kinds jump in round the frigate, as a wave of them would.
@@ -41,6 +43,15 @@ export const SUMMONS = {
   traffic(state) {
     state.traffic.timer = 0;
     return 'FACTION TRAFFIC';
+  },
+  // An attack on the crew's own base in this system, as when one comes on its own (F-222). A test game has none
+  // unless it is asked for.
+  siege(state) {
+    if (state.siege) return 'AN ATTACK IS ALREADY ON';
+    const own = thingsOf(state, 'station').find((st) => st.side === 'crew');
+    if (!own) return 'NO BASE OF YOURS HERE';
+    startSiege(state, own, state.sector, PIRATE);
+    return 'PIRATES ATTACK YOUR BASE';
   },
   clear(state) {
     state.vessels = state.vessels.filter((v) => v.side !== PIRATE);

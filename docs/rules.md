@@ -1191,6 +1191,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1234 | Spelets bild ritas med högst fyra skärmpunkter per spelpunkt, och ett steg mindre så länge bilderna kommer för långsamt. | byggd | Agentens mätning 2026-11-17 (B-282): sex gånger blev 4K-stort på en retinaskärm | tests/scale.test.js |
 | R-1235 | Stjärnkartan visar områdena ALPHA, BETA, GAMMA, DELTA och på den stora kartan EPSILON, med gränser ut från fristaden, och säger i vilket område ett system ligger. Varje område har ungefär lika många system. | byggd | Användaren 2026-11-17 (OM1, OM4, F-278); byggt 2026-11-18 | tests/story.test.js |
 | R-1236 | Spelet försöker starta ljudet vid varje tangent, när en tangent släpps, vid klick och när ett finger lyfts, och startskärmen visar PRESS ANY KEY FOR SOUND så länge ljudet inte har startat. | byggd | Användaren 2026-11-17 (B-281, Brave på macOS) | saknas |
+| R-1237 | Provspelslistan är en egen sida bredvid spelet med det som är byggt men inte provspelat, en länk per sak som startar rätt situation, och vad användaren ska säga. Synpunkter lämnas i chatten med sakens ID. I testläget kallar tangenten 6 in ett anfall på den egna basen. | byggd | Användaren 2026-11-16 och 2026-11-17 (F-222, PS1, PS2) | saknas |
 | R-943 | Skepp i nöd ber om bränsle eller reparation och betalar eller minns det. | förslag | BACKLOG F-083 | – |
 | R-944 | Captain kan anropa skepp och stationer för att be om bränsle, muta eller kräva tribut. | förslag | BACKLOG F-082 | – |
 
