@@ -67,7 +67,7 @@ const act = (name, code, label, short, more = {}) => ({
   gain: (WHO[name] || [])[2] || null,
   ...more,
 });
-const use = (name, label, short, more = {}) => act(name, 'KeyF', label, short, { main: true, ...more });
+const use = (name, label, short, more = {}) => act(name, 'KeyE', label, short, { main: true, ...more });
 
 // What the use key does with the thing the ship is docked at.
 function dockedUse(state, me, t) {
@@ -95,14 +95,14 @@ function onBoard(state, me) {
   const ship = state.ship;
   const captain = me.post === 'captain';
   if (!ship.docked) {
-    return captain && dockCandidate(state) ? [act('dock', 'KeyE', 'DOCK', 'DOCK', { main: true })] : [];
+    return captain && dockCandidate(state) ? [act('dock', 'KeyQ', 'DOCK', 'DOCK', { main: true })] : [];
   }
   const t = findDock(state, ship.docked);
   if (!t) return [];
   const list = [dockedUse(state, me, t)];
   if (captain) {
     const inside = state.players.some((p) => p.inside === t.id);
-    list.push(act('undock', 'KeyE', inside ? 'UNDOCK AND RECALL' : 'UNDOCK', 'UNDOCK'));
+    list.push(act('undock', 'KeyQ', inside ? 'UNDOCK AND RECALL' : 'UNDOCK', 'UNDOCK'));
     // With someone inside, the Captain can follow them on the boarding radar.
     if (inside && t.interior && !t.interior.trade) list.push(act('radar', 'KeyB', 'BOARDING RADAR', 'RADAR'));
   }

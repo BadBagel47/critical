@@ -647,6 +647,6 @@ export function drawShop(ctx, font, state, st, sv, mouse, who = null) {
     }
   }
   if (reason) font.draw(ctx, reason, SIDE.x + 8, SIDE.y + SIDE.h - 38, COL.ember[2]);
-  const keys = sv.mode === 'stores' ? 'I  CLOSE' : 'F  CLOSE';
+  const keys = sv.mode === 'stores' ? 'I  CLOSE' : 'E  CLOSE';
   font.draw(ctx, 'CLICK TO PICK    WHEEL  SCROLL    ' + keys, P.x + P.w - 12, P.y + P.h - 9, COL.faint, { align: 'r' });
 }

@@ -198,7 +198,7 @@ export function drawBoarderHud(ctx, font, state, view, player, place, me, origin
   if (me && me.sentries) x = label(ctx, font, x, 336, 'T  TURRET') + 4;
   // What is carried for the dark has a line of its own above the rest.
   if (me && it.dark) {
-    const lamp = label(ctx, font, 114, 320, me.lamp ? 'L  LAMP' : 'L  LAMP OFF', {
+    const lamp = label(ctx, font, 114, 320, me.lamp ? 'F  LAMP' : 'F  LAMP OFF', {
       fg: me.lamp ? COL.text : COL.faint,
     });
     if (me.flares) label(ctx, font, lamp + 4, 320, 'Q  FLARES  ' + me.flares);
