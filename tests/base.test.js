@@ -10,7 +10,7 @@ import { gatherForTesting } from '../src/sim/sectors.js';
 import { layOut } from '../src/sim/layout.js';
 import { basePlan, turnsOf, RADIUS } from '../src/sim/base.js';
 import { BASE } from '../src/sim/kinds.js';
-import { gunSlots, remountGuns, takeOver } from '../src/sim/stations.js';
+import { gunSlots, remountGuns, takeOver, fall, defenseOf, GUNS_AT } from '../src/sim/stations.js';
 import { cutPower } from '../src/sim/pressure.js';
 import { blocked, los, solidAt, deckOf, TILE } from '../src/sim/floor.js';
 import { stepDoors } from '../src/sim/furnish.js';
@@ -114,8 +114,35 @@ test('R-1163 R-1208 R-1164: ten places for guns, filled as the defence is bought
     'the large gun, whatever the level',
   );
   assert.equal(st.guns.length, 3);
-  // A base that is not the crew's has the four on its basement to defend itself with.
-  assert.equal(gunSlots(free(quiet(2))).length, 4);
+});
+
+test('R-1230 R-1231 R-218: guns by danger, a taken base blows its own, and a base taken back gets its own back', () => {
+  // Two guns where it is calm, six further out.
+  const st0 = free(quiet(2));
+  assert.equal(gunSlots(st0).length, 2, 'a calm system: two');
+  assert.deepEqual(
+    B.OTHERS_DEFENSE.map((lv) => GUNS_AT[lv]),
+    [2, 2, 6, 6],
+  );
+  // Taken by the crew: the mounts stand empty, and the message says why.
+  const s = quiet();
+  const st = free(s);
+  st.defense = { ...st.defense, guns: 2, shield: 1 };
+  remountGuns(st);
+  assert.equal(st.guns.length, 6);
+  takeOver(s, st);
+  assert.equal(st.guns.length, 0, 'the guns are blown');
+  assert.equal(defenseOf(st).guns, 0);
+  assert.equal(defenseOf(st).shield, 1, 'the shield stays');
+  assert.ok(s.events.some((e) => e.type === 'stationTaken' && e.blown));
+  // The crew buys guns, loses the base, and takes it back: half of what it bought is there again (R-218).
+  st.defense = { ...st.defense, guns: 3 };
+  remountGuns(st);
+  fall(s, st, 'pirate');
+  assert.equal(defenseOf(st).guns, 1);
+  takeOver(s, st);
+  assert.equal(defenseOf(st).guns, 1, 'not blown: what was left of its own');
+  assert.equal(st.guns.length, 2);
 });
 
 test('R-172 R-1159 R-1160 R-1161: the lamps show how the base sees the crew, and ST8 is painted on a taken base', () => {

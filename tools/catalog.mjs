@@ -16,7 +16,7 @@ import { PIPE_GRID } from '../src/sim/breakin.js';
 import { layOut } from '../src/sim/layout.js';
 import { RADIUS, DECK_NAMES } from '../src/sim/base.js';
 import { B } from '../src/sim/balance.js';
-import { GUNS_AT, OTHERS_GUNS } from '../src/sim/stations.js';
+import { GUNS_AT } from '../src/sim/stations.js';
 
 const table = (head, rows) =>
   [`| ${head.join(' | ')} |`, `|${head.map(() => '---').join('|')}|`, ...rows.map((r) => `| ${r.join(' | ')} |`)].join(
@@ -75,7 +75,11 @@ function bases() {
           'Kanontorn',
           `liv ${num(B.STATION_GUN_HP)}, skada ${num(B.STATION_GUN_DMG)} (pirater ${num(B.PIRATE_STATION_GUN_DMG)}), +${num(B.DEFENSE_GUN * 100)} % per köpt nivå`,
         ],
-        ['Torn per köpt nivå (R-1208)', `${GUNS_AT.join(', ')}. Andra sidors baser har minst ${OTHERS_GUNS} (R-1207)`],
+        ['Torn per köpt nivå (R-1208)', `${GUNS_AT.join(', ')}`],
+        [
+          'Andra sidors baser (R-1230)',
+          `försvarsnivå efter fara ${B.OTHERS_DEFENSE.join(', ')}, alltså ${B.OTHERS_DEFENSE.map((l) => GUNS_AT[l]).join(', ')} torn. En bas som besättningen tar spränger sina torn (R-1231)`,
+        ],
         ['Tunga torn på toppen', `${num(B.HEAVY_GUN_DMG)} gånger skadan`],
         ['Stor kanon (R-1164)', `${num(B.CANNON_PRICE)} krediter, ${num(B.CANNON_DMG)} gånger skadan`],
         ['Försvar i mainframen, per nivå', B.DEFENSE_PRICE.join(', ') + ' krediter (sköld, kanoner, säkerhet inne)'],

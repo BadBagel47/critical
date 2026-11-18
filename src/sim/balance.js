@@ -367,6 +367,9 @@ export const B = {
   STATION_INCOME: { station: 50, crew: 25 },
   DEFENSE_SHIELD: 0.5,
   DEFENSE_GUN: 0.35,
+  // The defence of a base that is not the crew's, by how dangerous its system is (R-1230): the level of guns, so
+  // two guns in the calm systems near the sanctuary and six further out. A proposal, to be tried in play.
+  OTHERS_DEFENSE: [1, 1, 2, 2],
   // Breaking into a station that trades (section 9). What the alarm costs with the station's own side, and
   // what taking it costs with everyone else. The help it calls comes this many seconds after the alarm.
   SEIZE_STANDING: 40,

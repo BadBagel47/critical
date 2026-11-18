@@ -7,7 +7,7 @@ import { damageShip } from '../src/sim/damage.js';
 import { thingsOf } from '../src/sim/things.js';
 import { makeVessel, hurtVessel } from '../src/sim/vessels.js';
 import { moodOf, enemies, isAngry, changeStanding, stepStanding, FACTIONS } from '../src/sim/sides.js';
-import { servicePrices, damageStation, isTrading, remountGuns } from '../src/sim/stations.js';
+import { servicePrices, damageStation, isTrading, remountGuns, gunHpMax } from '../src/sim/stations.js';
 import { dockShieldMax, CATALOG } from '../src/sim/upgrades.js';
 import { SHIPS, BASE } from '../src/sim/kinds.js';
 import { B } from '../src/sim/balance.js';
@@ -203,8 +203,8 @@ test('a station does not make peace while the crew is breaking into it, and one 
 test('a station has a shield that takes the hits first and comes back, and guns that can be shot off and are mended', () => {
   const s = farOut(quiet()),
     st = post(s);
-  // R-1163: a base that is not the crew's has at least the four guns on its basement.
-  assert.equal(st.guns.length, 4);
+  // R-1230: a base that is not the crew's has the guns of its system's danger, here the two of a calm system.
+  assert.equal(st.guns.length, 2);
   assert.ok(st.guns.every((g) => BASE.guns.slice(0, 4).some((p) => p.x === g.x && p.y === g.y)));
   damageStation(s, st, 50, { x: st.x, y: st.y }, 'pirate');
   assert.equal(st.shield, B.STATION_SHIELD - 50);
@@ -212,7 +212,7 @@ test('a station has a shield that takes the hits first and comes back, and guns 
   run(s, {}, B.STATION_SHIELD_DELAY + 50 / B.STATION_SHIELD_RECHARGE + 0.5);
   assert.equal(st.shield, B.STATION_SHIELD, 'the shield comes back after a while without hits');
   const gun = st.guns[0];
-  damageStation(s, st, B.STATION_SHIELD + B.STATION_GUN_HP, toWorld(st, gun), 'pirate');
+  damageStation(s, st, B.STATION_SHIELD + gunHpMax(st) + 1, toWorld(st, gun), 'pirate');
   assert.equal(st.shield, 0);
   assert.ok(gun.hp <= 0, 'a hit on a gun takes the gun out');
   assert.equal(st.hp, B.STATION_HP, 'and spares the hull');

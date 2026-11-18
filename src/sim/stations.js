@@ -26,15 +26,14 @@ import { earn, spend, mayBuyFor, ownPurse, ROLE_NAME } from './purses.js';
 import { turnOnCrew } from './mainframe.js';
 import { forward, headingTo, turnToward, angleDiff, toWorld, dist, rand, randRange, TAU } from './util.js';
 
-// The guns a base has, of its ten places (R-1163): none with no defence bought, two, six and all ten. A base
-// that is not the crew's has the four on its basement at least, as it always has had, to defend itself with.
+// The guns a base has, of its ten places (R-1208): none with no defence bought, two, six and all ten. A base that
+// is not the crew's gets a level of defence from how dangerous its system is when it is made (R-1230, sectors.js).
 // The large gun is bought on its own (R-1164). `off` is a gun of the crew's own station that has been mended and
 // waits to be switched on at the mainframe. Guns that are already there keep how they are.
 export const GUNS_AT = [0, 2, 6, 10];
-export const OTHERS_GUNS = 4;
 export function gunSlots(st) {
   const d = defenseOf(st);
-  const n = st.side === CREW ? GUNS_AT[d.guns] : Math.max(OTHERS_GUNS, GUNS_AT[d.guns]);
+  const n = GUNS_AT[d.guns];
   const list = BASE.guns.slice(0, n);
   return d.cannon ? [...list, BASE.cannon] : list;
 }
@@ -100,9 +99,11 @@ export function createStation(s, x, y, side, shipyard, name, home = false) {
     defense: { shield: 0, guns: 0, inner: 0, cannon: 0 },
     // On a station of the crew's: the part being mended from the mainframe, 'hull' or a gun by number.
     fix: null,
-    // When the crew took it, and whose it was before.
+    // When the crew took it, and whose it was before. `crewDefense` is what the crew gets back if it takes its own
+    // base again after it fell (R-218).
     takenAt: null,
     from: null,
+    crewDefense: null,
     guns: [],
     // A station of the crew's: its own purse for its defence, and the seconds towards its next income (F-088).
     purse: 0,
@@ -160,8 +161,13 @@ function syncStation(state, st) {
 }
 
 // The crew takes a station over. It becomes theirs, with a shipyard.
-// It is left in peace for a while, see siege.js. What was bought for its defence before is still there.
+// It is left in peace for a while, see siege.js. The base's security blows its own guns as it falls, so the
+// mounts stand empty and the crew builds the defence up itself (R-1231). A base of the crew's own that is taken
+// back gets what was left of what the crew bought (R-218). Shield and inner security stay as they were.
 export function takeOver(state, st) {
+  const blown = !st.crewDefense && (defenseOf(st).guns > 0 || defenseOf(st).cannon > 0);
+  st.defense = st.crewDefense ? { ...st.crewDefense } : { ...defenseOf(st), guns: 0, cannon: 0 };
+  st.crewDefense = null;
   st.from = st.side;
   st.side = CREW;
   st.takenAt = state.time;
@@ -192,7 +198,7 @@ export function takeOver(state, st) {
     setMood(it, null);
     it.desks = [];
   }
-  state.events.push({ type: 'stationTaken', name: st.name });
+  state.events.push({ type: 'stationTaken', name: st.name, blown });
 }
 
 // A station falls to those who attacked it: pirates that overran it, or the attackers on a station of the
@@ -210,6 +216,8 @@ export function fall(state, st, by = PIRATE) {
     inner: Math.floor(d.inner / 2),
     cannon: 0,
   };
+  // What the crew gets back if it takes its base again (R-218).
+  if (st.from === CREW) st.crewDefense = { ...st.defense };
   st.guns = mountGuns(st);
   st.favor = 0;
   state.events.push({ type: 'stationFell', name: st.name, side: by });
