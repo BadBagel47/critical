@@ -7,6 +7,7 @@ import { arrival, placeShip } from './system.js';
 import { createSectors, generateSector, gatherForTesting } from './sectors.js';
 import { applyTestLoadout } from './upgrades.js';
 import { createPurses } from './purses.js';
+import { createStoryState } from './questline.js';
 
 // `options.test` starts the game with everything unlocked, for trying things out.
 // `options.hardcore` gives the crew a single life: a lost ship ends the run for good.
@@ -70,6 +71,8 @@ export function createState(seed = 1, options = {}) {
     sector: 0,
     charts: [],
     jump: null,
+    // How far the crew has come in the main story (questline.js). A test game has none.
+    story: createStoryState(!!options.test),
   };
   state.sectors = createSectors(state, state.size);
   generateSector(state, 0);

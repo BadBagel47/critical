@@ -6,6 +6,7 @@ import { VIEW_W, VIEW_H, COL } from '../config.js';
 import { currentSector, jumpBlocked } from '../sim/sectors.js';
 import { viewOf } from '../sim/intel.js';
 import { hopsFrom, regionLayout } from '../sim/world.js';
+import { storyMark } from '../sim/questline.js';
 import { jumpCharge, jumpFuel } from '../sim/upgrades.js';
 import { playerById } from '../sim/players.js';
 import { FACTIONS } from '../sim/sides.js';
@@ -232,6 +233,17 @@ export function drawStarMap(ctx, state, view, assets) {
     ctx.stroke();
   }
   for (const sec of systems) drawSystem(ctx, state, sec, sec.id === picked);
+  // The story's next system: where it is, and nothing more (R-1226). Drawn also if the crew has not seen it.
+  const mark = storyMark(state);
+  if (mark !== null) {
+    const p = spot(state.sectors[mark]);
+    const r = 7 + Math.round(2 * Math.sin(state.time * 4));
+    ctx.strokeStyle = COL.captain;
+    ctx.beginPath();
+    ctx.arc(p.x + 0.5, p.y + 0.5, r, 0, Math.PI * 2);
+    ctx.stroke();
+    font.draw(ctx, 'STORY', p.x, p.y + 10, COL.captain, { align: 'c' });
+  }
   font.draw(ctx, 'STAR MAP', AREA.x + 6, AREA.y + 6, COL.dim);
   drawPanel(ctx, font, state, view, view.mouse);
 }

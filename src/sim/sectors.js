@@ -252,8 +252,9 @@ function returnWreck(state, sec, away) {
   addThing(state, createWreck(state, p.x, p.y, difficulty));
 }
 
-// Store this sector as it is, then load or create the next one.
-function arrive(state, to) {
+// Store this sector as it is, then load or create the next one. Exported for the tests, which go straight to a
+// system.
+export function arrive(state, to) {
   const ship = state.ship;
   // An attack on a station of the crew's goes on without them, and those hunting them lose track of them.
   leaveSiege(state);
