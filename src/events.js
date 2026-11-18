@@ -54,7 +54,7 @@ const TOAST = {
   recalled: (e) => [`UNDOCKED  ·  ${e.count} TELEPORTED HOME`, BAD],
   doorOpen: () => ['VAULT OPEN', LOOT],
   wreckExploded: () => ['THE WRECK BLEW UP', BAD],
-  lockOpen: (e) => (e.kind === 'pod' ? null : ['LOCK BYPASSED  ·  F TO BOARD', GOOD]),
+  lockOpen: (e) => (e.kind === 'pod' ? null : ['LOCK BYPASSED  ·  E TO BOARD', GOOD]),
   reactorShaken: (e) => [
     `BYPASS FAILED  ·  THE REACTOR LOSES ${e.lost} S` + (e.last ? '  ·  ONE MORE BLOWS THE WRECK' : ''),
     BAD,

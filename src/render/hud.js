@@ -253,7 +253,8 @@ function drawGunnerPanel(ctx, font, state, view) {
     const text = out ? `DARTS OUT  ${state.darts.length}  ·  R RECALL` : `DARTS  ${ship.dartStock}  ·  ${launch}`;
     label(ctx, font, 150, 314, text, { fg: out ? COL.ion[2] : COL.text, border: out ? COL.ion[0] : COL.line });
   }
-  const keys = weapons.length > 1 ? 'MOUSE AIM  ·  CLICK FIRE  ·  Q E WEAPON' : 'MOUSE AIM  ·  CLICK OR SPACE TO FIRE';
+  const keys =
+    weapons.length > 1 ? 'MOUSE AIM  ·  CLICK FIRE  ·  Q OR WHEEL WEAPON' : 'MOUSE AIM  ·  CLICK OR SPACE TO FIRE';
   font.draw(ctx, keys, VIEW_W - 8, 346, COL.faint, { align: 'r' });
   ctx.fillStyle = COL.ochre[3];
   for (const [dx, dy, w, h] of CROSSHAIR)
@@ -303,46 +304,33 @@ export function drawOverlay(ctx, font, title, lines, color = COL.text) {
   });
 }
 
+// One line each, short enough for the box (R-1239).
 const HELP = [
-  [
-    'ALL POSTS',
-    '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     J  STAR MAP     I  STORES     F  USE WHAT YOU ARE DOCKED AT',
-  ],
-  [
-    'CAPTAIN',
-    'W S  THROTTLE     A D  TURN     X  FULL STOP     E  DOCK AND UNDOCK     R  DARTS     SHIFT  AFTERBURNER',
-  ],
-  ['', 'C  SET A COURSE FOR THE NEXT PLACE ON THE MAP'],
-  ['ALL POSTS', 'Z  CHARGE THE BOOST, CAPTAIN LETS IT GO     CAPTAIN AND GUNNER  T  MARK A SHIP FOR THE OTHER'],
+  ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     J  STAR MAP'],
+  ['', 'I  STORES     L  LOG     E  GO ABOARD WHERE DOCKED     O  MENU     N  SOUND'],
+  ['', 'Z  CHARGE THE BOOST, THE CAPTAIN LETS IT GO     T  MARK A SHIP FOR THE OTHERS'],
+  ['CAPTAIN', 'W S  THROTTLE     A D  TURN     X  FULL STOP     Q  DOCK AND UNDOCK'],
+  ['', 'R  DARTS     SHIFT  AFTERBURNER     C  COURSE TO THE NEXT PLACE ON THE MAP'],
   ['', 'ON THE STAR MAP  PICK A SYSTEM NEXT TO THIS ONE, AND WHERE TO ARRIVE'],
-  [
-    'GUNNER',
-    'MOUSE  AIM     CLICK OR SPACE  FIRE     Q E  CHANGE WEAPON     X  SHIELD ON AND OFF     R  DARTS OUT AND HOME',
-  ],
-  ,
-  ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  SEND THE REPAIR CREW     SHIFT CLICK  QUEUE'],
-  [
-    '',
-    'V  OPEN AND FOLD AWAY THE PANEL     Q  SCANNER PULSE     B  DROP A BUOY     ON THE MAP  CLICK FOR A PROBE  ·  STAR MAP TOO',
-  ],
-  ['BOARDING', 'W A S D  MOVE     MOUSE  AIM     CLICK  FIRE     G  GRENADE     F  USE     C  CHARGE     T  TURRET'],
-  [
-    '',
-    'IN THE DARK  L  LAMP ON AND OFF     Q  THROW A FLARE     R  TRANQ GUN AND BACK     F  TAKE DOWN A SLEEPING GUARD',
-  ],
-  ['', 'O  MENU: SAVE, LOAD AND SOUND     N  ALL SOUND ON AND OFF     A GAMEPAD WORKS TOO'],
-  [
-    'TEST MODE',
-    '6  ATTACK ON YOUR BASE   7  PIRATE FIGHTERS   8  PIRATE GUNBOAT   9  A RAID ON A STATION   0  REMOVE PIRATES',
-  ],
+  ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE     Q OR THE WHEEL  CHANGE WEAPON'],
+  ['', 'X  SHIELD ON AND OFF     R  DARTS OUT AND HOME'],
+  ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  REPAIR CREW     SHIFT CLICK  QUEUE'],
+  ['', 'V  FOLD THE PANEL     Q  SCANNER PULSE     B  BUOY     CLICK THE MAP  PROBE'],
+  ['BOARDING', 'W A S D  MOVE     MOUSE  AIM     CLICK  FIRE     G  GRENADE     E  USE'],
+  ['', 'C  CHARGE     T  TURRET     F  LAMP     Q  FLARE     R  TRANQ GUN AND BACK'],
+  ['', 'E BY A SLEEPING GUARD  TAKE IT DOWN     A GAMEPAD WORKS TOO'],
+  ['TEST MODE', '6  ATTACK ON YOUR BASE   7  FIGHTERS   8  GUNBOAT   9  RAID   0  NO PIRATES'],
+  ['', 'A POST YOU LEAVE KEEPS DOING WHAT YOU SET IT TO.'],
 ];
 export function drawHelp(ctx, font, y0 = 96) {
-  rect(ctx, 30, y0 - 18, 580, 202, COL.panel, COL.line);
-  font.draw(ctx, 'CONTROLS', 42, y0 - 6, COL.text);
+  // The box grows with the list, and is moved up when it would reach below the screen.
+  const h = HELP.length * 15 + 44;
+  const top = Math.min(y0 - 18, VIEW_H - 6 - h);
+  rect(ctx, 30, top, 580, h, COL.panel, COL.line);
+  font.draw(ctx, 'CONTROLS', 42, top + 12, COL.text);
   HELP.forEach(([who, text], i) => {
-    const y = y0 + 14 + i * 16;
+    const y = top + 30 + i * 15;
     if (who) font.draw(ctx, who, 42, y, COL[who.toLowerCase()] || COL.text);
     font.draw(ctx, text, 110, y, COL.dim);
   });
-  font.draw(ctx, 'A POST YOU LEAVE KEEPS DOING WHAT YOU SET IT TO.', 42, y0 + 166, COL.faint);
 }

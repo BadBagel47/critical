@@ -154,7 +154,7 @@ ICON.panel = [
   '..#######..',
 ];
 
-const KEY_NAME = { KeyE: 'E', KeyF: 'F', KeyC: 'C', KeyV: 'V', KeyB: 'B' };
+const KEY_NAME = { KeyE: 'E', KeyF: 'F', KeyQ: 'Q', KeyC: 'C', KeyV: 'V', KeyB: 'B' };
 // How the player is playing right now: 'touch', 'pad' or 'keys'.
 const styleOf = (keys) => (keys.touch ? 'touch' : keys.pad.used ? 'pad' : 'keys');
 // Where the lowest button ends: above the HUD in space and inside, and at the bottom edge beside a panel.

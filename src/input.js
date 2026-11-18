@@ -22,7 +22,7 @@ const PAD_BUTTONS = [
 ];
 // What each button means in each situation, as the keyboard key it stands in for. CLICK presses the cursor.
 const PAD_KEYS = {
-  all: { START: 'KeyP', BACK: 'KeyM', B: 'KeyF' },
+  all: { START: 'KeyP', BACK: 'KeyM', B: 'KeyE' },
   menu: {
     A: 'Enter',
     START: 'Enter',
@@ -33,7 +33,7 @@ const PAD_KEYS = {
     RIGHT: 'ArrowRight',
   },
   captain: {
-    A: 'KeyE',
+    A: 'KeyQ',
     X: 'KeyX',
     Y: 'KeyR',
     L3: 'ShiftLeft',
@@ -44,7 +44,16 @@ const PAD_KEYS = {
     RB: 'Tab',
     LB: 'PadPrevPost',
   },
-  gunner: { RIGHT: 'KeyE', LEFT: 'KeyQ', A: 'KeyT', Y: 'KeyZ', X: 'KeyR', UP: 'KeyX', RB: 'Tab', LB: 'PadPrevPost' },
+  gunner: {
+    RIGHT: 'KeyQ',
+    LEFT: 'PadPrevWeapon',
+    A: 'KeyT',
+    Y: 'KeyZ',
+    X: 'KeyR',
+    UP: 'KeyX',
+    RB: 'Tab',
+    LB: 'PadPrevPost',
+  },
   engineer: {
     UP: 'ArrowUp',
     DOWN: 'ArrowDown',
@@ -61,7 +70,7 @@ const PAD_KEYS = {
   map: { X: 'KeyQ', Y: 'KeyB', A: 'CLICK', RB: 'Tab', LB: 'PadPrevPost' },
   panel: { A: 'CLICK' },
   radar: { A: 'CLICK', RIGHT: 'KeyB' },
-  away: { A: 'KeyF', X: 'KeyC', Y: 'KeyT', RB: 'KeyG', LB: 'KeyQ', L3: 'KeyL', R3: 'KeyR' },
+  away: { A: 'KeyE', X: 'KeyC', Y: 'KeyT', RB: 'KeyG', LB: 'KeyQ', L3: 'KeyF', R3: 'KeyR' },
 };
 const dead = (v) => (Math.abs(v) < 0.2 ? 0 : v);
 // The gamepad button that stands in for a key in the given layout, or null. The layout's own button comes

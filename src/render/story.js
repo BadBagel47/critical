@@ -1,4 +1,4 @@
-// The main story on the screen (D-052, R-1216): the log on K, with the story's task, the clues and what has
+// The main story on the screen (D-052, R-1216): the log on L, with the story's task, the clues and what has
 // happened, and a card with the scene each time a step is done, or a choice is to be made.
 import { COL, VIEW_W, VIEW_H } from '../config.js';
 import { FACTIONS } from '../sim/sides.js';
@@ -34,7 +34,7 @@ export function drawStoryLog(ctx, font, state) {
   const left = BOX.x + 14;
   const width = BOX.w - 28;
   font.draw(ctx, 'LOG', left, BOX.y + 10, COL.text, { scale: 2 });
-  font.draw(ctx, 'K  CLOSE', BOX.x + BOX.w - 14, BOX.y + 14, COL.dim, { align: 'r' });
+  font.draw(ctx, 'L  CLOSE', BOX.x + BOX.w - 14, BOX.y + 14, COL.dim, { align: 'r' });
   const log = storyLog(state);
   let y = BOX.y + 40;
   const line = (text, color = COL.dim) => {

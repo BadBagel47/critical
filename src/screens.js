@@ -110,7 +110,7 @@ const stickAim = (view, pad) => {
 // Shared by every mode on board the ship: F uses what the ship is docked at, and the post keys change post.
 function onBoard(game, out) {
   const { keys, state, me } = game;
-  if (keys.hit('KeyF') && state.ship.docked) out.board = true;
+  if (keys.hit('KeyE') && state.ship.docked) out.board = true;
   const at = POSTS.indexOf(me.post);
   if (keys.hit('Digit1')) out.take = 'captain';
   if (keys.hit('Digit2')) out.take = 'gunner';
@@ -128,7 +128,7 @@ function captainInput(game, out) {
     throttle: axis(keys, ['KeyW', 'ArrowUp'], ['KeyS', 'ArrowDown']) + keys.pad.rt - keys.pad.lt,
     turn: axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx,
     stop: keys.hit('KeyX'),
-    dock: keys.hit('KeyE'),
+    dock: keys.hit('KeyQ'),
     boost: keys.down('ShiftLeft', 'ShiftRight'),
     surge: keys.hit('KeyZ'),
     mark: keys.hit('KeyT'),
@@ -149,7 +149,9 @@ function gunnerInput(game, out) {
   out.gunner = {
     aim,
     fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5,
-    weapon: keys.hit('KeyE') ? 1 : keys.hit('KeyQ') ? -1 : null,
+    // Q goes round the weapons, and the wheel goes either way (R-1239).
+    weapon:
+      keys.hit('KeyQ') || keys.mouse.wheel > 0 ? 1 : keys.hit('PadPrevWeapon') || keys.mouse.wheel < 0 ? -1 : null,
     surge: keys.hit('KeyZ'),
     mark: keys.hit('KeyT') ? aim : null,
     // X switches the shield on and off (R-1129), and R sends the Darts out and calls them home (R-1187).
@@ -243,11 +245,11 @@ function starsInput(game, out) {
   }
 }
 
-// At the break-in panel: clicks work the lock. F steps away from it.
+// At the break-in panel: clicks work the lock. E steps away from it.
 function lockInput(game, out) {
   const { keys, state, view } = game;
   const m = keys.mouse;
-  if (keys.hit('KeyF')) {
+  if (keys.hit('KeyE')) {
     view.panel = null;
     return;
   }
@@ -256,10 +258,10 @@ function lockInput(game, out) {
   if (order) out.hack = [order];
 }
 
-// At a station desk: clicks buy things. F steps away from it.
+// At a station desk: clicks buy things. E steps away from it.
 function shopInput(game, out) {
   const { keys, state, view } = game;
-  if (keys.hit('KeyF')) {
+  if (keys.hit('KeyE')) {
     view.panel = null;
     return;
   }
@@ -281,10 +283,10 @@ function storesInput(game, out) {
   workShop(game, null, out);
 }
 
-// At a station's mainframe: clicks give orders. F steps away from it.
+// At a station's mainframe: clicks give orders. E steps away from it.
 function mainframeInput(game, out) {
   const { keys, state, view } = game;
-  if (keys.hit('KeyF')) {
+  if (keys.hit('KeyE')) {
     view.panel = null;
     return;
   }
@@ -325,9 +327,9 @@ function awayInput(game, out) {
     grenade: keys.hit('KeyG') || m.rightClicked ? lob : null,
     flare: keys.hit('KeyQ') ? lob : null,
     swap: keys.hit('KeyR'),
-    lampPressed: keys.hit('KeyL'),
-    use: keys.down('KeyF'),
-    usePressed: keys.hit('KeyF'),
+    lampPressed: keys.hit('KeyF'),
+    use: keys.down('KeyE'),
+    usePressed: keys.hit('KeyE'),
     charge: keys.hit('KeyC'),
     deploy: keys.hit('KeyT'),
   };
@@ -499,7 +501,7 @@ export function playerInput(game) {
   return out;
 }
 
-// The story (D-052): the card of a step the player has not seen yet, or of a choice to make, and the log on K. While
+// The story (D-052): the card of a step the player has not seen yet, or of a choice to make, and the log on L. While
 // a card is open, the keys that close it or choose are kept from the posts.
 const storyCard = (game) => {
   const { state, view } = game;
@@ -515,9 +517,9 @@ function storyKeys(game) {
   if (view.storySeen === null) {
     view.storySeen = state.story.done.length;
     if (state.story.at === 0)
-      toast(view, state, 'SOMEONE IS WAITING FOR YOU AT THE SANCTUARY  ·  K  LOG', COL.captain, 6);
+      toast(view, state, 'SOMEONE IS WAITING FOR YOU AT THE SANCTUARY  ·  L  LOG', COL.captain, 6);
   }
-  if (keys.hit('KeyK')) view.log = !view.log;
+  if (keys.hit('KeyL')) view.log = !view.log;
   if (view.log) return;
   const card = storyCard(game);
   if (card === null) return;
@@ -571,7 +573,7 @@ export function viewKeys(game, mode) {
   // V folds the Engineer's screen away and brings it back.
   if (mode === 'engineer' && keys.hit('KeyV')) view.engOpen = !view.engOpen;
   // B opens the Captain's boarding radar, and closes it.
-  if (mode === 'radar' && keys.hit('KeyB', 'KeyF', 'Escape')) view.panel = null;
+  if (mode === 'radar' && keys.hit('KeyB', 'KeyE', 'Escape')) view.panel = null;
   else if (mode === 'captain' && keys.hit('KeyB') && radarPlace(state)) view.panel = 'radar';
   const canOpenMap = mode === 'map' || mode === 'stars' || POSTS.includes(mode) || mode === 'crew';
   if (keys.hit('KeyM') && canOpenMap) view.panel = mode === 'map' ? null : 'map';

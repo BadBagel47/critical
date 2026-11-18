@@ -204,7 +204,7 @@ export function menuInput(game) {
   }
   if (keys.hit('Enter', 'NumpadEnter', 'Space') || (m.clicked && hovered === menu.row)) choose(game, row);
   if (!view.started && keys.hit('KeyT')) game.actions.newGame({ test: true });
-  if (keys.hit('KeyF', 'Escape', 'KeyO')) {
+  if (keys.hit('Escape', 'Backspace', 'KeyO')) {
     if (menu.page !== rootOf(game)) openPage(game, rootOf(game));
     else if (view.started) game.actions.closeMenu();
   }
@@ -258,7 +258,9 @@ export function drawMenu(game, t) {
   const asking = row && menu.confirm === row.id;
   const sliding = row && row.slider;
   const hint = sliding ? 'LEFT AND RIGHT CHANGE THE LEVEL' : 'ARROWS AND ENTER, OR THE MOUSE';
-  const line = asking ? row.confirm : menu.note || hint + (menu.page === 'title' ? '  ·  H  CONTROLS' : '  ·  F  BACK');
+  const line = asking
+    ? row.confirm
+    : menu.note || hint + (menu.page === 'title' ? '  ·  H  CONTROLS' : '  ·  ESC  BACK');
   font.draw(ctx, line, VIEW_W / 2, bottom + 12, asking ? COL.ember[2] : menu.note ? COL.ochre[2] : COL.faint, {
     align: 'c',
   });

@@ -215,7 +215,7 @@ await page.evaluate(() => {
   s.ship.vx = s.ship.vy = 0;
   s.ship.throttle = 0;
 });
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
 check(
   await settles(
@@ -248,7 +248,7 @@ check(
 );
 
 // Boarding: go in, move, shoot, throw a grenade, come back.
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
 check(await settles(async () => (await get('s.players[0].inside')) !== null), 'F boards a docked wreck');
 const x0 = await get('window.__critical.wrecks[0].interior.avatars[0].x');
@@ -273,13 +273,13 @@ check(
   await settles(async () => (await get('window.__critical.wrecks[0].interior.dark')) === true),
   'a wreck is dark inside',
 );
-await page.keyboard.press('KeyL');
+await page.keyboard.press('KeyF');
 await page.waitForTimeout(120);
 check(
   await settles(async () => (await get('window.__critical.wrecks[0].interior.avatars[0].lamp')) === false),
-  'L turns the lamp off',
+  'F turns the lamp off',
 );
-await page.keyboard.press('KeyL');
+await page.keyboard.press('KeyF');
 await page.waitForTimeout(120);
 check(
   await settles(async () => (await get('window.__critical.wrecks[0].interior.avatars[0].lamp')) === true),
@@ -310,7 +310,7 @@ await page.evaluate(() => {
   a.y = it.entry.y;
 });
 await page.waitForTimeout(100);
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
 check(await settles(async () => (await get('s.players[0].inside')) === null), 'F at the airlock returns to the ship');
 await shot('09-docked');
@@ -469,7 +469,7 @@ await page.evaluate(() => {
   window.__critical.view.cam = { x: s.ship.x, y: s.ship.y };
 });
 await page.keyboard.press('Digit1');
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(250);
 check(
   await settles(
@@ -490,7 +490,7 @@ await page.evaluate(() => {
   a.y = d.y + 12;
 });
 await page.waitForTimeout(100);
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
 check(await settles(async () => (await get("v.panel === 'shop'")) === true), 'F at a desk opens the station panel');
 await clickOn('service.refuel');
@@ -534,7 +534,7 @@ check(
   'parts from the stores are installed at the shipyard',
 );
 await shot('12-shipyard');
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(100);
 check(await settles(async () => (await get("v.panel === 'shop'")) === false), 'F closes the station panel');
 // The mainframe of the crew's own station: repairs and defence.
@@ -545,7 +545,7 @@ await page.evaluate(() => {
   a.y = it.mainframe.y;
 });
 await page.waitForTimeout(100);
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
 check(await settles(async () => (await get("v.panel === 'mainframe'")) === true), 'F at the mainframe opens its panel');
 // The station pays for its own defence, from what it has saved.
@@ -563,7 +563,7 @@ check(
   'defence for the station is bought at its mainframe',
 );
 await shot('12b-mainframe');
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(100);
 check(await settles(async () => (await get("v.panel === 'mainframe'")) === false), 'F closes the mainframe panel');
 await page.evaluate(() => {
@@ -573,7 +573,7 @@ await page.evaluate(() => {
   a.y = it.entry.y;
 });
 await page.waitForTimeout(100);
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
 check(
   await settles(async () => (await get('s.players[0].inside')) === null),
@@ -606,7 +606,7 @@ await page.evaluate(() => {
 await page.waitForTimeout(200);
 await shot('12b-hostile-station');
 // The station lock wants a code that only the Engineer screen shows.
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
 check(
   await settles(
@@ -618,13 +618,13 @@ check(
   'a hostile station asks for a code',
 );
 await shot('12d-code-panel');
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(80);
 await page.keyboard.press('Digit3');
 await page.waitForTimeout(150);
 await shot('12e-engineer-code');
 const code = await get("window.__critical.stations.find((x) => x.align === 'hostile').breakin.code");
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(150);
 for (const d of code) {
   await clickOn('digit.' + d);
@@ -638,7 +638,7 @@ check(
 );
 await page.keyboard.press('Digit1');
 await page.waitForTimeout(80);
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(250);
 check(
   await settles(async () => (await get('s.players[0].inside')) !== null),
@@ -656,7 +656,7 @@ await page.evaluate(() => {
 });
 await page.waitForTimeout(200);
 await shot('12c-station-inside');
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
 check(
   await settles(async () => (await get("v.panel === 'mainframe'")) === true),
@@ -682,7 +682,7 @@ check(
   ),
   'level 3 of the hack takes the station over',
 );
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 // The panel has to be closed before the boarder walks to the airlock, or the next F would go to the panel.
 await page.waitForFunction(() => window.__critical.view.panel === null, null, { timeout: 3000 }).catch(() => {});
 await page.evaluate(() => {
@@ -692,7 +692,7 @@ await page.evaluate(() => {
   a.y = it.entry.y;
 });
 await page.waitForTimeout(100);
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
 check(await settles(async () => (await get('s.players[0].inside')) === null), 'the boarder returns from the station');
 await page.keyboard.press('Digit1');
@@ -707,7 +707,7 @@ await page.evaluate(() => {
   window.__critical.view.cam = { x: s.ship.x, y: s.ship.y - 40 };
 });
 await page.waitForTimeout(150);
-await page.keyboard.press('KeyF');
+await page.keyboard.press('KeyE');
 await page.waitForTimeout(200);
 check(
   await settles(async () => (await get('window.__critical.pods[0].breakin.kind')) === 'dial'),
@@ -782,11 +782,11 @@ await page.evaluate(() => {
 });
 await page.keyboard.press('Digit2');
 await page.waitForTimeout(80);
-await page.keyboard.press('KeyE');
+await page.keyboard.press('KeyQ');
 await page.waitForTimeout(80);
-await page.keyboard.press('KeyE');
+await page.keyboard.press('KeyQ');
 await page.waitForTimeout(100);
-check(await settles(async () => (await get('s.ship.weapon')) === 'rockets'), 'E cycles the gunner weapon');
+check(await settles(async () => (await get('s.ship.weapon')) === 'rockets'), 'Q cycles the gunner weapon');
 await page.mouse.move(box.x + 440 * k, box.y + 90 * k);
 await page.mouse.down();
 await page.waitForTimeout(500);
@@ -1011,7 +1011,7 @@ await page.evaluate(() => window.localStorage.clear());
     'choosing a slot saves the game there',
   );
   await snap('22-save');
-  await press('KeyF', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'Enter');
+  await press('Escape', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'Enter');
   check(await settles(async () => (await at('v.menu.page')) === 'sound'), 'SOUND shows the levels');
   await press('ArrowLeft', 'ArrowLeft', 'ArrowDown', 'ArrowRight');
   const levels = JSON.parse(await at("localStorage.getItem('critical-volume')"));
@@ -1020,8 +1020,8 @@ await page.evaluate(() => window.localStorage.clear());
     'the arrow keys set the levels for effects and music, and they are kept',
   );
   await snap('23-sound');
-  await press('KeyF', 'KeyF');
-  check(await settles(async () => (await at('c.mode')) !== 'menu'), 'F leaves the menu');
+  await press('Escape', 'Escape');
+  check(await settles(async () => (await at('c.mode')) !== 'menu'), 'Escape leaves the menu');
   await p.evaluate(() => (window.__critical.state.purses.captain = 5));
   await press('KeyO', 'ArrowDown', 'ArrowDown', 'Enter');
   check(
@@ -1065,13 +1065,13 @@ await page.evaluate(() => window.localStorage.clear());
   const file = await download.path();
   const saved = JSON.parse((await import('node:fs')).readFileSync(file, 'utf8'));
   check(saved.game === 'critical-st8' && saved.state.purses.captain === 888, 'the game can be exported to a file');
-  // The ship starts close to the yard. It is moved well away first, so that F does not begin to dock.
+  // The ship starts close to the yard. It is moved well away first, so that nothing begins to dock.
   await p.evaluate(() => {
     const s = window.__critical.state;
     s.purses.captain = 2;
     Object.assign(s.ship, { x: 0, y: -5000, vx: 0, vy: 0, throttle: 0 });
   });
-  await press('KeyF', 'KeyO', 'ArrowDown', 'ArrowDown', 'Enter');
+  await press('Escape', 'KeyO', 'ArrowDown', 'ArrowDown', 'Enter');
   const rows = await at('8');
   for (let i = 0; i < rows; i++) if ((await at('v.menu.row')) !== 6) await press('ArrowDown');
   await settles(async () => (await at('v.menu.row')) === 6);
@@ -1101,7 +1101,7 @@ await page.evaluate(() => window.localStorage.clear());
   check(auto.summary.hardcore === true, 'a hardcore game also saves itself when docking');
   await press('KeyO');
   await snap('27-menu-hardcore');
-  await press('KeyF');
+  await press('Escape');
   await p.evaluate(() => (window.__critical.state.over = true));
   await p.waitForTimeout(200);
   await snap('28-lost-hardcore');

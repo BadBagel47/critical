@@ -33,7 +33,7 @@ test('the Captain is offered to dock only when the ship is in position, and nobo
   assert.deepEqual(names(s), [], 'nothing to do out in the empty');
   atPort(s, yard(s));
   assert.deepEqual(names(s), ['dock']);
-  assert.equal(offered(s)[0].code, 'KeyE');
+  assert.equal(offered(s)[0].code, 'KeyQ');
   assert.equal(offered(s)[0].main, true);
   s.players[0].post = 'gunner';
   assert.deepEqual(names(s), [], 'the Gunner cannot dock the ship');
@@ -143,10 +143,10 @@ test('nothing is offered while the game is paused or the ship is lost', () => {
   assert.deepEqual(names(s), []);
 });
 
-test('a gamepad shows the button that stands in for the key', () => {
-  assert.equal(padButtonFor('captain', 'KeyE'), 'A');
-  assert.equal(padButtonFor('captain', 'KeyF'), 'B', 'a button that works on every screen');
-  assert.equal(padButtonFor('away', 'KeyF'), 'A');
+test('R-1239: a gamepad shows the button that stands in for the key', () => {
+  assert.equal(padButtonFor('captain', 'KeyQ'), 'A');
+  assert.equal(padButtonFor('captain', 'KeyE'), 'B', 'a button that works on every screen');
+  assert.equal(padButtonFor('away', 'KeyE'), 'A');
   assert.equal(padButtonFor('away', 'KeyC'), 'X');
   assert.equal(padButtonFor('gunner', 'KeyZ'), 'Y', 'the overcharge');
   assert.equal(padButtonFor('captain', 'KeyB'), 'RIGHT', 'the boarding radar');
