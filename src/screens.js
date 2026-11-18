@@ -20,6 +20,7 @@ import { drawMap, mapPoint, chartClick, mapButtons } from './render/map.js';
 import { drawStarMap, starClick, starButtons } from './render/stars.js';
 import { drawShop, shopClick, shopButtons, shopScroll, createShopView } from './render/shop.js';
 import { drawMainframe, mainframeClick, mainframeButtons } from './render/mainframe.js';
+import { drawStoryLog, drawStoryCard } from './render/story.js';
 import { atMainframe } from './sim/mainframe.js';
 import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS, hackTarget, hackBox } from './render/engineer.js';
 import { drawActions, actionButtons } from './render/actions.js';
@@ -42,6 +43,10 @@ export function createView(input) {
     mfArm: false,
     menu: createMenu(),
     help: false,
+    // The story's log (K), and how many of the story's steps the player has seen the card of (render/story.js).
+    log: false,
+    storySeen: null,
+    storyButtons: [],
     wonSeen: false,
     engRow: 0,
     // The Engineer's own screen is folded away from the start, so that they see space like the others.
@@ -494,12 +499,64 @@ export function playerInput(game) {
   return out;
 }
 
+// The story (D-052): the card of a step the player has not seen yet, or of a choice to make, and the log on K. While
+// a card is open, the keys that close it or choose are kept from the posts.
+const storyCard = (game) => {
+  const { state, view } = game;
+  const q = state.story;
+  if (!q) return null;
+  if (view.storySeen === null) view.storySeen = q.done.length;
+  if (view.storySeen < q.done.length) return q.done[view.storySeen];
+  return q.choosing ? q.at : null;
+};
+function storyKeys(game) {
+  const { keys, state, view } = game;
+  if (!state.story) return;
+  if (view.storySeen === null) {
+    view.storySeen = state.story.done.length;
+    if (state.story.at === 0)
+      toast(view, state, 'SOMEONE IS WAITING FOR YOU AT THE SANCTUARY  ·  K  LOG', COL.captain, 6);
+  }
+  if (keys.hit('KeyK')) view.log = !view.log;
+  if (view.log) return;
+  const card = storyCard(game);
+  if (card === null) return;
+  const q = state.story;
+  if (q.choosing && card === q.at) {
+    const click =
+      keys.mouse.clicked &&
+      view.storyButtons.find(
+        (b) => keys.mouse.x >= b.x && keys.mouse.x < b.x + b.w && keys.mouse.y >= b.y && keys.mouse.y < b.y + b.h,
+      );
+    const k = keys.hit('Digit1') ? 0 : keys.hit('Digit2') ? 1 : click ? Number(click.name.slice(6)) : null;
+    keys.pressed.delete('Digit1');
+    keys.pressed.delete('Digit2');
+    if (click) keys.mouse.clicked = false;
+    if (k !== null) game.actions.storyChoice(k);
+    return;
+  }
+  if (keys.hit('Enter', 'NumpadEnter', 'Space')) {
+    view.storySeen++;
+    for (const c of ['Enter', 'NumpadEnter', 'Space']) keys.pressed.delete(c);
+  }
+}
+function drawStory(game) {
+  const { ctx, state, view, keys } = game;
+  const font = game.assets.font;
+  view.storyButtons = [];
+  if (!state.story) return;
+  if (view.log) return drawStoryLog(ctx, font, state);
+  const card = storyCard(game);
+  if (card !== null) view.storyButtons = drawStoryCard(ctx, font, state, card, keys.mouse);
+}
+
 // Keys that only change what is shown, and never reach the game.
 export function viewKeys(game, mode) {
   const { keys, state, view } = game;
   if (keys.hit('KeyH')) view.help = !view.help;
   if (keys.hit('KeyN')) toast(view, state, toggleMute() ? 'SOUND OFF' : 'SOUND ON', COL.text, 2);
   if (mode === 'title' || mode === 'menu') return;
+  storyKeys(game);
   if (keys.hit('KeyO')) {
     view.panel = 'menu';
     openPage(game, 'main');
@@ -571,6 +628,8 @@ export function drawScreen(game, mode, t) {
     drawOverlay(ctx, font, 'PAUSED', [`PAUSED BY ${state.pausedBy}`, '', 'PRESS P TO RESUME'], COL.text);
   }
   drawActions(ctx, game, mode, screen.pad);
+  // The story's card and log lie over everything else.
+  if (!state.over && mode !== 'title' && mode !== 'menu') drawStory(game);
   if (view.help && !state.over) drawHelp(ctx, font);
   if (keys.pad.used && screen.cursor) drawPointer(ctx, keys.mouse);
 }

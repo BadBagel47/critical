@@ -9,6 +9,7 @@ import { rect, label } from './draw.js';
 import { THING_LOOK, lookOf, SIDE_COL, MOOD_COL } from './looks.js';
 import { CREW, FACTIONS, enemies, moodOf, standingOf } from '../sim/sides.js';
 import { viewOf } from '../sim/intel.js';
+import { currentStep, spotOf } from '../sim/questline.js';
 
 export const MAP = { x: 12, y: 12, size: 336 };
 // The map is drawn to fit the system the ship is in: `HALF` is how far it reaches from the middle, and `K` how
@@ -357,6 +358,22 @@ function drawSidePanel(ctx, font, state, post, mouse, hostiles) {
   font.draw(ctx, 'J  STAR MAP    M  CLOSE', VIEW_W - 12, 344, COL.dim, { align: 'r' });
 }
 
+// Where the story's step is in this system (D-052): the signal to fly to, the wreck to search or the ship to
+// shoot down. Only the spot, as the star map only marks the system (R-1226).
+function drawStorySpot(ctx, font, state) {
+  const st = currentStep(state);
+  if (!st || st.system !== state.sector || !['scan', 'search', 'fight', 'board'].includes(st.sort)) return;
+  const spot = spotOf(state, st);
+  const p = toMap(spot.x, spot.y);
+  const r = 6 + Math.round(2 * Math.sin(state.time * 4));
+  ctx.strokeStyle = COL.captain;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(Math.round(p.x) + 0.5, Math.round(p.y) + 0.5, r, 0, Math.PI * 2);
+  ctx.stroke();
+  font.draw(ctx, 'STORY', Math.round(p.x), Math.round(p.y) + 10, COL.captain, { align: 'c' });
+}
+
 export function drawMap(ctx, state, view, assets) {
   const { font } = assets;
   const post = playerById(state, view.playerId).post;
@@ -372,6 +389,7 @@ export function drawMap(ctx, state, view, assets) {
   ctx.rect(MAP.x, MAP.y, MAP.size, MAP.size);
   ctx.clip();
   const hostiles = drawMapContents(ctx, font, state, sources);
+  drawStorySpot(ctx, font, state);
   ctx.restore();
   drawSidePanel(ctx, font, state, post, m, hostiles);
   if (post === 'engineer' && mapPoint(state, m.x, m.y)) {

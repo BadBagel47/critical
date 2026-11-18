@@ -14,6 +14,7 @@ import { createState } from './sim/state.js';
 import { tryBoard } from './sim/boarding.js';
 import { step, stepPlayers } from './sim/step.js';
 import { summon } from './sim/testing.js';
+import { chooseStory } from './sim/questline.js';
 import { findThing, thingsOf } from './sim/things.js';
 import { playerById } from './sim/players.js';
 import { resetEffects, updateEffects, updateInside } from './render/effects.js';
@@ -155,6 +156,8 @@ game.actions = {
   },
   // The game saves itself every time the ship docks.
   autosave: () => save(AUTO),
+  // The crew picks who gets the item at a choice in the story (questline.js).
+  storyChoice: (k) => chooseStory(game.state, k),
   // In a test game: call in pirates, a raid or traffic, and say what came.
   summon(what) {
     const came = summon(game.state, what);
