@@ -478,5 +478,57 @@ function stationsFor(s, kind, owner, sides, tier, end, sysName) {
   return list;
 }
 
+// The regions of the map (F-278, R-1227): slices around the sanctuary, four on the small and middle maps and five on
+// the large one, so that a system can be named with where it lies, as "DEEP GATE, DELTA". They are worked out from
+// where the systems lie, so nothing more is saved. Each slice holds as many systems as the others, give or take
+// one, and its edges lie in the widest gaps between systems. The sanctuary is in none of them.
+export const REGION_NAMES = ['ALPHA', 'BETA', 'GAMMA', 'DELTA', 'EPSILON'];
+const TAU2 = 2 * Math.PI;
+const norm = (a) => ((a % TAU2) + TAU2) % TAU2;
+export function regionLayout(sectors, size) {
+  const n = size === 'long' ? 5 : 4;
+  const mid = sectors[0];
+  const angle = (s) => norm(Math.atan2(s.y - mid.y, s.x - mid.x));
+  const around = sectors
+    .slice(1)
+    .map((s) => angle(s))
+    .sort((a, b) => a - b);
+  const m = around.length;
+  // The edge before system k (in order around): halfway between it and the one before.
+  const edge = (k) => {
+    const a = around[((k % m) + m) % m];
+    const b = around[(((k - 1) % m) + m) % m];
+    return norm(b + norm(a - b) / 2);
+  };
+  const gap = (k) => norm(around[((k % m) + m) % m] - around[(((k - 1) % m) + m) % m]);
+  // Try every start, and keep the one whose edges have the most room around them.
+  let best = null;
+  for (let start = 0; start < m; start++) {
+    const at = Array.from({ length: n }, (_, i) => start + Math.round((i * m) / n));
+    const room = Math.min(...at.map(gap));
+    if (!best || room > best.room) best = { room, at };
+  }
+  const bounds = best.at.map(edge);
+  const of = (id) => {
+    if (id === 0) return null;
+    const a = angle(sectors[id]);
+    for (let i = 0; i < n; i++) {
+      const from = bounds[i];
+      const to = bounds[(i + 1) % n];
+      if (norm(a - from) < norm(to - from)) return i;
+    }
+    return n - 1;
+  };
+  return {
+    count: n,
+    bounds,
+    names: REGION_NAMES.slice(0, n),
+    of,
+    nameOf: (id) => (id === 0 ? null : REGION_NAMES[of(id)]),
+    // The middle of a region's slice, for its name on a map.
+    middle: (i) => norm(bounds[i] + norm(bounds[(i + 1) % n] - bounds[i]) / 2),
+  };
+}
+
 // The radius of a system of the size it was given.
 export const radiusOf = (sec) => B.SYSTEM_R[sec.size];

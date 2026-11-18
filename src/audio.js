@@ -76,6 +76,9 @@ export function musicOutput() {
 }
 
 export const isMuted = () => muted;
+// Whether the sound still waits for the first key press or click, which browsers ask for before a page may make a
+// sound (B-281). The title screen says so while it waits.
+export const soundWaiting = () => !ac || ac.state !== 'running';
 export function toggleMute() {
   muted = !muted;
   if (master) master.gain.value = muted ? 0 : MASTER;

@@ -5,7 +5,7 @@
 import { VIEW_W, VIEW_H, COL } from '../config.js';
 import { currentSector, jumpBlocked } from '../sim/sectors.js';
 import { viewOf } from '../sim/intel.js';
-import { hopsFrom } from '../sim/world.js';
+import { hopsFrom, regionLayout } from '../sim/world.js';
 import { jumpCharge, jumpFuel } from '../sim/upgrades.js';
 import { playerById } from '../sim/players.js';
 import { FACTIONS } from '../sim/sides.js';
@@ -129,6 +129,8 @@ function drawPanel(ctx, font, state, view, mouse) {
   font.draw(ctx, name, left, 14, COL.text, { scale: 2 });
   const where = id === state.sector ? 'YOU ARE HERE' : hops === 1 ? 'ONE JUMP AWAY' : `${hops} JUMPS AWAY`;
   font.draw(ctx, where, left, 34, id === state.sector ? COL.captain : COL.dim);
+  const region = regionLayout(state.sectors, state.size).nameOf(id);
+  font.draw(ctx, region ? `IN ${region}` : 'THE SANCTUARY', VIEW_W - 12, 34, COL.dim, { align: 'r' });
   const [owner, color] = ownerOf(v);
   font.draw(ctx, owner, left, 48, color);
   if (v) {
@@ -174,11 +176,48 @@ function drawPanel(ctx, font, state, view, mouse) {
   font.draw(ctx, 'J  CLOSE    M  SYSTEM MAP', VIEW_W - 12, 344, COL.dim, { align: 'r' });
 }
 
+// The regions (F-278): faint lines out from the sanctuary between them, and their names. Everyone knows them, so
+// they are drawn also where the crew has not been.
+function drawRegions(ctx, font, state) {
+  const layout = regionLayout(state.sectors, state.size);
+  const mid = spot(state.sectors[0]);
+  const reach = AREA.w;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(AREA.x, AREA.y, AREA.w, AREA.h);
+  ctx.clip();
+  ctx.strokeStyle = COL.panel;
+  ctx.setLineDash([2, 3]);
+  for (let i = 0; i < layout.count; i++) {
+    const a = layout.bounds[i];
+    ctx.beginPath();
+    ctx.moveTo(mid.x + 0.5 + Math.cos(a) * 8, mid.y + 0.5 + Math.sin(a) * 8);
+    ctx.lineTo(mid.x + 0.5 + Math.cos(a) * reach, mid.y + 0.5 + Math.sin(a) * reach);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.restore();
+  layout.names.forEach((name, i) => {
+    const a = layout.middle(i);
+    // The name sits out along the middle of its slice, kept inside the map.
+    let r = AREA.w * 0.42;
+    let x = mid.x + Math.cos(a) * r;
+    let y = mid.y + Math.sin(a) * r;
+    while ((x < AREA.x + 30 || x > AREA.x + AREA.w - 30 || y < AREA.y + 20 || y > AREA.y + AREA.h - 12) && r > 20) {
+      r -= 4;
+      x = mid.x + Math.cos(a) * r;
+      y = mid.y + Math.sin(a) * r;
+    }
+    font.draw(ctx, name, Math.round(x), Math.round(y) - 3, COL.faint, { align: 'c' });
+  });
+}
+
 export function drawStarMap(ctx, state, view, assets) {
   const { font } = assets;
   ctx.fillStyle = '#0d0d18';
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
   rect(ctx, AREA.x - 1, AREA.y - 1, AREA.w + 2, AREA.h + 2, '#08080f', COL.line);
+  drawRegions(ctx, font, state);
   const { lanes, systems } = known(state);
   const picked = pickedSystem(state, view);
   ctx.lineWidth = 1;

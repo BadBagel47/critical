@@ -18,7 +18,7 @@
 // are in storytext.js. The story draws its own random numbers from the seed, so the game's own random numbers are
 // left as they were.
 import { FACTIONS, PIRATE } from './sides.js';
-import { hopsFrom } from './world.js';
+import { hopsFrom, regionLayout } from './world.js';
 import { createSectors } from './sectors.js';
 import { rand } from './util.js';
 import { planChain, pathsOf as chainPaths, checkChain, pick as corePick } from '../quest/core.js';
@@ -28,6 +28,21 @@ export { PREMISES, FALLBACKS };
 
 // How many steps the main story has for each size of map (R-1210), and how many choices split it (R-1212).
 export const MAIN_STEPS = { short: 8, medium: 12, long: 16 };
+// How many steps the crew finds without a mark on the star map (R-1229).
+export const HIDDEN_STEPS = { short: 1, medium: 2, long: 2 };
+
+// What a system can be known by, without its name, for a step the crew finds itself.
+export function featureOf(sec) {
+  if (sec.kind === 'empty')
+    return sec.special === 'rocks'
+      ? 'an empty system thick with asteroids'
+      : sec.special === 'wrecks'
+        ? 'an empty system full of wrecks'
+        : 'an empty system without a single station';
+  if (sec.owner === 'pirate') return 'a system the pirates hold';
+  if (sec.owner === 'contested') return 'a system two factions fight over';
+  return FACTIONS[sec.owner] ? `a system the ${FACTIONS[sec.owner].short} hold` : 'a system with free stations';
+}
 export const CHOICES = { short: 1, medium: 2, long: 2 };
 
 // The skeleton: one slot per step, in order. `act` is the part of the story, `kind` what may stand in the slot.
@@ -320,7 +335,9 @@ function fits(place, sys) {
 
 // Pick the system for a step: about as dangerous as the story is far along, a jump or two from the last step,
 // and seldom one the story has used before.
-function placeStep(s, world, sort, progress, from, usedSystems) {
+// `region` is the region the act is in (R-1228): a system outside it counts against, so that each act moves the
+// story to a region of its own and the whole map is used.
+function placeStep(s, world, sort, progress, from, usedSystems, region = null) {
   const place = SORTS[sort].place;
   const maxTier = Math.max(...world.systems.filter((x) => !x.boss).map((x) => x.tier));
   const want = Math.round(progress * maxTier);
@@ -331,6 +348,7 @@ function placeStep(s, world, sort, progress, from, usedSystems) {
     Math.abs(hops[x.id] - 2) +
     (x.id === from ? 6 : 0) +
     2 * (usedSystems[x.id] || 0) +
+    (region !== null && world.region.of(x.id) !== region ? 12 : 0) +
     1.5 * rand(s);
   let best = null;
   let bestScore = Infinity;
@@ -385,7 +403,42 @@ export function createStory(sectors, seed, size = 'short', options = {}) {
   let plan = null;
   for (let tries = 0; tries < 5 && !plan; tries++) plan = planChain(random, skeleton, CATALOG);
   if (!plan) throw new Error('no story could be made for seed ' + seed);
-  const world = { systems: sectors, hops: sectors.map((x) => hopsFrom(sectors, x.id)) };
+  const world = {
+    systems: sectors,
+    hops: sectors.map((x) => hopsFrom(sectors, x.id)),
+    region: regionLayout(sectors, size),
+  };
+  // Each act gets a region of its own, in a random order, the finale too if it has a pirate base there (R-1228).
+  const regionOrder = shuffle(
+    s,
+    Array.from({ length: world.region.count }, (_, k) => k),
+  );
+  let nextRegion = 0;
+  // The acts in the order they come, each run of the same act one region.
+  const slotRegion = [];
+  skeleton.forEach((sl, k) => {
+    if (sl.act === 'hook') return slotRegion.push(null);
+    if (k > 0 && skeleton[k - 1].act === sl.act && slotRegion[k - 1] !== null)
+      return slotRegion.push(slotRegion[k - 1]);
+    slotRegion.push(regionOrder[nextRegion++ % regionOrder.length]);
+  });
+  // The finale needs a pirate base: a region not used yet that has one, if there is any.
+  const pirateRegions = sectors
+    .filter((x) => !x.boss && x.plan.some(([side]) => side === PIRATE))
+    .map((x) => world.region.of(x.id))
+    .filter((r) => r !== null);
+  const last = slotRegion.length - 1;
+  if (pirateRegions.length && !pirateRegions.includes(slotRegion[last])) {
+    const fresh = pirateRegions.filter((r) => !slotRegion.slice(0, last).includes(r));
+    if (fresh.length) slotRegion[last] = fresh[0];
+    else {
+      // Every region with a pirate base is taken by an act: that act and the finale swap regions.
+      const p = pirateRegions[0];
+      const old = slotRegion[last];
+      for (let k = 0; k < last; k++) if (slotRegion[k] === p) slotRegion[k] = old;
+      slotRegion[last] = p;
+    }
+  }
   const end = sectors.find((x) => x.boss);
   const names = namer(s);
   const premise = PREMISES[options.premise] ? options.premise : pick(s, Object.keys(PREMISES));
@@ -429,7 +482,7 @@ export function createStory(sectors, seed, size = 'short', options = {}) {
     const where =
       p.kind === 'start'
         ? { system: 0, base: stationsIn(sectors[0], () => true)[0].name }
-        : placeStep(s, world, p.sort, progress, at, usedSystems);
+        : placeStep(s, world, p.sort, progress, at, usedSystems, slotRegion[i]);
     /** @type {Record<string, any>} */
     const step = {
       index: i,
@@ -489,6 +542,34 @@ export function createStory(sectors, seed, size = 'short', options = {}) {
     if (step.item) carried = step.item;
     else if (p.needs === 'item') carried = null;
   }
+  // The steps where the crew finds the place itself, without a mark on the star map (R-1229): one on the small map
+  // and two on the others, never the first two steps or the finale, and never right after a choice. The step
+  // before gives a clue instead: the region, something to know the system by, and how far it is from a system
+  // the story has been to.
+  const wantHidden = HIDDEN_STEPS[size] ?? 1;
+  // The step or steps right before, and the system the clue counts from: after a choice, where the choice was.
+  const beforeOf = (i) => (steps[i - 1].branches ? steps[i - 1].branches : [steps[i - 1]]);
+  const fromOf = (i) => (steps[i - 1].branches ? steps[i - 2].system : steps[i - 1].system);
+  const canHide = steps.filter(
+    (st, i) => i >= 2 && !st.branches && st.sort !== 'choose' && st.sort !== 'raid' && steps[i - 1].sort !== 'choose',
+  );
+  // First steps that are not next to each other; if that is not enough, any that are left.
+  for (const loose of [false, true])
+    for (const st of shuffle(s, canHide)) {
+      if (steps.filter((x) => x.hidden).length >= wantHidden || st.hidden) continue;
+      if (!loose && (beforeOf(st.index).some((b) => b.hidden) || (steps[st.index + 1] && steps[st.index + 1].hidden)))
+        continue;
+      // A place the story was just at cannot be hidden.
+      if (st.system === 0 || beforeOf(st.index).some((b) => b.system === st.system) || fromOf(st.index) === st.system)
+        continue;
+      const from = fromOf(st.index);
+      st.hidden = {
+        region: world.region.nameOf(st.system),
+        feature: featureOf(sectors[st.system]),
+        from,
+        hops: world.hops[from][st.system],
+      };
+    }
   // The items given in a branch are the same in both, so that the rest of the story reads the same.
   for (const st of steps)
     if (st.branches && st.branches[0].item && st.branches[1].item) st.branches[1].item = st.branches[0].item;
@@ -504,6 +585,7 @@ export function createStory(sectors, seed, size = 'short', options = {}) {
     contactOut,
     end: end ? end.id : null,
     steps,
+    regions: sectors.map((x) => world.region.nameOf(x.id)),
     clues: [],
     reveal: '',
   };
@@ -520,6 +602,9 @@ export const pathsOf = (story) => chainPaths(story.steps);
 export const sectorsFor = (seed, size) => createSectors({ rng: seed >>> 0, nextId: 1 }, size);
 
 // ---------- the checks ----------
+// Whether a text names a system: the whole name, not as the end of another one (LOW WAKE in HOLLOW WAKE).
+export const namesSystem = (text, name) => new RegExp(`(^|[^A-Z])${name}([^A-Z]|$)`).test(text);
+
 // What is wrong with a story: an empty list when it can be played from the start to the end on every way through
 // it (R-1209 to R-1214).
 export function checkStory(story, sectors) {
@@ -550,6 +635,15 @@ export function checkStory(story, sectors) {
     });
   }
   if (broken(story.reveal)) problems.push('the truth is not told at the end');
+  const hidden = story.steps.filter((st) => st.hidden);
+  if (hidden.length !== HIDDEN_STEPS[story.size])
+    problems.push(`${hidden.length} steps to find, not ${HIDDEN_STEPS[story.size]}`);
+  for (const st of hidden) {
+    const before = story.steps[st.index - 1];
+    for (const b of before.branches || [before])
+      if (namesSystem(b.text, sectors[st.system].name))
+        problems.push(`step ${st.index} names the system that step ${st.index + 1} should find`);
+  }
   return [...new Set(problems)];
 }
 
@@ -569,6 +663,8 @@ export function summarize(list) {
   const minutes = [];
   const jumps = [];
   let problems = 0;
+  // How many stories use every region of the map (R-1228).
+  let allRegions = 0;
   const examples = [];
   for (const { story, sectors } of list) {
     const found = checkStory(story, sectors);
@@ -577,6 +673,8 @@ export function summarize(list) {
       if (examples.length < 5) examples.push(`frö ${story.seed}: ${found[0]}`);
     }
     const path = pathsOf(story)[0];
+    const used = new Set(path.map((st) => story.regions[st.system]).filter(Boolean));
+    if (used.size === new Set(story.regions.filter(Boolean)).size) allRegions++;
     const t = minutesOf(path, sectors);
     minutes.push(t.minutes);
     jumps.push(t.jumps);
@@ -596,5 +694,6 @@ export function summarize(list) {
     twists,
     problems,
     examples,
+    allRegions,
   };
 }

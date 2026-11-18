@@ -109,7 +109,15 @@ export function createInput(canvas) {
     input.touch = false;
     gesture();
   });
-  window.addEventListener('keyup', (e) => input.keys.delete(e.code));
+  window.addEventListener('keyup', (e) => {
+    input.keys.delete(e.code);
+    // Some browsers, Brave among them, do not let every key down start the sound, but do let the key coming up,
+    // a click or a finger lifted (B-281). The sound is tried again at each of them until it runs.
+    gesture();
+  });
+  window.addEventListener('pointerup', gesture);
+  window.addEventListener('touchend', gesture);
+  window.addEventListener('click', gesture);
   window.addEventListener('blur', () => {
     input.keys.clear();
     input.mouse.down = false;

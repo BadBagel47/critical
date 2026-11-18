@@ -139,6 +139,7 @@ th{background:var(--soft);font-weight:800}
 import { sectorsFor, createStory, checkStory, pathsOf, minutesOf, summarize, SORTS, TWISTS, ACT_NAMES, TOKEN_NAMES, PREMISES, MAIN_STEPS } from '../../../src/sim/story.js';
 const CLUE_NAMES = { method: 'Hur', motive: 'Varför', side: 'Vem, en ledtråd', name: 'Namnet' };
 import { FACTIONS } from '../../../src/sim/sides.js';
+import { regionLayout } from '../../../src/sim/world.js';
 
 const COLORS = { talk:'#2c7be5', acquire:'#d68910', search:'#7d3c98', scan:'#138d75', fight:'#c0392b', board:'#a04000', deliver:'#2e86c1', choose:'#5d6d7e', raid:'#922b21' };
 const ROLE_NAMES = { captain:'Captain', gunner:'Gunner', engineer:'Engineer', boarders:'Bordarna' };
@@ -182,7 +183,8 @@ function pathNow() {
 function sysLine(st) {
   const sys = current.sectors[st.system];
   const owner = sys.owner === 'contested' ? 'omstritt' : sys.owner === 'pirate' ? 'pirater' : sys.owner ? FACTIONS[sys.owner].short : sys.kind === 'sanctuary' ? 'fristaden' : 'tomt';
-  return `${esc(sys.name)} · ${TIER_NAMES[sys.tier]} · ${owner}${st.base ? ' · ' + esc(st.base) : ''}`;
+  const region = current.story.regions[st.system];
+  return `${esc(sys.name)}${region ? ' · ' + region : ''} · ${TIER_NAMES[sys.tier]} · ${owner}${st.base ? ' · ' + esc(st.base) : ''}`;
 }
 
 const sceneOf = (st) => `<div class="scene">${st.scene.map((p) => `<p>${esc(p)}</p>`).join('')}</div>`;
@@ -192,7 +194,10 @@ const clueOf = (st) => (st.clue ? `<div class="clue"><b>Ledtråd till loggen:</b
 function card(st, n) {
   const sort = SORTS[st.sort];
   const gives = Array.isArray(st.gives) ? st.gives.map((g) => TOKEN_NAMES[g]).join(' eller ') : TOKEN_NAMES[st.gives];
-  const twist = st.twist ? `<span class="badge twist">${esc(TWISTS[st.twist].name)}</span>` : '';
+  const twist =
+    (st.twist ? `<span class="badge twist">${esc(TWISTS[st.twist].name)}</span>` : '') +
+    (st.hidden ? '<span class="badge" style="--c:#555">Hitta själv</span>' : '');
+  const found = st.goalFound ? `<div class="fallback">När systemet är hittat: ${esc(st.goalFound)}</div>` : '';
   const cooled = st.cooled ? `<div class="cooled">Om ${esc(FACTIONS[st.cooled.side].name)} inte fick saken: ${esc(st.cooled.text)}</div>` : '';
   const options = st.options
     ? `<div class="options">${st.options.map((o) => `<div class="scene"><p>${esc(o.text)}</p></div>${radioOf(o.radio)}`).join('')}</div>`
@@ -200,7 +205,7 @@ function card(st, n) {
   return `<article class="card" style="--c:${COLORS[st.sort]}">
     <div class="top"><span class="num">${n}</span><span class="badge">${esc(sort.name)}</span>${twist}<span class="where">${sysLine(st)}</span></div>
     <div class="flow">behöver ${st.needs ? TOKEN_NAMES[st.needs] : 'inget'} → ger ${gives} · ${sort.minutes} min · ${sort.roles.map((r) => ROLE_NAMES[r]).join(', ')}</div>
-    <div class="goal">Loggen: ${esc(st.goal)}</div>
+    <div class="goal">Loggen: ${esc(st.goal)}</div>${found}
     ${sceneOf(st)}${cooled}${clueOf(st)}${options}${radioOf(st.radio)}
     <div class="fallback">Om något går fel: ${esc(st.fallback)}</div>
   </article>`;
@@ -256,7 +261,7 @@ function drawRead() {
       html += radioOf(st.options[k].radio);
     }
     html += radioOf(st.radio);
-    html += `<div class="fallback">Loggen: ${esc(st.goal)}</div></div>`;
+    html += `<div class="fallback">Loggen: ${esc(st.goal)}${st.goalFound ? ' · När systemet är hittat: ' + esc(st.goalFound) : ''}</div></div>`;
   }
   html += '</div>';
   const clues = current.story.clues;
@@ -334,6 +339,14 @@ function drawMap() {
     const a = sectors[path[k - 1].system], b = sectors[path[k].system];
     svg += `<line x1="${X(a.x)}" y1="${Y(a.y)}" x2="${X(b.x)}" y2="${Y(b.y)}" stroke="#ffd166" stroke-width="2.5" stroke-dasharray="6 5" opacity=".75"/>`;
   }
+  const lay = regionLayout(sectors, story.size);
+  const c0 = sectors[0];
+  for (let i = 0; i < lay.count; i++) {
+    const a = lay.bounds[i];
+    svg += `<line x1="${X(c0.x)}" y1="${Y(c0.y)}" x2="${X(c0.x) + Math.cos(a) * 1400}" y2="${Y(c0.y) + Math.sin(a) * 1400}" stroke="#3a3f66" stroke-dasharray="4 6"/>`;
+    const m = lay.middle(i);
+    svg += `<text x="${X(c0.x) + Math.cos(m) * 250}" y="${Y(c0.y) + Math.sin(m) * 250}" fill="#565c8c" font-family="system-ui,sans-serif" font-size="22" font-weight="800" text-anchor="middle">${lay.names[i]}</text>`;
+  }
   for (const s of sectors) svg += `<circle cx="${X(s.x)}" cy="${Y(s.y)}" r="${s.kind === 'empty' ? 6 : 9}" fill="${fill(s)}"/>`;
   // The numbers of the steps in each system, beside it.
   const at = {};
@@ -371,6 +384,7 @@ function runStats() {
   let html = '<table><tr><th></th>' + rows.map((r) => `<th>${r.name} (${MAIN_STEPS[r.size]} steg)</th>`).join('') + '</tr>';
   html += '<tr><td>Tid</td>' + rows.map((r) => `<td>${Math.round(r.sum.minutes.avg)} min (${r.sum.minutes.min}–${r.sum.minutes.max})</td>`).join('') + '</tr>';
   html += '<tr><td>Hopp</td>' + rows.map((r) => `<td>${Math.round(r.sum.jumps)}</td>`).join('') + '</tr>';
+  html += '<tr><td>Använder alla områden</td>' + rows.map((r) => `<td>${r.sum.allRegions} av 100</td>`).join('') + '</tr>';
   html += '<tr><td>Fel</td>' + rows.map((r) => `<td class="${r.sum.problems ? 'bad' : 'ok'}">${r.sum.problems ? r.sum.problems + ' av 100<br>' + r.sum.examples.map(esc).join('<br>') : 'inga'}</td>`).join('') + '</tr>';
   for (const sort of sorts) {
     html += `<tr><td>${SORTS[sort].name}</td>` + rows.map((r) => {
