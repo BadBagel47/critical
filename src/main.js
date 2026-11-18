@@ -19,19 +19,20 @@ import { playerById } from './sim/players.js';
 import { resetEffects, updateEffects, updateInside } from './render/effects.js';
 import { pressActions } from './render/actions.js';
 import { label } from './render/draw.js';
+import { pickScale, speedWatch } from './render/scale.js';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('game'));
 const ctx = canvas.getContext('2d');
 let scale = 2;
 
 // The picture always fills the window, as far as its shape allows. It is drawn at a whole, even number of screen
-// pixels per game pixel, so that both the game's pixels and the finer text land on whole pixels, and the browser
-// then fits it to the window. When that fit is exact the pixels are left untouched, otherwise they are smoothed.
-const MAX_SCALE = 6;
+// pixels per game pixel, at most four, and fewer while the frames come too slowly (render/scale.js, B-282). The
+// browser then fits it to the window. When that fit is exact the pixels are left untouched, otherwise smoothed.
+const speed = speedWatch();
 function resize() {
   const fit = Math.min(window.innerWidth / VIEW_W, window.innerHeight / VIEW_H);
   const wanted = fit * (window.devicePixelRatio || 1);
-  scale = Math.max(2, Math.min(MAX_SCALE, 2 * Math.ceil(wanted / 2 - 0.01)));
+  scale = pickScale(wanted, speed.limit);
   canvas.width = VIEW_W * scale;
   canvas.height = VIEW_H * scale;
   canvas.style.width = Math.floor(VIEW_W * fit) + 'px';
@@ -238,6 +239,7 @@ function drawMeter(now, dt) {
   const opts = { fg: slow ? COL.ember[2] : COL.ion[2], border: slow ? COL.ember[0] : COL.ion[0] };
   label(ctx, game.assets.font, 8, 150, `FPS  ${meter.fps}`, opts);
   label(ctx, game.assets.font, 8, 166, `SLOWEST FRAME  ${meter.worst} MS`, opts);
+  label(ctx, game.assets.font, 8, 182, `SCALE  ${scale}  ·  ${VIEW_W * scale} × ${VIEW_H * scale}`, opts);
   // How many new pictures of the star are made each second, when it is in sight (F-205).
   label(ctx, game.assets.font, 8, 182, `STAR PICTURES  ${starPicturesPerSecond()} / S`, opts);
 }
@@ -262,6 +264,8 @@ function frame(now) {
   const real = (now - last) / 1000;
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
+  // The picture gets smaller while the frames come too slowly (B-282). Not in the still mode of the screen tests.
+  if (!still && real > 0 && speed.seen(real, scale) !== null) resize();
   const mode = settle(game);
   keys.pollPad(SCREENS[mode].pad, !!SCREENS[mode].cursor, dt);
   viewKeys(game, mode);

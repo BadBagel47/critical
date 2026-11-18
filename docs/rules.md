@@ -1188,6 +1188,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1229 | I ett steg på den lilla kartan och två på de större, aldrig slutet, är målet inte markerat. Ledtråden säger området och något att känna igen, och den som frågar i baren på en bas i området får systemet markerat. | bestämd | Användaren 2026-11-17 (OM5, F-278) | – |
 | R-1232 | Om storyn får röster i spelet läser berättaren bara meningar utan genererade namn, och namnen står i texten på skärmen. Karaktärernas repliker är inspelade i förväg. | bestämd | Användaren 2026-11-17 (VO3, D-280) | – |
 | R-1233 | Critical behåller sin pixelstil utan detaljerade ytor. Ljus, skuggor och effekter ska bli mer genomarbetade. | bestämd | Användaren 2026-11-17 (F-283) | – |
+| R-1234 | Spelets bild ritas med högst fyra skärmpunkter per spelpunkt, och ett steg mindre så länge bilderna kommer för långsamt. | byggd | Agentens mätning 2026-11-17 (B-282): sex gånger blev 4K-stort på en retinaskärm | tests/scale.test.js |
 | R-943 | Skepp i nöd ber om bränsle eller reparation och betalar eller minns det. | förslag | BACKLOG F-083 | – |
 | R-944 | Captain kan anropa skepp och stationer för att be om bränsle, muta eller kräva tribut. | förslag | BACKLOG F-082 | – |
 
