@@ -32,7 +32,8 @@ Alla stationer är standardbaser (D-217): tre runda våningar, BASEMENT med radi
 | Skrov | 1500 |
 | Sköld | 200, +50 % per köpt nivå |
 | Kanontorn | liv 45, skada 3 (pirater 6), +35 % per köpt nivå |
-| Torn per köpt nivå (R-1208) | 0, 2, 6, 10. Andra sidors baser har minst 4 (R-1207) |
+| Torn per köpt nivå (R-1208) | 0, 2, 6, 10 |
+| Andra sidors baser (R-1230) | försvarsnivå efter fara 1, 1, 2, 2, alltså 2, 2, 6, 6 torn. En bas som besättningen tar spränger sina torn (R-1231) |
 | Tunga torn på toppen | 1,5 gånger skadan |
 | Stor kanon (R-1164) | 600 krediter, 3 gånger skadan |
 | Försvar i mainframen, per nivå | 250, 450, 700 krediter (sköld, kanoner, säkerhet inne) |

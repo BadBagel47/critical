@@ -736,8 +736,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1206 | Insidan av en Gunboat är 38 gånger 21 rutor och av ett okänt skrov 54 gånger 25. | byggd | HANDOFF beslut 2026-11-14 (R-485, utan fraktskeppet och stationen) | tests/layout.test.js |
 | R-1207 | En bas som inte är besättningens har alltid minst de fyra kanontornen på källaren, som den alltid har haft, så att den kan försvara sig. Besättningens egen bas har bara de torn som är köpta. | ersatt av: R-1230 och R-1231 | Agentens tolkning av R-1163 och R-159 2026-11-16 (F-244) | – |
 | R-1208 | Kanontornen på basens tio platser följer köpt försvar: inget köpt ger inga torn, sedan två, sex och alla tio (delen av R-1163 som gäller tornen). Skölden köps fortfarande för sig. | byggd | Användaren 2026-11-16 (designtest D-217, R-1163); Användaren 2026-11-17 (SB1) | tests/base.test.js |
-| R-1230 | En bas som inte är besättningens har kanontorn efter hur farligt systemet är, i stället för alltid fyra. | bestämd | Användaren 2026-11-17 (SB2, F-279) | – |
-| R-1231 | När besättningen tar en bas spränger basens säkerhetssystem sina egna kanontorn, så att fästena står tomma och besättningen bygger upp försvaret själv. En egen bas som tas tillbaka får tillbaka det besättningen köpt, enligt R-218. | bestämd | Användaren 2026-11-17 (SB2, F-279) | – |
+| R-1230 | En bas som inte är besättningens har kanontorn efter hur farligt systemet är, i stället för alltid fyra. Två torn i lugna system och sex längre ut (förslag att prova). | byggd | Användaren 2026-11-17 (SB2, F-279); byggt 2026-11-18 | tests/base.test.js |
+| R-1231 | När besättningen tar en bas spränger basens säkerhetssystem sina egna kanontorn, så att fästena står tomma och besättningen bygger upp försvaret själv. En egen bas som tas tillbaka får tillbaka det besättningen köpt, enligt R-218. | byggd | Användaren 2026-11-17 (SB2, F-279); byggt 2026-11-18 | tests/base.test.js |
 | R-1189 | Ingen markering visar vägen ut, varken spår i golvet eller pilar. | bestämd | Användaren 2026-11-16 (D-216 skippad) | – |
 
 ## Lås och inbrott

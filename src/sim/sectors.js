@@ -7,7 +7,7 @@ import { makeVessel, firstWaveDelay } from './vessels.js';
 import { createMap } from './map.js';
 import { layRocks, layTestRocks } from './rocks.js';
 import { placeShip, arrival } from './system.js';
-import { createStation } from './stations.js';
+import { createStation, remountGuns } from './stations.js';
 import { leaveSiege } from './siege.js';
 import { huntAfterJump } from './bounty.js';
 import { jumpCharge, jumpFuel } from './upgrades.js';
@@ -115,6 +115,9 @@ export function generateSector(s, id) {
   sec.plan.forEach(([side, yard, d, name, sanctuary], i) => {
     const p = at(base + 1.1 + i * 2.3 + randRange(s, -0.2, 0.2), out(d));
     const st = createStation(s, p.x, p.y, side, yard, name, false);
+    // Its defence follows how dangerous the system is (R-1230).
+    st.defense.guns = B.OTHERS_DEFENSE[tier] ?? 1;
+    remountGuns(st);
     // The base of the sanctuary cannot be taken, and is never attacked.
     st.sanctuary = !!sanctuary;
     if (side !== 'pirate' && charted.length) st.chart = charted[(i + id) % charted.length];
@@ -174,6 +177,11 @@ export function gatherForTesting(s) {
   stations.forEach(([side, yard, deg, far, name], i) => {
     const p = from(deg, far);
     const st = createStation(s, p.x, p.y, side, yard, name, side === 'crew');
+    // The test world's other bases have the defence of a calm system (R-1230).
+    if (side !== 'crew') {
+      st.defense.guns = B.OTHERS_DEFENSE[0];
+      remountGuns(st);
+    }
     if (side !== 'pirate') st.chart = onward[i % Math.max(1, onward.length)] ?? null;
     addThing(s, st);
   });

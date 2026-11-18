@@ -112,7 +112,10 @@ const TOAST = {
   standDown: (e) => [`${e.name}  ·  STANDING DOWN`, GOOD],
   stationHostile: (e) => [`${e.name} IS NOW HOSTILE`, BAD],
   stationFightsBack: (e) => [`BYPASS FAILED  ·  ${e.name} FIGHTS BACK`, BAD],
-  stationTaken: (e) => [`${e.name} IS YOURS  ·  SHIPYARD OPEN`, GOOD],
+  stationTaken: (e) => [
+    e.blown ? `${e.name} IS YOURS  ·  ITS SECURITY BLEW ITS OWN GUNS` : `${e.name} IS YOURS  ·  SHIPYARD OPEN`,
+    GOOD,
+  ],
   gunDown: () => ['STATION GUN DESTROYED', LOOT],
   noRockets: () => ['OUT OF ROCKETS', WARM],
   dartLost: () => ['A DART WAS SHOT DOWN', BAD],
