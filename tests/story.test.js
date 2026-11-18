@@ -14,7 +14,11 @@ import {
   SORTS,
   FALLBACKS,
   PREMISES,
+  HIDDEN_STEPS,
+  summarize,
+  namesSystem,
 } from '../src/sim/story.js';
+import { regionLayout } from '../src/sim/world.js';
 
 const SIZES = ['short', 'medium', 'long'];
 const SEEDS = Array.from({ length: 40 }, (_, i) => i + 1);
@@ -167,4 +171,48 @@ test('the tester can pick the premise, and the convoy is written in full', () =>
     assert.deepEqual(checkStory(story, sectors), []);
   }
   assert.ok(PREMISES.convoy.full);
+});
+
+test('R-1227, R-1235: the map has four regions, five on the large map, about as large as each other, and the sanctuary in none', () => {
+  for (const size of SIZES)
+    for (const seed of [1, 2, 3]) {
+      const sectors = sectorsFor(seed, size);
+      const lay = regionLayout(sectors, size);
+      assert.equal(lay.count, size === 'long' ? 5 : 4);
+      assert.deepEqual(lay.names.slice(0, 4), ['ALPHA', 'BETA', 'GAMMA', 'DELTA']);
+      assert.equal(lay.of(0), null);
+      const counts = Array(lay.count).fill(0);
+      for (const s of sectors.slice(1)) counts[lay.of(s.id)]++;
+      assert.ok(
+        Math.max(...counts) - Math.min(...counts) <= Math.ceil(sectors.length / lay.count / 2),
+        `${size} ${seed}: ${counts}`,
+      );
+    }
+});
+
+test('R-1228: almost every story uses every region of the map', () => {
+  for (const size of SIZES) {
+    const list = SEEDS.map((seed) => storyOf(seed, size));
+    assert.ok(summarize(list).allRegions >= SEEDS.length * 0.9, size);
+  }
+});
+
+test('R-1229: one step on the small map and two on the others are found without a mark, with a clue that does not name the system', () => {
+  for (const size of SIZES)
+    for (const seed of SEEDS.slice(0, 15)) {
+      const { story, sectors } = storyOf(seed, size);
+      const hidden = story.steps.filter((st) => st.hidden);
+      assert.equal(hidden.length, HIDDEN_STEPS[size]);
+      for (const st of hidden) {
+        assert.notEqual(st.sort, 'raid');
+        assert.ok(st.goal.startsWith('Find ') && st.goal.includes(st.hidden.region));
+        assert.ok(!namesSystem(st.goal, sectors[st.system].name));
+        assert.ok(st.fallback.includes('Asking in a bar'));
+      }
+    }
+});
+
+test('a system is named only by its whole name', () => {
+  assert.ok(namesSystem('out in LOW WAKE, DELTA.', 'LOW WAKE'));
+  assert.ok(!namesSystem('2 jumps from HOLLOW WAKE, GAMMA.', 'LOW WAKE'));
 });

@@ -374,7 +374,12 @@ export function placeClues(story) {
 export function writeTexts(story, sectors) {
   const premise = PREMISES[story.premise];
   const { cast, truth } = story;
-  const w = (id) => sectors[id].name;
+  // A system with its region, so that it can be found on the star map (R-1227): "DEEP GATE, DELTA".
+  const w = (id) =>
+    story.regions && story.regions[id] ? `${sectors[id].name}, ${story.regions[id]}` : sectors[id].name;
+  // A step the crew finds itself (R-1229): where it is, told without the system's name.
+  const riddle = (n) =>
+    `${n.hidden.feature} in ${n.hidden.region}, ${n.hidden.hops === 1 ? 'one jump' : `${n.hidden.hops} jumps`} from ${w(n.hidden.from)}`;
   const side = (f) => FACTIONS[f].name;
   const sideOfBase = (sys, base) => {
     const entry = sectors[sys].plan.find((p) => p[3] === base);
@@ -423,6 +428,19 @@ export function writeTexts(story, sectors) {
     return n ? (n.branches ? n.branches[branch] : n) : null;
   };
   const lead = (token, n, k) => {
+    if (n.hidden) {
+      const where = riddle(n);
+      const v = valuesOf(n);
+      const clue = {
+        person: `${v.who} is waiting at a base in ${where}.`,
+        shop: `Someone at a base in ${where} has ${v.item} for sale.`,
+        wreck: `${v.wreck} went down in ${where}.`,
+        signal: `Something is sending from ${where}.`,
+        target: `${v.targetLong} was last seen in ${where}.`,
+        item: `${v.who} is waiting for ${v.carries} at a base in ${where}.`,
+      }[token];
+      return `${clue || `The trail goes on to ${where}.`} Nobody will say which system.`;
+    }
     const list = token === 'item' && n.sort === 'choose' ? LEADS.itemChoice : LEADS[token];
     return fill(vary(list, k), valuesOf(n));
   };
@@ -522,6 +540,11 @@ export function writeTexts(story, sectors) {
     }
     st.goal = fill(GOALS[st.sort], values);
     st.fallback = FALLBACKS[st.sort];
+    if (st.hidden) {
+      st.goalFound = st.goal;
+      st.goal = `Find ${riddle(st)}.`;
+      st.fallback = `Asking in a bar in ${st.hidden.region} marks the system on the star map. ${st.fallback}`;
+    }
     st.scene = scene;
     st.radio = radio.map((r) => ({ from: r.from, text: `"${r.text}"` }));
     st.clue = clueAt[i] ? clueText(clueAt[i]) : null;

@@ -3,7 +3,7 @@
 // a gamepad is read. A new mode is one more entry there, plus the rule in modeOf() for when it applies.
 import { VIEW_W, VIEW_H, ZOOM, COL } from './config.js';
 import { toast } from './events.js';
-import { toggleMute } from './audio.js';
+import { toggleMute, soundWaiting } from './audio.js';
 import { createMenu, openPage, drawMenu, menuButtons } from './menu.js';
 import { POSTS, playerById } from './sim/players.js';
 import { findDock } from './sim/things.js';
@@ -342,6 +342,9 @@ function drawOnBoard(game) {
 function drawTitleScreen(game, t) {
   drawStars(game.ctx, { x: t * 12, y: -t * 20 });
   drawMenu(game, t);
+  // Browsers let a page make a sound only after a key press or click (B-281). Until then the title says so.
+  if (soundWaiting() && Math.floor(t * 1.5) % 2 === 0)
+    game.assets.font.draw(game.ctx, 'PRESS ANY KEY FOR SOUND', VIEW_W / 2, 282, COL.ochre[2], { align: 'c' });
 }
 // The game menu lies on top of wherever the player is. The game goes on behind it.
 function drawGameMenu(game, t) {

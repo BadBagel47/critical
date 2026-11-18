@@ -1189,6 +1189,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1232 | Om storyn får röster i spelet läser berättaren bara meningar utan genererade namn, och namnen står i texten på skärmen. Karaktärernas repliker är inspelade i förväg. | bestämd | Användaren 2026-11-17 (VO3, D-280) | – |
 | R-1233 | Critical behåller sin pixelstil utan detaljerade ytor. Ljus, skuggor och effekter ska bli mer genomarbetade. | bestämd | Användaren 2026-11-17 (F-283) | – |
 | R-1234 | Spelets bild ritas med högst fyra skärmpunkter per spelpunkt, och ett steg mindre så länge bilderna kommer för långsamt. | byggd | Agentens mätning 2026-11-17 (B-282): sex gånger blev 4K-stort på en retinaskärm | tests/scale.test.js |
+| R-1235 | Stjärnkartan visar områdena ALPHA, BETA, GAMMA, DELTA och på den stora kartan EPSILON, med gränser ut från fristaden, och säger i vilket område ett system ligger. Varje område har ungefär lika många system. | byggd | Användaren 2026-11-17 (OM1, OM4, F-278); byggt 2026-11-18 | tests/story.test.js |
+| R-1236 | Spelet försöker starta ljudet vid varje tangent, när en tangent släpps, vid klick och när ett finger lyfts, och startskärmen visar PRESS ANY KEY FOR SOUND så länge ljudet inte har startat. | byggd | Användaren 2026-11-17 (B-281, Brave på macOS) | saknas |
 | R-943 | Skepp i nöd ber om bränsle eller reparation och betalar eller minns det. | förslag | BACKLOG F-083 | – |
 | R-944 | Captain kan anropa skepp och stationer för att be om bränsle, muta eller kräva tribut. | förslag | BACKLOG F-082 | – |
 
