@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Designtest: skärmarna för onlineläget</title>
+<style>
+/* A design test of the screens for playing online (D-270, F-040), drawn with the game's own font and colours on a
+   screen of the game's size. Nothing here is in the game yet, and nothing is sent anywhere. */
+:root { --bg: #090911; --panel: #13152a; --text: #e9ebf7; --muted: #a4aac8; --line: #2b3054; --accent: #7db4ff; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 60px; display: flex; flex-direction: column; gap: 14px; }
+h1 { margin: 0; font-size: 1.5rem; }
+p { margin: 0; color: var(--muted); max-width: 80ch; }
+.stage { width: 100%; max-width: calc(100vh * 16 / 9); }
+canvas { display: block; width: 100%; aspect-ratio: 16 / 9; image-rendering: pixelated; background: #05050a; border: 1px solid var(--line); border-radius: 8px; }
+.bar { display: flex; flex-wrap: wrap; gap: 6px; }
+.bar button { font: inherit; color: var(--text); background: #1c2040; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; cursor: pointer; min-height: 40px; }
+.bar button[aria-pressed='true'] { background: #2c3a7a; border-color: var(--accent); }
+.note { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.note b { color: var(--accent); }
+ul { margin: 6px 0 0; padding-left: 1.2em; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Designtest: skärmarna för onlineläget (D-270)</h1>
+  <p>Hur man skapar ett rum, går med, väljer post och fortsätter en sparad omgång, och vad som syns när någon tappar anslutningen. Ritat med spelets eget typsnitt i spelets storlek. Inget av detta finns i spelet än, och inget skickas någonstans. Planen står i docs/proposal-online.md.</p>
+  <div class="bar" id="screens"></div>
+  <div class="stage"><canvas id="screen" width="1280" height="720"></canvas></div>
+  <div class="note" id="about"></div>
+  <div class="note">
+    <b>Frågor</b>
+    <ul>
+      <li><b>ON5:</b> Pausar menyn (O) spelet för alla när man spelar online? Rekommendation: nej. Spelet fortsätter medan menyn är öppen, och raden PAUSE FOR EVERYONE pausar för alla. Vem som helst kan pausa och fortsätta.</li>
+      <li><b>ON6:</b> Räcker koden för att gå med, eller behövs länken? Rekommendation: koden räcker (ett öppet rum), eftersom den är lätt att läsa upp, och koden har sex tecken så den går inte att gissa. Värden kan alltid ta bort någon.</li>
+      <li><b>ON7:</b> Kan man gå med mitt i en omgång? Rekommendation: ja, direkt, och man tar en ledig post.</li>
+    </ul>
+  </div>
+</main>
+<script type="module">
+import { BitmapFont } from '../../../src/font.js';
+import { COL } from '../../../src/config.js';
+import { rect } from '../../../src/render/draw.js';
+import { qrSvg } from '../../../vendor/network-kit/client/share.js';
+
+const W = 640, H = 360;
+const canvas = document.getElementById('screen');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+ctx.scale(2, 2);
+const fimg = new Image();
+fimg.src = '../../../assets/font.png';
+await fimg.decode();
+const font = new BitmapFont(fimg, await fetch('../../../assets/font.json').then((r) => r.json()));
+
+const CODE = 'K7PX2M';
+const LINK = 'https://badbagel47.github.io/critical/#room=K7PX2M';
+const qr = new Image();
+qr.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(qrSvg(LINK, { margin: 2 }));
+await qr.decode();
+const POSTCOL = { CAPTAIN: COL.captain, GUNNER: COL.gunner, ENGINEER: COL.engineer };
+
+// ---------- pieces drawn as in the game's menu ----------
+function backdrop() {
+  ctx.fillStyle = '#05050a';
+  ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 90; i++) {
+    const x = (i * 97) % W, y = (i * 53 + (i % 7) * 31) % H;
+    ctx.fillStyle = i % 9 ? COL.faint : COL.dim;
+    ctx.fillRect(x, y, 1, 1);
+  }
+}
+function title(text, sub) {
+  font.draw(ctx, text, W / 2, 28, COL.text, { align: 'c', scale: 2 });
+  if (sub) font.draw(ctx, sub, W / 2, 52, COL.ion[2], { align: 'c' });
+}
+// Rows like the game's menu: a label, and on the right a value. `on` is the row the keys are on.
+function rows(list, y = 84, on = 0) {
+  list.forEach((r, i) => {
+    const ry = y + i * 20;
+    const lit = i === on;
+    rect(ctx, 105, ry, 430, 16, lit ? '#1c2140' : '#11121e', lit ? COL.ochre[2] : COL.line);
+    font.draw(ctx, r[0], 113, ry + 5, r.off ? COL.faint : lit ? COL.white : COL.text);
+    if (r[1]) font.draw(ctx, r[1], 527, ry + 5, r[2] || COL.dim, { align: 'r' });
+  });
+}
+const hint = (text, y = 300) => font.draw(ctx, text, W / 2, y, COL.dim, { align: 'c' });
+function banner(text, color = COL.ochre[2], y = 24) {
+  const w = font.width(text) + 16;
+  rect(ctx, W / 2 - w / 2, y, w, 15, '#14141c', color);
+  font.draw(ctx, text, W / 2, y + 5, color, { align: 'c' });
+}
+// A rough picture of the game behind the messages: the ship among the stars, and the posts at the top.
+function gameBehind(away = []) {
+  backdrop();
+  ctx.fillStyle = '#1b1e33';
+  ctx.beginPath();
+  ctx.ellipse(470, 250, 140, 90, 0.3, 0, 7);
+  ctx.fill();
+  rect(ctx, 306, 166, 28, 44, '#3a3f4b', COL.out);
+  rect(ctx, 314, 158, 12, 10, '#5a5f6b', COL.out);
+  ['CAPTAIN', 'GUNNER', 'ENGINEER'].forEach((p, i) => {
+    const gone = away.includes(p);
+    rect(ctx, 8 + i * 70, 8, 66, 13, gone ? '#14141c' : i === 0 ? POSTCOL[p] : '#14141c', gone ? COL.faint : COL.line);
+    font.draw(ctx, `${i + 1}  ${p}`, 41 + i * 70, 12, gone ? COL.faint : i === 0 ? COL.out : COL.dim, { align: 'c' });
+  });
+}
+
+// ---------- the screens ----------
+const SCREENS = {
+  title: {
+    name: 'Startskärmen',
+    about: 'Startskärmen får raden PLAY ONLINE. Allt annat är som i dag: man kan fortfarande spela ensam och i testläget.',
+    draw() {
+      backdrop();
+      title('CRITICAL ST8', 'ONE SHIP  ·  THREE POSTS  ·  A NEW STAR MAP EVERY GAME');
+      rows([['CONTINUE', 'KESTREL  ·  1:24  ·  2400 CR'], ['NEW GAME'], ['PLAY ONLINE', 'WITH UP TO THREE', COL.ion[2]], ['NEW GAME  ·  HARDCORE', 'ONE LIFE'], ['MAP SIZE', 'SHORT  ·  25 SYSTEMS'], ['LOAD GAME'], ['SOUND'], ['FULLSCREEN', 'OFF']], 84, 2);
+      hint('ARROWS AND ENTER, OR THE MOUSE  ·  H  CONTROLS');
+    },
+  },
+  online: {
+    name: 'Spela online',
+    about: 'Man skriver sitt namn en gång, och spelet minns det. Därifrån skapar man ett rum med en ny omgång eller en sparad, eller går med i någon annans med en kod.',
+    draw() {
+      backdrop();
+      title('PLAY ONLINE', 'ONE OF YOU HOSTS THE GAME  ·  THE OTHERS JOIN WITH A CODE OR A LINK');
+      rows([['YOUR NAME', 'ADA', COL.text], ['NEW ROOM  ·  NEW GAME', 'MAP SIZE SHORT'], ['NEW ROOM  ·  CONTINUE A SAVE', '3 SAVES'], ['JOIN WITH A CODE'], ['BACK']], 84, 1);
+      hint('YOUR NAME IS SHOWN TO THE OTHERS IN THE ROOM');
+    },
+  },
+  saves: {
+    name: 'Fortsätt en sparning',
+    about: 'Varje sparning visar vilka som hade vilken post, så att man ser vilken omgång det är (R-1245). Sparningar som kom från värden i en annan omgång ligger här också, eftersom alla får en kopia.',
+    draw() {
+      backdrop();
+      title('CONTINUE A SAVE', 'EVERY PLAYER HAS A COPY OF EACH SAVE THE HOST MADE');
+      rows([
+        ['AUTO  ·  TODAY 21:40', 'ADA  ·  BO  ·  CY', COL.ion[2]],
+        ['KESTREL  ·  1:24  ·  2400 CR', ''],
+        ['SLOT 2  ·  YESTERDAY 20:15', 'ADA  ·  BO  ·  -', COL.ion[2]],
+        ['ARDEN  ·  0:51  ·  900 CR', ''],
+        ['SLOT 3  ·  MONDAY', 'ADA  ·  -  ·  -', COL.ion[2]],
+        ['BACK'],
+      ], 84, 0);
+      hint('THE NAMES ARE CAPTAIN  ·  GUNNER  ·  ENGINEER');
+    },
+  },
+  room: {
+    name: 'Rummet, värden',
+    about: 'Värden ser koden, länken och en QR-kod att dela, och vem som har vilken post. Den som hade en post förra gången får den föreslagen igen (R-1246). En post som ingen har sköts som i dag: den går som den ställdes in.',
+    draw() {
+      backdrop();
+      title('ROOM ' + CODE, 'TELL THE OTHERS THE CODE, OR SEND THEM THE LINK');
+      ctx.drawImage(qr, 470, 84, 110, 110);
+      font.draw(ctx, 'SCAN TO JOIN', 525, 200, COL.dim, { align: 'c' });
+      font.draw(ctx, 'CODE', 60, 84, COL.dim);
+      font.draw(ctx, CODE.split('').join(' '), 60, 96, COL.ochre[2], { scale: 2 });
+      font.draw(ctx, 'LINK', 60, 128, COL.dim);
+      font.draw(ctx, LINK.replace('https://', ''), 60, 140, COL.ion[2]);
+      font.draw(ctx, 'COPY THE LINK  ·  C', 60, 152, COL.dim);
+      const posts = [['CAPTAIN', 'ADA  ·  YOU  ·  HOST'], ['GUNNER', 'BO  ·  HAD IT LAST TIME'], ['ENGINEER', 'FREE']];
+      posts.forEach(([p, who], i) => {
+        const y = 186 + i * 20;
+        rect(ctx, 60, y, 380, 16, '#11121e', COL.line);
+        font.draw(ctx, p, 68, y + 5, POSTCOL[p]);
+        font.draw(ctx, who, 432, y + 5, who === 'FREE' ? COL.faint : COL.text, { align: 'r' });
+      });
+      rows([['START THE GAME', 'CONTINUES  ·  KESTREL  ·  1:24', COL.acid[2]]], 262, 0);
+      hint('OTHERS CAN JOIN LATER TOO, AND TAKE A FREE POST', 300);
+    },
+  },
+  join: {
+    name: 'Gå med',
+    about: 'Koden har sex tecken utan 0, O, 1 och I, och skrivs med tangentbordet eller på skärmen. Med länken eller QR-koden behövs ingen kod. Fel kod ger ett tydligt besked.',
+    draw() {
+      backdrop();
+      title('JOIN WITH A CODE', 'THE HOST SEES THE CODE IN THE ROOM');
+      const typed = 'K7PX';
+      for (let i = 0; i < 6; i++) {
+        const x = 230 + i * 30;
+        rect(ctx, x, 100, 24, 30, i === typed.length ? '#1c2140' : '#11121e', i === typed.length ? COL.ochre[2] : COL.line);
+        if (typed[i]) font.draw(ctx, typed[i], x + 12, 108, COL.text, { align: 'c', scale: 2 });
+      }
+      rows([['YOUR NAME', 'BO', COL.text], ['JOIN', '', COL.acid[2]], ['BACK']], 160, 0);
+      banner('NO ROOM HAS THAT CODE  ·  CHECK IT WITH THE HOST', COL.ember[2], 240);
+      hint('LETTERS AND NUMBERS  ·  BACKSPACE ERASES', 300);
+    },
+  },
+  waiting: {
+    name: 'Väntar på värden',
+    about: 'Den som går med ser vem som är i rummet och väntar tills värden startar. Man väljer post redan här, och kan byta i spelet som i dag.',
+    draw() {
+      backdrop();
+      title('ROOM ' + CODE, 'WAITING FOR ADA TO START THE GAME');
+      const posts = [['CAPTAIN', 'ADA  ·  HOST'], ['GUNNER', 'BO  ·  YOU'], ['ENGINEER', 'FREE  ·  TAKE IT']];
+      posts.forEach(([p, who], i) => {
+        const y = 100 + i * 20;
+        rect(ctx, 130, y, 380, 16, i === 2 ? '#1c2140' : '#11121e', i === 2 ? COL.ochre[2] : COL.line);
+        font.draw(ctx, p, 138, y + 5, POSTCOL[p]);
+        font.draw(ctx, who, 502, y + 5, who.startsWith('FREE') ? COL.dim : COL.text, { align: 'r' });
+      });
+      rows([['LEAVE THE ROOM']], 180, -1);
+      hint('THE GAME STARTS FOR EVERYONE AT ONCE', 300);
+    },
+  },
+  drop: {
+    name: 'Någon tappar anslutningen',
+    about: 'När en spelare tappar anslutningen blir posten ledig direkt (R-1241). Är spelaren inne i en bas står det hur länge det dröjer innan den skickas hem (R-1243). Kommer spelaren tillbaka står det också.',
+    draw() {
+      gameBehind(['GUNNER']);
+      banner('BO LOST THE CONNECTION  ·  THE GUNNER POST IS FREE', COL.ochre[2], 30);
+      banner('BO IS INSIDE PIRATE HOLD  ·  SENT HOME IN 0:42 IF NOT BACK', COL.dim, 50);
+      font.draw(ctx, '2  TAKE THE GUNNER POST', W / 2, 330, COL.ion[2], { align: 'c' });
+    },
+  },
+  host: {
+    name: 'Värden försvinner',
+    about: 'Försvinner värden väntar spelet några sekunder, sedan tar en annan spelare över från det senaste läget. Inget går förlorat utom de sista sekunderna.',
+    draw() {
+      gameBehind(['CAPTAIN']);
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = '#05050a';
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = 1;
+      banner('ADA, THE HOST, LOST THE CONNECTION  ·  THE GAME WAITS', COL.ochre[2], 150);
+      banner('CY GOES ON WITH THE GAME IN 3', COL.ion[2], 172);
+    },
+  },
+  saved: {
+    name: 'Sparat',
+    about: 'När värden sparar, vid dockning eller i menyn, får alla en kopia (R-1245). Raden syns en stund och försvinner.',
+    draw() {
+      gameBehind();
+      banner('SAVED  ·  A COPY WENT TO EVERY PLAYER', COL.acid[2], 30);
+    },
+  },
+  menu: {
+    name: 'Menyn online',
+    about: 'Menyn (O) online. Med rekommendationen i ON5 pausar den inte spelet för de andra; raden PAUSE FOR EVERYONE gör det. Bara värden sparar, och de andra får kopian.',
+    draw() {
+      gameBehind();
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = '#05050a';
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = 1;
+      font.draw(ctx, 'MENU', W / 2, 40, COL.text, { align: 'c', scale: 2 });
+      font.draw(ctx, 'ROOM ' + CODE + '  ·  THE GAME GOES ON WHILE THE MENU IS OPEN', W / 2, 62, COL.dim, { align: 'c' });
+      rows([['BACK TO THE GAME'], ['PAUSE FOR EVERYONE'], ['INVITE', CODE, COL.ochre[2]], ['SAVE GAME', 'THE HOST SAVES', COL.faint], ['SOUND'], ['FULLSCREEN', 'OFF'], ['LEAVE THE ROOM']], 84, 1);
+    },
+  },
+};
+
+const bar = document.getElementById('screens');
+let at = 'title';
+for (const [key, s] of Object.entries(SCREENS)) {
+  const b = document.createElement('button');
+  b.textContent = s.name;
+  b.onclick = () => show(key);
+  b.dataset.key = key;
+  bar.append(b);
+}
+function show(key) {
+  at = key;
+  for (const b of bar.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.key === at));
+  ctx.clearRect(0, 0, W, H);
+  SCREENS[at].draw();
+  document.getElementById('about').textContent = SCREENS[at].about;
+}
+show(new URLSearchParams(location.search).get('screen') || 'title');
+</script>
+<script src="../../../src/fullscreen.js" defer></script>
+<script type="module" src="../../../src/playtest-start.js"></script>
+</body>
+</html>

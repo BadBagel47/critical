@@ -170,6 +170,20 @@ export const ITEMS = [
   },
   {
     group: 'Designtester',
+    id: 'D-270',
+    title: 'Skärmarna för onlineläget',
+    where: 'dator eller iPad',
+    steps: ['Bläddra mellan skärmarna med knapparna ovanför.', 'Läs frågorna under bilden.'],
+    links: [['Öppna designtestet', at('docs/design/prototypes/online.html')]],
+    ask: [
+      'Saknas något för att skapa ett rum, gå med eller fortsätta en sparning?',
+      'ON5: Ska menyn (O) låta spelet gå vidare för de andra, med en egen rad för att pausa för alla?',
+      'ON6: Räcker koden för att gå med?',
+      'ON7: Ska man kunna gå med mitt i en omgång?',
+    ],
+  },
+  {
+    group: 'Designtester',
     id: 'D-280',
     title: 'Röstprovet',
     where: 'dator eller iPad',

@@ -9,29 +9,28 @@ Prioriterat för: användarens egen ordning: Playtest och onlineläget först, s
 
 Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först, sedan uppdragen. Butiken och standardbasen är byggda, så uppdragen är nästa. Användaren 2026-11-17: först uppdragsstrukturen och en uppdragstestare, sedan uppdragen och storyn (A). Strukturen och testaren är klara 2026-11-17 (D-274, F-275), och D-274 väntar på att användaren läser storys i testaren. Frågorna under varje grupp har fasta etiketter efter projektregeln om frågeserier, så de byter inte namn när grupperna får nya bokstäver (agentregler v1.10). Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
 
-**A** – strong model, high level – Förberedelser för onlineläget
-- D-270 – Designskiss av skärmarna för att skapa och gå med i ett rum
-- Besked 2026-11-19 (Kör B rek): ON1 ja, gamla sparningar får sluta fungera. ON2: posten blir ledig direkt, rollens kassa behålls, en bordare inne skickas hem när väntetiden är slut, och svårigheten räknar bara de anslutna. ON3: sparningen ligger hos värden, och en kopia skickas till varje spelare när spelet sparar, så att vem som helst kan fortsätta; den går att exportera som fil. ON4: pengar och utrustning hör till posten, och spelet föreslår samma post till den som kommer tillbaka.
-
-**B** – strong model, high level – Onlineläget: spelets Worker och rummen – bygger på B
+**A** – strong model, high level – Onlineläget: spelets Worker och rummen
 - D-269 – Spelet på en egen Worker hos Cloudflare, med rummen på samma adress, så att inget laddas från andra tjänster. Kräver en engångsåtgärd: en Cloudflare-nyckel som hemlighet i critical
 - F-040 – Koppla spelet till network-kits rum: den som skapar rummet kör spelet, de andra skickar sina knapptryck, och den som går med får läget
 - D-264 – Utjämning och förutsägelse, så att den egna styrningen känns direkt trots fördröjningen
 - F-271 – Integritetstexten för onlineläget och Playtest
 - F-272 – Tester med två eller tre webbläsare mot en lokal kopia av servern
+- Fråga ON5: Pausar menyn (O) spelet för alla när man spelar online? Rekommendation: nej, spelet fortsätter medan menyn är öppen, och raden PAUSE FOR EVERYONE pausar för alla. Vem som helst kan pausa och fortsätta. Se designtestet docs/design/prototypes/online.html (D-270).
+- Fråga ON6: Räcker koden för att gå med, eller behövs länken? Rekommendation: koden räcker, eftersom den är lätt att läsa upp och inte går att gissa med sex tecken. Värden kan alltid ta bort någon.
+- Fråga ON7: Kan man gå med mitt i en omgång? Rekommendation: ja, direkt, och man tar en ledig post.
 - Fråga OL2: Spelet har i dag sin adress på GitHub. Ska det flytta helt till Cloudflare, så att spelet och rummen har samma adress? Rekommendation: ja, och den gamla adressen skickar vidare till den nya, så att gamla länkar fungerar. Sparade spel ligger i webbläsaren per adress, så de följer inte med av sig själva, men de går att exportera till fil och läsa in.
 
-**C** – strong model, high level – Sidouppdrag i baren, anseende genom uppdrag och smuggelgods
+**B** – strong model, high level – Sidouppdrag i baren, anseende genom uppdrag och smuggelgods
 - D-073 – Sidouppdrag som väljs i baren i ett gränssnitt som butikens: frakt, prisjakt och räddning, högst fem åt gången, med tidsgräns mot högre lön
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 - D-257 – Smuggeluppdrag från skumt folk på baser, som man pratar med
 - Fråga VO4: Ska storyn ha röster i spelet, efter röstprovet i uppdragstestaren? Rekommendation: lyssna på hela storyn och säg vad du tycker om rösterna och känslorna. Blir det ja spelas karaktärernas fasta repliker in, och berättaren läser bara meningar utan genererade namn (R-1232).
 
-**D** – strong model, high level – Ljus, skuggor och effekter i spelet – väntar på svar
+**C** – strong model, high level – Ljus, skuggor och effekter i spelet – väntar på svar
 - D-261 – Avgör med designtestet om grafiken ska ritas med WebGL, som behövs för ljus som glöder
 - Fråga GR3: Vilken version i designtestet för ljus känns bäst, och hur många bilder i sekunden visar mätaren på din Mac och iPad med många ljus och partiklar? Väntar på svar: det avgör om spelet byter till att rita med grafikkortet.
 
-**E** – strong model, medium level – Meddelanden från skeppet
+**D** – strong model, medium level – Meddelanden från skeppet
 - D-256 – Inventera alla meddelanden som kan dyka upp, när, för vem och var
 - D-187 – Se över hur spelet och skeppet visar meddelanden, så att det viktiga syns först
 - F-255 – Visa Gunner när dartsen är hela igen, genom skeppets meddelanden
@@ -42,7 +41,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Fråga MD5: Ska ett meddelande som bara gäller en post bara visas för den? Rekommendation: ja, för läge och status. Fara och händelser visas för alla.
 
 
-**F** – strong model, medium level – Förfina rollerna
+**E** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 - F-236 – Primära roller och tillfälligt övertagande: den som lämnar skeppet lämnar sina roller lediga, de kvar kan ta en av dem, och ägaren får tillbaka den direkt
 - F-235 – Bordarnas utrustning per roll, så att varje roll köper och har sin egen
@@ -50,75 +49,75 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Fråga RO1: Gäller ryggsäcken både utrustning och byte, och ersätter den CARGO PACK? Rekommendation: ja, en ryggsäck per roll som rymmer både och, och den ersätter CARGO PACK.
 - Fråga RO2: Hur många nivåer har ryggsäcken? Rekommendation: tre, där den första ger det man får med sig i dag.
 
-**G** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262) – väntar på svar
+**F** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262) – väntar på svar
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på iPad och sedan mobil i liggande format
 - Fråga P6: Vilket sikte för Gunner kändes bäst i designtestet, A, B eller C? Ingen rekommendation förrän du har provat.
 - Fråga P7: Fasta eller flytande spakar, och vilken storlek? Ingen rekommendation förrän du har provat.
 - Fråga P8: Ska gasen ligga kvar när spaken släpps, eller följa spaken tillbaka till noll? Ingen rekommendation förrän du har provat.
 
-**H** – strong model, high level – Viewer på en extra skärm
+**G** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 - Fråga VW1: Byggs viewern först som ett andra fönster på samma dator, innan onlineläget finns? Rekommendation: ja.
 - Fråga VW2: Vem väljer vad viewern visar? Rekommendation: alla kan skicka dit, och den senaste som skickade syns.
 
-**I** – strong model, high level – Sällsynta skepp
+**H** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 - Fråga SS1: Hur ofta dyker Juggernauten upp? Rekommendation: högst en per omgång hos varje faktion, i de farligare systemen, och som pirat bara nära slutet.
 - Fråga SS2: Vad ger en namngiven pirat? Rekommendation: en prissumma och en unik del som loot, och en eller två sådana per omgång.
 
-**J** – strong model, high level – Värme
+**I** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 - Fråga VÄ1: Vad händer när något blir för varmt? Rekommendation: det stängs av en stund, vapnen slutar skjuta och motorerna tappar fart, men skrovet tar ingen skada.
 - Fråga VÄ2: Hur kyler Engineer? Rekommendation: med kraft till kylning i samma panel som kraften i dag, och med uppgraderingar som kyler bättre. En skiss först.
 
-**K** – strong model, high level – Slå ut och borda
+**J** – strong model, high level – Slå ut och borda
 - D-248 – Se över hur man slår ut ett skepp för att borda det, så att Gunner har ett tydligt sätt att göra det i stället för att skeppet exploderar
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 - Fråga SL1: Hur slår Gunner ut ett skepp i stället för att spränga det? Rekommendation: ett eget vapen som tar sköld och motorer men nästan inte skrovet, och ett skepp utan motorer driver och kan bordas.
 - Fråga SL2: Vilka skepp kan slås ut och bordas? Rekommendation: fraktskepp och gunboats, som har insidor. Fighters inte.
 
-**L** – strong model, high level – Missiler och raketer
+**K** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 - Fråga MI1: Är missiler och raketer två olika delar? Rekommendation: ja, två delar som köps för sig, med ammunition vid disken som raketerna i dag.
 
-**M** – strong model, high level – Kontakt med andra skepp
+**L** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 - Fråga KO1: Hur anropar Captain? Rekommendation: en knapp när ett skepp eller en station är nära, med en kort lista att välja ur: be om bränsle, muta, kräva tribut.
 - Fråga KO2: Hur många eskorter kan man ha? Rekommendation: en åt gången, hyrd på baser.
 
-**N** – strong model, high level – Anomalier
+**M** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 - Fråga AN1: Vilka sorters anomalier först? Rekommendation: tre: ett fält där man flyger och skjuter långsammare, strålning som skadar skölden, och moln som stör sensorerna.
 - Fråga AN2: Syns de på stjärnkartan? Rekommendation: ja, när man har varit i systemet eller har systemradar.
 
-**O** – strong model, high level – En värld som förändras
+**N** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 - Fråga VF1: Hur ofta händer något i världen? Rekommendation: ungefär var tionde till femtonde minut, med ett meddelande när det händer.
 - Fråga VF2: Ska två faktioner vara i krig i varje omgång? Rekommendation: ja, ett krig per omgång, där uppdrag för den ena sänker anseendet hos den andra.
 
-**P** – strong model, high level – Ljudeffekter
+**O** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - Fråga LJ1: Görs ljuden som i dag, av spelets egen ljudmotor, eller som inspelade filer? Rekommendation: som i dag, så slipper vi licensfrågor och stora filer.
 
-**Q** – strong model, high level – Visuella effekter och feedback
+**P** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 - Fråga VE1: Ska skärmen skaka och blinka mer vid träffar? Rekommendation: lite mer, med ett val i menyn som stänger av skakningar och blixtar, av hänsyn till ljuskänsliga.
 
-**R** – strong model, high level – Förslag: ekonomi och belöningar
+**Q** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 - Fråga EK1: Förslaget om ekonomin skrevs innan den nya världen, butiken och kassorna per roll. Ska det skrivas om innan du svarar på frågorna i det? Rekommendation: ja.
 
-**S** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**R** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 - Fråga SV1: Ska nivåerna justeras först när ekonomin är bestämd? Rekommendation: ja, efter gruppen om ekonomi och belöningar, eftersom priserna och nivåerna hänger ihop.
 
-**T** – strong model, high level – Handel
+**S** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 - Fråga HA1: Var handlar man varor? Rekommendation: i en egen flik i butiken, med en priskarta på stjärnkartan.
 - Fråga HA2: Delar varorna lastrum med malmen? Rekommendation: ja, samma lastrum, som byggs ut.
@@ -198,7 +197,6 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | D-043 | Lägga ut medan någon är kvar inne. Beslut tills vidare: det går, och alla som är inne teleporteras hem på vanligt sätt Besked 2026-11-16: ändrat. Skeppet får lämna dockan men inte hoppa från systemet så länge någon är kvar inne, och ingen teleporteras tillbaka. Se F-211 och docs/proposal-bases.md avsnitt 4 | Ändrat, se F-211 |
 | D-264 | Fördröjning i onlineläget: med värden i en webbläsare ser de andra allt en tur och retur via Cloudflare senare. Utjämning mellan uppdateringar för skepp och figurer, och förutsägelse så att den egna styrningen känns direkt, mest för Captain som flyger och Gunner som siktar. Agentens granskning av network-kit 2026-11-17 | Ej påbörjad |
 | D-269 | Var spelet ligger: i dag på GitHub Pages, men network-kit behöver en Worker på Cloudflare. Agentens rekommendation: lägg spelet på samma Worker, så att allt kommer från en adress (annars bryter det mot tests/outside.mjs, som säger att inget får laddas från andra tjänster). Engångsåtgärder: en Cloudflare-nyckel som hemlighet i critical, ett flöde som publicerar dit, och uppdateringsflödet från network-kit (templates/update-network-kit.yml). Agentens granskning av network-kit 2026-11-17. Besked från network-kit 2026-11-17: hur spelets egna filer serveras från samma Worker står nu i network-kits docs/INTEGRATION.md avsnitt 2 (assets i wrangler-konfigurationen och location.origin som server). network-kits demo är uppsatt så | Ej påbörjad |
-| D-270 | Skärmarna för onlineläget: skapa rum, namn, länk och QR, ange kod, vem som har vilken post, väntar på värden, återanslutning, och om menyn (O) pausar för alla. Designskiss först. Agentens granskning av network-kit 2026-11-17 | Pågår 2026-11-19 (claude/trusting-franklin-4z4ny4) |
 | F-271 | Integritetstext för onlineläget: network-kit säger att varje spels text ska nämna att Cloudflare behandlar spelarnas namn och IP-adresser (GDPR), och vad som sparas och hur länge. Critical har ingen sådan text än. Agentens granskning av network-kit 2026-11-17. Agenten är ingen jurist Ska också ta upp Playtest-rapporterna (R-1240, D-288): vad som skickas, att det går till Cloudflare och att det sparas i 30 dagar. | Ej påbörjad |
 | F-272 | Tester med flera spelare: kör spelet mot network-kit i en lokal kopia av Cloudflares servermiljö (som network-kits egna tester), med två eller tre webbläsare, också för övertagande av värden och den som går med mitt i. Agentens granskning av network-kit 2026-11-17 | Ej påbörjad |
 | F-285 | Mushjulet som alternativ (besked MH1 2026-11-18): den som bordar byter utrustning med hjulet, och Engineer ändrar kraften till vapen, sköldar, motorer eller reparation för det system markören pekar på. Klick och tangenter finns kvar | Ej påbörjad |
@@ -439,3 +437,4 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | D-266 | När en spelare tappar anslutningen eller går: vad händer med posten, rollens kassa och en bordare som står inne i en bas, och med svårigheten som räknar spelarna (piratvågor, R-1191). Hänger ihop med F-034 (autopilot, parkerad) och F-236 (lediga roller). Agentens granskning av network-kit 2026-11-17. Besked från network-kit 2026-11-19: version 0.13 håller en tappad spelares plats under en frist och ger tillbaka den efteråt om den är ledig, och säger till rummet när någon kommer tillbaka (join och back med returning) | 2026-11-19 |
 | D-267 | Vem är vem online: koppla network-kits id för en deltagare till spelets spelare 0–2, deras roller och kassor (D-189), också för den som går med mitt i (F-038) och den som kommer tillbaka. Agentens granskning av network-kit 2026-11-17. Besked från network-kit 2026-11-19: version 0.13 ger varje deltagare ett fast id i rummet, och regler som körs på servern ser participant.rttMs och när varje meddelande kom fram (at) | 2026-11-19 |
 | D-268 | Sparning online: värdens webbläsare sparar vid dockning, och rummet behåller senaste läget i 24 timmar efter att alla gått. Bestäm var besättningens sparning ska ligga, så att man kan fortsätta en annan dag eller med en annan värd. Agentens granskning av network-kit 2026-11-17 | 2026-11-19 |
+| D-270 | Skärmarna för onlineläget: skapa rum, namn, länk och QR, ange kod, vem som har vilken post, väntar på värden, återanslutning, och om menyn (O) pausar för alla. Designskiss först. Agentens granskning av network-kit 2026-11-17 | 2026-11-19 |
