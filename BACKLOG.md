@@ -29,6 +29,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - D-264 – Utjämning och förutsägelse, så att den egna styrningen känns direkt trots fördröjningen
 - F-271 – Integritetstexten för onlineläget och Playtest
 - F-272 – Tester med två eller tre webbläsare mot en lokal kopia av servern
+- Fråga OL2: Spelet har i dag sin adress på GitHub. Ska det flytta helt till Cloudflare, så att spelet och rummen har samma adress? Rekommendation: ja, och den gamla adressen skickar vidare till den nya, så att gamla länkar fungerar. Sparade spel ligger i webbläsaren per adress, så de följer inte med av sig själva, men de går att exportera till fil och läsa in.
 
 **D** – strong model, high level – Sidouppdrag i baren, anseende genom uppdrag och smuggelgods
 - D-073 – Sidouppdrag som väljs i baren i ett gränssnitt som butikens: frakt, prisjakt och räddning, högst fem åt gången, med tidsgräns mot högre lön
