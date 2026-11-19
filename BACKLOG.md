@@ -10,9 +10,8 @@ Prioriterat för: användarens egen ordning, med storyn och uppdragen först (ag
 Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först, sedan uppdragen. Butiken och standardbasen är byggda, så uppdragen är nästa. Användaren 2026-11-17: först uppdragsstrukturen och en uppdragstestare, sedan uppdragen och storyn (A). Strukturen och testaren är klara 2026-11-17 (D-274, F-275), och D-274 väntar på att användaren läser storys i testaren. Frågorna under varje grupp har fasta etiketter efter projektregeln om frågeserier, så de byter inte namn när grupperna får nya bokstäver (agentregler v1.10). Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
 
 **A** – strong model, medium level – Fullskärm
-- F-286 – En knapp för fullskärm i spelet, så att det går att se och prova hur det blir på mobil, iPad och dator
-- Fråga FS1: Var ska knappen sitta? Rekommendation: FULLSCREEN i titelmenyn och i menyn (O), och en liten ruta i ett hörn på pekskärmar, eftersom de saknar tangentbord.
-- Fråga FS2: På iPhone tillåter Safari inte fullskärm för webbsidor. Det enda sättet är att lägga spelet på hemskärmen, och då behövs en liten fil som säger att spelet ska öppnas utan webbläsarens fält. Ska den läggas till? Rekommendation: ja, och knappen förklarar det på iPhone i stället för att inte göra något.
+- F-286 – En knapp för fullskärm som är lätt att nå i spelet och på alla testsidor (provspelslistan, uppdragstestaren och designtesterna), så att det går att se och prova hur det blir på mobil, iPad och dator
+- Besked 2026-11-19 (FS1): knappen ska vara enkel att nå i alla våra tester. Besked (FS2): fullskärm på iPhone via hemskärmen läggs i backloggen (F-287).
 
 **B** – strong model, high level – Sidouppdrag i baren, anseende genom uppdrag och smuggelgods
 - D-073 – Sidouppdrag som väljs i baren i ett gränssnitt som butikens: frakt, prisjakt och räddning, högst fem åt gången, med tidsgräns mot högre lön
@@ -210,6 +209,7 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | F-272 | Tester med flera spelare: kör spelet mot network-kit i en lokal kopia av Cloudflares servermiljö (som network-kits egna tester), med två eller tre webbläsare, också för övertagande av värden och den som går med mitt i. Agentens granskning av network-kit 2026-11-17 | Ej påbörjad |
 | F-285 | Mushjulet som alternativ (besked MH1 2026-11-18): den som bordar byter utrustning med hjulet, och Engineer ändrar kraften till vapen, sköldar, motorer eller reparation för det system markören pekar på. Klick och tangenter finns kvar | Ej påbörjad |
 | F-286 | Fullskärm (användaren 2026-11-19): "Låt oss lägga in en knapp för fullskärm så att jag kan se hur det blir både på mobil och dator. Svårt att testa annars" | Ej påbörjad |
+| F-287 | Fullskärm på iPhone: Safari på iPhone tillåter inte fullskärm för webbsidor, så spelet behöver en fil som säger att det ska öppnas utan webbläsarens fält när det läggs på hemskärmen, och fullskärmsknappen förklarar då hur man gör. Från F-286 (användaren 2026-11-19, FS2) | Ej påbörjad |
 
 ## Låg
 
