@@ -467,7 +467,7 @@ Från agentregler v1.13 (2026-11-19), väntar på användaren:
 
 Genomgång 2026-11-14 (D-033). Agenten är ingen jurist, och inget här är juridisk rådgivning. Officiella källor är IMY (imy.se) för personuppgifter och PTS (pts.se) för kakor och liknande lagring.
 
-- Spelet och designsidan laddar inget från andra tjänster. Det kontrolleras med `node tests/outside.mjs`.
+- Spelet och designsidan laddar inget från andra tjänster. Det kontrolleras med `node tests/outside.mjs`. Undantag (ägaren 2026-11-19, R-1240): Playtest-rapporterna får gå till network-kits adminsida, men bara när en testarlänk har öppnats. Det är inte byggt än (D-288), och integritetstexten F-271 ska ta upp det.
 - Designsidan laddade tidigare typsnitt från Google Fonts. De är borttagna och sidan använder systemets typsnitt.
 - Spelet hanterar inga personuppgifter: inga namn, konton eller formulär.
 - Spelet sparar tre sorters saker i webbläsaren, alla på spelarens egen begäran och utan personuppgifter: om ljudet är av eller på (`critical-muted`), ljudnivåerna (`critical-volume`) och sparade spel (`critical-save-auto` och `critical-save-1` till `5`). Inga kakor. Regeln som kan beröras är lagen om elektronisk kommunikation, 9 kap. 28 §, om lagring i användarens utrustning. Lagring som behövs för något användaren själv har bett om brukar vara undantagen från samtycke. Användaren bedömer att det är okej (2026-11-14).
