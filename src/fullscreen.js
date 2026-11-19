@@ -8,8 +8,9 @@
 // `window.criticalFullscreen` lets the game's own menu do the same: { supported, active(), toggle() }.
 (() => {
   'use strict';
-  const doc = document;
-  const root = doc.documentElement;
+  // Safari on the iPad knows fullscreen only by its older names, with webkit in front.
+  const doc = /** @type {any} */ (document);
+  const root = /** @type {any} */ (doc.documentElement);
   const request = root.requestFullscreen || root.webkitRequestFullscreen;
   const exit = doc.exitFullscreen || doc.webkitExitFullscreen;
   const current = () => doc.fullscreenElement || doc.webkitFullscreenElement || null;
@@ -23,7 +24,7 @@
       // The browser said no: nothing changes.
     }
   };
-  window.criticalFullscreen = { supported, active, toggle };
+  /** @type {any} */ (window).criticalFullscreen = { supported, active, toggle };
   if (!supported || /[?&]still\b/.test(window.location.search)) return;
 
   const ENTER =
@@ -59,7 +60,7 @@
     e.stopPropagation();
     toggle();
     // Back to the game's own screen, so that its keys work again at once.
-    const canvas = doc.querySelector('canvas[tabindex]');
+    const canvas = /** @type {HTMLElement | null} */ (doc.querySelector('canvas[tabindex]'));
     if (canvas) canvas.focus();
     else button.blur();
   });
