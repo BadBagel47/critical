@@ -1,9 +1,10 @@
 // Saved games. A save is the whole game state as text, with a few words about it for the list of saves.
 // Nothing here touches the screen: the place where saves are kept is passed in, so this can be tested.
 import { currentSector } from './sim/sectors.js';
+import { packInterior, unpackInterior } from './sim/interior.js';
 
 // Raised whenever the shape of the game state changes, so that an old save is refused instead of breaking.
-export const SAVE_VERSION = 28;
+export const SAVE_VERSION = 29;
 // One save made by the game itself every time the ship docks, and five that the player makes.
 export const AUTO = 'auto';
 export const MANUAL = ['1', '2', '3', '4', '5'];
@@ -32,9 +33,23 @@ export function packSave(state, now) {
     version: SAVE_VERSION,
     savedAt: now,
     summary: summaryOf(state),
-    state: { ...state, events: [] },
+    state: packState({ ...state, events: [] }),
   };
 }
+
+// The insides of the places the crew has boarded, in the system the ship is in and in those it has left, are
+// kept without their plans, which are made again from their seeds when the save is read (D-263). That keeps a
+// save small: it is also what goes to the other players online.
+function eachThing(state, fn) {
+  const list = (things) => things.map((t) => (t.interior ? { ...t, interior: fn(t.interior) } : t));
+  return {
+    ...state,
+    things: list(state.things),
+    sectors: state.sectors.map((s) => (s.saved ? { ...s, saved: { ...s.saved, things: list(s.saved.things) } } : s)),
+  };
+}
+export const packState = (state) => eachThing(state, packInterior);
+export const unpackState = (state) => eachThing(state, unpackInterior);
 
 // Read a save from text. Gives { save } or { error } with a line for the player.
 export function parseSave(text) {
@@ -48,6 +63,11 @@ export function parseSave(text) {
   const whole = st && st.ship && Array.isArray(st.players) && Array.isArray(st.things) && Array.isArray(st.sectors);
   if (!save || save.game !== 'critical-st8' || !whole) return { error: 'THAT IS NOT A SAVE FILE' };
   if (save.version !== SAVE_VERSION) return { error: 'THAT SAVE IS FROM ANOTHER VERSION OF THE GAME' };
+  try {
+    save.state = unpackState(st);
+  } catch {
+    return { error: 'THAT SAVE FILE IS DAMAGED' };
+  }
   return { save };
 }
 

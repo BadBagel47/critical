@@ -104,30 +104,122 @@ export function spotIn(state, it, box, taken, away = 0) {
   return p;
 }
 
+// The plan of an inside is made from a seed of its own (D-263), drawn from the game's random numbers when the
+// crew first boards the place. The plan, the rooms and what stands in them never change after that, so a save
+// keeps only the seed, what the plan was made from, and the few tiles that have changed since (doors sealed or
+// opened). The rest is made again from the seed when the save is read. See packInterior and unpackInterior.
+// What a plan is made from: the place as it was then.
+const planInput = (place) => ({
+  kind: place.kind,
+  hull: place.hull,
+  heading: place.heading || 0,
+  shipyard: !!place.shipyard,
+});
+
 export function createInterior(state, wreck) {
+  const seed = Math.floor(rand(state) * 4294967296) >>> 0;
+  const input = planInput(wreck);
   /** @type {any} */
-  const plan = layOut(state, wreck);
-  const { rooms, vault } = plan;
-  const base = wreck.kind === 'station';
+  const it = { planSeed: seed, planFrom: input, ...madePlan(seed, input) };
+  return fillInterior(state, it, wreck);
+}
+
+// The part of an inside that is made from its seed alone: the plan, the rooms and what each is for, the things
+// that stand in them, and the doors. Made in the same order every time, with nothing from the game's state.
+function madePlan(seed, input) {
+  /** @type {any} */
+  const plan = layOut({ rng: seed }, input);
+  const base = input.kind === 'station';
   const it = {
     w: plan.w,
     h: plan.h,
     tiles: plan.tiles,
-    rooms,
-    vault,
+    rooms: plan.rooms,
+    vault: plan.vault,
     halls: plan.halls,
     airlocks: plan.airlocks,
     far: plan.far,
-    // A base has three floors side by side in the same grid, and ways between them (see base.js): where each
-    // floor lies, the ways, the tile each tile of a way leads to, and where help comes in at the cargo arms.
     decks: plan.decks || null,
     links: plan.links || [],
     jumps: plan.jumps || null,
     docks: plan.docks || [],
+    uses: [],
+    doors: [],
+  };
+  const away = (r) => dist(r.mid.x, r.mid.y, it.airlocks[0].x, it.airlocks[0].y);
+  const rest = it.rooms.filter((_, i) => i !== it.vault);
+  const named = it.rooms.find((r, i) => i !== it.vault && r.use === 'ENGINES');
+  const deep = base ? null : named || [...rest].sort((a, b) => away(b) - away(a))[0];
+  if (base) it.mainframe = { ...it.rooms.find((r) => r.use === 'COMMAND').mid };
+  it.uses = usesOf(it, input, deep);
+  delete it.mainframe;
+  furnish(it);
+  it.doors = plan.doors ? plan.doors.map((d) => ({ ...d })) : doorsOf(it);
+  it.deep = deep ? it.rooms.indexOf(deep) : -1;
+  return it;
+}
+
+// The parts of an inside that madePlan makes, and that a save leaves out.
+const PLANNED = [
+  'w',
+  'h',
+  'rooms',
+  'vault',
+  'halls',
+  'airlocks',
+  'far',
+  'decks',
+  'links',
+  'jumps',
+  'docks',
+  'uses',
+  'doors',
+  'deep',
+];
+// Plans made again from saves, kept while the page is open: a plan is the same every time it is made.
+const planCache = new Map();
+const planFor = (seed, input) => {
+  const key = seed + ':' + JSON.stringify(input);
+  if (!planCache.has(key)) {
+    if (planCache.size > 40) planCache.clear();
+    planCache.set(key, madePlan(seed, input));
+  }
+  return planCache.get(key);
+};
+
+// An inside as a save keeps it: without its plan, and with only the tiles that are not as the plan made them.
+export function packInterior(it) {
+  if (!it || it.planSeed === undefined) return it;
+  const plan = planFor(it.planSeed, it.planFrom);
+  const changed = {};
+  for (let i = 0; i < it.tiles.length; i++) if (it.tiles[i] !== plan.tiles[i]) changed[i] = it.tiles[i];
+  const out = { ...it, changed };
+  for (const k of PLANNED) delete out[k];
+  delete out.tiles;
+  return out;
+}
+
+// An inside from a save, made whole again.
+export function unpackInterior(saved) {
+  if (!saved || saved.planSeed === undefined || saved.tiles) return saved;
+  const plan = planFor(saved.planSeed, saved.planFrom);
+  const copy = JSON.parse(JSON.stringify(plan));
+  // In the same order as a new inside, so that a game read back is the same text as the game saved.
+  const it = { planSeed: saved.planSeed, planFrom: saved.planFrom, ...copy, ...saved };
+  for (const [i, c] of Object.entries(saved.changed || {})) it.tiles[+i] = c;
+  delete it.changed;
+  return it;
+}
+
+// The rest of a new inside: what is in it and who, from the game's own random numbers.
+function fillInterior(state, it, wreck) {
+  const { rooms } = it;
+  const base = wreck.kind === 'station';
+  Object.assign(it, {
     // The airlock the crew comes in through. tryBoard sets it to the one the frigate is docked at.
-    entry: plan.airlocks[0],
+    entry: it.airlocks[0],
     // The airlocks of a base, each with a hatch and an inner door that are never open together. See airlock.js.
-    locks: base ? makeLocks(plan) : [],
+    locks: base ? makeLocks(it) : [],
     timer: null,
     live: false,
     // A wreck has no power. It is dark inside, and the crew finds its way by lamp and flare.
@@ -167,9 +259,7 @@ export function createInterior(state, wreck) {
     pressure: null,
     // Where the turning lights of an alarm are, spread evenly over the floor (R-1182).
     beacons: [],
-    // What each room is for, the doors of the rooms, and the tiles of those that are shut. See furnish.js.
-    uses: [],
-    doors: [],
+    // The tiles of the doors that are shut. What each room is for and the doors themselves are in the plan.
     shut: [],
     trade: false,
     // The rooms of a trading station that are for its staff only, by number. See makeTrade.
@@ -190,9 +280,7 @@ export function createInterior(state, wreck) {
     grenades: [],
     flares: [],
     fx: [],
-  };
-  const away = (r) => dist(r.mid.x, r.mid.y, it.entry.x, it.entry.y);
-  const rest = rooms.filter((_, i) => i !== vault);
+  });
   const roomFor = (use) => rooms.find((r) => r.use === use);
   if (base) {
     // What stands in a base: the mainframe in the command room, the switchgear, the drone hangar and the comms.
@@ -202,13 +290,8 @@ export function createInterior(state, wreck) {
     it.comms = { ...roomFor('COMMS').mid };
     it.beacons = beaconsFor(it);
   }
-  // What the rooms are for, and the things in them. A plan that says where its engines are has the reactor of a
-  // wreck there. Otherwise it stands in the room furthest in.
-  const named = rooms.find((r, i) => i !== vault && r.use === 'ENGINES');
-  const deep = base ? null : named || [...rest].sort((a, b) => away(b) - away(a))[0];
-  it.uses = usesOf(it, wreck, deep);
-  furnish(it);
-  it.doors = plan.doors ? plan.doors.map((d) => ({ ...d })) : doorsOf(it);
+  // The reactor of a wreck stands where the plan put its engines, or in the room furthest in (see madePlan).
+  const deep = it.deep >= 0 ? rooms[it.deep] : null;
   // A friendly or neutral station is a place to walk around and trade in, with nothing to fight.
   if (isTrading(wreck)) {
     makeTrade(state, it, wreck);
