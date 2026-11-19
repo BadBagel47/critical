@@ -33,6 +33,7 @@ code{font:600 .9rem ui-monospace,Menlo,monospace;background:#0b0d1c;border:1px s
 <main>
   <h1>Provspelslista</h1>
   <p>Det som är byggt men inte provspelat, med en länk som startar rätt situation direkt. Prova en sak i taget och skriv vad du tycker i chatten, med sakens ID först, till exempel <code>F-279: tornen sprängdes, men …</code>. Agenten för in det i regelboken och backloggen.</p>
+  <p>Knappen uppe till höger visar sidan i fullskärm, här, i spelet och i alla designtester. På iPhone går det inte än.</p>
   <p>Länkarna till spelet startar i testläget, där allt är upplåst. Där kallar tangenterna 6 till 9 in ett anfall på din bas, pirater och en räd, och 0 tar bort piraterna.</p>
   <div id="list"></div>
 </main>
@@ -108,5 +109,6 @@ for (const it of ITEMS) {
 }
 document.getElementById('list').innerHTML = html;
 </script>
+<script src="src/fullscreen.js" defer></script>
 </body>
 </html>

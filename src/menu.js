@@ -50,6 +50,14 @@ function slotRow(game, slot, use, whenEmpty, confirm) {
 const back = (game) => ({ id: 'back', label: 'BACK', run: () => openPage(game, rootOf(game)) });
 const noStorage = (game) => (game.storage ? null : 'THIS BROWSER DOES NOT ALLOW SAVING');
 
+// Fullscreen (F-286), where the browser can show the game so: the same as the button in the corner (src/fullscreen.js).
+// The menu is chosen within a frame of the key or the click, which the browser still counts as the player's own act.
+function fullscreenRow() {
+  const fs = typeof window !== 'undefined' ? /** @type {any} */ (window).criticalFullscreen : null;
+  if (!fs || !fs.supported) return [];
+  return [{ id: 'fullscreen', label: 'FULLSCREEN', right: fs.active() ? 'ON' : 'OFF', run: fs.toggle }];
+}
+
 const PAGES = {
   title: {
     rows(game) {
@@ -79,6 +87,7 @@ const PAGES = {
         },
         { id: 'load', label: 'LOAD GAME', run: () => openPage(game, 'load') },
         { id: 'sound', label: 'SOUND', run: () => openPage(game, 'sound') },
+        ...fullscreenRow(),
         { id: 'test', label: 'TEST MODE', right: 'EVERYTHING UNLOCKED', run: () => a.newGame({ test: true }) },
       ];
     },
@@ -99,6 +108,7 @@ const PAGES = {
         { id: 'load', label: 'LOAD GAME', right: hard, off: !!hard, run: () => openPage(game, 'load') },
         { id: 'sound', label: 'SOUND', run: () => openPage(game, 'sound') },
         { id: 'export', label: 'EXPORT THIS GAME TO A FILE', right: hard, off: !!hard, run: a.exportGame },
+        ...fullscreenRow(),
         // Only a test game has this.
         ...(state.test
           ? [{ id: 'testing', label: 'TEST  ·  CALL IN SHIPS', run: () => openPage(game, 'testing') }]
