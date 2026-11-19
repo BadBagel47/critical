@@ -146,6 +146,9 @@ export const B = {
   CREW_HP: 100,
   CREW_SPEED_FOOT: 72,
   CREW_RADIUS: 5,
+  // How long a boarder whose connection is lost stays inside before being sent home, in seconds (R-1243). The
+  // same as network-kit's grace period, which keeps the seat and the post for the player meanwhile.
+  AWAY_HOME: 60,
   CARRY_MAX: 3,
   CARRY_SLOW: 0.08,
   TELEPORT_HP: 15,

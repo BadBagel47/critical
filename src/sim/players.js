@@ -12,6 +12,7 @@ const freePost = (state) => POSTS.find((post) => !holderOf(state, post)) || null
 
 // `inside` is the id of the wreck or station the player is in, or null when on the ship.
 // `backTo` remembers the post a player left to go inside. `wants` is a post the player asked for while it was held.
+// `away` is how many seconds an online player has been gone since the connection was lost, or null (D-266).
 export function createPlayer(id, name, post) {
   return {
     id,
@@ -24,6 +25,7 @@ export function createPlayer(id, name, post) {
     inside: null,
     lockedOut: null,
     tele: 0,
+    away: null,
   };
 }
 
@@ -45,6 +47,50 @@ export function removePlayer(state, id) {
   state.players = state.players.filter((p) => p !== player);
   state.events.push({ type: 'playerLeft', player: id, name: player.name });
   return true;
+}
+
+// Online (D-266, D-267): a player whose connection is lost stays in the crew, as the same player, and so keeps
+// what is theirs: the purse of their own role and their gear (R-1242). Their post is free for the others at once
+// (R-1241). A boarder who is still gone when the wait is over is sent home (R-1243, see away.js), and the game is
+// only as hard as those who are there (R-1244).
+export const isAway = (player) => player.away !== null && player.away !== undefined;
+export const connectedPlayers = (state) => state.players.filter((p) => !isAway(p));
+
+export function dropPlayer(state, id) {
+  const player = playerById(state, id);
+  if (!player || isAway(player)) return false;
+  player.away = 0;
+  player.wants = null;
+  if (player.post) leavePost(player);
+  state.events.push({ type: 'playerAway', player: id, name: player.name });
+  return true;
+}
+
+// Back again: the same post as before if it is still free, or another free one. Inside, the boarder goes on.
+export function backPlayer(state, id) {
+  const player = playerById(state, id);
+  if (!player || !isAway(player)) return false;
+  player.away = null;
+  if (player.inside === null) returnToPost(state, player);
+  state.events.push({ type: 'playerBack', player: id, name: player.name });
+  return true;
+}
+
+// The post a player held when the game was saved, to offer it to them again when they come back to the game by
+// the same name (R-1246). Null when nobody of that name was in the crew.
+export function postOf(state, name) {
+  const player = state.players.find((p) => p.name === name);
+  return player ? player.post || player.backTo || null : null;
+}
+
+// Who held which post when the game was saved, for the list of saves (R-1245).
+export function crewOf(state) {
+  const crew = {};
+  for (const post of POSTS) {
+    const p = state.players.find((x) => x.post === post || (!x.post && x.backTo === post));
+    crew[post] = p ? p.name : null;
+  }
+  return crew;
 }
 
 // A player on the ship moves to a post, if nobody else holds it.

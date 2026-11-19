@@ -3,6 +3,7 @@
 // What a class of ship is like is read from SHIPS in kinds.js. How it behaves is its brain, below.
 // Which side a ship is on decides whom it fights: pirates fight everyone, and the ships of a faction
 // fight pirates, and the crew only when the crew has made an enemy of that faction.
+import { connectedPlayers } from './players.js';
 import { B } from './balance.js';
 import { earn } from './purses.js';
 import { SHIPS } from './kinds.js';
@@ -27,7 +28,8 @@ import { forward, headingTo, angleDiff, turnToward, toWorld, dist, rand, randRan
 export const classOf = (v) => SHIPS[v.kind];
 export const pirates = (state) => state.vessels.filter((v) => v.side === PIRATE);
 const pirateCount = (state) => state.vessels.reduce((n, v) => n + (v.side === PIRATE ? 1 : 0), 0);
-const pace = (state) => B.PIRATE_PACE[Math.min(3, state.players.length)] || 1;
+// Only those who are there count (R-1244): a player who has lost the connection does not make the pirates come faster.
+const pace = (state) => B.PIRATE_PACE[Math.min(3, Math.max(1, connectedPlayers(state).length))] || 1;
 export const firstWaveDelay = (state) => B.FIRST_WAVE_DELAY * pace(state);
 // How far a ship looks for someone to fight.
 const SIGHT = 700;

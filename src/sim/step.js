@@ -26,6 +26,7 @@ import { stepJump } from './sectors.js';
 import { stepBoarding } from './boarding.js';
 import { stepMap } from './map.js';
 import { stepStory } from './questline.js';
+import { stepAway } from './away.js';
 import { level, shieldMax, dockShieldMax } from './upgrades.js';
 
 function age(list, dt) {
@@ -103,6 +104,7 @@ export function step(state, cmds, dt) {
   state.vessels = state.vessels.filter((v) => v.hp > 0 && !v.gone);
   stepSalvage(state, dt);
   stepStory(state);
+  stepAway(state, dt);
   stepRocks(state, dt);
   stepAlarm(state, B.ALARM_RANGE[level(ship, 'alarm')]);
   stepDarts(state, cmds.gunner, dt);
