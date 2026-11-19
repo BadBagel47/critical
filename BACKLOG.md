@@ -16,7 +16,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - F-271 – Integritetstexten för onlineläget och Playtest
 - F-272 – Tester med två eller tre webbläsare mot en lokal kopia av servern
 - Fråga ON5: Pausar menyn (O) spelet för alla när man spelar online? Rekommendation: nej, spelet fortsätter medan menyn är öppen, och raden PAUSE FOR EVERYONE pausar för alla. Vem som helst kan pausa och fortsätta. Se designtestet docs/design/prototypes/online.html (D-270).
-- Fråga ON6: Räcker koden för att gå med, eller behövs länken? Rekommendation: koden räcker, eftersom den är lätt att läsa upp och inte går att gissa med sex tecken. Värden kan alltid ta bort någon.
+- Besked 2026-11-19 (ON6): ja, koden räcker för att gå med (ett öppet rum).
 - Fråga ON7: Kan man gå med mitt i en omgång? Rekommendation: ja, direkt, och man tar en ledig post.
 - Fråga OL2: Spelet har i dag sin adress på GitHub. Ska det flytta helt till Cloudflare, så att spelet och rummen har samma adress? Rekommendation: ja, och den gamla adressen skickar vidare till den nya, så att gamla länkar fungerar. Sparade spel ligger i webbläsaren per adress, så de följer inte med av sig själva, men de går att exportera till fil och läsa in.
 
