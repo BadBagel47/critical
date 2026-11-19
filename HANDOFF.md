@@ -1,6 +1,6 @@
 # HANDOFF
 
-Rules version: v1.12
+Rules version: v1.14
 Inventory: 2026-11-14
 Project language: English (all text in the game and README)
 
@@ -423,6 +423,7 @@ Grafik
 - 2026-11-15: Anpassat till agentregler v1.9: `auto-merge.yml` hoppar över commits märkta [wip] (oavslutat arbete).
 - 2026-11-17: Anpassat till agentregler v1.11: kortare rapporter, val som knappar, och frågor med rekommendation under varje grupp i körförslaget. Frågorna har fasta etiketter enligt projektregeln om frågeserier, så de byter inte namn när grupperna får nya bokstäver. Verktyget för backloggen klarar frågorna (F-273).
 - 2026-11-17: Anpassat till agentregler v1.12: verktyget för backloggen skriver vilken gren som påbörjat något ("Pågår datum (gren)"), ID från network-kit skrivs med repots namn framför, och körförslaget börjar med vad ordningen bygger på och säger när en grupp bygger på en annan. Frågorna behåller sina fasta etiketter enligt projektregeln, vilket reglerna tillåter.
+- 2026-11-19: Anpassat till agentregler v1.14 (v1.13 och v1.14): reglerna är kortare och uppdelade (SETUP.md, WEB.md) med samma innebörd. `auto-merge.yml` har redan mallens kö (concurrency) på sitt merge-steg, och projektets tillägg med tester före merge är tillåtet enligt v1.14. Gamla grenar som redan är helt sammanslagna med main ska tas bort vid sessionens start, men sessionen fick inte ta bort grenar (2026-11-19). 41 sådana grenar finns. Webbgrunderna i WEB.md ligger under Pending adaptation och väntar på användarens ja.
 - 2026-11-16: Sessionen fick inte starta en server i bakgrunden (`npm run serve`). Provkörningen i webbläsaren och skärmbilderna kördes i stället med ett litet skript som startar en server i samma process och stänger den när testet är klart.
 
 ## Engångsåtgärder
@@ -432,6 +433,12 @@ Grafik
 - Klar 2026-11-14: automatisk merge enligt agentreglernas mall (`.github/workflows/auto-merge.yml`), vald av användaren. Grenar som börjar med claude/ slås ihop med main av sig själva.
 - Klar 2026-11-14: tester körs automatiskt på GitHub vid varje push. Det krävde ingen åtgärd från användaren.
 - Väntar (2026-11-17, D-269): inför onlineläget behövs en Cloudflare-nyckel som hemlighet i critical, ett flöde som publicerar spelet till en Worker, och uppdateringsflödet från network-kit. Föreslås när D-269 är bestämd.
+
+## Pending adaptation
+
+Från agentregler v1.13 (2026-11-19), väntar på användaren:
+- 1.1 Webbgrunderna (WEB.md) på sidorna bredvid spelet (provspelslistan och designtesterna): ingen blå markering vid tryck på mobil, fokusring bara för tangentbordet, en egen nedtryckt stil på knappar, och en egen pil i rullgardinsmenyer. Spelet ritas på en canvas och berörs knappt. Rekommendation: ja.
+- 1.2 Ta bort 41 gamla grenar som redan är helt sammanslagna med main. Sessionen fick inte ta bort grenar. Alternativ: användaren tillåter det, eller agentreglernas mall templates/archive-branches.yml läggs till. Rekommendation: tillåt det för grenar som är helt sammanslagna.
 
 ## Teknisk bedömning
 
