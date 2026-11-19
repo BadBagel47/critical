@@ -32,69 +32,15 @@ code{font:600 .9rem ui-monospace,Menlo,monospace;background:#0b0d1c;border:1px s
 <body>
 <main>
   <h1>Provspelslista</h1>
-  <p>Det som är byggt men inte provspelat, med en länk som startar rätt situation direkt. Prova en sak i taget och skriv vad du tycker i chatten, med sakens ID först, till exempel <code>F-279: tornen sprängdes, men …</code>. Agenten för in det i regelboken och backloggen.</p>
+  <p>Det som är byggt men inte provspelat, med en länk som startar rätt situation direkt. Har du öppnat en testarlänk från adminsidan syns Playtest-rutan till vänster, här, i spelet och i designtesterna: starta ett test där, följ stegen och skicka svaren, så läser agenten dem. Annars, skriv vad du tycker i chatten med sakens ID först, till exempel <code>F-279: tornen sprängdes, men …</code>. Agenten för in det i regelboken och backloggen.</p>
   <p>Knappen uppe till höger visar sidan i fullskärm, här, i spelet och i alla designtester. På iPhone går det inte än.</p>
   <p>Länkarna till spelet startar i testläget, där allt är upplåst. Där kallar tangenterna 6 till 9 in ett anfall på din bas, pirater och en räd, och 0 tar bort piraterna.</p>
   <div id="list"></div>
 </main>
-<script>
-'use strict';
-// The list. When something is built that should be played, it is added here; when the user has tried it, it goes.
-// where: 'dator' or 'iPad'. links: [text, address]. ask: what the user is asked to say.
-const ITEMS = [
-  { group: 'Spelet', id: 'B-282, B-259', title: 'Snabbare grafik och markören med många skepp', where: 'dator',
-    steps: ['Starta, och vänta tills piraterna kommer.', 'Läs av FPS, SLOWEST FRAME och SCALE uppe till vänster.', 'Flytta markören medan många skepp är nära.'],
-    links: [['Starta med pirater och mätare', './?test&call=fighters,gunboat&fps']],
-    ask: 'Hur många bilder i sekunden, och blir markören fortfarande långsam?' },
-  { group: 'Spelet', id: 'B-281', title: 'Musiken på startskärmen i Brave', where: 'dator',
-    steps: ['Öppna spelet. Startskärmen ska säga PRESS ANY KEY FOR SOUND.', 'Bläddra i menyn med pilarna och släpp tangenten.'],
-    links: [['Öppna spelet', './']],
-    ask: 'Startar musiken, och försvinner texten?' },
-  { group: 'Spelet', id: 'F-278', title: 'Områdena på stjärnkartan', where: 'dator',
-    steps: ['Tryck J för stjärnkartan.', 'Se områdena ALPHA till DELTA och gränserna ut från fristaden.', 'Klicka på ett system: panelen säger vilket område det ligger i.'],
-    links: [['Starta i testläget', './?test']],
-    ask: 'Är områdena lätta att se och förstå?' },
-  { group: 'Spelet', id: 'F-279', title: 'Försvar som byggs upp själv', where: 'dator',
-    steps: ['Tryck 6 för ett anfall på din egen bas, och se hur den försvarar sig.', 'Ta en annan bas genom att borda den och ta mainframen: dess torn ska sprängas, och meddelandet säger det.', 'Köp torn till basen i mainframen.'],
-    links: [['Anfall på din bas', './?test&call=siege'], ['Starta i testläget', './?test']],
-    ask: 'Känns det logiskt att bygga upp försvaret själv? Två torn i lugna system och sex längre ut, är det lagom?' },
-  { group: 'Spelet', id: 'F-244, F-209', title: 'Standardbasen och fraktskeppets insida', where: 'dator',
-    steps: ['Docka vid CHARTER TEST DOCK och gå in i basen.', 'Borda fraktskeppets vrak och gå igenom det.'],
-    links: [['Starta i testläget', './?test']],
-    ask: 'Hur känns basens tre våningar och fraktskeppet?' },
-  { group: 'Spelet', id: 'F-208', title: 'Basens insida som i designtestet', where: 'dator',
-    steps: ['Docka vid CHARTER TEST DOCK och gå in.', 'Gå runt på mittenvåningen, och ta hissen eller trappan ner till källaren och upp till toppen.', 'Gå också in på en fientlig bas: tryck 6 eller borda en pirats bas.'],
-    links: [['Starta i testläget', './?test']],
-    ask: 'Känns våningarna som i designtestet: ljus mitt, smutsig källare och kall topp? Saknas något?' },
-  { group: 'Spelet', id: 'F-085', title: 'Tom tank vid asteroiderna', where: 'dator',
-    steps: ['Du startar vid asteroiderna med tom tank.', 'Bryt malm och se att den blir bränsle så att du kan hoppa vidare.'],
-    links: [['Starta med tom tank', './?test&at=rocks&nofuel']],
-    ask: 'Går det att ta sig vidare utan att fastna?' },
-  { group: 'Spelet', id: 'R-1239', title: 'De nya tangenterna', where: 'dator',
-    steps: ['Q dockar och avdockar (Captain), E går ombord och använder saker inne, F tänder ficklampan inne, L öppnar loggen.', 'Som Gunner: byt vapen med Q och med mushjulet.', 'H visar alla tangenter.'],
-    links: [['Starta i testläget', './?test']],
-    ask: 'Sitter tangenterna rätt i handen?' },
-  { group: 'Spelet', id: 'D-052', title: 'Huvudstoryn i spelet', where: 'dator',
-    steps: ['Starta ett nytt spel (inte testläget). Ett meddelande säger att någon väntar i fristaden.', 'Tryck L för loggen.', 'Docka vid fristadens bas och läs scenen. Följ sedan storyn med stjärnkartan (J), där nästa system är markerat.', 'Vid ett val: välj med 1 eller 2.'],
-    links: [['Öppna spelet', './']],
-    ask: 'Hur känns det att följa storyn i spelet: loggen, korten och markeringen på kartan?' },
-  { group: 'Designtester', id: 'F-283, D-261', title: 'Ljus, skuggor och effekter', where: 'dator och iPad',
-    steps: ['Växla mellan A, B och C.', 'Tryck Många ljus och partiklar, och läs av bilder i sekunden i B och C.'],
-    links: [['Öppna designtestet', 'docs/design/prototypes/light.html']],
-    ask: 'GR3: vilken version känns bäst, och hur många bilder i sekunden på din Mac och iPad?' },
-  { group: 'Designtester', id: 'D-262', title: 'Pekskärmen', where: 'iPad',
-    steps: ['Öppna i liggande läge på iPad.', 'Prova spakarna och de tre sätten för Gunner att sikta.'],
-    links: [['Öppna designtestet', 'docs/design/prototypes/touch.html']],
-    ask: 'P6–P8: vilket sikte, fasta eller flytande spakar, och ska gasen ligga kvar?' },
-  { group: 'Designtester', id: 'D-274, F-276', title: 'Storyn i uppdragstestaren', where: 'dator eller iPad',
-    steps: ['Välj Berättelse och läs en story.', 'Byt frö och kartstorlek. Titta på kartan: storyn ska gå genom alla områden.'],
-    links: [['Öppna testaren', 'docs/design/prototypes/missions.html?premise=convoy']],
-    ask: 'Hur känns berättelsen, och är ledtrådarna till mål man hittar själv lagom svåra?' },
-  { group: 'Designtester', id: 'D-280', title: 'Röstprovet', where: 'dator eller iPad',
-    steps: ['Välj Berättelse och tryck Spela hela storyn.'],
-    links: [['Lyssna på röstprovet', 'docs/design/prototypes/missions.html?size=medium&seed=4&premise=convoy']],
-    ask: 'VO4: ska storyn ha röster i spelet?' },
-];
+<script type="module">
+import { ITEMS } from './src/playtest-items.js';
+// The list is in src/playtest-items.js, shared with Playtest in the game and on the design tests.
+
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 let html = '';
 let group = null;
@@ -104,11 +50,12 @@ for (const it of ITEMS) {
     <div class="top"><span class="id">${esc(it.id)}</span><span class="title">${esc(it.title)}</span><span class="where">${esc(it.where)}</span></div>
     <ol>${it.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
     <div class="links">${it.links.map(([t, href], k) => `<a class="go${k ? ' ghost' : ''}" href="${esc(href)}">${esc(t)}</a>`).join('')}</div>
-    <div class="ask">Säg i chatten: ${esc(it.ask)}</div>
+    <div class="ask">Säg i chatten: ${esc([].concat(it.ask).join(' '))}</div>
   </section>`;
 }
 document.getElementById('list').innerHTML = html;
 </script>
 <script src="src/fullscreen.js" defer></script>
+<script type="module" src="src/playtest-start.js"></script>
 </body>
 </html>

@@ -9,11 +9,7 @@ Prioriterat för: användarens egen ordning: Playtest och onlineläget först, s
 
 Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först, sedan uppdragen. Butiken och standardbasen är byggda, så uppdragen är nästa. Användaren 2026-11-17: först uppdragsstrukturen och en uppdragstestare, sedan uppdragen och storyn (A). Strukturen och testaren är klara 2026-11-17 (D-274, F-275), och D-274 väntar på att användaren läser storys i testaren. Frågorna under varje grupp har fasta etiketter efter projektregeln om frågeserier, så de byter inte namn när grupperna får nya bokstäver (agentregler v1.10). Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
 
-**A** – strong model, medium level – Playtest i spelet
-- D-288 – Koppla in network-kits Playtest: Playtest-rutan i spelet och på testsidorna, där ett test startas, stegen syns och resultatet skickas till adminsidan, och Playtest Remote på mobilen. Granskning 2026-11-19: network-kits klient laddas i dag som en enda modul på knappt 190 kB med QR-koden och rumsklienten. Löst i network-kit v0.15.0 med ett lätt startsteg. Kopian tas in med network-kits eget skript och dess uppdateringsflöde, som onlineläget sedan använder. Ta network-kit v0.15.0 (släppt 2026-11-19) och importera startPlaytest från client/playtest-entry.js: utan testarlänk laddar det inget mer och skickar inget (network-kit F-096), så Critical behöver ingen egen lösning för det. Adresserna till adminsidan har en version (/playtest/v1/…), vilket klienten sköter. network-kit v0.14.0 är släppt (2026-11-19): en kopia av klientdelen i vendor/network-kit, provspelslistan flyttas till en egen modul som provspelslistan, spelet och designsidorna läser, startPlaytest på varje sida, och tests/outside.mjs tillåter bara adminsidans adress med en testarlänk. Se network-kit docs/INTEGRATION.md avsnitt 11
-- Besked 2026-11-19 (PR1, ägaren via network-kit-sessionen): undantag från regeln om andra tjänster, bara för Playtest-rapporterna och bara när en testarlänk från adminsidan har öppnats (R-1240). Rapporterna sparas i 30 dagar, och skärmbilder krymps till cirka 300 kB. Även vänner med en testarlänk kan rapportera.
-
-**B** – strong model, high level – Förberedelser för onlineläget
+**A** – strong model, high level – Förberedelser för onlineläget
 - D-263 – Ta insidorna ur tillståndet och spara bara det som ändrats, så att sparningarna och trafiken blir mindre (network-kit delar redan stora lägen)
 - D-266 – Bestäm vad som händer när en spelare tappar anslutningen, så att posten, kassan och en bordare inne i en bas inte blir hängande
 - D-267 – Koppla network-kits deltagare till spelets spelare, roller och kassor, så att den som kommer tillbaka får sina igen
@@ -21,7 +17,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - D-270 – Designskiss av skärmarna för att skapa och gå med i ett rum
 - Besked 2026-11-19 (Kör B rek): ON1 ja, gamla sparningar får sluta fungera. ON2: posten blir ledig direkt, rollens kassa behålls, en bordare inne skickas hem när väntetiden är slut, och svårigheten räknar bara de anslutna. ON3: sparningen ligger hos värden, och en kopia skickas till varje spelare när spelet sparar, så att vem som helst kan fortsätta; den går att exportera som fil. ON4: pengar och utrustning hör till posten, och spelet föreslår samma post till den som kommer tillbaka.
 
-**C** – strong model, high level – Onlineläget: spelets Worker och rummen – bygger på B
+**B** – strong model, high level – Onlineläget: spelets Worker och rummen – bygger på B
 - D-269 – Spelet på en egen Worker hos Cloudflare, med rummen på samma adress, så att inget laddas från andra tjänster. Kräver en engångsåtgärd: en Cloudflare-nyckel som hemlighet i critical
 - F-040 – Koppla spelet till network-kits rum: den som skapar rummet kör spelet, de andra skickar sina knapptryck, och den som går med får läget
 - D-264 – Utjämning och förutsägelse, så att den egna styrningen känns direkt trots fördröjningen
@@ -29,17 +25,17 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - F-272 – Tester med två eller tre webbläsare mot en lokal kopia av servern
 - Fråga OL2: Spelet har i dag sin adress på GitHub. Ska det flytta helt till Cloudflare, så att spelet och rummen har samma adress? Rekommendation: ja, och den gamla adressen skickar vidare till den nya, så att gamla länkar fungerar. Sparade spel ligger i webbläsaren per adress, så de följer inte med av sig själva, men de går att exportera till fil och läsa in.
 
-**D** – strong model, high level – Sidouppdrag i baren, anseende genom uppdrag och smuggelgods
+**C** – strong model, high level – Sidouppdrag i baren, anseende genom uppdrag och smuggelgods
 - D-073 – Sidouppdrag som väljs i baren i ett gränssnitt som butikens: frakt, prisjakt och räddning, högst fem åt gången, med tidsgräns mot högre lön
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 - D-257 – Smuggeluppdrag från skumt folk på baser, som man pratar med
 - Fråga VO4: Ska storyn ha röster i spelet, efter röstprovet i uppdragstestaren? Rekommendation: lyssna på hela storyn och säg vad du tycker om rösterna och känslorna. Blir det ja spelas karaktärernas fasta repliker in, och berättaren läser bara meningar utan genererade namn (R-1232).
 
-**E** – strong model, high level – Ljus, skuggor och effekter i spelet – väntar på svar
+**D** – strong model, high level – Ljus, skuggor och effekter i spelet – väntar på svar
 - D-261 – Avgör med designtestet om grafiken ska ritas med WebGL, som behövs för ljus som glöder
 - Fråga GR3: Vilken version i designtestet för ljus känns bäst, och hur många bilder i sekunden visar mätaren på din Mac och iPad med många ljus och partiklar? Väntar på svar: det avgör om spelet byter till att rita med grafikkortet.
 
-**F** – strong model, medium level – Meddelanden från skeppet
+**E** – strong model, medium level – Meddelanden från skeppet
 - D-256 – Inventera alla meddelanden som kan dyka upp, när, för vem och var
 - D-187 – Se över hur spelet och skeppet visar meddelanden, så att det viktiga syns först
 - F-255 – Visa Gunner när dartsen är hela igen, genom skeppets meddelanden
@@ -50,7 +46,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Fråga MD5: Ska ett meddelande som bara gäller en post bara visas för den? Rekommendation: ja, för läge och status. Fara och händelser visas för alla.
 
 
-**G** – strong model, medium level – Förfina rollerna
+**F** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 - F-236 – Primära roller och tillfälligt övertagande: den som lämnar skeppet lämnar sina roller lediga, de kvar kan ta en av dem, och ägaren får tillbaka den direkt
 - F-235 – Bordarnas utrustning per roll, så att varje roll köper och har sin egen
@@ -58,75 +54,75 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Fråga RO1: Gäller ryggsäcken både utrustning och byte, och ersätter den CARGO PACK? Rekommendation: ja, en ryggsäck per roll som rymmer både och, och den ersätter CARGO PACK.
 - Fråga RO2: Hur många nivåer har ryggsäcken? Rekommendation: tre, där den första ger det man får med sig i dag.
 
-**H** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262) – väntar på svar
+**G** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262) – väntar på svar
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på iPad och sedan mobil i liggande format
 - Fråga P6: Vilket sikte för Gunner kändes bäst i designtestet, A, B eller C? Ingen rekommendation förrän du har provat.
 - Fråga P7: Fasta eller flytande spakar, och vilken storlek? Ingen rekommendation förrän du har provat.
 - Fråga P8: Ska gasen ligga kvar när spaken släpps, eller följa spaken tillbaka till noll? Ingen rekommendation förrän du har provat.
 
-**I** – strong model, high level – Viewer på en extra skärm
+**H** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 - Fråga VW1: Byggs viewern först som ett andra fönster på samma dator, innan onlineläget finns? Rekommendation: ja.
 - Fråga VW2: Vem väljer vad viewern visar? Rekommendation: alla kan skicka dit, och den senaste som skickade syns.
 
-**J** – strong model, high level – Sällsynta skepp
+**I** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 - Fråga SS1: Hur ofta dyker Juggernauten upp? Rekommendation: högst en per omgång hos varje faktion, i de farligare systemen, och som pirat bara nära slutet.
 - Fråga SS2: Vad ger en namngiven pirat? Rekommendation: en prissumma och en unik del som loot, och en eller två sådana per omgång.
 
-**K** – strong model, high level – Värme
+**J** – strong model, high level – Värme
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 - Fråga VÄ1: Vad händer när något blir för varmt? Rekommendation: det stängs av en stund, vapnen slutar skjuta och motorerna tappar fart, men skrovet tar ingen skada.
 - Fråga VÄ2: Hur kyler Engineer? Rekommendation: med kraft till kylning i samma panel som kraften i dag, och med uppgraderingar som kyler bättre. En skiss först.
 
-**L** – strong model, high level – Slå ut och borda
+**K** – strong model, high level – Slå ut och borda
 - D-248 – Se över hur man slår ut ett skepp för att borda det, så att Gunner har ett tydligt sätt att göra det i stället för att skeppet exploderar
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 - Fråga SL1: Hur slår Gunner ut ett skepp i stället för att spränga det? Rekommendation: ett eget vapen som tar sköld och motorer men nästan inte skrovet, och ett skepp utan motorer driver och kan bordas.
 - Fråga SL2: Vilka skepp kan slås ut och bordas? Rekommendation: fraktskepp och gunboats, som har insidor. Fighters inte.
 
-**M** – strong model, high level – Missiler och raketer
+**L** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 - Fråga MI1: Är missiler och raketer två olika delar? Rekommendation: ja, två delar som köps för sig, med ammunition vid disken som raketerna i dag.
 
-**N** – strong model, high level – Kontakt med andra skepp
+**M** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 - Fråga KO1: Hur anropar Captain? Rekommendation: en knapp när ett skepp eller en station är nära, med en kort lista att välja ur: be om bränsle, muta, kräva tribut.
 - Fråga KO2: Hur många eskorter kan man ha? Rekommendation: en åt gången, hyrd på baser.
 
-**O** – strong model, high level – Anomalier
+**N** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 - Fråga AN1: Vilka sorters anomalier först? Rekommendation: tre: ett fält där man flyger och skjuter långsammare, strålning som skadar skölden, och moln som stör sensorerna.
 - Fråga AN2: Syns de på stjärnkartan? Rekommendation: ja, när man har varit i systemet eller har systemradar.
 
-**P** – strong model, high level – En värld som förändras
+**O** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 - Fråga VF1: Hur ofta händer något i världen? Rekommendation: ungefär var tionde till femtonde minut, med ett meddelande när det händer.
 - Fråga VF2: Ska två faktioner vara i krig i varje omgång? Rekommendation: ja, ett krig per omgång, där uppdrag för den ena sänker anseendet hos den andra.
 
-**Q** – strong model, high level – Ljudeffekter
+**P** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - Fråga LJ1: Görs ljuden som i dag, av spelets egen ljudmotor, eller som inspelade filer? Rekommendation: som i dag, så slipper vi licensfrågor och stora filer.
 
-**R** – strong model, high level – Visuella effekter och feedback
+**Q** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 - Fråga VE1: Ska skärmen skaka och blinka mer vid träffar? Rekommendation: lite mer, med ett val i menyn som stänger av skakningar och blixtar, av hänsyn till ljuskänsliga.
 
-**S** – strong model, high level – Förslag: ekonomi och belöningar
+**R** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 - Fråga EK1: Förslaget om ekonomin skrevs innan den nya världen, butiken och kassorna per roll. Ska det skrivas om innan du svarar på frågorna i det? Rekommendation: ja.
 
-**T** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**S** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 - Fråga SV1: Ska nivåerna justeras först när ekonomin är bestämd? Rekommendation: ja, efter gruppen om ekonomi och belöningar, eftersom priserna och nivåerna hänger ihop.
 
-**U** – strong model, high level – Handel
+**T** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 - Fråga HA1: Var handlar man varor? Rekommendation: i en egen flik i butiken, med en priskarta på stjärnkartan.
 - Fråga HA2: Delar varorna lastrum med malmen? Rekommendation: ja, samma lastrum, som byggs ut.
@@ -215,7 +211,6 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | F-272 | Tester med flera spelare: kör spelet mot network-kit i en lokal kopia av Cloudflares servermiljö (som network-kits egna tester), med två eller tre webbläsare, också för övertagande av värden och den som går med mitt i. Agentens granskning av network-kit 2026-11-17 | Ej påbörjad |
 | F-285 | Mushjulet som alternativ (besked MH1 2026-11-18): den som bordar byter utrustning med hjulet, och Engineer ändrar kraften till vapen, sköldar, motorer eller reparation för det system markören pekar på. Klick och tangenter finns kvar | Ej påbörjad |
 | F-287 | Fullskärm på iPhone: Safari på iPhone tillåter inte fullskärm för webbsidor, så spelet behöver en fil som säger att det ska öppnas utan webbläsarens fält när det läggs på hemskärmen, och fullskärmsknappen förklarar då hur man gör. Från F-286 (användaren 2026-11-19, FS2) | Ej påbörjad |
-| D-288 | Playtest i spelet (namnen Playtest, Playtest-rutan och Playtest Remote, ägaren 2026-11-19). Provspelsrapporter i spelet (network-kit-sessionen 2026-11-19, på ägarens begäran): network-kit gör en ruta där man startar ett test, ser stegen och rapporterar Klar, Fungerade inte, Avbryt eller Börja om, och adminsidans Worker sparar rapporterna. Critical behöver: test-id från playtest.html, resultat, fri text och svar per fråga, adressen, version, enhet, webbläsare, fönster, fullskärm, fel i konsolen, FPS med &fps, och gärna en skärmbild. Rutan får inte ta fokus eller fånga spelets tangenter. Besked PR1 2026-11-19: undantaget är tillåtet, se R-1240. network-kit v0.14.0 släppt 2026-11-19, se dess docs/INTEGRATION.md avsnitt 11 | Pågår 2026-11-19 (claude/trusting-franklin-4z4ny4) |
 
 ## Låg
 
@@ -447,3 +442,4 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | F-284 | Nya tangenter (R-1239): E använder överallt (dörrar, saker, gå ombord, lämna paneler), Q dockar och avdockar för Captain och byter vapen för Gunner, som också kan använda mushjulet, F är ficklampan inne och L loggen. Menyn stängs med Escape eller O. Handkontrollens knappar ligger kvar. Hjälpskärmen omskriven i kortare rader, eftersom den gick utanför rutan. Provat i röktestet, inte provspelat | 2026-11-18 |
 | F-208 | Standardbasen (docs/proposal-bases.md avsnitt 3): genereras varje gång, tre våningar med var sin stil, ljus och ren mitt med entré och det lagliga (services, shipyard om basen har det, armory, bar), smutsig industri med dockor och ett stort lastutrymme med vakter i källaren, kall kommandodel med mainframen överst. Föremål har samma form som i rymden. Öppna ytor med skydd, inga för små rum, flera vägar att välja, rum som fyller ut. Bränsletunnor bara där de passar. Ersätter D-072:s två våningar och F-103 Besked 2026-11-18: planlösningen är byggd i F-209, och det som återstår är utseendet från designtestet standard-base.html | 2026-11-19 |
 | F-286 | Fullskärm (användaren 2026-11-19): "Låt oss lägga in en knapp för fullskärm så att jag kan se hur det blir både på mobil och dator. Svårt att testa annars" | 2026-11-19 |
+| D-288 | Playtest i spelet (namnen Playtest, Playtest-rutan och Playtest Remote, ägaren 2026-11-19). Provspelsrapporter i spelet (network-kit-sessionen 2026-11-19, på ägarens begäran): network-kit gör en ruta där man startar ett test, ser stegen och rapporterar Klar, Fungerade inte, Avbryt eller Börja om, och adminsidans Worker sparar rapporterna. Critical behöver: test-id från playtest.html, resultat, fri text och svar per fråga, adressen, version, enhet, webbläsare, fönster, fullskärm, fel i konsolen, FPS med &fps, och gärna en skärmbild. Rutan får inte ta fokus eller fånga spelets tangenter. Besked PR1 2026-11-19: undantaget är tillåtet, se R-1240. network-kit v0.14.0 släppt 2026-11-19, se dess docs/INTEGRATION.md avsnitt 11 | 2026-11-19 |
