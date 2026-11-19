@@ -36,7 +36,8 @@ import {
   glow,
   shadow,
 } from './inside-things.js';
-import { HULL, drawHull, drawLinks, drawTiles, styleOf } from './inside-tiles.js';
+import { HULL, drawBaseChanges, drawHull, drawLinks, drawTiles, styleOf } from './inside-tiles.js';
+import { HULLS, drawBaseDeck } from './inside-base.js';
 export { doorLamp } from './inside-tiles.js';
 export { lockColour } from './inside-light.js';
 
@@ -81,8 +82,13 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
     ctx.arc(box.deck.cx, box.deck.cy, box.deck.r + HULL, 0, 7);
     ctx.clip();
   }
-  drawTiles(ctx, it, origin, style, state.time);
-  if (box.deck) drawHull(ctx, box.deck, style);
+  // A base is drawn as in its design test (F-208), each floor in a style of its own.
+  if (box.deck) {
+    const deck = it.decks.indexOf(box.deck);
+    drawBaseDeck(ctx, it, deck);
+    drawBaseChanges(ctx, it, origin, state.time);
+    drawHull(ctx, box.deck, HULLS[deck]);
+  } else drawTiles(ctx, it, origin, style, state.time);
   drawLinks(ctx, font, it);
   drawConsoles(ctx, font, it, state.time, me);
   for (const desk of it.desks) drawDesk(ctx, img, font, place, desk);

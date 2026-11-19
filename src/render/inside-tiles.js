@@ -99,6 +99,30 @@ function drawMarks(ctx, style, c, tx, ty, x, y) {
 const solid = (c) => c === '#' || c === 'L';
 
 // Every other stretch of wall that faces a floor has a strip light in the side's colour. Some of them are out.
+// A locked door, such as the vault's: a heavy slab with bolts, and how far the crew has cut through it.
+function drawLock(ctx, it, x, y) {
+  rect(ctx, x + 1, y + 3, TILE - 2, 10, '#1c1c28', COL.out);
+  for (let k = 2; k < TILE - 2; k += 6) {
+    ctx.fillStyle = COL.ochre[1];
+    ctx.fillRect(x + k, y + 6, 3, 4);
+  }
+  if (it.doorCut > 0) {
+    ctx.fillStyle = COL.ochre[3];
+    ctx.fillRect(x, y + 13, Math.round(TILE * Math.min(1, it.doorCut)), 2);
+  }
+}
+
+// What changes on a floor of a base, drawn over its picture (F-208): the locked doors and the doors.
+export function drawBaseChanges(ctx, it, origin, time = 0) {
+  const tx0 = Math.max(0, Math.floor(-origin.x / TILE) - 1);
+  const ty0 = Math.max(0, Math.floor(-origin.y / TILE) - 1);
+  const tx1 = Math.min(it.w, Math.ceil((VIEW_W - origin.x) / TILE) + 1);
+  const ty1 = Math.min(it.h, Math.ceil((VIEW_H - origin.y) / TILE) + 1);
+  for (let ty = ty0; ty < ty1; ty++)
+    for (let tx = tx0; tx < tx1; tx++) if (tileAt(it, tx, ty) === 'L') drawLock(ctx, it, tx * TILE, ty * TILE);
+  drawDoors(ctx, it, time);
+}
+
 export const lampAt = (it, style, tx, ty) =>
   tx % 2 === 0 &&
   tileAt(it, tx, ty) === '#' &&
@@ -153,15 +177,7 @@ export function drawTiles(ctx, it, origin, style, time = 0) {
         open = (dx, dy) => !solid(tileAt(it, tx + dx, ty + dy));
       rect(ctx, x, y, TILE, TILE, wall[1]);
       if (c === 'L') {
-        rect(ctx, x + 1, y + 3, TILE - 2, 10, '#1c1c28', COL.out);
-        for (let k = 2; k < TILE - 2; k += 6) {
-          ctx.fillStyle = COL.ochre[1];
-          ctx.fillRect(x + k, y + 6, 3, 4);
-        }
-        if (it.doorCut > 0) {
-          ctx.fillStyle = COL.ochre[3];
-          ctx.fillRect(x, y + 13, Math.round(TILE * Math.min(1, it.doorCut)), 2);
-        }
+        drawLock(ctx, it, x, y);
         continue;
       }
       if (open(0, -1)) {
@@ -273,7 +289,7 @@ export function doorLamp(it, d, closed, time) {
 
 // The doors of the rooms: shut, a slab with a lamp, and open, two halves slid into the frame. A sealed door (of an
 // airlock or the command room) is shut while its tiles are sealed.
-function drawDoors(ctx, it, time = 0) {
+export function drawDoors(ctx, it, time = 0) {
   const shut = new Set(it.shut || []);
   for (const d of it.doors || []) {
     const sealed = d.tiles.some((i) => it.tiles[i] === 'D');

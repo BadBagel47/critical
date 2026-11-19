@@ -355,10 +355,10 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-264 | Det finns inget eget varv i början, utan spelet börjar i en fristad. | byggd | proposal-bases.md §1, §5 | tests/sim.test.js |
 | R-265 | Anfall på egna baser följer fortfarande reglerna i station-boarding.md §14. | bestämd | proposal-bases.md §1 | – |
 | R-266 | Föremål har samma form inne som i rymden. | bestämd | proposal-bases.md §3; BACKLOG F-208 | – |
-| R-267 | Standardbasen har tre våningar: källare, mitten och översta våningen, med var sin stil. | bestämd | proposal-bases.md §3 | – |
-| R-268 | Mittenvåningen är ljus och ren, man kommer in där, och där finns services, shipyard om basen har det, armory och bar. | bestämd | proposal-bases.md §3; BACKLOG F-208 och D-072 | – |
-| R-269 | Källaren är smutsig industri med dockor och ett stort lastutrymme med vakter. | bestämd | proposal-bases.md §3; BACKLOG F-208 | – |
-| R-270 | Översta våningen är en kall kommandodel med mainframen, där basen tas över. | bestämd | proposal-bases.md §3 | – |
+| R-267 | Standardbasen har tre våningar: källare, mitten och översta våningen, med var sin stil. | byggd | proposal-bases.md §3; F-208 byggd 2026-11-19 | tests/inside-look.test.js |
+| R-268 | Mittenvåningen är ljus och ren, man kommer in där, och där finns services, shipyard om basen har det, armory och bar. | byggd | proposal-bases.md §3; BACKLOG F-208 och D-072; F-208 byggd 2026-11-19 | tests/inside-look.test.js |
+| R-269 | Källaren är smutsig industri med dockor och ett stort lastutrymme med vakter. | byggd | proposal-bases.md §3; BACKLOG F-208; F-208 byggd 2026-11-19 | tests/inside-look.test.js |
+| R-270 | Översta våningen är en kall kommandodel med mainframen, där basen tas över. | byggd | proposal-bases.md §3; F-208 byggd 2026-11-19 | tests/inside-look.test.js |
 | R-271 | Basen har både öppna ytor och skydd, inga rum så små att striderna blir svåra, och vägval i stället för en rak väg. | bestämd | proposal-bases.md §3 | – |
 | R-272 | Bränsletunnor finns bara där de passar, som i last och verkstad, inte i bostäderna. | bestämd | proposal-bases.md §3; BACKLOG F-208 | – |
 | R-273 | Basen har rum som fyller ut så att den känns som en riktig plats. | bestämd | proposal-bases.md §3 | – |
@@ -378,7 +378,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-285 | Varvet är en permanent uppgradering som köps till en bas, och alla standardbaser kan köpa det. | bestämd | BACKLOG F-215, proposal-bases.md avsnitt 1 | – |
 | R-286 | På eget varv får man tillbaka tre fjärdedelar när man byter bort en del, annars hälften. | bestämd | BACKLOG F-215 | – |
 | R-287 | Det finns inget förråd för delar. | bestämd | BACKLOG F-215 | – |
-| R-288 | Standardbasens översta våning är en kall kommandodel med mainframen. | bestämd | BACKLOG F-208 | – |
+| R-288 | Standardbasens översta våning är en kall kommandodel med mainframen. | byggd | BACKLOG F-208; F-208 byggd 2026-11-19 | tests/inside-look.test.js |
 | R-289 | Baserna har öppna ytor och skydd, inga för små rum och flera vägar att välja mellan. | bestämd | BACKLOG F-208 | – |
 | R-290 | Under bordning fylls drönare på vid larm, och vakter kan komma med ett skepp som dockar. | bestämd | BACKLOG F-210 | – |
 | R-291 | Förstärkningsskeppet anfaller inte ett dockat skepp som ingen sitter i. | ersatt av: R-1191 | BACKLOG F-210 (ersatt av krock 7) | – |
