@@ -1,7 +1,10 @@
-name: Auto-merge agent branches to main
+name: Auto-merge agent branches to dev
 
-# An agent branch is merged into main, and so published, only when every check has passed on it. A push
-# that changes nothing but documents is merged at once, since it cannot break the game.
+# Test builds (owner 2026-11-20, DV1–DV3, agent rules section 4 item 7): an agent branch is merged into `dev`, and
+# so into the test build at https://critical-dev.l8p1.workers.dev, only when every check has passed on it. A push
+# that changes nothing but documents is merged at once. `main`, the published game, changes only when the owner
+# says Publicera (publish.yml). The planning documents and the workflows are copied from dev to main at once,
+# so that the backlog and the decisions are always seen (DV3).
 on:
   push:
     branches:
@@ -23,13 +26,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Everything that the merge would bring to main counts, not only this push. An earlier push whose
-      # checks failed is still waiting on the branch, and must not slip in behind a change to a document.
-      - name: See whether anything but documents would change on main
+      # Everything that the merge would bring to dev counts, not only this push. An earlier push whose checks
+      # failed is still waiting on the branch, and must not slip in behind a change to a document.
+      - name: See whether anything but documents would change on dev
         id: look
         run: |
           git fetch origin main
-          git diff --name-only "origin/main...${GITHUB_SHA}" > changed.txt
+          base=origin/main
+          if git fetch origin dev 2>/dev/null; then base=origin/dev; fi
+          git diff --name-only "${base}...${GITHUB_SHA}" > changed.txt
           if grep -qvE '(\.md$|^docs/)' changed.txt; then
             echo "game=true" >> "$GITHUB_OUTPUT"
           else
@@ -48,24 +53,89 @@ jobs:
     # One merge at a time. A push that comes while another waits takes its place, which is fine: it holds
     # the earlier commits too.
     concurrency:
-      group: auto-merge-main
+      group: auto-merge
       cancel-in-progress: false
+    outputs:
+      dev: ${{ steps.dev.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
 
-      - name: Merge the tested commit into main
+      - name: Merge the tested commit into dev
+        id: dev
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
-          git fetch origin "${GITHUB_REF_NAME}"
+          git fetch origin main
+          # The first time, dev starts as main.
+          if ! git ls-remote --exit-code --heads origin dev >/dev/null; then git push origin origin/main:refs/heads/dev; fi
+          git fetch origin dev
+          git checkout -B dev origin/dev
+          # What reached main by itself (documents) comes into dev first, then the agent's work.
+          git merge --no-edit origin/main
           git merge --no-edit "${GITHUB_SHA}"
-          git push origin main
+          git push origin dev
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Bring the planning documents and the workflows to main
+        run: |
+          git checkout -B main origin/main
+          files=$(git diff --name-only origin/main dev -- BACKLOG.md HANDOFF.md AGENTS.md 'docs/proposal-*.md' .github/workflows)
+          if [ -n "$files" ]; then
+            git checkout dev -- $files
+            git commit -m "Documents from dev: $(echo $files | tr '\n' ' ')"
+            git push origin main
+            echo "changed=yes" >> "$GITHUB_ENV"
+          fi
 
       - name: Trigger GitHub Pages build
+        if: env.changed == 'yes'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh api -X POST "repos/${GITHUB_REPOSITORY}/pages/builds"
+
+  deploy-dev:
+    needs: merge
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-dev
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.merge.outputs.dev }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Put the site together
+        run: node tools/site.mjs dist "${{ needs.merge.outputs.dev }}"
+
+      # Cloudflare now and then answers a deploy with error 10007 for a moment; then it is tried again.
+      - name: Deploy the test build to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          for try in 1 2 3; do
+            npx --yes wrangler@4 deploy --config wrangler.dev.jsonc 2>&1 | tee deploy.log
+            status=${PIPESTATUS[0]}
+            if [ "$status" = 0 ]; then exit 0; fi
+            if ! grep -q 10007 deploy.log; then exit "$status"; fi
+            sleep 20
+          done
+          exit 1
+
+      # The test build answers with this very commit, not an older one (network-kit B-119).
+      - name: Check that the test build is the new one
+        run: |
+          want="${{ needs.merge.outputs.dev }}"
+          for i in $(seq 1 36); do
+            got=$(curl -fsS "https://critical-dev.l8p1.workers.dev/version.txt?$i" || true)
+            if [ "$got" = "$want" ]; then echo "test build is $want"; exit 0; fi
+            sleep 5
+          done
+          echo "the test build still answers with: $got"
+          exit 1

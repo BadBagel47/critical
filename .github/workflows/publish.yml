@@ -1,0 +1,41 @@
+name: Publish dev to main
+
+# Publicera (owner 2026-11-20, DV1–DV3): dev, as it is on the test build, becomes the published game. Started by
+# hand, by the owner or by an agent when the owner says Publicera, on the dev branch: the checks run on dev first,
+# and only then is dev merged into main, which GitHub Pages publishes.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    concurrency:
+      group: auto-merge
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Merge dev into main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git fetch origin dev
+          git merge --no-edit "${GITHUB_SHA}"
+          git push origin main
+
+      - name: Trigger GitHub Pages build
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${GITHUB_REPOSITORY}/pages/builds"
