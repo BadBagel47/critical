@@ -136,8 +136,13 @@ jobs:
             got=$(curl -fsS "https://critical-dev.l8p1.workers.dev/version.txt?$i" || true)
             if [ "$got" = "$want" ]; then
               echo "test build is $want"
-              # The rooms answer too (F-040).
-              curl -fsS "https://critical-dev.l8p1.workers.dev/rooms" && exit 0
+              # The rooms answer too (F-040). What they answer is shown, so that a failure says why.
+              for j in 1 2 3 4 5 6; do
+                code=$(curl -sS -o rooms.txt -w '%{http_code}' "https://critical-dev.l8p1.workers.dev/rooms?$j" || true)
+                echo "rooms: $code $(head -c 300 rooms.txt)"
+                if [ "$code" = 200 ] && grep -q codeLength rooms.txt; then exit 0; fi
+                sleep 10
+              done
               echo "the rooms do not answer"
               exit 1
             fi
