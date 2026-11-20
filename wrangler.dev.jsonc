@@ -1,0 +1,9 @@
+// The test build of the game on Cloudflare (DV2, 2026-11-20): the dev branch, at critical-dev.l8p1.workers.dev.
+// Published by .github/workflows/auto-merge.yml after every change that reaches dev. The folder is made by
+// tools/site.mjs. The rooms for online play are added here in F-040.
+{
+  "name": "critical-dev",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "assets": { "directory": "dist" }
+}

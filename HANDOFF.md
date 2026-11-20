@@ -61,11 +61,12 @@ Idéer spånas i chatten och samlas i designskissen. Det som ska byggas läggs i
 
 ## Publicering
 
-GitHub Pages direkt från main, rotmappen. Spelet har inget byggsteg, så det som ligger på main är det som publiceras. Agentens grenar (claude/) slås ihop med main automatiskt, men först när alla tester har gått igenom hos GitHub (användaren, 2026-11-15). Misslyckas de publiceras ingenting och den gamla versionen ligger kvar. Det är en avvikelse från agentreglernas mall, som slår ihop direkt, och den gäller bara det här projektet. En publicering som rör spelet tar därför ungefär två minuter. En ändring som bara rör dokument (filer som slutar på .md och allt under docs/) slås ihop direkt utan att vänta på testerna, eftersom det måste gå snabbt att lägga till saker i backloggen (användaren, 2026-11-15). Agenten väntar inte heller in publiceringen av en ren dokumentändring innan den svarar. Testerna körs av `.github/workflows/test.yml`, som `auto-merge.yml` anropar och väntar på. Adress: https://badbagel47.github.io/critical/
-
-Pages slogs på 2026-11-14. Flytt till Cloudflare sker när nätverksmotorn byggs in.
-
-Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.github.io/critical/`.
+Testbyggen sedan 2026-11-20 (användaren, DV1–DV3, projektregel i AGENTS.md):
+- Allt arbete går till grenen `dev`. Agentens grenar (claude/) slås ihop med dev av `.github/workflows/auto-merge.yml` när alla tester har gått igenom (en ändring som bara rör dokument slås ihop direkt), och dev publiceras sedan på Cloudflare som testbygge: https://critical-dev.l8p1.workers.dev (Workern `critical-dev`, `wrangler.dev.jsonc`, sidan sätts ihop av `tools/site.mjs`). Flödet kontrollerar att testbygget svarar med just den commiten (`version.txt`).
+- `main` är det publicerade spelet, på GitHub Pages: https://badbagel47.github.io/critical/. Det ändras bara när användaren säger **Publicera**: då startas flödet *Publish dev to main* (`.github/workflows/publish.yml`) på dev, som kör testerna och slår ihop dev med main.
+- Planeringsdokumenten (BACKLOG.md, HANDOFF.md, AGENTS.md, docs/proposal-*.md) och flödena kopieras från dev till main direkt, så att backloggen och besluten alltid syns (DV3). Regelboken, ekonomibladet och katalogen följer koden och når main med Publicera.
+- När onlineläget publiceras flyttar spelet till Cloudflare, först på critical.l8p1.workers.dev (OL3 ändrat 2026-11-20) och senare på critical.trythis.one.
+- GitHub-hemligheten `CLOUDFLARE_API_TOKEN` finns i critical (användaren 2026-11-20).
 
 ## Dokumentkarta
 
@@ -173,6 +174,8 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 
 Arbetssätt
 - Onlineläget (2026-11-19, OL2, OL3, ON5, ON6): spelet och rummen på samma adress hos Cloudflare med adressen critical.trythis.one, och GitHub-adressen skickar vidare (R-1248, R-1249). Koden räcker för att gå med. Paus och fortsätt kräver att alla anslutna godkänner (R-1250, F-037).
+- Testbyggen (2026-11-20, DV1–DV3): allt arbete via grenen dev och testbygget på critical-dev.l8p1.workers.dev; main bara när användaren säger Publicera; planeringsdokumenten direkt till main. Ersätter beskedet 2026-11-15 om att allt slås ihop med main när testerna gått igenom, och OL5. Se Publicering.
+- Adress för onlineläget (2026-11-20, OL3 ändrat): critical.l8p1.workers.dev så länge, critical.trythis.one senare (F-289).
 - Ordning (2026-11-19, OL1): Playtest i spelet först, sedan onlineläget (förberedelserna och spelets Worker med rummen), och därefter storyn och sidouppdragen.
 - Ordning (2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden. Priser sätts när det finns saker att köpa och uppgradera.
 - Regelboken (2026-11-16): alla spelregler ska samlas i docs/rules.md med nummer, status och källa, och kontrolleras mot varje nytt beslut. Projektregeln står i AGENTS.md. Regelboken finns sedan 2026-11-16 i docs/rules.md.
