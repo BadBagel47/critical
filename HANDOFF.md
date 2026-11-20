@@ -441,7 +441,7 @@ Grafik
 - Klar 2026-11-14: användaren slog på GitHub Pages för repot (Deploy from a branch, main, rot).
 - Klar 2026-11-14: automatisk merge enligt agentreglernas mall (`.github/workflows/auto-merge.yml`), vald av användaren. Grenar som börjar med claude/ slås ihop med main av sig själva.
 - Klar 2026-11-14: tester körs automatiskt på GitHub vid varje push. Det krävde ingen åtgärd från användaren.
-- Väntar (2026-11-17, D-269): inför onlineläget behövs en Cloudflare-nyckel som hemlighet i critical, ett flöde som publicerar spelet till en Worker, och uppdateringsflödet från network-kit. Föreslås när D-269 är bestämd.
+- Väntar (2026-11-20, D-269): GitHub-hemligheterna CLOUDFLARE_API_TOKEN och TRYTHIS_COUNTRY_BYPASS i critical, med samma värden som i network-kit (network-kit-sessionen 2026-11-20). Med dem publiceras spelet och rummen på critical.trythis.one. Uppdateringsflödet från network-kit (templates/update-network-kit.yml) läggs till i samma körning.
 
 ## Pending adaptation
 
