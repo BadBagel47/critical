@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Critical ST8 · online play and privacy</title>
+<style>
+  body { margin: 0; background: #05050a; color: #e3e5ec; font: 17px/1.55 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 18px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 12px; }
+  h2 { font-size: 1.1rem; margin: 26px 0 6px; color: #9be4ee; }
+  p, li { color: #c4c8d6; }
+  a { color: #dba445; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Online play and what is sent</h1>
+  <p>Critical ST8 can be played alone without anything leaving your browser. This page says what happens when you play online, or report a play test.</p>
+
+  <h2>Playing online</h2>
+  <ul>
+    <li>Rooms run on Cloudflare, in the EU. One player's browser runs the game; the others send what they press and get the steps of the game back.</li>
+    <li>What is sent: the name you choose, the room's code, what you press, and the game itself when you join. Nothing else about you.</li>
+    <li>Cloudflare handles your IP address to carry the connection, as any website does.</li>
+    <li>A room keeps the names of those in it, a random key for each browser (stored only as a hash), and the latest state of the game. It is deleted 24 hours after the last player has left, or an hour after it was closed.</li>
+  </ul>
+
+  <h2>In your browser</h2>
+  <ul>
+    <li>Saved games, the sound settings and the name you chose for online play are kept in your browser's own storage, and never sent anywhere unless you play online.</li>
+    <li>When you play online, every player keeps a copy of the crew's saves, so that anyone can go on another day.</li>
+  </ul>
+
+  <h2>Play tests</h2>
+  <ul>
+    <li>Only in a browser that has opened a tester link from the game's maker: the answers you give, any pictures you add, and the page's context (address, device, browser, window size, errors, frames per second) are sent with the report.</li>
+    <li>Reports are kept for 30 days, unless the maker keeps one longer.</li>
+  </ul>
+
+  <p><a href="./">Back to the game</a></p>
+</main>
+</body>
+</html>

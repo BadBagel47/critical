@@ -14,6 +14,26 @@ const at = (path) => ROOT + path;
 
 export const ITEMS = [
   {
+    group: 'Onlineläget',
+    id: 'F-040, F-037',
+    title: 'Spela tillsammans på testbygget',
+    where: 'dator, iPad',
+    steps: [
+      'Öppna spelet på testbygget på två enheter, gärna en dator och en iPad. Spelet på GitHub har inte onlineläget än.',
+      'På den ena: PLAY ONLINE, skriv ett namn och välj NEW ROOM · NEW GAME. Rutan visar kod, länk och QR-kod.',
+      'På den andra: skanna QR-koden, öppna länken eller välj JOIN WITH A CODE.',
+      'Spela en stund. Tryck P på den ena och godkänn med P på den andra.',
+      'Stäng den ena och öppna länken igen.',
+    ],
+    links: [['Spelet', at('')]],
+    ask: [
+      'Gick det att komma in, och hur lång tid tog det?',
+      'Känns styrningen fördröjd hos den som gick med? Hur mycket?',
+      'Fungerade pausen som du tänkt?',
+      'Fick du tillbaka din post när du kom tillbaka?',
+    ],
+  },
+  {
     group: 'Spelet',
     id: 'B-282, B-259',
     title: 'Snabbare grafik och markören med många skepp',
