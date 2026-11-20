@@ -5,6 +5,7 @@
 //   row.confirm   a question shown first, for choices that throw something away. Choosing again goes ahead.
 //   row.slider    the row sets a volume instead: 'effects' or 'music'
 //   row.off       the row cannot be chosen right now, and `right` says why
+import { knownAvailable } from './online.js';
 import { VIEW_W, VIEW_H, COL } from './config.js';
 import { rect, bar } from './render/draw.js';
 import { volumeOf, setVolume, isMuted, toggleMute } from './audio.js';
@@ -31,6 +32,13 @@ export function openPage(game, page) {
     rows.findIndex((r) => !r.off),
   );
 }
+const storedNameOf = (game) => {
+  try {
+    return (game.storage && game.storage.getItem('critical-name')) || '';
+  } catch {
+    return '';
+  }
+};
 const rootOf = (game) => (game.view.started ? 'main' : 'title');
 
 const slotName = (slot) => (slot === AUTO ? 'AUTOSAVE' : 'SLOT ' + slot);
@@ -88,6 +96,9 @@ const PAGES = {
         { id: 'load', label: 'LOAD GAME', run: () => openPage(game, 'load') },
         { id: 'sound', label: 'SOUND', run: () => openPage(game, 'sound') },
         ...fullscreenRow(),
+        ...(knownAvailable()
+          ? [{ id: 'online', label: 'PLAY ONLINE', right: 'WITH UP TO THREE', run: () => openPage(game, 'online') }]
+          : []),
         { id: 'test', label: 'TEST MODE', right: 'EVERYTHING UNLOCKED', run: () => a.newGame({ test: true }) },
       ];
     },
@@ -108,6 +119,14 @@ const PAGES = {
         { id: 'load', label: 'LOAD GAME', right: hard, off: !!hard, run: () => openPage(game, 'load') },
         { id: 'sound', label: 'SOUND', run: () => openPage(game, 'sound') },
         { id: 'export', label: 'EXPORT THIS GAME TO A FILE', right: hard, off: !!hard, run: a.exportGame },
+        // Online (F-040): the invitation, a pause for everyone by vote (R-1250), and leaving the room.
+        ...(game.online && game.online.active()
+          ? [
+              { id: 'invite', label: 'INVITE', right: game.online.code || '', run: a.invite },
+              { id: 'votepause', label: 'PAUSE FOR EVERYONE', right: 'THE OTHERS AGREE WITH P', run: a.votePause },
+              { id: 'leaveroom', label: 'LEAVE THE ROOM', run: a.leaveOnline },
+            ]
+          : []),
         ...fullscreenRow(),
         // Only a test game has this.
         ...(state.test
@@ -133,6 +152,33 @@ const PAGES = {
     },
   },
   // What a test game can call in. Each is on a key too, so that it can be done without opening the menu.
+  // Online play (F-040, docs/design/prototypes/online.html).
+  online: {
+    title: 'PLAY ONLINE',
+    rows(game) {
+      const a = game.actions;
+      const latest = latestSlot(game.saves);
+      return [
+        { id: 'name', label: 'YOUR NAME', right: storedNameOf(game) || 'NOT SET', run: a.askName },
+        { id: 'hostnew', label: 'NEW ROOM  ·  NEW GAME', run: () => a.hostOnline(false) },
+        {
+          id: 'hostsave',
+          label: 'NEW ROOM  ·  CONTINUE',
+          right: latest ? slotName(latest) : 'NO SAVED GAME',
+          off: !latest,
+          run: () => a.hostOnline(true),
+        },
+        { id: 'join', label: 'JOIN WITH A CODE', run: a.joinOnline },
+        {
+          id: 'privacy',
+          label: 'ABOUT ONLINE PLAY',
+          right: 'WHAT IS SENT',
+          run: () => window.open('privacy.html', '_blank'),
+        },
+        back(game),
+      ];
+    },
+  },
   testing: {
     title: 'TEST  ·  CALL IN SHIPS',
     rows(game) {

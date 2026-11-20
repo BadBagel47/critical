@@ -1,0 +1,11 @@
+// The game with its rooms in a local copy of Cloudflare's server (workerd), for the tests with several browsers
+// (F-272, tests/online.mjs). As wrangler.dev.jsonc, without the admin page, which is not there locally.
+{
+  "name": "critical-test",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "dist" },
+  "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  "vars": { "ROOM_LIMITS": "off" }
+}
