@@ -22,10 +22,15 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Besked 2026-11-20 (ON7): ja, man kan gå med mitt i en omgång och tar en ledig post.
 - Besked 2026-11-20 (ON8): ingen ruta för att välja; den som går med mitt i en omgång får den första lediga posten i ordningen Captain, Gunner, Engineer, och byter sedan med 1, 2 och 3 om en annan är ledig.
 
-**B** – strong model, high level – Sidouppdrag i baren, anseende genom uppdrag och smuggelgods
+**B** – strong model, high level – Sidouppdrag i baren, anseende genom uppdrag och smuggelgods – väntar på svar
 - D-073 – Sidouppdrag som väljs i baren i ett gränssnitt som butikens: frakt, prisjakt och räddning, högst fem åt gången, med tidsgräns mot högre lön
 - F-118 – Anseende höjs genom uppdrag och inte av sig självt med tiden, så att man får jobba för det
 - D-257 – Smuggeluppdrag från skumt folk på baser, som man pratar med
+- Fråga SU1: Vilka sidouppdrag och hur görs de? Rekommendation: frakt (en låda hämtas i baren och lämnas på en annan bas), prisjakt (en namngiven pirat skjuts ner i ett system som markeras på stjärnkartan, som storyns strider) och räddning (bordarna går in i ett vrak och bär ut en överlevande till luftslussen, som loot).
+- Fråga SU2: Var väljs de? Rekommendation: vid ett bord i baren inne på basen, dit någon går till fots och trycker E, med uppdragen som en lista som i butiken. Högst fem åt gången.
+- Fråga SU3: Lön och tid? Rekommendation: 300 till 1500 krediter efter avstånd och fara, med tidsgräns 50 procent mer. Ett misslyckat uppdrag ger ingen lön och kostar lite anseende hos den som gav det. Värdena är preliminära och förs in i ekonomibladet.
+- Fråga SU4: Anseende (F-118)? Rekommendation: dåligt anseende slutar stiga av sig självt. Uppdrag höjer anseendet hos den som ger dem, och en faktion vars baser är stängda för besättningen ger ibland uppdrag på neutrala baser, så att det alltid går att reparera.
+- Fråga SU5: Smugglingen (D-257)? Rekommendation: i en egen körning direkt efter denna, eftersom den behöver patrullens skanning och Engineers vågspel (D-074). Den här körningen bygger frakt, prisjakt, räddning och anseendet.
 - Fråga VO4: Ska storyn ha röster i spelet, efter röstprovet i uppdragstestaren? Rekommendation: lyssna på hela storyn och säg vad du tycker om rösterna och känslorna. Blir det ja spelas karaktärernas fasta repliker in, och berättaren läser bara meningar utan genererade namn (R-1232).
 
 **C** – strong model, high level – Ljus, skuggor och effekter i spelet – väntar på svar
