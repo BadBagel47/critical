@@ -134,7 +134,13 @@ jobs:
           want="${{ needs.merge.outputs.dev }}"
           for i in $(seq 1 36); do
             got=$(curl -fsS "https://critical-dev.l8p1.workers.dev/version.txt?$i" || true)
-            if [ "$got" = "$want" ]; then echo "test build is $want"; exit 0; fi
+            if [ "$got" = "$want" ]; then
+              echo "test build is $want"
+              # The rooms answer too (F-040).
+              curl -fsS "https://critical-dev.l8p1.workers.dev/rooms" && exit 0
+              echo "the rooms do not answer"
+              exit 1
+            fi
             sleep 5
           done
           echo "the test build still answers with: $got"
