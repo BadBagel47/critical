@@ -19,7 +19,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Besked 2026-11-19: OL2 ja, spelet och rummen ligger på samma adress hos Cloudflare, och den gamla GitHub-adressen skickar vidare dit (R-1248). OL3 ja, spelet får adressen critical.trythis.one (R-1249); var trythis.one sköts kontrolleras först. ON5: paus och fortsätt kräver att alla anslutna godkänner inom tio sekunder, menyn pausar aldrig av sig själv online, och den som spelar ensam pausar direkt (R-1250, F-037).
 - F-037 – Paus och fortsätt som alla godkänner: den som vill pausa trycker paus, de andra ser vem som vill och godkänner med P, och spelet pausar när alla anslutna har sagt ja
 - Besked 2026-11-20: OL4 nej, critical.trythis.one följer trythis.ones regel och släpps bara in från Sverige; kontrollen efter publicering görs mot Workerns egen adress på workers.dev, som inte omfattas av regeln. OL5 nej, ingen förhandsversion: Critical publiceras från main som i dag och tar network-kits versioner från dess main.
-- Fråga ON7: Kan man gå med mitt i en omgång? Rekommendation: ja, direkt, och man tar en ledig post.
+- Besked 2026-11-20 (ON7): ja, man kan gå med mitt i en omgång och tar en ledig post.
 
 **B** – strong model, high level – Sidouppdrag i baren, anseende genom uppdrag och smuggelgods
 - D-073 – Sidouppdrag som väljs i baren i ett gränssnitt som butikens: frakt, prisjakt och räddning, högst fem åt gången, med tidsgräns mot högre lön
