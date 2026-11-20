@@ -1202,6 +1202,9 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1245 | Online sparar värden, och varje sparning skickas också till alla spelare, så att vem som helst kan fortsätta en annan dag. Sparningen visar vem som hade vilken post. | bestämd | Användaren 2026-11-19 (Kör B rek), ON3; D-268 | tests/online-crew.test.js |
 | R-1246 | Den som kommer tillbaka till en sparad omgång under samma namn får samma post föreslagen. | bestämd | Användaren 2026-11-19 (Kör B rek), ON4; D-267 | tests/online-crew.test.js |
 | R-1247 | Gamla sparningar får sluta fungera när sparningens form ändras. | byggd | Användaren 2026-11-19 (Kör B rek), ON1; D-263 | tests/saves.test.js |
+| R-1248 | Spelet och rummen för onlineläget ligger på samma adress hos Cloudflare, och spelets gamla adress på GitHub skickar vidare dit. | bestämd | Användaren 2026-11-19 (OL2); D-269 | – |
+| R-1249 | Spelets adress blir critical.trythis.one. | bestämd | Användaren 2026-11-19 (OL3); D-269 | – |
+| R-1250 | Online pausar och fortsätter spelet först när alla anslutna spelare har godkänt inom tio sekunder; menyn pausar aldrig av sig själv online, och den som spelar ensam pausar direkt. | bestämd | Användaren 2026-11-19 (ON5); F-037 | – |
 | R-943 | Skepp i nöd ber om bränsle eller reparation och betalar eller minns det. | förslag | BACKLOG F-083 | – |
 | R-944 | Captain kan anropa skepp och stationer för att be om bränsle, muta eller kräva tribut. | förslag | BACKLOG F-082 | – |
 

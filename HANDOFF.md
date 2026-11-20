@@ -171,6 +171,7 @@ Kontrollera den publicerade sidan med `node tests/smoke.mjs https://badbagel47.g
 ## Decisions
 
 Arbetssätt
+- Onlineläget (2026-11-19, OL2, OL3, ON5, ON6): spelet och rummen på samma adress hos Cloudflare med adressen critical.trythis.one, och GitHub-adressen skickar vidare (R-1248, R-1249). Koden räcker för att gå med. Paus och fortsätt kräver att alla anslutna godkänner (R-1250, F-037).
 - Ordning (2026-11-19, OL1): Playtest i spelet först, sedan onlineläget (förberedelserna och spelets Worker med rummen), och därefter storyn och sidouppdragen.
 - Ordning (2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden. Priser sätts när det finns saker att köpa och uppgradera.
 - Regelboken (2026-11-16): alla spelregler ska samlas i docs/rules.md med nummer, status och källa, och kontrolleras mot varje nytt beslut. Projektregeln står i AGENTS.md. Regelboken finns sedan 2026-11-16 i docs/rules.md.
