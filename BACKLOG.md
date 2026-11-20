@@ -20,6 +20,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - F-037 – Paus och fortsätt som alla godkänner: den som vill pausa trycker paus, de andra ser vem som vill och godkänner med P, och spelet pausar när alla anslutna har sagt ja
 - Besked 2026-11-20: OL4 nej, critical.trythis.one följer trythis.ones regel och släpps bara in från Sverige; kontrollen efter publicering görs mot Workerns egen adress på workers.dev, som inte omfattas av regeln. OL5 nej, ingen förhandsversion: Critical publiceras från main som i dag och tar network-kits versioner från dess main.
 - Besked 2026-11-20 (ON7): ja, man kan gå med mitt i en omgång och tar en ledig post.
+- Besked 2026-11-20 (ON8): ingen ruta för att välja; den som går med mitt i en omgång får den första lediga posten i ordningen Captain, Gunner, Engineer, och byter sedan med 1, 2 och 3 om en annan är ledig.
 
 **B** – strong model, high level – Sidouppdrag i baren, anseende genom uppdrag och smuggelgods
 - D-073 – Sidouppdrag som väljs i baren i ett gränssnitt som butikens: frakt, prisjakt och räddning, högst fem åt gången, med tidsgräns mot högre lön
