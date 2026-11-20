@@ -33,6 +33,8 @@ const RUN_KEY = 'nk-playtest:run';
 const QUEUE_KEY = 'nk-playtest:queue';
 const PLACE_KEY = 'nk-playtest:place';
 const PAIR_KEY = 'nk-playtest:pair';
+const OPEN_KEY = 'nk-playtest:open'; // Open test (F-118): this tab's answer, sessionStorage
+export const NAME_KEY = 'nk-playtest:name'; // Open test: the optional name (owner Q8), sessionStorage
 const QUEUE_MAX = 5;
 const IMAGE_TARGET = 300 * 1024; // owner 2026-11-19: about 300 kB, made smaller, never thrown away
 const RESULT_TEXT = { worked: 'Fungerade', partly: 'Delvis', failed: 'Fungerade inte', cancelled: 'Avbrutet', note: 'Anteckning' };
@@ -142,10 +144,20 @@ const STYLE = `
   box-shadow: 0 10px 30px rgba(0,0,0,.5); font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; overflow: hidden; }
 .nkp[hidden] { display: none; }
-.nkp.folded { width: auto; max-height: none; border-radius: 999px; }
+.nkp.folded { width: auto; max-height: none; border: 0; border-radius: 50%; background: transparent; box-shadow: none; overflow: visible; }
 .nkp * { box-sizing: border-box; }
 .nkp .bar { display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px; background: #1b2147; cursor: grab; touch-action: none; }
-.nkp.folded .bar { padding: 6px 12px; border-radius: 999px; }
+.nkp.folded .bar { padding: 0; background: transparent; }
+.nkp button.fab { position: relative; width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 50%; background: #1b2147;
+  border: 2px solid #7db4ff; display: grid; place-items: center; box-shadow: 0 6px 18px rgba(0,0,0,.5); touch-action: none; cursor: grab; }
+.nkp .fab svg { width: 22px; height: 22px; display: block; }
+.nkp .fab .tag { position: absolute; top: -9px; left: 26px; background: #ffcc33; color: #1a1a1a; font: 700 10px/1.4 ui-monospace, Menlo, monospace;
+  border-radius: 999px; padding: 0 5px; white-space: nowrap; pointer-events: none; }
+.nkp .fab .linked { position: absolute; right: -3px; bottom: -3px; width: 12px; height: 12px; border-radius: 50%; background: #3fb950;
+  border: 2px solid #10142a; pointer-events: none; }
+.nkp .rec { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.nkp input[type="text"] { font: inherit; color: inherit; background: #0b1020; border: 1px solid #3a4386; border-radius: 8px; padding: 8px 10px; }
+.nkp button.quiet { background: transparent; border-color: transparent; color: #a9b0d6; font-size: 13px; text-decoration: underline; }
 .nkp .bar b { flex: 1; font-size: 14px; letter-spacing: .04em; white-space: nowrap; }
 .nkp .dot { width: 10px; height: 10px; border-radius: 50%; background: #ffcc33; display: inline-block; margin-right: 4px; }
 .nkp button { font: inherit; color: inherit; background: #262d5c; border: 1px solid #3a4386; border-radius: 8px;
@@ -201,8 +213,8 @@ export class ReportSender {
   }
 
   async image(blob) {
-    const res = await this.fetch(`${this.admin}/playtest/v1/image?token=${encodeURIComponent(this.token)}`, {
-      method: 'POST', headers: { 'content-type': blob.type || 'image/jpeg' }, body: blob,
+    const res = await this.fetch(`${this.admin}/playtest/v1/image`, {
+      method: 'POST', headers: { 'content-type': blob.type || 'image/jpeg', 'x-playtest-token': this.token }, body: blob,
     });
     if (!res.ok) throw Object.assign(new Error('image'), { status: res.status });
     return (await res.json()).id;
@@ -264,6 +276,40 @@ function blobToDataUrl(blob) {
 
 // ------------------------------------------------------------------ the panel
 
+/** Open test (F-118): what the address asks for, `?record`, `?report` or both; null for neither. */
+export function openMode(win = globalThis.window) {
+  const q = new URLSearchParams(win?.location?.search ?? '');
+  const record = q.has('record');
+  const report = q.has('report');
+  return record || report ? { record, report } : null;
+}
+
+/**
+ * Asks the admin page once per tab whether this game's Open test is on (the
+ * browser's Origin says which game); the answer is kept until the test ends.
+ * Resolves to { game, label, expires, open: true, token } or null.
+ */
+export function openSession({ win, admin, fetch: f }) {
+  if (win.__nkOpen) return win.__nkOpen;
+  const s = store(win, 'sessionStorage');
+  const kept = read(s, OPEN_KEY);
+  if (kept?.token && kept.expires > Date.now()) return (win.__nkOpen = Promise.resolve(kept));
+  const go = f ?? ((...a) => win.fetch(...a));
+  win.__nkOpen = (async () => {
+    try {
+      // Plain text needs no preflight.
+      const res = await go(`${String(admin).replace(/\/$/, '')}/playtest/v1/open`, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: '{}' });
+      if (!res.ok) return null;
+      const found = await res.json();
+      write(s, OPEN_KEY, found);
+      return found;
+    } catch {
+      return null;
+    }
+  })();
+  return win.__nkOpen;
+}
+
 /**
  * Start Playtest on this page. Does nothing (returns null) unless this browser
  * has a working tester link. Options: admin (the admin page's address), items,
@@ -287,9 +333,21 @@ export async function startPlaytest(options = {}) {
     }
   }
   const token = read(local, TOKEN_KEY);
-  if (!token) return null;
   const f = options.fetch ?? ((...a) => win.fetch(...a));
   const admin = String(options.admin).replace(/\/$/, '');
+  // The address decides what shows, the tester link only who it is (owner Q15):
+  // with a tester link, ?record alone shows no panel.
+  const mode = openMode(win);
+  if (token && mode && !mode.report) return null;
+  if (!token) {
+    // Open test (F-118): ?report shows the panel while the game's test is on.
+    if (!openMode(win)?.report) return null;
+    const open = await openSession({ win, admin, fetch: f });
+    if (!open) return null;
+    const panel = new PlaytestPanel({ ...options, win, doc, admin, token: open.token, tester: open, fetch: f, storage: local });
+    panel.mount();
+    return panel;
+  }
   let tester = null;
   try {
     const res = await f(`${admin}/playtest/v1/check`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token }) });
@@ -304,6 +362,38 @@ export async function startPlaytest(options = {}) {
   const panel = new PlaytestPanel({ ...options, win, doc, admin, token, tester, fetch: f, storage: local });
   panel.mount();
   return panel;
+}
+
+/**
+ * A second tap within four seconds confirms (owner Q11): the first changes the
+ * button's text. Used instead of confirm(), which Safari offers to suppress.
+ */
+export function confirmTap(win, button, ask, ms = 4000) {
+  if (button.dataset.confirming) {
+    win.clearTimeout?.(Number(button.dataset.confirming));
+    delete button.dataset.confirming;
+    return true;
+  }
+  const before = button.textContent;
+  button.textContent = ask;
+  button.dataset.confirming = String(win.setTimeout?.(() => {
+    delete button.dataset.confirming;
+    button.textContent = before;
+  }, ms) ?? 1);
+  return false;
+}
+
+const SVG = 'http://www.w3.org/2000/svg';
+/** The folded panel's flask (F-117), drawn so it looks the same on every device. */
+function flaskIcon(doc) {
+  const svg = doc.createElementNS(SVG, 'svg');
+  for (const [k, v] of Object.entries({ viewBox: '0 0 24 24', fill: 'none', stroke: '#7db4ff', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' })) svg.setAttribute(k, v);
+  for (const d of ['M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3', 'M7 15h10']) {
+    const path = doc.createElementNS(SVG, 'path');
+    path.setAttribute('d', d);
+    svg.append(path);
+  }
+  return svg;
 }
 
 export class PlaytestPanel {
@@ -490,10 +580,22 @@ export class PlaytestPanel {
     const root = this.root;
     root.replaceChildren();
     root.classList.toggle('folded', this.folded);
+    if (this.folded) {
+      // A round button with a flask (F-117): a tap opens the box, a drag moves it.
+      const label = `Visa Playtest${this.run ? ` (test ${this.run.id} pågår)` : ''}${this.remotes ? ', fjärrkontroll ansluten' : ''}`;
+      const fab = this.el('button', { type: 'button', class: 'fab', 'aria-label': label, title: label, on: { click: () => { if (!this.dragged) this.fold(false); } } },
+        flaskIcon(this.doc),
+        this.run ? this.el('span', { class: 'tag' }, this.run.id) : null,
+        this.remotes ? this.el('span', { class: 'linked' }) : null);
+      const bar = this.el('div', { class: 'bar' }, fab);
+      this.drag(bar, true);
+      root.append(bar);
+      return;
+    }
     const bar = this.el('div', { class: 'bar' },
       this.run ? this.el('span', { class: 'dot', title: 'Ett test pågår' }) : null,
       this.el('b', {}, `Playtest${this.folded && this.run ? ` · ${this.run.id}` : ''}${this.folded && this.remotes ? ' · fjärr' : ''}`),
-      this.folded ? null : this.el('button', { type: 'button', class: 'small', title: 'Fjärrkontroll på en annan enhet', on: { click: () => this.showPair() } }, 'Fjärr'),
+      this.folded || this.tester?.open ? null : this.el('button', { type: 'button', class: 'small', title: 'Fjärrkontroll på en annan enhet', on: { click: () => this.showPair() } }, 'Fjärr'),
       this.el('button', { type: 'button', class: 'small', 'aria-label': this.folded ? 'Visa' : 'Fäll ihop', on: { click: () => this.fold(!this.folded) } }, this.folded ? '▸' : '–'));
     this.drag(bar);
     root.append(bar);
@@ -513,16 +615,23 @@ export class PlaytestPanel {
     if (folded) this.giveBack();
   }
 
-  drag(bar) {
+  drag(bar, onButtons = false) {
     let start = null;
     bar.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('button')) return;
+      if (!onButtons && e.target.closest('button')) return;
       start = { px: e.clientX, py: e.clientY, ...this.at };
-      bar.setPointerCapture?.(e.pointerId);
+      this.dragged = false;
+      // Captured only once it is a drag: a capture from the start would send a tap's click to the bar, not the button.
+      if (!onButtons) bar.setPointerCapture?.(e.pointerId);
     });
     bar.addEventListener('pointermove', (e) => {
       if (!start) return;
-      this.place({ x: start.x + e.clientX - start.px, y: start.y + e.clientY - start.py });
+      // A few pixels are still a tap (F-117: the folded button opens on a tap).
+      if (!this.dragged && Math.abs(e.clientX - start.px) + Math.abs(e.clientY - start.py) > 6) {
+        this.dragged = true;
+        if (onButtons) bar.setPointerCapture?.(e.pointerId);
+      }
+      if (this.dragged) this.place({ x: start.x + e.clientX - start.px, y: start.y + e.clientY - start.py });
     });
     const end = () => {
       if (!start) return;
@@ -534,8 +643,16 @@ export class PlaytestPanel {
   }
 
   renderList(body) {
-    const who = this.tester ? `${this.tester.label || 'Testare'} · ${this.tester.game}` : 'Inte kontakt med adminsidan än; rapporter sparas och skickas senare.';
+    const until = this.tester?.open ? ` · till ${new Date(this.tester.expires).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '';
+    const who = this.tester ? `${this.tester.label || 'Testare'} · ${this.tester.game}${until}` : 'Inte kontakt med adminsidan än; rapporter sparas och skickas senare.';
     body.append(this.el('p', { class: 'muted' }, who));
+    if (this.tester?.open) {
+      // Owner Q8: an optional name goes with the reports and recordings.
+      const name = this.el('input', { type: 'text', maxlength: '40', autocomplete: 'nickname', placeholder: 'Ditt namn (frivilligt)', 'aria-label': 'Ditt namn (frivilligt)', value: read(this.session, NAME_KEY) ?? '' });
+      name.addEventListener('input', () => write(this.session, NAME_KEY, name.value.trim() || null));
+      body.append(name);
+    }
+    this.renderRecording(body);
     if (this.notice) body.append(this.el('p', { class: 'note', role: 'status' }, this.notice));
     if (!this.items.length) body.append(this.el('p', { class: 'muted' }, 'Spelet har inga tester i listan just nu.'));
     for (const item of this.items) {
@@ -545,6 +662,47 @@ export class PlaytestPanel {
         this.el('span', {}, item.title ?? item.id)));
     }
     body.append(this.el('button', { type: 'button', on: { click: () => this.note() } }, 'Skriv en anteckning utan test'));
+    if (this.tester?.open) return; // Open test: closing the tab is enough
+    // Confirmed in the page, not with confirm(): Safari offers to suppress a page's dialogs (owner Q11).
+    const stop = this.el('button', { type: 'button', class: 'quiet', on: { click: () => this.forget(stop) } }, 'Sluta testa på den här enheten');
+    body.append(stop);
+  }
+
+  /** *Spela in* / *Sluta spela in* (F-120), when the game runs Playtest Recorder. */
+  renderRecording(body) {
+    if (!this.watchingRecorder) {
+      this.watchingRecorder = true;
+      this.win.addEventListener?.('nk-playtest-recorder', () => { if (!this.folded && this.view === 'list') this.render(); });
+    }
+    const rec = this.win.__nkRecorder;
+    if (!rec || rec.closed) return;
+    const row = this.el('div', { class: 'rec' },
+      this.el('span', { class: 'muted' }, rec.recording ? '● Spelar in' : 'Spelar inte in'),
+      rec.recording
+        ? this.el('button', { type: 'button', class: 'small', on: { click: () => rec.stop() } }, 'Sluta spela in')
+        : this.el('button', { type: 'button', class: 'small go', title: 'Tar med de senaste två minuterna', on: { click: () => rec.start() } }, 'Spela in'));
+    body.append(row);
+  }
+
+  /**
+   * Makes this browser forget the tester link (F-117, owner Q3): the box, Playtest
+   * Remote and the Recorder stop here; other devices and the link itself are
+   * untouched, and opening the link again starts over.
+   */
+  async forget(button) {
+    if (button && !confirmTap(this.win, button, 'Tryck igen för att sluta testa här')) return;
+    await this.sender.flush().catch(() => {}); // what waits to be sent goes first
+    try {
+      this.remote?.leave();
+    } catch {
+      // already gone
+    }
+    write(this.storage, TOKEN_KEY, null);
+    write(this.session, RUN_KEY, null);
+    write(this.session, PAIR_KEY, null);
+    this.win.dispatchEvent?.(new this.win.CustomEvent('nk-playtest-forget'));
+    this.root.remove();
+    this.giveBack();
   }
 
   open(id) {
@@ -682,6 +840,7 @@ export class PlaytestPanel {
       via: extra.via ?? 'panel',
       images: extra.images ?? [],
       context: this.context(),
+      ...(this.tester?.open && read(this.session, NAME_KEY) ? { name: read(this.session, NAME_KEY) } : {}),
     };
     const outcome = await this.sender.send(report, this.pictures);
     if (outcome.sent && result !== 'cancelled' && report.testId) this.reported.add(report.testId);
