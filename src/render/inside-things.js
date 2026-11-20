@@ -76,6 +76,7 @@ const DESK = {
   services: () => ['SERVICES', COL.ochre[2]],
   shipyard: (place) => (place.shipyard ? ['SHIPYARD', COL.captain] : ['NO SHIPYARD', COL.faint]),
   armory: () => ['ARMORY', COL.ember[1]],
+  jobs: () => ['JOBS', COL.ochre[2]],
 };
 
 // The docked frigate and the tunnel from it into the airlock, outside the hull at the way in.

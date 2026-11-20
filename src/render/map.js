@@ -1,4 +1,5 @@
 // The shared map screen and the small map on the space HUD.
+import { jobSpot } from '../sim/jobs.js';
 import { VIEW_W, VIEW_H, COL } from '../config.js';
 import { B } from '../sim/balance.js';
 import { visionSources, isVisible } from '../sim/map.js';
@@ -374,6 +375,20 @@ function drawStorySpot(ctx, font, state) {
   font.draw(ctx, 'STORY', Math.round(p.x), Math.round(p.y) + 10, COL.captain, { align: 'c' });
 }
 
+// Where the pirate of a bounty and the wreck of a rescue are in this system (D-073).
+function drawJobSpots(ctx, font, state) {
+  for (const job of state.jobs ? state.jobs.taken : []) {
+    if (job.to.sector !== state.sector || job.kind === 'cargo') continue;
+    const p = toMap(jobSpot(state, job).x, jobSpot(state, job).y);
+    ctx.strokeStyle = COL.ochre[2];
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(Math.round(p.x) + 0.5, Math.round(p.y) + 0.5, 5, 0, Math.PI * 2);
+    ctx.stroke();
+    font.draw(ctx, 'JOB', Math.round(p.x), Math.round(p.y) + 9, COL.ochre[2], { align: 'c' });
+  }
+}
+
 export function drawMap(ctx, state, view, assets) {
   const { font } = assets;
   const post = playerById(state, view.playerId).post;
@@ -390,6 +405,7 @@ export function drawMap(ctx, state, view, assets) {
   ctx.clip();
   const hostiles = drawMapContents(ctx, font, state, sources);
   drawStorySpot(ctx, font, state);
+  drawJobSpots(ctx, font, state);
   ctx.restore();
   drawSidePanel(ctx, font, state, post, m, hostiles);
   if (post === 'engineer' && mapPoint(state, m.x, m.y)) {

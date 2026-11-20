@@ -99,6 +99,13 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
   }
   for (const l of it.loot) {
     shadow(ctx, l.x, l.y, 5);
+    // A survivor of a rescue job (D-073) lies on the floor, waiting to be carried out.
+    if (l.type === 'survivor') {
+      glow(ctx, l.x, l.y, 12, COL.acid[2], 0.2);
+      sprite(ctx, img.boarder, l.x, l.y, Math.PI / 2);
+      font.draw(ctx, 'SURVIVOR', l.x, l.y - 14, COL.acid[2], { align: 'c' });
+      continue;
+    }
     glow(ctx, l.x, l.y, 9, l.type === 'crate' ? COL.ochre[2] : COL.ion[2], 0.14);
     sprite(ctx, img[l.type], l.x, l.y);
   }
@@ -166,7 +173,15 @@ function drawFloor(ctx, state, place, me, assets, fx, origin) {
       ctx.globalAlpha = 1;
     }
     a.carry.forEach((c, i) => {
-      rect(ctx, a.x - 5 + i * 4, a.y - 13, 3, 3, c.type === 'crate' ? COL.ochre[2] : COL.ion[2], COL.out);
+      rect(
+        ctx,
+        a.x - 5 + i * 4,
+        a.y - 13,
+        3,
+        3,
+        c.type === 'crate' ? COL.ochre[2] : c.type === 'survivor' ? COL.acid[2] : COL.ion[2],
+        COL.out,
+      );
     });
   }
   // The names of the rooms stand on signs at their doors, the same as on the Captain's radar.

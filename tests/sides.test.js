@@ -6,7 +6,7 @@ import { step } from '../src/sim/step.js';
 import { damageShip } from '../src/sim/damage.js';
 import { thingsOf } from '../src/sim/things.js';
 import { makeVessel, hurtVessel } from '../src/sim/vessels.js';
-import { moodOf, enemies, isAngry, changeStanding, stepStanding, FACTIONS } from '../src/sim/sides.js';
+import { moodOf, enemies, isAngry, changeStanding, FACTIONS } from '../src/sim/sides.js';
 import { servicePrices, damageStation, isTrading, remountGuns, gunHpMax } from '../src/sim/stations.js';
 import { dockShieldMax, CATALOG } from '../src/sim/upgrades.js';
 import { SHIPS, BASE } from '../src/sim/kinds.js';
@@ -170,18 +170,15 @@ test('a patrol that is fighting pirates is spared the stray shots of the crew', 
   assert.equal(s.standing.wardens, 0);
 });
 
-test('a side that has fallen out with the crew comes round by itself, but only as far as trading at a high price', () => {
+test('R-405 R-390 R-396: a side that has fallen out with the crew does not come round by itself', () => {
   const s = farOut(quiet());
   s.standing.wardens = -100;
-  for (let i = 0; i < 3000; i++) stepStanding(s, 1);
-  assert.ok(Math.abs(s.standing.wardens - B.STANDING.mends) < 0.1);
-  assert.equal(moodOf(s, 'wardens'), 'wary');
-  s.standing.charter = 10;
-  stepStanding(s, 100);
-  assert.equal(s.standing.charter, 10, 'a standing that is good enough stays as it is');
+  for (let i = 0; i < 3000; i++) step(s, {}, 1 / 4);
+  assert.equal(s.standing.wardens, -100);
+  assert.equal(moodOf(s, 'wardens'), 'hostile');
 });
 
-test('a station does not make peace while the crew is breaking into it, and one hit too many means a long wait', () => {
+test('one hit too many on a station means it comes to shooting, with no quick way back', () => {
   const s = quiet(),
     st = post(s);
   s.ship.x = st.x;
@@ -190,13 +187,6 @@ test('a station does not make peace while the crew is breaking into it, and one 
   assert.equal(s.standing[st.side], -100, 'once it has come to shooting there is no quick way back');
   step(s, {}, DT);
   assert.equal(st.align, 'hostile');
-  dockAt(s, st);
-  const before = s.standing[st.side];
-  for (let i = 0; i < 3000; i++) stepStanding(s, 1);
-  assert.equal(s.standing[st.side], before);
-  s.ship.docked = null;
-  for (let i = 0; i < 3000; i++) stepStanding(s, 1);
-  assert.ok(s.standing[st.side] > B.STANDING.closed);
 });
 
 // ---------- stations that defend themselves ----------

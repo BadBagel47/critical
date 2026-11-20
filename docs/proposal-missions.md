@@ -132,3 +132,7 @@ Motorns kärna är skild från spelet och hämtar ingen annan kod. Den kedjar st
 - **US7 (ja):** Captain får nästan hälften av jobbet, eftersom det är Captain som pratar och lämnar saker. Ska samtalen ske inne på basen, så att någon går dit till fots? Rekommendation: ja, för en del av samtalen. Då får bordarna mer att göra, och baserna används till mer än handel.
 - **US8 (se ovan):** Hur ska texterna låta? Rekommendation: läs några storys i testaren och säg vad som känns fel. Texterna är korta mallar med luckor, och fler varianter läggs till när tonen är bestämd.
 - **US9 (se ovan):** Ska sidouppdragen också visas i testaren innan de byggs? Rekommendation: ja, när uppdragen (D-073) tas fram.
+
+## Sidouppdragen (D-073, byggda 2026-11-20)
+
+Besked SU1–SU5 (Kör B rek): frakt, prisjakt och räddning tas vid bordet JOBS i baren på en bas. Lön 300–1500 krediter efter avstånd och fara, hälften till med tidsgräns. Ett misslyckat uppdrag ger ingen lön och kostar lite anseende. Anseendet förbättras bara genom uppdrag, och en faktion med stängda baser ger ibland uppdrag på fria baser. Smugglingen (D-257) kommer i en egen körning. Reglerna är R-1251 till R-1255.

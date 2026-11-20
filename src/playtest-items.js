@@ -132,6 +132,23 @@ export const ITEMS = [
     ask: 'Hur känns det att följa storyn i spelet: loggen, korten och markeringen på kartan?',
   },
   {
+    group: 'Spelet',
+    id: 'D-073, F-118',
+    title: 'Sidouppdrag i baren',
+    where: 'dator',
+    steps: [
+      'Docka vid CHARTER TEST DOCK, gå in och gå till bordet JOBS i baren. Tryck E.',
+      'Ta ett uppdrag med en siffra eller ett klick. L visar dina uppdrag, och stjärnkartan (J) markerar systemen med JOB.',
+      'Gör ett av varje sort: lämna lådan på basen, skjut ner piraten och bär ut den överlevande ur vraket.',
+    ],
+    links: [['Starta i testläget', at('?test')]],
+    ask: [
+      'Är det lätt att förstå vad uppdragen vill och var man ska?',
+      'Känns lönen och tiden lagom?',
+      'Saknas något, till exempel att kunna lämna tillbaka ett uppdrag?',
+    ],
+  },
+  {
     group: 'Designtester',
     id: 'F-283, D-261',
     title: 'Ljus, skuggor och effekter',

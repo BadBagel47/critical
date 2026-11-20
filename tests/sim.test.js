@@ -2026,9 +2026,10 @@ test('a friendly station is walked into without a lock, and its desks open the s
     av = it.avatars[0];
   assert.equal(it.trade, true);
   assert.equal(it.guards.length + it.turrets.length, 0);
+  // The table in the bar for side missions stands there too (D-073, R-1252).
   assert.deepEqual(
     it.desks.map((d) => d.type),
-    ['services', 'shipyard', 'armory'],
+    ['services', 'shipyard', 'armory', 'jobs'],
   );
   for (const d of it.desks) assert.ok(!blocked(it, d.x, d.y, 4), d.type + ' desk stands on the floor');
   step(s, { away: { 0: { fire: true, aim: { x: av.x + 50, y: av.y } } } }, DT);
@@ -2087,7 +2088,7 @@ test('a station that is taken over becomes a trading floor', () => {
   step(s, { away: { 0: { usePressed: true } } }, DT);
   step(s, { system: { board: [0] } }, DT);
   assert.equal(st.interior.trade, true);
-  assert.equal(st.interior.desks.length, 3);
+  assert.equal(st.interior.desks.length, 4);
 });
 
 // ---------- what the posts do for each other ----------

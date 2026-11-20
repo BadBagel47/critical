@@ -1,5 +1,6 @@
 // Stations. Each belongs to a side: the crew, the pirates, a faction, or itself. How it treats the crew
 // follows from that: friendly and neutral ones trade, hostile ones shoot. All of them defend themselves.
+import { jobOrders } from './jobs.js';
 import { B } from './balance.js';
 import { THINGS, BASE } from './kinds.js';
 import { CREW, PIRATE, ownSide, moodOf, enemies, changeStanding, provoke, isAngry, inSanctuary } from './sides.js';
@@ -651,6 +652,7 @@ export function stepStations(state, cmds, dt) {
   for (const order of cmds.shop || []) {
     if (isTrading(docked)) shop(state, docked, order);
   }
+  if (isTrading(docked) && cmds.jobs) jobOrders(state, docked, cmds.jobs);
   const stations = thingsOf(state, 'station');
   for (const st of stations) {
     st.favor = Math.max(0, st.favor - dt);

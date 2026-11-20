@@ -21,6 +21,7 @@ import { drawStarMap, starClick, starButtons } from './render/stars.js';
 import { drawShop, shopClick, shopButtons, shopScroll, createShopView } from './render/shop.js';
 import { drawMainframe, mainframeClick, mainframeButtons } from './render/mainframe.js';
 import { drawStoryLog, drawStoryCard } from './render/story.js';
+import { drawJobs, jobRows } from './render/jobs.js';
 import { atMainframe } from './sim/mainframe.js';
 import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS, hackTarget, hackBox } from './render/engineer.js';
 import { drawActions, actionButtons } from './render/actions.js';
@@ -72,6 +73,7 @@ export function modeOf(game) {
   const docked = findDock(state, state.ship.docked);
   if (me.inside !== null) {
     if (view.panel === 'shop' && isTrading(docked)) return 'shop';
+    if (view.panel === 'jobs' && isTrading(docked)) return 'jobs';
     const at = mainframeAt(game);
     return view.panel === 'mainframe' && at ? 'mainframe' : 'away';
   }
@@ -277,6 +279,22 @@ function workShop(game, st, out) {
   if (hit && hit.set) Object.assign(view.shop, hit.set);
   if (hit && hit.order) out.shop = [hit.order];
 }
+// At the table in the bar (D-073): a click or a number takes a job. E or Escape steps away from it.
+function jobsInput(game, out) {
+  const { keys, state, view } = game;
+  if (keys.hit('KeyE') || keys.hit('Escape')) {
+    view.panel = null;
+    return;
+  }
+  const st = findDock(state, state.ship.docked);
+  const rows = jobRows(state, st);
+  let pick = rows.findIndex((r, k) => keys.hit('Digit' + (k + 1)));
+  if (pick < 0 && keys.mouse.clicked) {
+    const m = keys.mouse;
+    pick = rows.findIndex((r) => m.x >= r.x && m.x < r.x + r.w && m.y >= r.y && m.y < r.y + r.h);
+  }
+  if (pick >= 0) out.jobs = [{ take: rows[pick].job.id }];
+}
 // The stores, opened with I anywhere on board (R-1171). What is there is seen, but nothing is bought here.
 function storesInput(game, out) {
   onBoard(game, out);
@@ -372,6 +390,12 @@ function drawShopScreen(game) {
     drawShop(ctx, assets.font, state, findDock(state, state.ship.docked), view.shop, keys.mouse, view.playerId);
 }
 
+function drawJobsScreen(game) {
+  const { ctx, state, assets, keys } = game;
+  drawAway(game);
+  if (!state.over) drawJobs(ctx, assets.font, state, findDock(state, state.ship.docked), keys.mouse);
+}
+
 function drawMainframeScreen(game) {
   const { ctx, state, view, assets, keys } = game;
   drawAway(game);
@@ -452,6 +476,17 @@ export const SCREENS = {
     toasts: [232, 217],
     buttons: (game) => shopButtons(game.state, docked(game), game.view.shop, game.view.playerId),
   },
+  jobs: {
+    pad: 'panel',
+    cursor: true,
+    input: jobsInput,
+    draw: drawJobsScreen,
+    toasts: [312],
+    buttons: (game) => {
+      const st = docked(game);
+      return st ? jobRows(game.state, st).map(({ name, x, y, w, h }) => ({ name, x, y, w, h })) : [];
+    },
+  },
   mainframe: {
     pad: 'panel',
     cursor: true,
@@ -513,7 +548,11 @@ const storyCard = (game) => {
 };
 function storyKeys(game) {
   const { keys, state, view } = game;
-  if (!state.story) return;
+  // The log has the side missions too, so it opens also in a game without a story (a test game).
+  if (!state.story) {
+    if (keys.hit('KeyL')) view.log = !view.log;
+    return;
+  }
   if (view.storySeen === null) {
     view.storySeen = state.story.done.length;
     if (state.story.at === 0)
@@ -546,8 +585,8 @@ function drawStory(game) {
   const { ctx, state, view, keys } = game;
   const font = game.assets.font;
   view.storyButtons = [];
-  if (!state.story) return;
   if (view.log) return drawStoryLog(ctx, font, state);
+  if (!state.story) return;
   const card = storyCard(game);
   if (card !== null) view.storyButtons = drawStoryCard(ctx, font, state, card, keys.mouse);
 }

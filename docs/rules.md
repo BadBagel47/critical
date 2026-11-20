@@ -46,7 +46,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 - Faktioner kan vara i krig med varandra. I dag slåss de bara i omstridda system.
 - En station som har blivit fientlig av träffar är det inte för gott, utan anseendet kan återtas (R-1190). I dag är den fientlig för gott efter åtta träffar.
 - Medan besättningen är inne anfalls det dockade skeppet aldrig när en spelar, och sällan när två eller tre spelar (R-1191). I dag anfaller bounty hunters det dockade skeppet efter ungefär en minut.
-- Anseendet förbättras inte av sig självt med tiden. I dag gör det det, fram till avvaktande, tills uppdragen finns.
+- ~~Anseendet förbättras inte av sig självt med tiden.~~ Byggt 2026-11-20 (F-118, R-405): det förbättras bara genom uppdrag.
 - Kanontorn köps, och skeppet börjar med en fast kanon rakt fram. I dag har skeppet ett torn i nosen och torn på vingarna.
 
 ## Bränsle och färd
@@ -458,9 +458,9 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-341 | Har det väl gått till eld faller anseendet till botten. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-342 | Anseendet stiger 0,5 hos alla för varje nedskjuten pirat. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-343 | Anseendet stiger 20 hos stationens sida för att rädda en station ur ett anfall. | byggd | HANDOFF beslut 2026-11-14 | saknas |
-| R-344 | Anseendet stiger av sig självt med tiden upp till avvaktande. | byggd | HANDOFF beslut 2026-11-14 | saknas |
+| R-344 | Anseendet stiger av sig självt med tiden upp till avvaktande. | ersatt av: R-405 | HANDOFF beslut 2026-11-14 | saknas |
 | R-345 | Från botten tar det ungefär sju minuter till stängd och tjugo minuter till avvaktande. | byggd | HANDOFF beslut 2026-11-14 | saknas |
-| R-346 | Ingen förlåter medan besättningen ligger dockad vid en av deras fientliga stationer. | byggd | HANDOFF beslut 2026-11-14 | saknas |
+| R-346 | Ingen förlåter medan besättningen ligger dockad vid en av deras fientliga stationer. | ersatt av: R-405 | HANDOFF beslut 2026-11-14 | saknas |
 | R-347 | Faktionerna slåss inte med varandra, och alla slåss med pirater. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-348 | Tacken för hjälp vid ett anfall (rabatt eller krediter) kommer bara om besättningen själv träffat någon av angriparna. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-349 | Ett nytt trafikskepp eller en patrull kommer var tjugonde till fyrtiofemte sekund, högst fem samtidigt. | byggd | HANDOFF beslut 2026-11-14 | saknas |
@@ -504,13 +504,13 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-387 | THE CHARTER är ett handelsförbund med rika stationer och bra priser som betalar för frakt och eskort (platshållare). | bestämd | HANDOFF beslut 2026-11-14 | – |
 | R-388 | THE WARDENS är en ordningsmakt som patrullerar med tunga skepp, har de bästa varven och skannar efter smuggelgods (platshållare). | bestämd | HANDOFF beslut 2026-11-14 | – |
 | R-389 | THE DRIFTERS är fria bärgare och nybyggare i utkanten med billiga reparationer, som köper allt och inte bryr sig om smuggelgods (platshållare). | bestämd | HANDOFF beslut 2026-11-14 | – |
-| R-390 | Anseende ska inte förlåtas med tiden utan förtjänas, främst genom faktionsuppdrag som kan ge plus hos en och minus hos en annan. | bestämd | HANDOFF beslut 2026-11-14 | – |
+| R-390 | Anseende ska inte förlåtas med tiden utan förtjänas, främst genom faktionsuppdrag som kan ge plus hos en och minus hos en annan. | byggd | HANDOFF beslut 2026-11-14; F-118 byggd 2026-11-20 | tests/sides.test.js |
 | R-391 | Förlåtelsen med tiden tas bort först när uppdragen finns. | bestämd | HANDOFF beslut 2026-11-14; station-boarding.md §10, §13 | – |
 | R-392 | Faktioner ska kunna vara i krig med varandra. | bestämd | HANDOFF beslut 2026-11-14 | – |
 | R-393 | Det blir ett krig mellan två faktioner per omgång. | bestämd | HANDOFF beslut 2026-11-14; BACKLOG F-119 | – |
 | R-394 | En faktion vars station besättningen håller kan bli "stängd". | bestämd | HANDOFF beslut 2026-11-14 | – |
 | R-395 | Juggernaut patrullerar hos faktioner och dyker i mycket sällsynta fall upp som pirat. | bestämd | HANDOFF beslut 2026-11-14 | – |
-| R-396 | Man ska inte bli förlåten med tiden, utan får jobba för anseendet främst genom faktionsuppdrag. | bestämd | station-boarding.md §10 | – |
+| R-396 | Man ska inte bli förlåten med tiden, utan får jobba för anseendet främst genom faktionsuppdrag. | byggd | station-boarding.md §10; F-118 byggd 2026-11-20 | tests/sides.test.js |
 | R-397 | Faktioner ska kunna vara i krig med varandra (F-119). | bestämd | station-boarding.md §10 | – |
 | R-398 | Så länge ni håller en faktions station kan anseendet hos den faktionen som bäst bli "stängd". | bestämd | station-boarding.md §10 | – |
 | R-399 | Det ska alltid finnas en väg tillbaka: pirater, nödanrop och faktionsuppdrag som erbjuds på andras baser. | bestämd | station-boarding.md §10; proposal-economy.md 1.5 regel 6, BACKLOG F-118 | – |
@@ -519,7 +519,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-402 | I ett omstritt system har båda faktionerna stationer, och deras patruller skjuter på varandra när de möts. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 | tests/world.test.js |
 | R-403 | Hjälper man den ena sidan stiger anseendet hos den och sjunker hos den andra. | byggd | proposal-world.md steg 3 besked, BACKLOG D-089 och D-073 | tests/world.test.js |
 | R-404 | Ett system byter inte ägare i steg 3. Det kommer med F-087. | bestämd | proposal-world.md steg 3 besked | – |
-| R-405 | Anseende höjs genom uppdrag och inte av sig självt med tiden. | bestämd | proposal-world.md steg 4, BACKLOG F-118, proposal-economy.md 1.5 regel 6 | – |
+| R-405 | Anseende höjs genom uppdrag och inte av sig självt med tiden. | byggd | proposal-world.md steg 4, BACKLOG F-118, proposal-economy.md 1.5 regel 6; F-118 byggd 2026-11-20 | tests/sides.test.js |
 | R-406 | Ett dåligt anseende stiger i dag av sig självt upp till avvaktande. Det ska tas bort när uppdragen finns. | bestämd | proposal-economy.md 1.5 regel 6, BACKLOG F-118 | – |
 | R-407 | Faktionernas platshållarnamn gäller tills de gås igenom, och orden Kestrel och Drifters ses över. | bestämd | BACKLOG D-095, proposal-world.md "Lagar och regler" | – |
 | R-408 | Varje faktion har ett eget område av grannsystem. | förslag | proposal-world.md steg 3 | – |
@@ -1205,6 +1205,11 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1248 | Spelet och rummen för onlineläget ligger på samma adress hos Cloudflare, och spelets gamla adress på GitHub skickar vidare dit. | bestämd | Användaren 2026-11-19 (OL2); D-269 | – |
 | R-1249 | Spelets adress blir critical.trythis.one. | bestämd | Användaren 2026-11-19 (OL3); D-269 | – |
 | R-1250 | Online pausar och fortsätter spelet först när alla anslutna spelare har godkänt inom tio sekunder; menyn pausar aldrig av sig själv online, och den som spelar ensam pausar direkt. | bestämd | Användaren 2026-11-19 (ON5); F-037 | – |
+| R-1251 | Sidouppdragen är frakt (en låda lämnas på en annan bas), prisjakt (en namngiven pirat skjuts ner) och räddning (bordarna bär ut en överlevande ur ett vrak), och målets system markeras på stjärnkartan. | byggd | Användaren 2026-11-20 (Kör B rek), SU1; D-073 | tests/jobs.test.js |
+| R-1252 | Sidouppdragen tas vid ett bord i baren inne på en bas som handlar med besättningen, som en lista. | byggd | Användaren 2026-11-20 (Kör B rek), SU2; D-073 | tests/jobs.test.js |
+| R-1253 | Ett sidouppdrag betalar 300 till 1500 krediter efter avstånd och fara, med tidsgräns hälften till; ett som inte hinns med betalar inget och kostar lite anseende hos den som gav det. | byggd | Användaren 2026-11-20 (Kör B rek), SU3; D-073 | tests/jobs.test.js |
+| R-1254 | Besättningen har högst fem sidouppdrag åt gången. | byggd | Användaren 2026-11-14; D-073 | tests/jobs.test.js |
+| R-1255 | Ett gjort sidouppdrag höjer anseendet hos den som gav det, och en faktion vars baser är stängda för besättningen ger ibland uppdrag på fria baser. | byggd | Användaren 2026-11-20 (Kör B rek), SU4; F-118 | tests/jobs.test.js |
 | R-943 | Skepp i nöd ber om bränsle eller reparation och betalar eller minns det. | förslag | BACKLOG F-083 | – |
 | R-944 | Captain kan anropa skepp och stationer för att be om bränsle, muta eller kräva tribut. | förslag | BACKLOG F-082 | – |
 

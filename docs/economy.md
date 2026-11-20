@@ -79,6 +79,9 @@ En avvaktande station tar 1.5 gånger priset. En station som står i skuld efter
 | Pod | 60–140 | hälften av gångerna 25 bränsle |
 | Malm, per bit | 6 | eller 4 bränsle |
 | Hjälp vid nödanrop | 100 hos en vänlig | rabatt hos en neutral |
+| Sidouppdrag: frakt | 250 + 150 per hopp + 100 per farlighetsnivå, 300–1500 | 1.5 gånger så mycket med tidsgräns; inget och −4 anseende om tiden går ut |
+| Sidouppdrag: prisjakt | 450 + 150 per hopp + 100 per farlighetsnivå, 300–1500 | 1.5 gånger så mycket med tidsgräns; inget och −4 anseende om tiden går ut |
+| Sidouppdrag: räddning | 400 + 150 per hopp + 100 per farlighetsnivå, 300–1500 | 1.5 gånger så mycket med tidsgräns; inget och −4 anseende om tiden går ut |
 
 ## 3. Världen
 

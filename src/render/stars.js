@@ -7,6 +7,7 @@ import { currentSector, jumpBlocked } from '../sim/sectors.js';
 import { viewOf } from '../sim/intel.js';
 import { hopsFrom, regionLayout } from '../sim/world.js';
 import { storyMark } from '../sim/questline.js';
+import { jobSystems } from '../sim/jobs.js';
 import { jumpCharge, jumpFuel } from '../sim/upgrades.js';
 import { playerById } from '../sim/players.js';
 import { FACTIONS } from '../sim/sides.js';
@@ -243,6 +244,16 @@ export function drawStarMap(ctx, state, view, assets) {
     ctx.arc(p.x + 0.5, p.y + 0.5, r, 0, Math.PI * 2);
     ctx.stroke();
     font.draw(ctx, 'STORY', p.x, p.y + 10, COL.captain, { align: 'c' });
+  }
+  // The systems of the side missions the crew holds (D-073), in the side missions' own colour.
+  for (const id of new Set(jobSystems(state))) {
+    if (id === mark) continue;
+    const p = spot(state.sectors[id]);
+    ctx.strokeStyle = COL.ochre[2];
+    ctx.beginPath();
+    ctx.arc(p.x + 0.5, p.y + 0.5, 6, 0, Math.PI * 2);
+    ctx.stroke();
+    font.draw(ctx, 'JOB', p.x, p.y + 10, COL.ochre[2], { align: 'c' });
   }
   font.draw(ctx, 'STAR MAP', AREA.x + 6, AREA.y + 6, COL.dim);
   drawPanel(ctx, font, state, view, view.mouse);

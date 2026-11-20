@@ -1,5 +1,6 @@
 // The crew inside a place (D-227): going aboard and back, what the use key does where a boarder stands, the ways
 // between floors, and each boarder's step. What gives them away is here too.
+import { offersAt } from './jobs.js';
 import { B } from './balance.js';
 import { findDock, localPorts } from './things.js';
 import { shipNose } from './ship.js';
@@ -356,7 +357,11 @@ function stepVisitor(state, place, it, av, cmd, dt) {
   if (at && at.type === 'link') takeLink(state, it, av, at);
   if (at && at.type === 'mainframe') state.events.push({ type: 'mainframeUsed', player: av.player });
   const desk = it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20);
-  if (desk && (!at || at.type === 'desk')) state.events.push({ type: 'deskUsed', player: av.player, desk: desk.type });
+  if (desk && (!at || at.type === 'desk')) {
+    // The table in the bar has its jobs ready when someone walks up to it (D-073).
+    if (desk.type === 'jobs') offersAt(state, place);
+    state.events.push({ type: 'deskUsed', player: av.player, desk: desk.type });
+  }
 }
 
 // What is done by holding the use key at a console of a base: the switchgear is switched off, the drone hangar

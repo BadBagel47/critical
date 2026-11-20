@@ -131,14 +131,5 @@ export function thankForPirate(state) {
   for (const side of Object.keys(state.standing)) changeStanding(state, side, B.STANDING_GAIN.pirate);
 }
 
-// A side that the crew has fallen out with comes round by itself in time, as far as trading at a high price.
-// That way there is always a way back.
-export function stepStanding(state, dt) {
-  // Nobody forgives a crew that is busy breaking into one of their stations.
-  const docked = state.ship.docked && state.things.find((t) => t.id === state.ship.docked);
-  const busy = docked && docked.align === 'hostile' ? docked.side : null;
-  for (const side of Object.keys(state.standing)) {
-    if (side === busy) continue;
-    if (state.standing[side] < B.STANDING.mends) changeStanding(state, side, B.STANDING_GAIN.forgive * dt);
-  }
-}
+// A side that has fallen out with the crew does not come round by itself (F-118, R-405): the crew works for it
+// with jobs, see jobs.js.

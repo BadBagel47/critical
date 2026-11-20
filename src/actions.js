@@ -109,7 +109,7 @@ function onBoard(state, me) {
   return list.filter(Boolean);
 }
 
-const DESK = { services: 'SERVICES', shipyard: 'SHIPYARD', armory: 'ARMORY' };
+const DESK = { services: 'SERVICES', shipyard: 'SHIPYARD', armory: 'ARMORY', jobs: 'JOBS' };
 
 function away(state, me) {
   const place = findDock(state, me.inside);
@@ -139,7 +139,7 @@ function away(state, me) {
     return [use('hangar', 'PUT THE DRONE HANGAR OUT', 'HANGAR', { hold: true, progress: it.turning })];
   if (at.type === 'comms')
     return [use('comms', 'STOP THE CALL FOR HELP', 'COMMS', { hold: true, progress: it.turning })];
-  if (at.type === 'desk') return [use('trade', DESK[at.desk.type], 'TRADE')];
+  if (at.type === 'desk') return [use('trade', DESK[at.desk.type], at.desk.type === 'jobs' ? 'JOBS' : 'TRADE')];
   if (at.type === 'mainframe') {
     const working = it.hack ? { progress: it.work[it.hack.level], hold: true } : {};
     return [use('mainframe', 'MAINFRAME', 'MAINFRAME', working)];

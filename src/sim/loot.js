@@ -50,6 +50,9 @@ export function deposit(state, av) {
       }
     } else if (item.type === 'part') {
       openFoundSlot(state, item);
+    } else if (item.type === 'survivor') {
+      // A survivor from a rescue job is home (D-073): jobs.js pays for it.
+      state.events.push({ type: 'survivorHome', job: item.job });
     } else credits += item.value;
   }
   state.ship.fuel = Math.min(fuelMax(state.ship), state.ship.fuel + fuel);

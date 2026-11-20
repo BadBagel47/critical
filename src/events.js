@@ -45,6 +45,9 @@ const NOT_READY = {
 
 // Short messages for things that just happened: event type -> [text, colour], or null for no message.
 const TOAST = {
+  jobTaken: () => ['JOB TAKEN  ·  SEE THE LOG  ·  L', LOOT],
+  jobDone: (e) => [`JOB DONE  ·  +${e.pay} CREDITS`, GOOD],
+  jobFailed: () => ['JOB FAILED  ·  OUT OF TIME', BAD],
   boarded: (e) => (e.trade ? null : ['BOARDING', WARM]),
   teleported: () => ['TELEPORTED HOME  ·  TELEPORTER CHARGING', BAD],
   returned: () => ['BACK ON THE SHIP', GOOD],
@@ -227,7 +230,8 @@ export function readEvents(game) {
     // The lock panel and the shop open for the player who walked up to them.
     if (e.type === 'breakinOpened' && mine) view.panel = 'lock';
     if (e.type === 'mainframeUsed' && mine) view.panel = 'mainframe';
-    if (e.type === 'deskUsed' && mine) {
+    if (e.type === 'deskUsed' && mine && e.desk === 'jobs') view.panel = 'jobs';
+    else if (e.type === 'deskUsed' && mine) {
       view.panel = 'shop';
       openShop(view.shop, state, view.playerId, e.desk, findDock(state, state.ship.docked));
     }

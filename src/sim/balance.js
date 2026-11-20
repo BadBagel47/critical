@@ -28,13 +28,31 @@ export const B = {
   ENGINE_POWER: [0, 0.6, 0.85, 1.0, 1.25],
   // standing with factions and free stations, from -100 to 100. At or above `friendly` a side is friendly.
   // At or below each of the others it turns wary (higher prices), closed (no trade) and hostile (opens fire).
-  // A bad standing mends by itself up to `mends`, which is still wary.
+  // `mends` was how far a bad standing mended by itself; it no longer does (F-118). Kept for what reads it.
   STANDING: { friendly: 50, wary: -20, closed: -50, hostile: -80, mends: -30 },
   // what moves the standing: shooting a station or a ship, destroying a ship, answering a distress call,
   // destroying a pirate, and how fast a bad standing mends by itself, per second.
   STANDING_LOSS: { stationHit: 10, shipHit: 2, shipKill: 25 },
   // `rival`: a ship of one side shot down in a contested system, for the other side.
-  STANDING_GAIN: { rescue: 20, pirate: 0.5, forgive: 0.05, rival: 6 },
+  STANDING_GAIN: { rescue: 20, pirate: 0.5, rival: 6 },
+  // Side missions (D-073, R-1251 to R-1255). Pay in credits to every purse: base by kind, more for each hop away and
+  // each tier of danger there, half as much again with a time limit, kept within `pay`. The time limit is
+  // timeBase + timePerHop for each hop, in seconds. Preliminary values (SU3); see docs/economy.md.
+  JOBS: {
+    max: 5,
+    offered: 4,
+    refresh: 600,
+    reach: 3,
+    base: { cargo: 250, bounty: 450, rescue: 400 },
+    perHop: 150,
+    perTier: 100,
+    timedShare: 0.4,
+    timedPay: 1.5,
+    pay: [300, 1500],
+    timeBase: 240,
+    timePerHop: 240,
+    standing: { done: 8, failed: 4 },
+  },
   WARY_PRICE: 1.5,
   // a side that the crew shoots at warns them first. A hit after the warning, but not in the first moment
   // after it, starts a fight that lasts this long after the crew's last shot

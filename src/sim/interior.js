@@ -497,7 +497,17 @@ export function makeTrade(state, it, st) {
     ['services', roomFor('SERVICES')],
     ['shipyard', yard],
     ['armory', roomFor('ARMORY')],
-  ].map(([type, room]) => ({ type, ...room.mid }));
+    // The table in the bar where side missions are taken (D-073, R-1252).
+    [
+      'jobs',
+      roomFor('BAR') ||
+        roomFor('MARKET') ||
+        roomFor('HOTEL') ||
+        (yard === roomFor('LOUNGE') ? null : roomFor('LOUNGE')),
+    ],
+  ]
+    .filter(([, room]) => room)
+    .map(([type, room]) => ({ type, ...room.mid }));
   it.staff = it.rooms.map((r, i) => i).filter((i) => it.rooms[i].staff);
   // People walk about in the concourse and in the rooms that are open to them.
   it.civilians = [];

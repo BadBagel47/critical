@@ -87,6 +87,11 @@ function priceSheet() {
     `| Pod | ${B.POD_CREDITS.join('–')} | hälften av gångerna ${B.CELL_FUEL} bränsle |`,
     `| Malm, per bit | ${B.ORE_PRICE} | eller ${B.ORE_FUEL} bränsle |`,
     `| Hjälp vid nödanrop | ${B.RAID_REWARD} hos en vänlig | rabatt hos en neutral |`,
+    // Side missions (D-073, R-1253): paid to every purse, preliminary values (SU3).
+    ...['cargo', 'bounty', 'rescue'].map(
+      (k) =>
+        `| Sidouppdrag: ${{ cargo: 'frakt', bounty: 'prisjakt', rescue: 'räddning' }[k]} | ${B.JOBS.base[k]} + ${B.JOBS.perHop} per hopp + ${B.JOBS.perTier} per farlighetsnivå, ${B.JOBS.pay[0]}–${B.JOBS.pay[1]} | ${B.JOBS.timedPay} gånger så mycket med tidsgräns; inget och −${B.JOBS.standing.failed} anseende om tiden går ut |`,
+    ),
   );
   return L;
 }

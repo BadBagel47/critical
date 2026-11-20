@@ -3,6 +3,7 @@
 import { COL, VIEW_W, VIEW_H } from '../config.js';
 import { FACTIONS } from '../sim/sides.js';
 import { storyLog, stepOf, currentStep } from '../sim/questline.js';
+import { jobText, timeLeft } from '../sim/jobs.js';
 import { rect } from './draw.js';
 
 // Lines of text no wider than `w`, broken between words. The font is upper case only.
@@ -46,6 +47,10 @@ export function drawStoryLog(ctx, font, state) {
   };
   if (!log) {
     line('THERE IS NO STORY IN A TEST GAME.');
+    y += 6;
+    font.draw(ctx, 'SIDE MISSIONS', left, y, COL.captain);
+    y += 13;
+    drawJobLines(state, line);
     return;
   }
   font.draw(ctx, 'THE STORY', left, y, COL.captain);
@@ -74,7 +79,19 @@ export function drawStoryLog(ctx, font, state) {
   }
   font.draw(ctx, 'SIDE MISSIONS', left, y, COL.captain);
   y += 13;
-  line('NONE YET. THEY WILL BE TAKEN IN THE BARS OF THE BASES.', COL.faint);
+  drawJobLines(state, line);
+}
+
+// The side missions the crew holds (D-073): what to do, the pay, and the time left of those that have a limit.
+function drawJobLines(state, line) {
+  const taken = state.jobs ? state.jobs.taken : [];
+  if (!taken.length) return line('NONE. JOBS ARE TAKEN AT THE TABLE IN THE BAR OF A BASE.', COL.faint);
+  for (const j of taken) {
+    const left = timeLeft(state, j);
+    const time =
+      left === null ? '' : `  ·  ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')} LEFT`;
+    line(`·  ${jobText(state, j)}  ·  ${j.pay} CR${time}`, left !== null && left < 60 ? COL.ember[2] : COL.dim);
+  }
 }
 
 // The card for a step: its scene and what was said on the radio, or, at a choice, the two options.
