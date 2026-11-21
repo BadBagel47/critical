@@ -452,7 +452,8 @@ Grafik
 - Klar 2026-11-14: användaren slog på GitHub Pages för repot (Deploy from a branch, main, rot).
 - Klar 2026-11-14: automatisk merge enligt agentreglernas mall (`.github/workflows/auto-merge.yml`), vald av användaren. Grenar som börjar med claude/ slås ihop med main av sig själva.
 - Klar 2026-11-14: tester körs automatiskt på GitHub vid varje push. Det krävde ingen åtgärd från användaren.
-- Väntar (2026-11-20, D-269): GitHub-hemligheten CLOUDFLARE_API_TOKEN i critical, med samma värde som i network-kit. Hemligheter gäller per repo, så den som finns i network-kit, bricks och vattigt kan inte läsas härifrån. TRYTHIS_COUNTRY_BYPASS behövs inte: kontrollen efter publicering görs mot Workerns adress på workers.dev (OL4, 2026-11-20). Uppdateringsflödet från network-kit läggs till i samma körning.
+- Klar 2026-11-20 (D-269): GitHub-hemligheten CLOUDFLARE_API_TOKEN i critical, med samma värde som i network-kit. Hemligheter gäller per repo, så den som finns i network-kit, bricks och vattigt kan inte läsas härifrån. TRYTHIS_COUNTRY_BYPASS behövs inte: kontrollen efter publicering görs mot Workerns adress på workers.dev (OL4, 2026-11-20). Uppdateringsflödet från network-kit läggs till i samma körning.
+- Väntar på network-kit (besked 2026-11-21): när network-kit säger till byts adminsidans adress i `PLAYTEST_ADMIN` (`src/playtest-start.js`) och i `tests/outside.mjs` från network-kit-admin.l8p1.workers.dev till nk-admin.trythis.one. Spelets egen workers.dev-adress berörs inte. Inte före beskedet.
 
 ## Pending adaptation
 
