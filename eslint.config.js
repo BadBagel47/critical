@@ -11,7 +11,7 @@ const browser = [
   'Image',
   'fetch',
 ];
-const shared = ['console', 'URL', 'Blob', 'setTimeout', 'clearTimeout'];
+const shared = ['console', 'URL', 'Blob', 'setTimeout', 'clearTimeout', 'structuredClone'];
 const node = ['process'];
 const globals = (names) => Object.fromEntries(names.map((name) => [name, 'readonly']));
 

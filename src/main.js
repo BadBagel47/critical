@@ -112,7 +112,9 @@ function load(slot) {
 }
 
 function save(slot) {
-  const ok = writeSlot(game.storage, slot, game.state, Date.now());
+  // Online, a guest draws a guess of the game (D-264); what is saved is the real one.
+  const real = (game.online && game.online.confirmed) || game.state;
+  const ok = writeSlot(game.storage, slot, real, Date.now());
   refreshSaves();
   if (slot !== AUTO) game.view.menu.note = ok ? 'SAVED' : 'THE BROWSER HAS NO ROOM FOR THE SAVE';
   else if (ok) toast(game.view, game.state, 'GAME SAVED', COL.dim, 2);
@@ -365,7 +367,13 @@ function drawMeter(now, dt) {
   label(ctx, game.assets.font, 8, 166, `SLOWEST FRAME  ${meter.worst} MS`, opts);
   label(ctx, game.assets.font, 8, 182, `SCALE  ${scale}  ·  ${VIEW_W * scale} × ${VIEW_H * scale}`, opts);
   // How many new pictures of the star are made each second, when it is in sight (F-205).
-  label(ctx, game.assets.font, 8, 182, `STAR PICTURES  ${starPicturesPerSecond()} / S`, opts);
+  label(ctx, game.assets.font, 8, 198, `STAR PICTURES  ${starPicturesPerSecond()} / S`, opts);
+  // Online, a guest's guess of the game (D-264): how long it takes, and how many steps it is ahead of the host's.
+  const o = game.online;
+  if (o && o.confirmed) {
+    const ahead = `${o.mine.length} STEPS AHEAD`;
+    label(ctx, game.assets.font, 8, 214, `GUESS  ${o.guessMs.toFixed(1)} MS  ·  ${ahead}`, opts);
+  }
 }
 
 // Online: the room and the crew at the top, and what has just happened (F-040).

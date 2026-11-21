@@ -88,6 +88,9 @@ export function createOnline(game, hooks) {
     ops: [], // the host's: what goes into the next step
     lines: [], // what the screen shows for a while: { text, until, color }
     vote: null, // { by, yes: Set of player ids, until }
+    confirmed: null, // a guest's: the game as the host's steps have made it; game.state is the guess drawn (D-264)
+    mine: [], // a guest's: its own inputs sent, or about to be, that the host's steps have not taken yet
+    guessMs: 0, // a guest's: how long the guess took, on average
     sinceSnap: 0,
     closed: null,
   };
@@ -174,10 +177,13 @@ export function createOnline(game, hooks) {
 
   // ----------------------------------------------------------------- the guest
   function guestStep(entry, dt) {
-    applyOps(game.state, entry.s);
-    stepPlayers(game.state, entry.i, dt);
+    const state = o.confirmed;
+    applyOps(state, entry.s);
+    stepPlayers(state, entry.i, dt);
     o.tick++;
-    if (entry.p !== undefined && entry.p !== printOf(game.state)) {
+    // The host takes one input from each player in each step, in the order sent.
+    if (entry.i && entry.i[game.view.playerId] !== undefined) o.mine.shift();
+    if (entry.p !== undefined && entry.p !== printOf(state)) {
       o.ready = false;
       o.inbox = [];
       say('OUT OF STEP WITH THE HOST  ·  GETTING THE GAME AGAIN', 'warn', 3);
@@ -206,6 +212,8 @@ export function createOnline(game, hooks) {
       }
       const state = unpackState(data.state);
       hooks.play(state, mine);
+      o.confirmed = game.state;
+      o.mine = [];
       o.tick = data.tick;
       o.inbox = o.inbox.filter((e) => e.n > o.tick);
       o.ready = true;
@@ -246,6 +254,10 @@ export function createOnline(game, hooks) {
   }
   function becomeHost() {
     o.role = 'host';
+    // The host plays the real game, not a guess.
+    if (o.confirmed) game.state = o.confirmed;
+    o.confirmed = null;
+    o.mine = [];
     o.table = (o.room.room && o.room.room.data && o.room.room.data.table) || o.table;
     o.queues = new Map();
     o.ops = [];
@@ -344,17 +356,52 @@ export function createOnline(game, hooks) {
     // A guest sends what it asks for, and steps what the host has decided, catching up if it is behind.
     // Always in threes, never more often: the room takes a limited pace from each player, and faster than that
     // the inputs would queue up and come later and later. A pause asked for goes along with them.
-    for (const input of inputs) o.outbox.push(input);
+    for (const input of inputs) {
+      o.outbox.push(input);
+      if (o.ready) o.mine.push(input);
+    }
     while (o.outbox.length >= SEND_EVERY) {
       const list = o.outbox.splice(0, SEND_EVERY);
       if (o.ready) o.room.send({ t: 'in', list });
     }
     if (!o.ready) return;
-    const most = o.inbox.length > 12 ? 8 : o.inbox.length > 4 ? 2 : 1;
-    for (let k = 0; k < most && o.inbox.length && o.ready; k++) {
-      guestStep(o.inbox.shift(), dt);
-      hooks.stepped();
+    // The host's steps come a few at a time. Stepped at the pace of this screen, with a few kept in hand, the others
+    // move evenly; when many have piled up, a few more are taken each frame until the pile is small again.
+    const n = o.inbox.length;
+    let take = inputs.length + (n > 30 ? 6 : n > 8 ? 1 : 0) - (n <= 2 && inputs.length ? 1 : 0);
+    for (; take > 0 && o.inbox.length && o.ready; take--) guestStep(o.inbox.shift(), dt);
+    if (!o.ready) return;
+    guess(dt);
+    // The camera follows the ship that is drawn, once for every step of this screen (as on one computer).
+    for (let k = 0; k < inputs.length; k++) hooks.stepped();
+  }
+
+  // What this player sees (D-264): the game as the host's steps have made it, and then this player's own inputs that
+  // the host has not taken yet, each for one step, so that steering, aiming and walking answer at once instead of a
+  // round trip later. The others are guessed to do nothing in those steps. The guess is made anew each frame from the
+  // real game, so a wrong guess is put right by itself. What the real steps make happen (sounds, sparks) is told
+  // once, from the real game; the guess only shows.
+  const GUESS_MOST = 30; // steps: half a second
+  function guess(dt) {
+    const real = o.confirmed;
+    const events = real.events.splice(0);
+    const t0 = performance.now();
+    let seen = real;
+    try {
+      seen = structuredClone(real);
+      const pid = game.view.playerId;
+      const ahead = o.mine.length > GUESS_MOST ? o.mine.slice(-GUESS_MOST) : o.mine;
+      for (const input of ahead) {
+        const mine = { ...input };
+        delete mine.pause;
+        stepPlayers(seen, { [pid]: mine }, dt);
+      }
+    } catch {
+      seen = real;
     }
+    seen.events = events;
+    game.state = seen;
+    o.guessMs += (performance.now() - t0 - o.guessMs) * 0.05;
   }
 
   // Who is in the room, for the screen.
@@ -367,7 +414,10 @@ export function createOnline(game, hooks) {
   function pause() {
     if (!o.room) return;
     if (o.role === 'host') askPause(game.view.playerId);
-    else o.room.send({ t: 'in', list: [{ pause: true }] });
+    else {
+      o.room.send({ t: 'in', list: [{ pause: true }] });
+      if (o.ready) o.mine.push({});
+    }
   }
 
   o.pause = pause;

@@ -39,7 +39,9 @@ async function player(name) {
 const at = (page, fn) => page.evaluate(fn);
 const look = (page) =>
   at(page, () => {
-    const s = window.__critical.state;
+    // A guest draws a guess of the game (D-264); the real one is the one to compare.
+    const o = window.__critical.online;
+    const s = (o && o.confirmed) || window.__critical.state;
     return { crew: s.players.map((p) => p.name + ':' + p.post).join(','), x: s.ship.x.toFixed(1), rng: s.rng };
   });
 
@@ -76,8 +78,17 @@ try {
   const shield = (page) => at(page, () => window.__critical.state.ship.shieldOn);
   const before = await shield(ada);
   await bo.keyboard.press('KeyX');
+  // BO sees it at once, before the host has stepped it (D-264).
+  const atOnce = await at(bo, () => ({
+    seen: window.__critical.state.ship.shieldOn,
+    real: window.__critical.online.confirmed.ship.shieldOn,
+  }));
+  check(atOnce.seen !== before, 'BO sees the shield at once', JSON.stringify(atOnce));
   await bo.waitForTimeout(1200);
   check((await shield(ada)) !== before && (await shield(bo)) === (await shield(ada)), "BO's shield in both games");
+  const real = await at(bo, () => window.__critical.online.confirmed.ship.shieldOn);
+  check(real === (await shield(ada)), "and in BO's real game");
+  console.log('     the guess takes', (await at(bo, () => window.__critical.online.guessMs)).toFixed(2), 'ms a frame');
 
   // ADA asks for a pause: nothing yet. BO agrees: paused in both.
   await ada.keyboard.press('KeyP');

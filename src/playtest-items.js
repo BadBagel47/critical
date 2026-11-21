@@ -22,6 +22,7 @@ export const ITEMS = [
       'Öppna spelet på testbygget på två enheter, gärna en dator och en iPad. Spelet på GitHub har inte onlineläget än.',
       'På den ena: PLAY ONLINE, skriv ett namn och välj NEW ROOM · NEW GAME. Rutan visar kod, länk och QR-kod.',
       'På den andra: skanna QR-koden, öppna länken eller välj JOIN WITH A CODE.',
+      'Lägg till ?fps efter adressen på den som går med, så visas GUESS: hur lång tid förhandsbilden tar.',
       'Spela en stund. Tryck P på den ena och godkänn med P på den andra.',
       'Stäng den ena och öppna länken igen.',
     ],
@@ -29,6 +30,7 @@ export const ITEMS = [
     ask: [
       'Gick det att komma in, och hur lång tid tog det?',
       'Känns styrningen fördröjd hos den som gick med? Hur mycket?',
+      'Vad visar GUESS och FPS på iPaden?',
       'Fungerade pausen som du tänkt?',
       'Fick du tillbaka din post när du kom tillbaka?',
     ],
