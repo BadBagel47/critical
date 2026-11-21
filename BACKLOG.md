@@ -11,6 +11,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 
 **A** – strong model, high level – Onlineläget: spelets Worker och rummen
 - D-269 – Spelet på en egen Worker hos Cloudflare, med rummen på samma adress, så att inget laddas från andra tjänster. Kräver en engångsåtgärd: en Cloudflare-nyckel som hemlighet i critical
+- Påminn användaren (2026-11-21, NX3 sparad till senare): före provspelet online kan agenten 1) rätta provspelstestet, som säger iPad fast pekstyrning saknas, 2) prova med en låtsad fördröjning på 100–200 ms i testet med flera webbläsare, 3) prova att en spelare kommer tillbaka och att värden laddar om sidan, 4) ta skärmbilder av onlinemenyn, inbjudan och besättningsraden i olika storlekar.
 - F-290 – Värden i bakgrunden: väntar på network-kit F-144, som lämnar över värdskapet själv; Critical tar sedan in den versionen
 - Besked 2026-11-19 (ON6): ja, koden räcker för att gå med (ett öppet rum).
 - Besked 2026-11-19: OL2 ja, spelet och rummen ligger på samma adress hos Cloudflare, och den gamla GitHub-adressen skickar vidare dit (R-1248). OL3 ja, spelet får adressen critical.trythis.one (R-1249); var trythis.one sköts kontrolleras först. ON5: paus och fortsätt kräver att alla anslutna godkänner inom tio sekunder, menyn pausar aldrig av sig själv online, och den som spelar ensam pausar direkt (R-1250, F-037).
