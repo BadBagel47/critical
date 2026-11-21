@@ -152,6 +152,16 @@ export function crewCommands(state, inputs) {
     }
     if (input.take) takePost(state, player, input.take);
     if (player.post && input[player.post]) cmds[player.post] = input[player.post];
+    // With no one on the Gunner's post, the Captain aims and fires while steering (R-1256, F-291): the aim, the
+    // trigger and the choice of weapon, nothing else. Whoever takes the post takes the guns back.
+    // With the computer on the Gunner's post, the Captain's guns only count while firing or changing weapon.
+    if (player.post === 'captain' && input.gunner && !holderOf(state, 'gunner') && !cmds.gunner) {
+      const { aim, fire, weapon } = input.gunner;
+      const computer = state.computer && state.computer.allowed.gunner && state.computer.on.gunner;
+      if (!computer || fire || weapon) cmds.gunner = { aim, fire: !!fire, weapon: weapon || null };
+    }
+    // K: the ship's computer on or off on this player's post (R-1257).
+    if (player.post && input.auto) (cmds.system.auto ||= []).push(player.post);
     if (input.board) (cmds.system.board ||= []).push(player.id);
     if (input.hack) (cmds.hack ||= {})[player.id] = input.hack;
   }

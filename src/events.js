@@ -109,6 +109,8 @@ const TOAST = {
   sold: (e) => [`SOLD  ·  ${e.name}  ·  +${e.credits} CREDITS`, LOOT],
   restocked: (e) => [`${e.what} RESTOCKED`, LOOT],
   shieldOn: () => ['SHIELD ON  ·  IT DRAWS A LITTLE FUEL', TECH],
+  computerOn: (e) => [`SHIP'S COMPUTER ON  ·  ${e.post.toUpperCase()}  ·  IT RUNS THE POST WHEN NO ONE IS THERE`, TECH],
+  computerOff: (e) => [`SHIP'S COMPUTER OFF  ·  ${e.post.toUpperCase()}`, TECH],
   shieldOff: (e) => [e.why === 'fuel' ? 'SHIELD OFF  ·  NO FUEL LEFT' : 'SHIELD OFF', WARM],
   holdFire: (e) => [`${e.name}:  HOLD YOUR FIRE`, WARM],
   fightBack: (e) => [`${e.name}  ·  FIGHTING BACK`, BAD],

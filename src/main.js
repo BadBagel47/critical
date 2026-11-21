@@ -194,7 +194,7 @@ async function hostOnline(fromSave) {
     const save = latest && readSlot(game.storage, latest);
     if (!save) return tell('NO SAVED GAME', 'START A NEW GAME ONLINE INSTEAD.');
     play(save.state);
-  } else play(createState(newSeed(), { size: game.view.menu.size }));
+  } else play(createState(newSeed(), { size: game.view.menu.size, computer: { ...game.view.menu.computer } }));
   const me = playerById(game.state, game.view.playerId);
   if (me) me.name = name;
   const session = startSession();
@@ -277,7 +277,11 @@ function planAfterLoss() {
   }
   const latest = latestSlot(game.saves);
   if (latest) return { line: 'PRESS R TO LOAD THE LAST SAVE', go: () => load(latest) };
-  return { line: 'PRESS R TO TRY AGAIN', go: () => game.actions.newGame({ test: state.test, size: state.size }) };
+  const computer = state.computer ? { ...state.computer.allowed } : undefined;
+  return {
+    line: 'PRESS R TO TRY AGAIN',
+    go: () => game.actions.newGame({ test: state.test, size: state.size, computer }),
+  };
 }
 
 // The camera follows the ship, looking a little ahead of where it is going.

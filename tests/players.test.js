@@ -156,3 +156,27 @@ test('a player who leaves frees the post, and the last player cannot leave', () 
   assert.equal(removePlayer(s, 0), false);
   assert.equal(s.players.length, 1);
 });
+
+test('R-1256: with no one on the Gunner post the Captain aims and fires while steering, and nothing more', () => {
+  const s = quiet(createState(1));
+  assert.equal(holderOf(s, 'gunner'), null);
+  const wasShield = s.ship.shieldOn;
+  run(
+    s,
+    { 0: { captain: { throttle: 1 }, gunner: { aim: { x: 0, y: -900 }, fire: true, shield: true, darts: true } } },
+    1,
+  );
+  assert.ok(s.ship.throttle > 0.5, 'the Captain steers');
+  assert.ok(s.bolts.length > 0, 'and fires the guns at the same time');
+  assert.equal(s.ship.shieldOn, wasShield, 'the shield is still for the Gunner post');
+});
+
+test('R-1256: once someone holds the Gunner post, the Captain no longer fires', () => {
+  const s = crewOf(2);
+  run(s, { 0: { gunner: { aim: { x: 0, y: -900 }, fire: true } } }, 1);
+  assert.equal(s.bolts.length, 0);
+  // The Gunner goes aboard a wreck: the post is free again, and the Captain has the guns.
+  s.players[1].post = null;
+  run(s, { 0: { gunner: { aim: { x: 0, y: -900 }, fire: true } } }, 1);
+  assert.ok(s.bolts.length > 0);
+});
