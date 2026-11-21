@@ -21,7 +21,20 @@ const STEP_Y = 20;
 const SLIDER = { x: X + W - 150, w: 110 };
 
 // `size` is how big a world a new game gets, see sim/world.js.
-export const createMenu = () => ({ page: 'title', row: 0, confirm: null, note: null, size: 'short' });
+// `computer` is which posts the ship's computer may run in a new game; none by default (R-816, F-034).
+export const createMenu = () => ({
+  page: 'title',
+  row: 0,
+  confirm: null,
+  note: null,
+  size: 'short',
+  computer: { captain: false, gunner: false, engineer: false },
+});
+// What the ship's computer may run, in a few words.
+export function computerSummary(computer) {
+  const posts = Object.keys(computer).filter((p) => computer[p]);
+  return posts.length ? posts.map((p) => p.toUpperCase()).join('  ') : 'NO POSTS';
+}
 // Open a page with the first row that can be chosen picked.
 export function openPage(game, page) {
   const menu = game.view.menu;
@@ -72,6 +85,7 @@ const PAGES = {
       const a = game.actions;
       const latest = latestSlot(game.saves);
       const size = game.view.menu.size;
+      const computer = { ...game.view.menu.computer };
       return [
         {
           id: 'continue',
@@ -80,12 +94,12 @@ const PAGES = {
           off: !latest,
           run: () => a.load(latest),
         },
-        { id: 'new', label: 'NEW GAME', run: () => a.newGame({ size }) },
+        { id: 'new', label: 'NEW GAME', run: () => a.newGame({ size, computer }) },
         {
           id: 'hardcore',
           label: 'NEW GAME  ·  HARDCORE',
           right: 'ONE LIFE',
-          run: () => a.newGame({ hardcore: true, size }),
+          run: () => a.newGame({ hardcore: true, size, computer }),
         },
         {
           id: 'size',
@@ -93,13 +107,19 @@ const PAGES = {
           right: `${SIZE_NAMES[size]}  ·  ${SIZES[size]} SYSTEMS`,
           run: () => (game.view.menu.size = SIZE_ORDER[(SIZE_ORDER.indexOf(size) + 1) % SIZE_ORDER.length]),
         },
+        {
+          id: 'computer',
+          label: "SHIP'S COMPUTER",
+          right: computerSummary(computer),
+          run: () => openPage(game, 'computer'),
+        },
         { id: 'load', label: 'LOAD GAME', run: () => openPage(game, 'load') },
         { id: 'sound', label: 'SOUND', run: () => openPage(game, 'sound') },
         ...fullscreenRow(),
         ...(knownAvailable()
           ? [{ id: 'online', label: 'PLAY ONLINE', right: 'WITH UP TO THREE', run: () => openPage(game, 'online') }]
           : []),
-        { id: 'test', label: 'TEST MODE', right: 'EVERYTHING UNLOCKED', run: () => a.newGame({ test: true }) },
+        { id: 'test', label: 'TEST MODE', right: 'EVERYTHING UNLOCKED', run: () => a.newGame({ test: true, computer }) },
       ];
     },
   },
@@ -194,6 +214,20 @@ const PAGES = {
       ];
     },
   },
+  // Which posts the ship's computer may run in a new game (F-034, R-816, R-1112). It holds for the whole game.
+  computer: {
+    title: "SHIP'S COMPUTER",
+    rows(game) {
+      const c = game.view.menu.computer;
+      const row = (post) => ({
+        id: 'computer.' + post,
+        label: post.toUpperCase(),
+        right: c[post] ? 'MAY RUN IT' : 'NO',
+        run: () => (c[post] = !c[post]),
+      });
+      return [row('captain'), row('gunner'), row('engineer'), back(game)];
+    },
+  },
   sound: {
     title: 'SOUND',
     rows(game) {
@@ -211,7 +245,7 @@ const PAGES = {
 export function menuRows(game) {
   const page = PAGES[game.view.menu.page];
   const rows = page.rows(game);
-  const y0 = game.view.started ? (VIEW_H - rows.length * STEP_Y) / 2 + 8 : 108;
+  const y0 = game.view.started ? (VIEW_H - rows.length * STEP_Y) / 2 + 8 : 100;
   return rows.map((row, i) => ({ ...row, x: X, y: y0 + i * STEP_Y, w: W, h: ROW_H }));
 }
 // Every row of the current page by name. Used by the browser test.
@@ -321,7 +355,8 @@ export function drawMenu(game, t) {
     align: 'c',
   });
   if (!view.started) {
-    font.draw(ctx, 'EARLY VERSION  ·  ONLINE PLAY COMES LATER', VIEW_W / 2, 344, COL.faint, { align: 'c' });
+    const later = knownAvailable() ? 'EARLY VERSION' : 'EARLY VERSION  ·  ONLINE PLAY COMES LATER';
+    font.draw(ctx, later, VIEW_W / 2, 344, COL.faint, { align: 'c' });
     void t;
   }
 }

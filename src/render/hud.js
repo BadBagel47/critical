@@ -5,6 +5,7 @@ import { THINGS } from '../sim/kinds.js';
 import { nodeStatus, speedOf, weaponPower } from '../sim/ship.js';
 import { WEAPONS, weaponsOf } from '../sim/weapons.js';
 import { POSTS, playerById, holderOf } from '../sim/players.js';
+import { computerAllowed, computerOn } from '../sim/computer.js';
 import { findDock, findThing, nameOf } from '../sim/things.js';
 import { isTrading, allStations } from '../sim/stations.js';
 import { RISK_NAMES } from '../sim/siege.js';
@@ -33,8 +34,11 @@ export function drawTabs(ctx, font, state, view) {
     const mine = me.post === post;
     const holder = holderOf(state, post);
     const other = holder && !mine ? '  ' + holder.name : '';
+    // The ship's computer runs the post: AUTO on its tab (R-815, R-822).
+    const auto = !holder && computerOn(state, post) ? '  AUTO' : '';
     const look = mine ? { fg: COL.out, bg: COL[post], border: null } : { fg: COL.dim, bg: COL.panel, border: COL.line };
-    x = label(ctx, font, x, 8, `${i + 1}  ${post.toUpperCase()}${other}`, look) + 4;
+    if (auto) look.fg = COL.ion[2];
+    x = label(ctx, font, x, 8, `${i + 1}  ${post.toUpperCase()}${other}${auto}`, look) + 4;
   });
   return x;
 }
@@ -219,6 +223,20 @@ function drawCaptainPanel(ctx, font, state) {
     ? 'W S THROTTLE  ·  A D TURN  ·  X STOP  ·  SHIFT AFTERBURNER'
     : 'W S THROTTLE  ·  A D TURN  ·  X STOP';
   font.draw(ctx, keys, VIEW_W - 8, 346, ship.boosting ? COL.ion[2] : COL.faint, { align: 'r' });
+  // With no one on the Gunner's post the Captain has the guns too (R-1256, F-291).
+  if (!holderOf(state, 'gunner') && weaponsOf(ship).length) {
+    const w = WEAPONS[ship.weapon];
+    const name = w ? (w.ammo ? `${w.name}  ${w.ammo(ship)}` : w.name) : 'NO WEAPON';
+    const off = weaponPower(ship) <= 0;
+    const wide = font.draw(
+      ctx,
+      `GUNS  ${name}${off ? '  ·  NO POWER' : ''}`,
+      154,
+      314,
+      off ? COL.ember[2] : COL.gunner,
+    );
+    font.draw(ctx, '  ·  CLICK FIRE  ·  WHEEL WEAPON', 154 + wide, 314, COL.faint);
+  }
 }
 
 const CROSSHAIR = [
@@ -289,6 +307,12 @@ export function drawHud(ctx, state, view, assets, dock) {
     font.draw(ctx, 'Q PULSE  ·  B BUOY', VIEW_W - 8, 346, COL.faint, { align: 'r' });
   } else if (!me.post) font.draw(ctx, '1 2 3  TAKE A FREE POST', VIEW_W - 8, 346, COL.faint, { align: 'r' });
   drawOwnSystem(ctx, font, state, me.post);
+  // Where the computer may run this post: K switches it, and whether it is on (R-1257).
+  if (me.post && computerAllowed(state, me.post)) {
+    const on = computerOn(state, me.post);
+    const text = `K  SHIP'S COMPUTER ${on ? 'ON  ·  RUNS THIS POST WHEN YOU LEAVE' : 'OFF'}`;
+    font.draw(ctx, text, 8, 298, on ? COL.ion[2] : COL.faint);
+  }
   drawMiniMap(ctx, state, VIEW_W - 70, 44);
   font.draw(ctx, 'M  MAP    J  STARS', VIEW_W - 8, 110, COL.faint, { align: 'r' });
 }
@@ -308,10 +332,12 @@ export function drawOverlay(ctx, font, title, lines, color = COL.text) {
 const HELP = [
   ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     J  STAR MAP'],
   ['', 'I  STORES     L  LOG     E  GO ABOARD WHERE DOCKED     O  MENU     N  SOUND'],
+  ['', "K  THE SHIP'S COMPUTER ON OR OFF ON THIS POST, WHERE IT WAS ALLOWED AT THE START"],
   ['', 'Z  CHARGE THE BOOST, THE CAPTAIN LETS IT GO     T  MARK A SHIP FOR THE OTHERS'],
   ['CAPTAIN', 'W S  THROTTLE     A D  TURN     X  FULL STOP     Q  DOCK AND UNDOCK'],
   ['', 'R  DARTS     SHIFT  AFTERBURNER     C  COURSE TO THE NEXT PLACE ON THE MAP'],
   ['', 'ON THE STAR MAP  PICK A SYSTEM NEXT TO THIS ONE, AND WHERE TO ARRIVE'],
+  ['', 'NO ONE ON GUNNER  MOUSE  AIM     CLICK OR SPACE  FIRE     WHEEL  WEAPON'],
   ['GUNNER', 'MOUSE  AIM     CLICK OR SPACE  FIRE     Q OR THE WHEEL  CHANGE WEAPON'],
   ['', 'X  SHIELD ON AND OFF     R  DARTS OUT AND HOME'],
   ['ENGINEER', 'CLICK A PIP  SET POWER     CLICK A NODE  REPAIR CREW     SHIFT CLICK  QUEUE'],

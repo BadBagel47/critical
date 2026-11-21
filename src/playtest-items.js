@@ -14,6 +14,25 @@ const at = (path) => ROOT + path;
 
 export const ITEMS = [
   {
+    group: 'Spelet',
+    id: 'F-291, F-034',
+    title: 'Spela ensam med skeppets dator',
+    where: 'dator',
+    steps: [
+      "Välj SHIP'S COMPUTER på startsidan och låt den sköta GUNNER och ENGINEER. Starta ett nytt spel.",
+      'Som Captain: styr med tangenterna, sikta med musen och klicka för att skjuta. Hjulet byter vapen.',
+      'Tryck 2 och K, och 3 och K. Flikarna visar AUTO. Gå tillbaka till Captain med 1.',
+      'Flyg in i en strid och se vad datorn gör. Prova också att låta datorn sköta CAPTAIN medan du själv sitter på Gunner.',
+    ],
+    links: [['Starta', at('')]],
+    ask: [
+      'Går det nu att styra och skjuta samtidigt?',
+      'Är datorn för bra, lagom eller för dålig?',
+      'Kretsar datorn som Captain på ett sätt som hjälper?',
+      'Kommer piraterna för tätt eller för glest?',
+    ],
+  },
+  {
     group: 'Onlineläget',
     id: 'F-040, F-037',
     title: 'Spela tillsammans på testbygget',

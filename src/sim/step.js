@@ -8,6 +8,7 @@
 import { B } from './balance.js';
 import { stepCaptain, stepGunner, stepEngineer, stepDrones } from './posts.js';
 import { crewCommands } from './players.js';
+import { runComputer } from './computer.js';
 import { nodeFactor } from './ship.js';
 import { stepSurge, stepMarks } from './teamwork.js';
 import { stepRocks } from './rocks.js';
@@ -84,6 +85,7 @@ export function step(state, cmds, dt) {
     return state;
   }
   const ship = state.ship;
+  cmds = runComputer(state, { ...cmds });
   stepCaptain(state, cmds.captain, dt);
   stepJump(state, cmds.captain, dt);
   stepFuel(state, dt);

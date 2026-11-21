@@ -911,7 +911,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1110 | Bara en spelare åt gången har en roll. Den som tillfälligt tar en ledig roll håller också kvar sin egen, så ingen annan kan ta någon av dem. | bestämd | Användaren 2026-11-16 (D-189) | – |
 | R-1118 | När den som har en roll kommer tillbaka får hen den direkt, och den som hade tagit över går tillbaka till sin egen roll. | bestämd | Användaren 2026-11-16 (D-189) | – |
 | R-1111 | Med två spelare tas den tredje rollen över på samma sätt, eller sköts av datorn. | bestämd | Användaren 2026-11-16 (D-189) | – |
-| R-1112 | Om datorn får sköta roller, och vilka, bestäms när omgången startar och gäller hela omgången. Datorn slås på i vyn för en roll där det är tillåtet. | bestämd | Användaren 2026-11-16 (D-189, D-186) | – |
+| R-1112 | Om datorn får sköta roller, och vilka, bestäms när omgången startar och gäller hela omgången. Datorn slås på i vyn för en roll där det är tillåtet. | byggd | Användaren 2026-11-16 (D-189, D-186); F-034 byggd 2026-11-21 | tests/computer.test.js |
 | R-1113 | Varje roll köper utrustningen till sin egen bordare ur sin egen kassa. I dag betalar den som köper, men utrustningen gäller alla bordare (F-235). | bestämd | Användaren 2026-11-16 (D-189) | – |
 | R-1114 | Engineer köper det som rör skeppets skydd och energi, Gunner vapnen, och Captain motorer, bränsle och sensorer. | byggd | Användaren 2026-11-16 (F-188, agentens förslag godkänt) | tests/purses.test.js |
 | R-753 | Uppgraderingar går inte sönder var för sig tills vidare, och frågan tas upp igen med värmen. | byggd | HANDOFF beslut 2026-11-14 | saknas |
@@ -976,21 +976,24 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-812 | När skrovet nästan är slut, ingen är kvar och datorn sköter Captain, backar skeppet till en säker plats och kommer tillbaka när någon kallar från luftslussen. | bestämd | proposal-bases.md §4 | – |
 | R-813 | Datorn gör aldrig något stort på egen hand, utom att backa ut skeppet när den sköter Captain. | bestämd | proposal-bases.md §4 | – |
 | R-814 | När skrovet nästan är slut, ingen är kvar och datorn inte sköter Captain, ligger skeppet kvar och skyddas av basens dockningssköld. | bestämd | proposal-bases.md §4 | – |
-| R-815 | Det ska synas när skeppets dator sköter något. | bestämd | proposal-computer.md (Det som är bestämt), BACKLOG D-186 | – |
-| R-816 | Vid start väljer man vilka roller datorn får sköta, och som standard är det ingen. | bestämd | proposal-computer.md (Det som är bestämt), BACKLOG D-186 | – |
+| R-815 | Det ska synas när skeppets dator sköter något. | byggd | proposal-computer.md (Det som är bestämt), BACKLOG D-186; AUTO på fliken, F-034 byggd 2026-11-21 | saknas |
+| R-816 | Vid start väljer man vilka roller datorn får sköta, och som standard är det ingen. | byggd | proposal-computer.md (Det som är bestämt), BACKLOG D-186; F-034 byggd 2026-11-21 | tests/computer.test.js |
 | R-817 | En roll som datorn sköter är öppen för alla spelare att handla åt i butiken. | bestämd | proposal-computer.md (Det som är bestämt), BACKLOG D-186 och D-189 | – |
 | R-818 | Uppgraderingarna sorteras efter kategori och roll. | bestämd | BACKLOG F-188 | – |
 | R-819 | Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar. | bestämd | BACKLOG D-189 | – |
 | R-820 | Startkanonen tar ingen plats, Captain siktar med skeppet och Gunner skjuter. | förslag | proposal-bases.md §6 | – |
 | R-821 | Skeppets delar (vapen, pansar, sköld och energi) får nivå 2 och 3 i stället för att köpas en gång. | förslag | proposal-items.md 2.1 och fråga 3 | – |
-| R-822 | En post som datorn sköter visar AUTO på sin flik, och den som tar posten tar över direkt. | förslag | proposal-computer.md | – |
-| R-823 | Datorn tar en ikryssad post av sig själv när ingen sitter där. | förslag | proposal-computer.md fråga 1 | – |
-| R-824 | Valet av datorposter kan ändras från menyn under omgången, men bara när alla spelare är överens. | förslag | proposal-computer.md fråga 2 | – |
+| R-822 | En post som datorn sköter visar AUTO på sin flik, och den som tar posten tar över direkt. | byggd | proposal-computer.md; Användaren 2026-11-21 (SO7) | saknas |
+| R-823 | Datorn tar en ikryssad post av sig själv när ingen sitter där. | ersatt av: R-1257 | proposal-computer.md fråga 1; Användaren 2026-11-21 (SO7) | – |
+| R-824 | Valet av datorposter kan ändras från menyn under omgången, men bara när alla spelare är överens. | ersatt av: R-1112 | proposal-computer.md fråga 2; valet gäller hela omgången | – |
 | R-825 | Datorn följer det som är utpekat och gör aldrig något stort på egen hand, som att docka eller hoppa. | ersatt av: R-813 | proposal-computer.md fråga 3 (ersatt av krock 10) | – |
-| R-826 | Datorn reagerar en halv sekund senare och träffar ungefär hälften så ofta som en van spelare, lika för alla svårighetsgrader. | förslag | proposal-computer.md fråga 4 | – |
-| R-827 | Datorn som Captain håller satt kurs och låg fart nära stationer och vrak. | förslag | proposal-computer.md | – |
-| R-828 | Datorn som Gunner skjuter på den fiende Captain märkt, annars den närmaste som skjuter på skeppet, och aldrig på stationer, med raketer eller med Heavy Laser. | förslag | proposal-computer.md | – |
-| R-829 | Datorn som Engineer lagar det som är värst skadat och flyttar energi till skölden när skeppet blir beskjutet. | förslag | proposal-computer.md | – |
+| R-826 | Datorn reagerar en halv sekund senare och träffar ungefär hälften så ofta som en van spelare, lika för alla svårighetsgrader. | byggd | proposal-computer.md fråga 4; Användaren 2026-11-21 (SO5) | tests/computer.test.js |
+| R-827 | Datorn som Captain håller satt kurs och låg fart nära stationer och vrak. | byggd | proposal-computer.md; Användaren 2026-11-21 (SO4); i strid gäller R-1258 | tests/computer.test.js |
+| R-828 | Datorn som Gunner skjuter på den fiende Captain märkt, annars den närmaste som skjuter på skeppet, och aldrig på stationer, med raketer eller med Heavy Laser. | byggd | proposal-computer.md; Användaren 2026-11-21 (SO5) | tests/computer.test.js |
+| R-829 | Datorn som Engineer lagar det som är värst skadat och flyttar energi till skölden när skeppet blir beskjutet. | byggd | proposal-computer.md; Användaren 2026-11-21 (SO5) | tests/computer.test.js |
+| R-1257 | Den som sitter på en post där datorn får sköta slår på eller av datorn med K. Påslagen sköter den posten så fort ingen sitter där, släpper den direkt när någon tar posten, och tar den igen när posten lämnas. | byggd | Användaren 2026-11-21 (SO7); F-034 | tests/computer.test.js |
+| R-1258 | I strid kretsar datorn som Captain runt fienden på lagom avstånd och byter håll då och då, så att skeppet varken ligger still eller far iväg. | byggd | Användaren 2026-11-21 (SO1, SO4); F-034 | tests/computer.test.js |
+| R-1259 | Varje post datorn är påslagen för räknas som en fjärdedels spelare för hur tätt piraterna kommer: tätare än ensam, glesare än två. | byggd | Användaren 2026-11-21 (SO6); F-034 | tests/computer.test.js |
 | R-830 | Under bordning försvarar och lagar datorn skeppet. | förslag | proposal-computer.md fråga 5 | – |
 | R-831 | Piratvågorna är glesare för en ensam spelare men något tätare när datorn hjälper till. | förslag | proposal-computer.md fråga 6 | – |
 | R-832 | Skeppet har sex skadedelar som förut, men det ersattes av fem delar 2026-11-15. | ersatt av: ett senare beslut, se källan | HANDOFF beslut 2026-11-14 | – |
@@ -1219,6 +1222,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 |---|---|---|---|---|
 | R-945 | Spelet går också att spela ensam. | byggd | HANDOFF beslut | saknas |
 | R-946 | Den som spelar ensam börjar som Captain. | byggd | HANDOFF beslut | saknas |
+| R-1256 | När ingen sitter på Gunner-posten siktar Captain med musen, skjuter med musknappen eller mellanslag och byter vapen med hjulet, medan skeppet styrs med tangenterna. Skölden, dartsen och märkning kräver Gunner-posten. Den som tar Gunner-posten tar över vapnen. | byggd | Användaren 2026-11-21 (SO1, SO3); F-291 | tests/players.test.js |
 | R-947 | Inget moment i spelet pausar spelet. | byggd | HANDOFF beslut | saknas |
 | R-948 | En pausknapp fryser världen för alla spelare. | byggd | HANDOFF beslut | saknas |
 | R-949 | Hardcore mode ger ett liv. | byggd | HANDOFF beslut 2026-11-14 | saknas |

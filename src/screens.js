@@ -4,8 +4,8 @@
 import { VIEW_W, VIEW_H, ZOOM, COL } from './config.js';
 import { toast } from './events.js';
 import { toggleMute, soundWaiting } from './audio.js';
-import { createMenu, openPage, drawMenu, menuButtons } from './menu.js';
-import { POSTS, playerById } from './sim/players.js';
+import { createMenu, openPage, drawMenu, menuButtons, menuRows } from './menu.js';
+import { POSTS, playerById, holderOf } from './sim/players.js';
 import { findDock } from './sim/things.js';
 import { isTrading } from './sim/stations.js';
 import { turretMount } from './sim/weapons.js';
@@ -119,13 +119,16 @@ function onBoard(game, out) {
   if (keys.hit('Digit3')) out.take = 'engineer';
   if (keys.hit('Tab')) out.take = POSTS[(at + 1) % POSTS.length];
   if (keys.hit('PadPrevPost')) out.take = POSTS[(at + POSTS.length - 1) % POSTS.length];
+  // K: the ship's computer on or off on this post, where it may run it (R-1257).
+  if (keys.hit('KeyK')) out.auto = true;
 }
 
 function captainInput(game, out) {
-  const { keys } = game;
+  const { keys, state } = game;
   onBoard(game, out);
   // The course is the Captain's own instrument. It changes nothing in the game, so it lives in the view.
-  if (keys.hit('KeyC')) game.view.course = nextCourse(game.state, game.view);
+  const course = keys.hit('KeyC');
+  if (course) game.view.course = nextCourse(game.state, game.view);
   out.captain = {
     throttle: axis(keys, ['KeyW', 'ArrowUp'], ['KeyS', 'ArrowDown']) + keys.pad.rt - keys.pad.lt,
     turn: axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx,
@@ -134,6 +137,21 @@ function captainInput(game, out) {
     boost: keys.down('ShiftLeft', 'ShiftRight'),
     surge: keys.hit('KeyZ'),
     mark: keys.hit('KeyT'),
+  };
+  // The ship's computer follows the course when it flies the ship (R-827), so the game is told it too.
+  if (course) out.captain.course = game.view.course === undefined ? null : game.view.course;
+  // No one on the Gunner's post: the Captain aims with the mouse and fires with a click or Space, and the wheel
+  // changes the weapon (R-1256, F-291). The keys stay the Captain's own.
+  if (!holderOf(state, 'gunner')) out.gunner = captainGuns(game);
+}
+
+function captainGuns(game) {
+  const { keys, view } = game;
+  const m = keys.mouse;
+  return {
+    aim: { x: view.cam.x + (m.x - VIEW_W / 2) / ZOOM, y: view.cam.y + (m.y - VIEW_H / 2) / ZOOM },
+    fire: (m.down && !game.overAction) || keys.down('Space'),
+    weapon: m.wheel > 0 ? 1 : m.wheel < 0 ? -1 : null,
   };
 }
 
@@ -368,8 +386,11 @@ function drawTitleScreen(game, t) {
   drawStars(game.ctx, { x: t * 12, y: -t * 20 });
   drawMenu(game, t);
   // Browsers let a page make a sound only after a key press or click (B-281). Until then the title says so.
+  // Below the line under the rows, however many rows there are.
+  const rows = menuRows(game);
+  const y = rows.length ? rows[rows.length - 1].y + 44 : 282;
   if (soundWaiting() && Math.floor(t * 1.5) % 2 === 0)
-    game.assets.font.draw(game.ctx, 'PRESS ANY KEY FOR SOUND', VIEW_W / 2, 282, COL.ochre[2], { align: 'c' });
+    game.assets.font.draw(game.ctx, 'PRESS ANY KEY FOR SOUND', VIEW_W / 2, y, COL.ochre[2], { align: 'c' });
 }
 // The game menu lies on top of wherever the player is. The game goes on behind it.
 function drawGameMenu(game, t) {

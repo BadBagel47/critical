@@ -94,6 +94,20 @@ export const B = {
   WAVE_INTERVAL: 40,
   WAVE_INTERVAL_MIN: 28,
   MAX_PIRATES: 5,
+  // The ship's computer on free posts (F-034, R-826): clearly worse than a person. It reacts this many seconds
+  // late, aims off by up to this much, counts the ship as hit for this long after a hit, and fights within this
+  // range, circling at this distance, turning the other way round every so many seconds, at this throttle. It slows
+  // near stations and wrecks within this distance, and each post it runs counts as this much of a player for the
+  // pace of the pirates (R-1259). To be set by playing.
+  COMPUTER_DELAY: 0.5,
+  COMPUTER_AIM_ERROR: 18,
+  COMPUTER_HURT_TIME: 4,
+  COMPUTER_FIGHT_RANGE: 650,
+  COMPUTER_ORBIT: 260,
+  COMPUTER_SWERVE: 6,
+  COMPUTER_FIGHT_THROTTLE: 0.7,
+  COMPUTER_SLOW_NEAR: 320,
+  COMPUTER_CREW: 0.25,
   // Fewer people on board means more time between waves, so a small crew can still leave the ship.
   PIRATE_PACE: { 1: 2.2, 2: 1.4, 3: 1 },
   PIRATE_BOLT_SPEED: 290,
