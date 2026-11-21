@@ -1,5 +1,7 @@
 // Side missions (D-073, R-1251 to R-1255): jobs taken at the table in the bar of a base, besides the main story.
 //   cargo   a crate is taken on board at the bar, and is left at another base by docking there
+//   smuggle the same with goods that a Warden patrol must not find (D-257, R-1260): only from Drifter and free
+//           bases, never to a Warden base, for about twice the pay. See scan.js.
 //   bounty  a pirate with a name is shot down in a system that the star map marks
 //   rescue  the boarders go into a wreck in a system that the star map marks, and carry a survivor out to the
 //           airlock, as they carry loot
@@ -24,6 +26,10 @@ import { earn } from './purses.js';
 export const createJobs = () => ({ offers: {}, taken: [], done: 0 });
 
 export const JOB_KINDS = ['cargo', 'bounty', 'rescue'];
+// Who gives smuggling jobs: the Drifters and the free bases, never the Wardens or the Charter (R-1260).
+export const smugglesAt = (side) => side === 'drifters' || String(side).startsWith('free-');
+// Whether the ship carries smuggled goods.
+export const carryingContraband = (state) => !!state.jobs && state.jobs.taken.some((j) => j.kind === 'smuggle');
 const PIRATE_NAMES = [
   'RED VESNA',
   'OLD KASSEL',
@@ -48,7 +54,8 @@ const pick = (state, list) => list[Math.floor(rand(state) * list.length)];
 
 const keyOf = (sector, name) => sector + ':' + name;
 // The bases of a system the crew may trade at: those that are not pirate bases.
-const tradingBases = (sys) => sys.plan.filter(([side]) => side !== PIRATE).map(([, , , name]) => name);
+const tradingBases = (sys, but = null) =>
+  sys.plan.filter(([side]) => side !== PIRATE && side !== but).map(([, , , name]) => name);
 
 // The side a job is given for, at a base of `side`: mostly the base's own side; now and then another faction, or
 // on a free base a faction that the crew has fallen out with, so that there is always a way back (R-1255).
@@ -68,15 +75,16 @@ function giverAt(state, side) {
 }
 
 // A new job offered at a base in system `from`, or null when there is nowhere to send the crew.
-function makeJob(state, from, baseName, side) {
+function makeJob(state, from, baseName, side, kind = pick(state, JOB_KINDS)) {
   const hops = hopsFrom(state.sectors, from);
   const near = state.sectors.filter((s) => hops[s.id] >= 0 && hops[s.id] <= B.JOBS.reach && !s.boss);
-  const kind = pick(state, JOB_KINDS);
   let to;
-  if (kind === 'cargo') {
+  if (kind === 'cargo' || kind === 'smuggle') {
+    // Smuggled goods never go to a Warden base.
+    const but = kind === 'smuggle' ? 'wardens' : null;
     const places = near
       .filter((s) => s.id !== from && s.kind !== 'empty')
-      .flatMap((s) => tradingBases(s).map((name) => ({ sector: s.id, name })));
+      .flatMap((s) => tradingBases(s, but).map((name) => ({ sector: s.id, name })));
     if (!places.length) return null;
     to = pick(state, places);
   } else {
@@ -89,7 +97,8 @@ function makeJob(state, from, baseName, side) {
   const timed = rand(state) < B.JOBS.timedShare;
   let pay = B.JOBS.base[kind] + far * B.JOBS.perHop + tier * B.JOBS.perTier;
   if (timed) pay *= B.JOBS.timedPay;
-  pay = Math.max(B.JOBS.pay[0], Math.min(B.JOBS.pay[1], Math.round(pay / 10) * 10));
+  const most = B.JOBS.pay[1] * (kind === 'smuggle' ? B.JOBS.smugglePay : 1);
+  pay = Math.max(B.JOBS.pay[0], Math.min(most, Math.round(pay / 10) * 10));
   return {
     id: state.nextId++,
     kind,
@@ -113,6 +122,11 @@ export function offersAt(state, st) {
   const list = [];
   for (let i = 0; i < B.JOBS.offered; i++) {
     const job = makeJob(state, state.sector, st.name, giverAt(state, st.side));
+    if (job) list.push(job);
+  }
+  // A Drifter or free base often has goods to smuggle as well, for itself (R-1260).
+  if (smugglesAt(st.side) && rand(state) < B.JOBS.smuggleShare) {
+    const job = makeJob(state, state.sector, st.name, st.side, 'smuggle');
     if (job) list.push(job);
   }
   state.jobs.offers[key] = { at: state.time, list };
@@ -195,7 +209,7 @@ export function stepJobs(state) {
       continue;
     }
     if (state.sector !== job.to.sector) continue;
-    if (job.kind === 'cargo') {
+    if (job.kind === 'cargo' || job.kind === 'smuggle') {
       const docked = findThing(state, state.ship.docked);
       if (docked && docked.kind === 'station' && docked.name === job.to.name && docked.align !== 'hostile')
         finish(state, job, true);
@@ -228,6 +242,7 @@ export function stepJobs(state) {
 export function jobText(state, job) {
   const sys = state.sectors[job.to.sector].name;
   if (job.kind === 'cargo') return `CARRY A CRATE TO ${job.to.name} IN ${sys}`;
+  if (job.kind === 'smuggle') return `SMUGGLE GOODS TO ${job.to.name} IN ${sys}  ·  KEEP THEM FROM THE WARDENS`;
   if (job.kind === 'bounty') return `SHOOT DOWN ${job.target} IN ${sys}`;
   return `BRING A SURVIVOR OUT OF THE WRECK ${job.target} IN ${sys}`;
 }

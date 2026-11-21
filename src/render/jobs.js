@@ -7,7 +7,7 @@ import { rect } from './draw.js';
 import { wrap } from './story.js';
 
 const BOX = { x: 48, y: 22, w: VIEW_W - 96, h: VIEW_H - 44 };
-const KIND = { cargo: 'CARGO', bounty: 'BOUNTY', rescue: 'RESCUE' };
+const KIND = { cargo: 'CARGO', bounty: 'BOUNTY', rescue: 'RESCUE', smuggle: 'SMUGGLE' };
 const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 // What the list shows, and where each offer can be clicked.

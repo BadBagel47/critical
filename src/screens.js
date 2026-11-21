@@ -25,6 +25,7 @@ import { drawJobs, jobRows } from './render/jobs.js';
 import { atMainframe } from './sim/mainframe.js';
 import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS, hackTarget, hackBox } from './render/engineer.js';
 import { drawActions, actionButtons } from './render/actions.js';
+import { drawScan, myScanTurn, scanButtons } from './render/scan.js';
 import { pursesLine } from './sim/purses.js';
 
 // What is kept about the screen. None of it is part of the game: two players look at the same game differently.
@@ -121,6 +122,15 @@ function onBoard(game, out) {
   if (keys.hit('PadPrevPost')) out.take = POSTS[(at + POSTS.length - 1) % POSTS.length];
   // K: the ship's computer on or off on this post, where it may run it (R-1257).
   if (keys.hit('KeyK')) out.auto = true;
+  // A Warden scan with goods to hide, and this player's turn: F and G turn the first dial, V and B the second, and
+  // the Engineer's arrow keys do as well (R-1262).
+  if (myScanTurn(game)) {
+    const eng = me.post === 'engineer';
+    out.scan = {
+      a: axis(keys, eng ? ['KeyG', 'ArrowRight'] : ['KeyG'], eng ? ['KeyF', 'ArrowLeft'] : ['KeyF']),
+      b: axis(keys, eng ? ['KeyB', 'ArrowUp'] : ['KeyB'], eng ? ['KeyV', 'ArrowDown'] : ['KeyV']),
+    };
+  }
 }
 
 function captainInput(game, out) {
@@ -186,7 +196,9 @@ function engineerInput(game, out) {
   const { keys, state, view } = game;
   const rows = SYSTEM_KEYS.length;
   onBoard(game, out);
-  const cmd = { power: [], repair: null, tool: quickTool(keys), surge: null };
+  // While the Engineer hides goods from a scan, the arrow keys and B work the dials instead (R-1262).
+  const dials = myScanTurn(game);
+  const cmd = { power: [], repair: null, tool: dials ? null : quickTool(keys), surge: null };
   // The keys follow how the systems are laid out. On the panel they are in a column: up and down pick one,
   // left and right set its power. In the strip beside the view of space they are in a row, so there left and
   // right pick one, and up and down raise and lower its power.
@@ -203,10 +215,11 @@ function engineerInput(game, out) {
         ['ArrowUp', 'KeyW'],
         ['ArrowDown', 'KeyS'],
       ];
-  if (keys.hit(...before)) view.engRow = (view.engRow + rows - 1) % rows;
-  if (keys.hit(...after)) view.engRow = (view.engRow + 1) % rows;
-  if (keys.hit(...more)) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: 1 });
-  if (keys.hit(...less)) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: -1 });
+  const free = (codes) => (dials ? codes.filter((c) => !c.startsWith('Arrow')) : codes);
+  if (keys.hit(...free(before))) view.engRow = (view.engRow + rows - 1) % rows;
+  if (keys.hit(...free(after))) view.engRow = (view.engRow + 1) % rows;
+  if (keys.hit(...free(more))) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: 1 });
+  if (keys.hit(...free(less))) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: -1 });
   // While a station's code lock is being worked on, Space or a click on it stops the needle of the hack.
   const m = keys.mouse;
   const box = hackBox();
@@ -377,10 +390,12 @@ function drawOnBoard(game) {
   const { ctx, state, view, assets } = game;
   if (game.me.post === 'engineer' && view.engOpen) {
     drawEngineer(ctx, state, view, assets);
+    drawScan(ctx, assets.font, game);
     return;
   }
   const dock = drawSpace(ctx, state, view, assets);
   drawHud(ctx, state, view, assets, dock);
+  drawScan(ctx, assets.font, game);
 }
 function drawTitleScreen(game, t) {
   drawStars(game.ctx, { x: t * 12, y: -t * 20 });
@@ -539,7 +554,11 @@ export function buttonsOf(game) {
   const mode = settle(game);
   const screen = SCREENS[mode];
   game.me = game.view.started ? playerById(game.state, game.view.playerId) : null;
-  return [...(screen.buttons ? screen.buttons(game) : []), ...actionButtons(game, mode)];
+  return [
+    ...(screen.buttons ? screen.buttons(game) : []),
+    ...actionButtons(game, mode),
+    ...scanButtons(game).map(({ name, x, y, w, h }) => ({ name, x, y, w, h })),
+  ];
 }
 
 // What this player asks the game for in one step. See crewCommands in sim/players.js.
@@ -631,10 +650,11 @@ export function viewKeys(game, mode) {
     for (const code of Object.keys(calls)) if (keys.hit(code)) game.actions.summon(calls[code]);
   }
   // V folds the Engineer's screen away and brings it back.
-  if (mode === 'engineer' && keys.hit('KeyV')) view.engOpen = !view.engOpen;
+  const dials = myScanTurn(game);
+  if (mode === 'engineer' && !dials && keys.hit('KeyV')) view.engOpen = !view.engOpen;
   // B opens the Captain's boarding radar, and closes it.
   if (mode === 'radar' && keys.hit('KeyB', 'KeyE', 'Escape')) view.panel = null;
-  else if (mode === 'captain' && keys.hit('KeyB') && radarPlace(state)) view.panel = 'radar';
+  else if (mode === 'captain' && !dials && keys.hit('KeyB') && radarPlace(state)) view.panel = 'radar';
   const canOpenMap = mode === 'map' || mode === 'stars' || POSTS.includes(mode) || mode === 'crew';
   if (keys.hit('KeyM') && canOpenMap) view.panel = mode === 'map' ? null : 'map';
   // I opens the stores, and closes them (R-1171).
