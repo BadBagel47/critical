@@ -9,8 +9,9 @@ import { computerAllowed, computerOn } from '../sim/computer.js';
 import { findDock, findThing, nameOf } from '../sim/things.js';
 import { isTrading, allStations } from '../sim/stations.js';
 import { RISK_NAMES } from '../sim/siege.js';
+import { enemies, CREW } from '../sim/sides.js';
 import { currentSector } from '../sim/sectors.js';
-import { has, hullMax, shieldMax, dockShieldMax, fuelMax, jumpCharge, fuelMarks } from '../sim/upgrades.js';
+import { has, hullMax, shieldMax, dockShieldMax, fuelMax, jumpCharge, fuelMarks, dartsMax } from '../sim/upgrades.js';
 import { dist } from '../sim/util.js';
 import { rect, label, bar } from './draw.js';
 import { drawMiniMap } from './map.js';
@@ -165,8 +166,24 @@ function dockedLine(state, me) {
   return { text: `DOCKED AT ${what}  ·  THE LOCK IS OPEN`, ...CALM };
 }
 
-// Status lines at the top centre, most urgent first.
-function statusLines(state, me, dock) {
+// The lines at the top centre (D-187, MD1, MD5): danger first, which nothing else can push away, then the state of
+// things that concern this player's post. What the sensors know of the surroundings is in the strip at the right.
+export function statusLines(state, me, dock) {
+  return [...dangerLines(state), ...stateLines(state, me, dock)].filter(Boolean);
+}
+
+// Danger: what can cost the ship, a station of the crew's or someone aboard, for everyone.
+function dangerLines(state) {
+  const lines = [shipAlert(state)];
+  const siege = state.siege;
+  if (siege && siege.level >= RISK_NAMES.length - 1) lines.push(siegeLine(state));
+  if (has(state.ship, 'alarm') && state.alarm.count > 0 && state.alarm.eta <= 0)
+    lines.push({ text: alarmText(state), ...ALARM });
+  return lines.filter(Boolean);
+}
+
+// The state of things: the post's own (MD5), and what the whole ship is doing.
+function stateLines(state, me, dock) {
   const ship = state.ship;
   const captain = me.post === 'captain';
   const lines = [];
@@ -179,28 +196,51 @@ function statusLines(state, me, dock) {
     const left = Math.ceil(jumpCharge(ship) - state.jump.t);
     lines.push({ text: `JUMPING TO ${state.sectors[state.jump.to].name} IN ${left} S`, ...READY });
   }
+  // Docked is for everyone, since anyone may go aboard; getting there is the Captain's.
   if (dock && dock.docked) lines.push(dockedLine(state, me));
-  else if (dock && dock.ready) lines.push({ text: 'IN POSITION TO DOCK', ...READY });
-  else if (dock && dock.tooFast) lines.push({ text: 'TOO FAST TO DOCK', ...WARM });
+  else if (captain && dock && dock.ready) lines.push({ text: 'IN POSITION TO DOCK', ...READY });
+  else if (captain && dock && dock.tooFast) lines.push({ text: 'TOO FAST TO DOCK', ...WARM });
   else if (dock && captain) lines.push({ text: 'DOCKING  ·  HOLD COURSE', ...CALM });
-  lines.push(shipAlert(state));
+  return lines;
+}
+
+function siegeLine(state) {
+  const siege = state.siege;
+  const found = allStations(state).find((x) => x.st.id === siege.station);
+  const where = found && found.sector !== state.sector ? '  ·  ' + state.sectors[found.sector].name : '';
+  const text = `${found ? found.st.name : 'YOUR STATION'} UNDER ATTACK${where}  ·  RISK ${RISK_NAMES[siege.level]}`;
+  return { text, color: COL.ember[2], border: COL.ember[0] };
+}
+
+// The sensor strip (D-187, MD2, MD3): what the ship knows of its surroundings, under the credits at the right. What
+// can be seen on the screen is always there; what lies beyond needs the sensors bought for it, as before.
+export function sensorLines(state) {
+  const ship = state.ship;
+  const lines = [];
+  const seen = state.vessels.filter(
+    (v) => v.hp > 0 && enemies(state, v.side, CREW) && Math.abs(v.x - ship.x) < 360 && Math.abs(v.y - ship.y) < 210,
+  ).length;
+  if (seen) lines.push({ text: `${seen} HOSTILE${seen > 1 ? 'S' : ''} IN SIGHT`, color: COL.ember[2] });
+  if (has(ship, 'alarm') && state.alarm.count > 0 && state.alarm.eta > 0)
+    lines.push({ text: alarmText(state), color: COL.ochre[2] });
   const raided = state.raid && findThing(state, state.raid.station);
   if (raided) {
     const far = Math.round(dist(ship.x, ship.y, raided.x, raided.y) / 10);
-    const text = `DISTRESS CALL  ·  ${raided.name}  ·  ${far} M  ·  ${fmtTime(state.raid.timer)}`;
-    lines.push({ text, color: COL.ochre[3], border: COL.ochre[1] });
+    lines.push({
+      text: `DISTRESS  ·  ${raided.name}  ·  ${far} M  ·  ${fmtTime(state.raid.timer)}`,
+      color: COL.ochre[3],
+    });
   }
-  // An attack on a station of the crew's, wherever it is.
   const siege = state.siege;
-  if (siege && siege.level >= 0) {
-    const found = allStations(state).find((x) => x.st.id === siege.station);
-    const where = found && found.sector !== state.sector ? '  ·  ' + state.sectors[found.sector].name : '';
-    const text = `${found ? found.st.name : 'YOUR STATION'} UNDER ATTACK${where}  ·  RISK ${RISK_NAMES[siege.level]}`;
-    lines.push({ text, color: COL.ember[2], border: COL.ember[0] });
-  }
-  const alarm = alarmText(state);
-  if (alarm) lines.push({ text: alarm, ...ALARM });
-  return lines.filter(Boolean);
+  if (siege && siege.level >= 0 && siege.level < RISK_NAMES.length - 1)
+    lines.push({ ...siegeLine(state), border: null });
+  if (state.bounty) lines.push({ text: `BOUNTY ON YOU  ·  ${state.bounty.amount} CR`, color: COL.ochre[2] });
+  return lines;
+}
+function drawSensors(ctx, font, state) {
+  sensorLines(state)
+    .slice(0, 4)
+    .forEach((l, i) => font.draw(ctx, l.text, VIEW_W - 8, 124 + i * 12, l.color, { align: 'r' }));
 }
 
 function drawCaptainPanel(ctx, font, state) {
@@ -268,7 +308,13 @@ function drawGunnerPanel(ctx, font, state, view) {
   if (has(ship, 'bay')) {
     const out = ship.dartsOut;
     const launch = ship.docked ? 'UNDOCK TO LAUNCH' : 'R LAUNCH';
-    const text = out ? `DARTS OUT  ${state.darts.length}  ·  R RECALL` : `DARTS  ${ship.dartStock}  ·  ${launch}`;
+    // How many are whole, and when the next lost one is built again (F-255).
+    const whole = ship.dartStock + state.darts.length;
+    const max = dartsMax(ship);
+    const next = whole < max ? `  ·  NEXT IN ${Math.ceil(B.DART_REGEN - ship.dartRegen)} S` : '';
+    const text = out
+      ? `DARTS OUT  ${state.darts.length} OF ${max}  ·  R RECALL${next}`
+      : `DARTS  ${ship.dartStock} OF ${max}  ·  ${launch}${next}`;
     label(ctx, font, 150, 314, text, { fg: out ? COL.ion[2] : COL.text, border: out ? COL.ion[0] : COL.line });
   }
   const keys =
@@ -283,9 +329,8 @@ export function drawHud(ctx, state, view, assets, dock) {
   const { font } = assets;
   const me = playerById(state, view.playerId);
   drawTabs(ctx, font, state, view);
-  const bounty = state.bounty ? `BOUNTY ON YOU  ${state.bounty.amount}   ` : '';
   const purse = shownPurse(state, me);
-  const credits = (state.test ? 'TEST MODE   ' : '') + bounty + `${ROLE_NAME[purse.role]}  ${purse.credits} CR`;
+  const credits = (state.test ? 'TEST MODE   ' : '') + `${ROLE_NAME[purse.role]}  ${purse.credits} CR`;
   label(ctx, font, VIEW_W - 8, 8, credits, { anchor: 'r', fg: COL.ochre[2] });
   const where = `${currentSector(state).name}   KILLS  ${state.kills}   ${fmtTime(state.time)}`;
   label(ctx, font, VIEW_W - 8, 24, where, { anchor: 'r', fg: COL.dim });
@@ -314,6 +359,7 @@ export function drawHud(ctx, state, view, assets, dock) {
     font.draw(ctx, text, 8, 298, on ? COL.ion[2] : COL.faint);
   }
   drawMiniMap(ctx, state, VIEW_W - 70, 44);
+  drawSensors(ctx, font, state);
   font.draw(ctx, 'M  MAP    J  STARS', VIEW_W - 8, 110, COL.faint, { align: 'r' });
 }
 

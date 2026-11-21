@@ -1226,6 +1226,11 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-945 | Spelet går också att spela ensam. | byggd | HANDOFF beslut | saknas |
 | R-946 | Den som spelar ensam börjar som Captain. | byggd | HANDOFF beslut | saknas |
 | R-1256 | När ingen sitter på Gunner-posten siktar Captain med musen, skjuter med musknappen eller mellanslag och byter vapen med hjulet, medan skeppet styrs med tangenterna. Skölden, dartsen och märkning kräver Gunner-posten. Den som tar Gunner-posten tar över vapnen. | byggd | Användaren 2026-11-21 (SO1, SO3); F-291 | tests/players.test.js |
+| R-1263 | Fara (ett anfall på en egen station med risk HIGH, skeppets egen varning, fiender som är här) står överst och trängs aldrig undan av annat. | byggd | Användaren 2026-11-21 (MD1); D-187 | tests/messages.test.js |
+| R-1264 | Läget för en post visas bara för den posten: att komma i position att docka för Captain, en överladdning för den som löser ut den, dartsen för Gunner. Dockad, hopp, fara och händelser visas för alla. | byggd | Användaren 2026-11-21 (MD5); D-187, F-255 | tests/messages.test.js |
+| R-1265 | Sensorremsan uppe till höger under minikartan visar fiender i sikte, fiendelarmet med tid kvar, nödanrop, anfall på egna stationer som inte är HIGH, och prissumman. Det som syns visas alltid; det bortom kräver köpta sensorer, som tidigare. | byggd | Användaren 2026-11-21 (MD2, MD3); D-187 | tests/messages.test.js |
+| R-1266 | Alla meddelanden sparas, de senaste 40, och visas under SHIP'S MESSAGES i loggen på L. | byggd | Användaren 2026-11-21 (MD4); D-187 | saknas |
+| R-1267 | Gunner ser hur många darts som är hela och när nästa byggs, och får ett meddelande när en dart är klar. | byggd | Användaren 2026-11-16 (F-255) | saknas |
 | R-947 | Inget moment i spelet pausar spelet. | byggd | HANDOFF beslut | saknas |
 | R-948 | En pausknapp fryser världen för alla spelare. | byggd | HANDOFF beslut | saknas |
 | R-949 | Hardcore mode ger ett liv. | byggd | HANDOFF beslut 2026-11-14 | saknas |

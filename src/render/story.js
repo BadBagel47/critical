@@ -29,11 +29,13 @@ const shade = (ctx) => {
 };
 const BOX = { x: 48, y: 22, w: VIEW_W - 96, h: VIEW_H - 44 };
 
-export function drawStoryLog(ctx, font, state) {
+export function drawStoryLog(ctx, font, state, view) {
   shade(ctx);
   rect(ctx, BOX.x, BOX.y, BOX.w, BOX.h, COL.panel, COL.line);
   const left = BOX.x + 14;
-  const width = BOX.w - 28;
+  // The story and the jobs on the left, the ship's messages on the right (MD4, D-187).
+  const width = Math.round(BOX.w * 0.58) - 28;
+  drawMessages(ctx, font, state, view);
   font.draw(ctx, 'LOG', left, BOX.y + 10, COL.text, { scale: 2 });
   font.draw(ctx, 'L  CLOSE', BOX.x + BOX.w - 14, BOX.y + 14, COL.dim, { align: 'r' });
   const log = storyLog(state);
@@ -54,7 +56,7 @@ export function drawStoryLog(ctx, font, state) {
     return;
   }
   font.draw(ctx, 'THE STORY', left, y, COL.captain);
-  font.draw(ctx, `STEP ${Math.min(log.done.length + 1, log.of)} OF ${log.of}`, BOX.x + BOX.w - 14, y, COL.dim, {
+  font.draw(ctx, `STEP ${Math.min(log.done.length + 1, log.of)} OF ${log.of}`, left + width, y, COL.dim, {
     align: 'r',
   });
   y += 14;
@@ -80,6 +82,30 @@ export function drawStoryLog(ctx, font, state) {
   font.draw(ctx, 'SIDE MISSIONS', left, y, COL.captain);
   y += 13;
   drawJobLines(state, line);
+}
+
+// The ship's latest messages, newest first, as many as fit (MD4): what went by in a fight can be read here.
+function drawMessages(ctx, font, state, view) {
+  const x = BOX.x + Math.round(BOX.w * 0.58);
+  const width = BOX.x + BOX.w - 14 - x;
+  rect(ctx, x - 8, BOX.y + 36, 1, BOX.h - 50, COL.line);
+  font.draw(ctx, "SHIP'S MESSAGES", x, BOX.y + 40, COL.captain);
+  let y = BOX.y + 54;
+  const kept = (view && view.messages) || [];
+  if (!kept.length) font.draw(ctx, 'NOTHING YET.', x, y, COL.faint);
+  for (const m of [...kept].reverse()) {
+    const ago = Math.max(0, Math.round(state.time - m.at));
+    const when = ago < 60 ? `${ago} S AGO` : `${Math.floor(ago / 60)} MIN AGO`;
+    const lines = wrap(font, m.text, width);
+    if (y + lines.length * 11 + 10 > BOX.y + BOX.h - 8) break;
+    font.draw(ctx, when, x, y, COL.faint);
+    y += 10;
+    for (const l of lines) {
+      font.draw(ctx, l, x, y, m.color || COL.dim);
+      y += 11;
+    }
+    y += 3;
+  }
 }
 
 // The side missions the crew holds (D-073): what to do, the pay, and the time left of those that have a limit.

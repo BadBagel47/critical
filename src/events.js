@@ -3,6 +3,7 @@ import { COL } from './config.js';
 import { playEvents, setEngine } from './audio.js';
 import { openShop } from './render/shop.js';
 import { findDock } from './sim/things.js';
+import { playerById } from './sim/players.js';
 
 const WARM = COL.ochre[2];
 const GOOD = COL.acid[2];
@@ -133,7 +134,10 @@ const TOAST = {
   gunDown: () => ['STATION GUN DESTROYED', LOOT],
   noRockets: () => ['OUT OF ROCKETS', WARM],
   dartLost: () => ['A DART WAS SHOT DOWN', BAD],
-  dartBuilt: () => ['A NEW DART IS READY', TECH],
+  dartBuilt: (e) => [
+    e.ready >= e.of ? `ALL DARTS READY  ·  ${e.of} OF ${e.of}` : `A NEW DART IS READY  ·  ${e.ready} OF ${e.of}`,
+    TECH,
+  ],
   jumpCharging: (e) => [`JUMP DRIVE CHARGING  ·  ${e.name}`, TECH],
   jumpCancelled: () => ['JUMP CANCELLED', WARM],
   cannotJump: (e) => ['CANNOT JUMP  ·  ' + e.reason, WARM],
@@ -209,6 +213,8 @@ const TOAST = {
   reliefLost: () => ['THE SHIP WITH THE HELP IS GONE', GOOD],
 };
 // Things that only concern the player they happened to.
+// Messages for one post only (MD5, D-187): the state of that post. Danger and what happens are for everyone.
+const FOR_POST = { dartBuilt: 'gunner', dartOut: 'gunner' };
 const PERSONAL = new Set([
   'boarded',
   'teleported',
@@ -227,7 +233,12 @@ const PERSONAL = new Set([
 export function toast(view, state, text, color = COL.text, seconds = 3.5) {
   if (view.toasts.some((t) => t.text === text)) return;
   view.toasts.push({ text, color, until: state.time + seconds });
+  // Every message is kept in the log on L too, so that what went by in a fight can be read later (MD4).
+  const kept = (view.messages ||= []);
+  kept.push({ text, color, at: state.time });
+  if (kept.length > LOG_KEPT) kept.splice(0, kept.length - LOG_KEPT);
 }
+const LOG_KEPT = 40;
 
 // Called once per frame, after the game has been stepped and before its event list is emptied.
 export function readEvents(game) {
@@ -253,6 +264,10 @@ export function readEvents(game) {
       view.panel = null;
     }
     if (PERSONAL.has(e.type) && !mine) continue;
+    // What concerns one post only is told to that post (MD5): the Gunner hears about the Darts.
+    const post = FOR_POST[e.type];
+    const me = playerById(state, view.playerId);
+    if (post && me && me.post !== post) continue;
     const made = TOAST[e.type] && TOAST[e.type](e, state);
     if (made) toast(view, state, made[0], made[1]);
   }
