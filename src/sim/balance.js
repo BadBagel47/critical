@@ -43,7 +43,7 @@ export const B = {
     offered: 4,
     refresh: 600,
     reach: 3,
-    base: { cargo: 250, bounty: 450, rescue: 400 },
+    base: { cargo: 250, bounty: 450, rescue: 400, smuggle: 500 },
     perHop: 150,
     perTier: 100,
     timedShare: 0.4,
@@ -52,6 +52,31 @@ export const B = {
     timeBase: 240,
     timePerHop: 240,
     standing: { done: 8, failed: 4 },
+    // Smuggling (D-257, R-1260): how often a Drifter or free base has a smuggling job among its jobs, and that a
+    // smuggling job pays about twice as much as carrying a crate, up to twice the highest pay.
+    smuggleShare: 0.6,
+    smugglePay: 2,
+  },
+  // A Warden patrol scans the ship (D-074, R-1261, R-1262): when it comes within `range`, unless it scanned this
+  // ship less than `again` seconds ago. The scan takes `time` seconds. A ship further away than `breaks` cuts it
+  // short; when it got there flying faster than `fleeSpeed` it fled, and the Wardens think `fled` less of the crew.
+  // With smuggled goods aboard, the two dials must lie within `near` of the scan's for `hold` seconds; a dial
+  // turns `turn` of a full round a second. Caught, the goods are lost and the Wardens think `caught` less.
+  SCAN: {
+    range: 260,
+    again: 120,
+    time: 8,
+    breaks: 520,
+    fleeSpeed: 90,
+    fled: 3,
+    near: 0.06,
+    hold: 1.2,
+    turn: 0.35,
+    caught: 10,
+    // While it scans, the Warden ship keeps `follow` from the ship, at up to `followSpeed`: a ship that flies
+    // faster gets away, and has fled.
+    follow: 170,
+    followSpeed: 120,
   },
   WARY_PRICE: 1.5,
   // a side that the crew shoots at warns them first. A hit after the warning, but not in the first moment

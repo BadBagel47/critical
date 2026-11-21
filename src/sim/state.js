@@ -78,6 +78,8 @@ export function createState(seed = 1, options = {}) {
     jobs: createJobs(),
     // Which posts the ship's computer may run, chosen when the game starts, and where it is on (computer.js).
     computer: createComputer(options.computer),
+    // A Warden patrol's scan of the ship for smuggled goods, while it lasts (scan.js).
+    scan: null,
   };
   state.sectors = createSectors(state, state.size);
   generateSector(state, 0);

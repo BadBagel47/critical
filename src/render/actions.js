@@ -5,6 +5,7 @@ import { VIEW_W, COL } from '../config.js';
 import { actionsOf } from '../actions.js';
 import { padButtonFor } from '../input.js';
 import { rect } from './draw.js';
+import { scanButtons } from './scan.js';
 
 // Symbols for the touch buttons, drawn by hand on an 11 x 11 grid.
 const ICON = {
@@ -204,6 +205,13 @@ export function pressActions(game, mode) {
     if (b.action.off) continue;
     if (keys.mouse.clicked) keys.pressed.add(b.action.code);
     if (keys.mouse.down) keys.virtual.add(b.action.code);
+  }
+  // The arrows on the box for a Warden scan (R-1262) work the same way.
+  for (const b of scanButtons(game)) {
+    if (!within(keys.mouse, b)) continue;
+    game.overAction = true;
+    if (keys.mouse.clicked) keys.pressed.add(b.code);
+    if (keys.mouse.down) keys.virtual.add(b.code);
   }
   if (game.overAction) keys.mouse.clicked = false;
 }

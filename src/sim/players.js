@@ -164,6 +164,8 @@ export function crewCommands(state, inputs) {
     if (player.post && input.auto) (cmds.system.auto ||= []).push(player.post);
     if (input.board) (cmds.system.board ||= []).push(player.id);
     if (input.hack) (cmds.hack ||= {})[player.id] = input.hack;
+    // The dials against a Warden scan (scan.js); only the player whose turn it is counts there.
+    if (input.scan) (cmds.scan ||= {})[player.id] = input.scan;
   }
   return cmds;
 }

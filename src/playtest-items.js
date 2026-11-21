@@ -15,6 +15,24 @@ const at = (path) => ROOT + path;
 export const ITEMS = [
   {
     group: 'Spelet',
+    id: 'D-257, D-074',
+    title: 'Smuggla förbi Wardens',
+    where: 'dator',
+    steps: [
+      'Docka vid en bas som hör till Drifters eller är fri, gå in och ta ett SMUGGLE-uppdrag vid bordet i baren.',
+      'Flyg mot målet. När ett Warden-skepp kommer nära börjar en skanning, och en liten ruta visar två vågor.',
+      'Vrid rattarna med F och G och med V och B, eller klicka på pilarna, tills vågorna ligger på varandra.',
+      'Prova också att låta tiden ta slut, och att flyga ifrån skanningen.',
+    ],
+    links: [['Starta', at('')]],
+    ask: [
+      'Var minispelet lagom svårt på åtta sekunder?',
+      'Gick det att styra och skjuta medan rutan syntes?',
+      'Är lönen värd risken?',
+    ],
+  },
+  {
+    group: 'Spelet',
     id: 'F-291, F-034',
     title: 'Spela ensam med skeppets dator',
     where: 'dator',
