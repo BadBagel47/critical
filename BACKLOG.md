@@ -28,11 +28,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - D-256 – Inventera alla meddelanden som kan dyka upp, när, för vem och var
 - D-187 – Se över hur spelet och skeppet visar meddelanden, så att det viktiga syns först
 - F-255 – Visa Gunner när dartsen är hela igen, genom skeppets meddelanden
-- Fråga MD1: Ska fara ha en egen plats på skärmen som aldrig trängs undan? Rekommendation: ja.
-- Fråga MD2: Var ska sensorremsan sitta? Rekommendation: uppe till höger under krediterna, där minikartan är.
-- Fråga MD3: Ska det mesta i sensorremsan kräva köpta sensorer? Rekommendation: ja, men det som syns på skärmen visas alltid.
-- Fråga MD4: Ska det finnas en logg över meddelanden? Rekommendation: ja, i loggen på L, som nu finns för storyn (F-284).
-- Fråga MD5: Ska ett meddelande som bara gäller en post bara visas för den? Rekommendation: ja, för läge och status. Fara och händelser visas för alla.
+- Besked 2026-11-21 (MD1–MD5, alla enligt rekommendation): fara får en egen plats som aldrig trängs undan; sensorremsan sitter uppe till höger under krediterna; det mesta i den kräver köpta sensorer, men det som syns på skärmen visas alltid; meddelandena hamnar i loggen på L; läge och status för en post visas bara för den posten, fara och händelser för alla.
 
 
 **D** – strong model, medium level – Förfina rollerna
@@ -40,8 +36,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - F-236 – Primära roller och tillfälligt övertagande: den som lämnar skeppet lämnar sina roller lediga, de kvar kan ta en av dem, och ägaren får tillbaka den direkt
 - F-235 – Bordarnas utrustning per roll, så att varje roll köper och har sin egen
 - F-285 – Mushjulet som alternativ: den som bordar byter utrustning med hjulet, och Engineer ändrar kraften på det system markören pekar på. Klick och tangenter finns kvar
-- Fråga RO1: Gäller ryggsäcken både utrustning och byte, och ersätter den CARGO PACK? Rekommendation: ja, en ryggsäck per roll som rymmer både och, och den ersätter CARGO PACK.
-- Fråga RO2: Hur många nivåer har ryggsäcken? Rekommendation: tre, där den första ger det man får med sig i dag.
+- Besked 2026-11-21 (RO1–RO2, enligt rekommendation): en ryggsäck per roll som rymmer både utrustning och byte och ersätter CARGO PACK, i tre nivåer där den första ger det man får med sig i dag.
 
 **E** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262) – väntar på svar
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på iPad och sedan mobil i liggande format
