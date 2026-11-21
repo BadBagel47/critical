@@ -361,10 +361,20 @@ const noseOff = () =>
     const ny = s.ship.y - Math.cos(s.ship.heading) * 44;
     return s.ship.docked === st.id ? Math.hypot(nx - port.x, ny - port.y) : 999;
   }, port);
-check(
-  await settles(async () => (await noseOff()) < 1, 8000),
-  'a click on it docks, and the ship is pulled in to the port',
-);
+// The pull takes a few seconds of the game's time, which on a busy machine is longer (2026-11-21: it once ran out
+// at eight seconds on GitHub). If it still fails, what the ship was doing is printed.
+const pulled = await settles(async () => (await noseOff()) < 1, 20000);
+if (!pulled)
+  console.log(
+    '  the ship:',
+    await page.evaluate(() => {
+      const s = window.__critical.state.ship;
+      return JSON.stringify({ docked: s.docked, x: s.x, y: s.y, heading: s.heading, mode: window.__critical.mode });
+    }),
+    'nose off',
+    await noseOff(),
+  );
+check(pulled, 'a click on it docks, and the ship is pulled in to the port');
 check((await offered()) === 'action.aboard action.undock', 'docked, the buttons offer to go aboard and to undock');
 await shot('09a-docked-buttons');
 await page.keyboard.press('Digit2');

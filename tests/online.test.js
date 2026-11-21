@@ -16,7 +16,8 @@ function fakeRoom(me) {
     on: (type, fn) => (on[type] = fn),
     emit: (type, e) => on[type](e),
     send(d, opts) {
-      this.sent.push({ d, to: opts && opts.to });
+      // As over the network: what is sent is a copy.
+      this.sent.push({ d: JSON.parse(JSON.stringify(d)), to: opts && opts.to });
       return true;
     },
     setData(d) {
@@ -115,4 +116,56 @@ test('R-1250: one who has lost the connection is not waited for', () => {
   steps(o, 1, () => ({ pause: true }));
   steps(o, 1);
   assert.equal(game.state.paused, true);
+});
+
+function joined() {
+  const { game: hostGame, o: host, room: hostRoom } = hosted();
+  hostRoom.emit('peer', { event: 'join', id: 'b', name: 'BO' });
+  steps(host, 1);
+  const full = hostRoom.sent.find((m) => m.d.t === 'full').d;
+  const game = { state: null, view: { playerId: null } };
+  const o = createOnline(game, {
+    stepped() {},
+    ended() {},
+    play(state, pid) {
+      game.state = state;
+      game.view.playerId = pid;
+    },
+  });
+  const room = fakeRoom('b');
+  o.attach(room, 'guest');
+  room.emit('message', { from: 'a', data: full });
+  return { hostGame, host, hostRoom, game, o, room };
+}
+
+test('D-264: a guest sees its own input at once, and the real game takes it when the host has stepped it', () => {
+  const { host, hostRoom, game, o, room } = joined();
+  assert.equal(o.ready, true);
+  const was = o.confirmed.ship.shieldOn;
+  // BO switches the shield: drawn at once, though the host has not had it yet.
+  o.run([{ gunner: { shield: true } }], STEP);
+  assert.equal(game.state.ship.shieldOn, !was);
+  assert.equal(o.confirmed.ship.shieldOn, was);
+  assert.notEqual(game.state, o.confirmed);
+  // It reaches the host, which steps it; the steps come back, and the real game has it too.
+  o.run([{}, {}], STEP);
+  const sent = room.sent.filter((m) => m.d.t === 'in');
+  for (const m of sent) hostRoom.emit('message', { from: 'b', data: m.d });
+  steps(host, 6);
+  const back = hostRoom.sent.filter((m) => m.d.t === 'steps' && m.d.from > 1);
+  for (const m of back) room.emit('message', { from: 'a', data: m.d });
+  o.run([{}, {}, {}, {}, {}, {}], STEP);
+  assert.equal(o.confirmed.ship.shieldOn, !was);
+  assert.equal(game.state.ship.shieldOn, !was);
+  // What is left to guess is only what this player did after.
+  assert.ok(o.mine.every((i) => !i.gunner));
+});
+
+test('D-264: the guess never reaches the real game, and a save is of the real game', () => {
+  const { game, o } = joined();
+  const real = o.confirmed;
+  o.run([{ gunner: { shield: true } }, {}], STEP);
+  assert.notEqual(game.state, real);
+  assert.equal(o.confirmed, real);
+  assert.equal(real.events.length, 0);
 });
