@@ -625,7 +625,7 @@ function drawStory(game) {
   const { ctx, state, view, keys } = game;
   const font = game.assets.font;
   view.storyButtons = [];
-  if (view.log) return drawStoryLog(ctx, font, state);
+  if (view.log) return drawStoryLog(ctx, font, state, view);
   if (!state.story) return;
   const card = storyCard(game);
   if (card !== null) view.storyButtons = drawStoryCard(ctx, font, state, card, keys.mouse);
