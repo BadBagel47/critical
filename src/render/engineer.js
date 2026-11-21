@@ -114,6 +114,16 @@ export function engineerClick(state, mx, my, shift) {
   return null;
 }
 export const SYSTEM_KEYS = SYS.map((s) => s.key);
+// The system whose row of pips the pointer is on, or null: the mouse wheel changes its power (F-285).
+export function engineerSystemAt(mx, my) {
+  for (let i = 0; i < SYS.length; i++) {
+    const first = pipRect(i, 0);
+    const last = pipRect(i, B.POWER_MAX_PER_SYSTEM - 1);
+    if (mx >= first.x - 6 && mx < last.x + last.w + 6 && my >= first.y - 4 && my < first.y + first.h + 4)
+      return SYS[i].key;
+  }
+  return null;
+}
 
 // Everything that can be clicked on this screen, by name. Used by the browser test.
 export function engineerButtons(state) {

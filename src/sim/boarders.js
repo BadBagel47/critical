@@ -11,12 +11,12 @@ import { isTrading, ringTurning } from './stations.js';
 import { MAINFRAME_REACH, turnOnCrew } from './mainframe.js';
 import { cycleLock, hatchOpen, lockNear } from './airlock.js';
 import { cutPower, restorePower, stopCall, wreckHangar } from './pressure.js';
-import { breakinBonus, has, level, teleCooldown } from './upgrades.js';
+import { breakinBonus, level, teleCooldown, gearLevel, carrySlow } from './upgrades.js';
 import { createBreakin } from './breakin.js';
 import { clamp, dist, headingTo, randRange, toWorld } from './util.js';
 import { fireDart, fireRifle, throwFlare, throwGrenade } from './firearms.js';
 import { createInterior, makeTrade, setMood } from './interior.js';
-import { deposit, pickUpLoot } from './loot.js';
+import { deposit, lootNear, pickUp, dropAll } from './loot.js';
 
 // Where a boarder stands when they have just come in: a step inside the airlock, side by side.
 function comeIn(it, k) {
@@ -150,9 +150,10 @@ export function gearUp(state, av) {
   av.grenades = B.GRENADES;
   // Only the Gunner carries the ship's breaching charge.
   av.charges = av.role === 'gunner' ? level(ship, 'charge') : 0;
-  av.sentries = has(ship, 'sentry') ? 1 : 0;
-  av.flares = has(ship, 'flare') ? B.FLARES : 0;
-  av.darts = has(ship, 'tranq') ? B.TRANQ_DARTS : 0;
+  // Each role has its own gear (F-235, R-1113).
+  av.sentries = gearLevel(ship, 'sentry', av.role) ? 1 : 0;
+  av.flares = gearLevel(ship, 'flare', av.role) ? B.FLARES : 0;
+  av.darts = gearLevel(ship, 'tranq', av.role) ? B.TRANQ_DARTS : 0;
 }
 
 export function leave(state, it, av, teleported) {
@@ -209,6 +210,14 @@ export function giveAway(state, place, it, at) {
 }
 
 // A loud noise at `at`: guards near enough to hear it come looking, and it gives the crew away.
+// Running footsteps (F-292, R-1269): guards near enough come to look where they were heard, but are not yet sure.
+function footsteps(state, it, av) {
+  for (const g of it.guards) {
+    if (g.down || g.sleep > 0 || g.mode !== 'idle') continue;
+    if (dist(g.x, g.y, av.x, av.y) < B.SPRINT_HEARD) g.curious = { x: av.x, y: av.y, wait: B.GUARD_CURIOUS };
+  }
+}
+
 export function heard(state, it, at) {
   for (const g of it.guards) if (dist(g.x, g.y, at.x, at.y) < B.SHOT_HEARD) alertGuard(g, at);
   foundOut(state, it, at);
@@ -255,6 +264,9 @@ export function useTarget(it, av) {
   if (it.hangar && !it.hangar.out && !it.trade && dist(av.x, av.y, it.hangar.x, it.hangar.y) < B.CONSOLE_REACH)
     return { type: 'hangar' };
   if (it.call && dist(av.x, av.y, it.comms.x, it.comms.y) < B.CONSOLE_REACH) return { type: 'comms' };
+  // Loot is picked up with the use key, one thing at a time (F-293), when there is nothing else to use here.
+  const item = it.loot && lootNear(it, av);
+  if (item) return { type: 'loot', item };
   if (it.mainframe && dist(av.x, av.y, it.mainframe.x, it.mainframe.y) < MAINFRAME_REACH) return { type: 'mainframe' };
   if (it.trade) {
     const desk = it.desks.find((d) => dist(d.x, d.y, av.x, av.y) < 20);
@@ -302,13 +314,17 @@ export const openVault = (it) => {
   it.tiles = it.tiles.map((c) => (c === 'L' ? '.' : c));
 };
 
-function walk(it, av, cmd, dt) {
+function walk(state, it, av, cmd, dt) {
   const mx = clamp(cmd.mx || 0, -1, 1);
   const my = clamp(cmd.my || 0, -1, 1);
   const len = Math.hypot(mx, my);
   if (len <= 0) return;
-  // Carrying things slows the boarder down.
-  const sp = (B.CREW_SPEED_FOOT * (1 - B.CARRY_SLOW * av.carry.length) * dt) / Math.max(1, len);
+  // Carrying things slows the boarder down, less with a better backpack (R-1268). With nothing carried, Shift runs,
+  // and is heard (F-292, R-1269).
+  const run = cmd.sprint && !av.carry.length;
+  const pace = run ? B.SPRINT : 1 - carrySlow(state.ship, av.role) * av.carry.length;
+  const sp = (B.CREW_SPEED_FOOT * pace * dt) / Math.max(1, len);
+  if (run) footsteps(state, it, av);
   move(it, av, mx * sp, my * sp, B.CREW_RADIUS);
 }
 
@@ -383,7 +399,7 @@ export function stepAvatar(state, place, it, av, cmd, dt) {
   av.cool = Math.max(0, av.cool - dt);
   if (!cmd) return;
   if (cmd.aim) av.heading = headingTo(cmd.aim.x - av.x, cmd.aim.y - av.y);
-  walk(it, av, cmd, dt);
+  walk(state, it, av, cmd, dt);
   if (it.trade) {
     stepVisitor(state, place, it, av, cmd, dt);
     return;
@@ -405,10 +421,11 @@ export function stepAvatar(state, place, it, av, cmd, dt) {
     takeLink(state, it, av, at);
     return;
   }
+  if (at && at.type === 'loot') pickUp(state, it, av, at.item);
+  if (cmd.drop) dropAll(state, it, av);
   if (cmd.grenade && av.grenades > 0) throwGrenade(it, av, cmd.grenade);
   if (cmd.lampPressed) av.lamp = !av.lamp;
   if (cmd.flare && av.flares > 0) throwFlare(state, it, av, cmd.flare);
-  pickUpLoot(state, it, av);
   // What is carried is stowed on the ship at the airlock, through its open hatch.
   const onHatch = tileAt(it, Math.floor(av.x / TILE), Math.floor(av.y / TILE)) === 'A' || atAirlockDoor(it, av);
   const atAirlock = onHatch && hatchOpen(it);

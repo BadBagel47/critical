@@ -110,17 +110,43 @@ test('going inside leaves the post free, and coming back gives it back', () => {
   assert.equal(gunner.post, 'gunner', 'back at the old post');
 });
 
-test('a post taken while its holder was away stays taken, and the one who returns gets a free post', () => {
+test('R-1108 R-1109 R-1118: an own post may be taken while its owner is aboard, and is given back at once', () => {
   const s = crewOf(2);
   const wreck = dockAtOpenWreck(s);
+  assert.deepEqual(
+    s.players.map((p) => p.own),
+    ['captain', 'gunner'],
+  );
+  // While the Gunner is on the ship, the Gunner's post is kept for them.
+  stepPlayers(s, { 0: { take: 'gunner' } }, DT);
+  assert.equal(playerById(s, 0).post, 'captain');
   stepPlayers(s, { 1: { board: true } }, DT);
   stepPlayers(s, { 0: { take: 'gunner' } }, DT);
-  assert.equal(playerById(s, 0).post, 'gunner');
+  assert.equal(playerById(s, 0).post, 'gunner', 'taken for a while');
   wreck.interior.guards = [];
   wreck.interior.turrets = [];
   stepPlayers(s, { 1: { away: { usePressed: true } } }, DT);
   assert.equal(playerById(s, 1).inside, null);
-  assert.equal(playerById(s, 1).post, 'captain', 'the first free post');
+  assert.equal(playerById(s, 1).post, 'gunner', 'the owner has it back at once');
+  assert.equal(playerById(s, 0).post, 'captain', 'and the other is back on their own');
+});
+
+test('R-1110 R-1111: who takes a free post keeps their own, and the third post of two players is free to take', () => {
+  const s = crewOf(3);
+  const wreck = dockAtOpenWreck(s);
+  stepPlayers(s, { 2: { board: true } }, DT);
+  wreck.interior.guards = [];
+  // The Engineer is aboard: the Gunner takes the Engineer's post, and the Gunner's own post is kept.
+  stepPlayers(s, { 1: { take: 'engineer' } }, DT);
+  assert.equal(playerById(s, 1).post, 'engineer');
+  stepPlayers(s, { 0: { take: 'gunner' } }, DT);
+  assert.equal(playerById(s, 0).post, 'captain', 'the Gunner keeps their own post');
+  // Two players: the third post is nobody's own, and either may take it.
+  const two = crewOf(2);
+  stepPlayers(two, { 1: { take: 'engineer' } }, DT);
+  assert.equal(playerById(two, 1).post, 'engineer');
+  stepPlayers(two, { 0: { take: 'gunner' } }, DT);
+  assert.equal(playerById(two, 0).post, 'captain', 'and their own is kept for them meanwhile');
 });
 
 test('station desks only take orders from a player who is inside the station', () => {

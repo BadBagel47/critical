@@ -19,6 +19,7 @@ import {
   priceOf,
   payerOf,
   CATALOG,
+  forBuyer,
 } from './upgrades.js';
 import { payBounty } from './bounty.js';
 import { fuelUnit } from './fuel.js';
@@ -347,6 +348,8 @@ const SERVICES = {
 function shop(state, st, order) {
   const own = ownPurse(state, order.player);
   if (['buy', 'sell', 'install', 'remove'].includes(order.action)) {
+    // A plain name of boarding gear stands for the buyer's own (F-235).
+    order = { ...order, item: forBuyer(order.item, own) };
     if (!CATALOG[order.item]) return;
     const role = payerOf(order.item, own);
     const verb = { buy: 'BUYS', sell: 'SELLS', install: 'INSTALLS', remove: 'REMOVES' }[order.action];

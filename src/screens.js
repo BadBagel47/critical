@@ -23,7 +23,15 @@ import { drawMainframe, mainframeClick, mainframeButtons } from './render/mainfr
 import { drawStoryLog, drawStoryCard } from './render/story.js';
 import { drawJobs, jobRows } from './render/jobs.js';
 import { atMainframe } from './sim/mainframe.js';
-import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS, hackTarget, hackBox } from './render/engineer.js';
+import {
+  drawEngineer,
+  engineerClick,
+  engineerSystemAt,
+  engineerButtons,
+  SYSTEM_KEYS,
+  hackTarget,
+  hackBox,
+} from './render/engineer.js';
 import { drawActions, actionButtons } from './render/actions.js';
 import { drawScan, myScanTurn, scanButtons } from './render/scan.js';
 import { pursesLine } from './sim/purses.js';
@@ -227,6 +235,12 @@ function engineerInput(game, out) {
   if (hackTarget(state) && (keys.hit('Space') || onHack)) cmd.ring = true;
   // Z builds up an overcharge for the system that is picked.
   if (keys.hit('KeyZ')) cmd.surge = SYSTEM_KEYS[view.engRow];
+  // The mouse wheel: up gives more power, down less, to the system the pointer is on on the panel, or in the strip
+  // beside the view of space to the one that is picked (F-285).
+  if (keys.mouse.wheel) {
+    const sys = view.engOpen ? engineerSystemAt(keys.mouse.x, keys.mouse.y) : SYSTEM_KEYS[view.engRow];
+    if (sys) cmd.power.push({ sys, delta: keys.mouse.wheel < 0 ? 1 : -1 });
+  }
   if (keys.mouse.clicked && view.engOpen) {
     const click = engineerClick(state, keys.mouse.x, keys.mouse.y, keys.mouse.shift);
     if (click && click.power) cmd.power.push(...click.power);
@@ -375,12 +389,16 @@ function awayInput(game, out) {
     fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5,
     grenade: keys.hit('KeyG') || m.rightClicked ? lob : null,
     flare: keys.hit('KeyQ') ? lob : null,
-    swap: keys.hit('KeyR'),
+    // R or the mouse wheel changes between the rifle and the tranq gun (F-285).
+    swap: keys.hit('KeyR') || m.wheel !== 0,
     lampPressed: keys.hit('KeyF'),
     use: keys.down('KeyE'),
     usePressed: keys.hit('KeyE'),
     charge: keys.hit('KeyC'),
     deploy: keys.hit('KeyT'),
+    // Shift runs while nothing is carried (F-292), and X puts down all that is carried (F-293).
+    sprint: keys.down('ShiftLeft', 'ShiftRight'),
+    drop: keys.hit('KeyX'),
   };
 }
 

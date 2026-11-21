@@ -43,7 +43,7 @@ export function fireRifle(state, it, av) {
     vy: f.y * B.RIFLE_SPEED,
     ttl: B.RIFLE_TTL,
     owner: 'crew',
-    dmg: rifleDmg(state.ship) * (av.role === 'gunner' ? B.ROLE_RIFLE : 1),
+    dmg: rifleDmg(state.ship, av.role) * (av.role === 'gunner' ? B.ROLE_RIFLE : 1),
   });
   av.cool = B.RIFLE_INTERVAL;
   state.events.push({ type: 'rifle' });

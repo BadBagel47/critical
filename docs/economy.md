@@ -29,13 +29,7 @@
 | SOLAR CELLS | system | CAPTAIN | system | 200 | 1 |
 | DOCKING FIELD | system | ENGINEER | system | 150 | 1 |
 | SYSTEM RADAR | system | CAPTAIN | – | 200 | 2 |
-| RIFLE UPGRADE | armory | den som köper | – | 120 | 2 |
-| CARGO PACK | armory | den som köper | – | 140 | 1 |
-| SUIT ARMOR | armory | den som köper | – | 160 | 1 |
 | BREACHING CHARGE | armory | GUNNER | – | 50 | 1 |
-| TRANQ GUN | armory | den som köper | – | 120 | 1 |
-| FLARES | armory | den som köper | – | 60 | 1 |
-| DEPLOYABLE TURRET | armory | den som köper | – | 180 | 1 |
 | HACKING KIT | armory | den som köper | – | 150 | 1 |
 | TELEPORTER COILS | armory | den som köper | – | 150 | 1 |
 | EXTRA HULL SLOT | hull | CAPTAIN | – | 250 | 2 |
@@ -44,6 +38,24 @@
 | EXTRA SYSTEM SLOT | system | GUNNER | – | 200 | 2 |
 | EXTRA HULL SLOT | hull | ENGINEER | – | 250 | 2 |
 | EXTRA SYSTEM SLOT | system | ENGINEER | – | 200 | 2 |
+| RIFLE UPGRADE | armory | CAPTAIN | – | 120 | 2 |
+| RIFLE UPGRADE | armory | GUNNER | – | 120 | 2 |
+| RIFLE UPGRADE | armory | ENGINEER | – | 120 | 2 |
+| BACKPACK | armory | CAPTAIN | – | 160 | 2 |
+| BACKPACK | armory | GUNNER | – | 160 | 2 |
+| BACKPACK | armory | ENGINEER | – | 160 | 2 |
+| SUIT ARMOR | armory | CAPTAIN | – | 160 | 1 |
+| SUIT ARMOR | armory | GUNNER | – | 160 | 1 |
+| SUIT ARMOR | armory | ENGINEER | – | 160 | 1 |
+| TRANQ GUN | armory | CAPTAIN | – | 120 | 1 |
+| TRANQ GUN | armory | GUNNER | – | 120 | 1 |
+| TRANQ GUN | armory | ENGINEER | – | 120 | 1 |
+| FLARES | armory | CAPTAIN | – | 60 | 1 |
+| FLARES | armory | GUNNER | – | 60 | 1 |
+| FLARES | armory | ENGINEER | – | 60 | 1 |
+| DEPLOYABLE TURRET | armory | CAPTAIN | – | 180 | 1 |
+| DEPLOYABLE TURRET | armory | GUNNER | – | 180 | 1 |
+| DEPLOYABLE TURRET | armory | ENGINEER | – | 180 | 1 |
 
 ### Tjänster på stationer
 
@@ -135,7 +147,7 @@ Den första timmen räknas som en kvart i fristaden och resten i ett bebott gran
 | GUNNER | TARGETING COMPUTER | 10 |
 | GUNNER | EXTRA HULL SLOT  LV 2 | 15 |
 | GUNNER | ROCKET PODS | 18 |
-| GUNNER | CARGO PACK | 20 |
+| GUNNER | BACKPACK | 21 |
 | ENGINEER | SCANNER PULSE | 2 |
 | ENGINEER | ARMOR PLATING | 5 |
 | ENGINEER | EXTRA HULL SLOT | 8 |

@@ -524,8 +524,11 @@ await buyThis('gunner', 'upgrade', 'twin');
 check(await settles(async () => (await get('s.ship.owned.twin')) === 1), 'a part is bought into the stores');
 await buyThis('gunner', 'upgrade', 'heavy');
 check(await settles(async () => (await get('s.ship.owned.heavy')) === 1), 'and another part fits now');
-await buyThis('gunner', 'boarding', 'pack');
-check(await settles(async () => (await get('s.ship.mods.pack')) === 1), 'boarding gear works at once');
+await buyThis('gunner', 'boarding', 'pack.gunner');
+check(
+  await settles(async () => (await get("s.ship.mods['pack.gunner']")) === 1),
+  "boarding gear works at once, and is the Gunner's own",
+);
 check(await settles(async () => (await get('Math.min(...Object.values(s.purses))')) < 2000), 'upgrades cost credits');
 await shot('12-station');
 // The shipyard: the ship with its slots, and a part from the stores installed in a free one.

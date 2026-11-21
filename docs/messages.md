@@ -33,7 +33,7 @@ Spelet visar meddelanden på fyra ställen (D-187, besked MD1–MD5 2026-11-21):
 - fiendelarmet med tid kvar (kräver Enemy Alarm)
 - anfall på en egen station med risk LOW eller MEDIUM
 
-## Händelser (125)
+## Händelser (127)
 
 | Händelse | Text | Sort | Vem ser den |
 |---|---|---|---|
@@ -147,6 +147,8 @@ Spelet visar meddelanden på fyra ställen (D-187, besked MD1–MD5 2026-11-21):
 | surgeCooling | BOOST COOLING  ·  … S | varning | alla |
 | surgeNoPower | THE ENGINES HAVE NO POWER FOR A BOOST | varning | alla |
 | powerLost | REACTOR DAMAGED  ·  POWER LOST | fara | alla |
+| postKept | … IS … | varning | bara den det gäller |
+| postGivenBack | … IS BACK  ·  … | teknik | bara den det gäller |
 | postTaken | … IS HELD BY …  ·  THEY CAN SWAP BY ASKING FOR YOUR POST | varning | bara den det gäller |
 | playerJoined | … JOINED THE CREW | teknik | alla |
 | playerLeft | … LEFT THE CREW | – | alla |
