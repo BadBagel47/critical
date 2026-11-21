@@ -12,7 +12,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 **A** – strong model, high level – Onlineläget: spelets Worker och rummen
 - D-269 – Spelet på en egen Worker hos Cloudflare, med rummen på samma adress, så att inget laddas från andra tjänster. Kräver en engångsåtgärd: en Cloudflare-nyckel som hemlighet i critical
 - D-264 – Utjämning och förutsägelse, så att den egna styrningen känns direkt trots fördröjningen
-- F-290 – Värden i bakgrunden: lämna över värdskapet när värdens sida döljs, så att spelet inte står still för alla
+- F-290 – Värden i bakgrunden: väntar på network-kit F-144, som lämnar över värdskapet själv; Critical tar sedan in den versionen
 - Besked 2026-11-19 (ON6): ja, koden räcker för att gå med (ett öppet rum).
 - Besked 2026-11-19: OL2 ja, spelet och rummen ligger på samma adress hos Cloudflare, och den gamla GitHub-adressen skickar vidare dit (R-1248). OL3 ja, spelet får adressen critical.trythis.one (R-1249); var trythis.one sköts kontrolleras först. ON5: paus och fortsätt kräver att alla anslutna godkänner inom tio sekunder, menyn pausar aldrig av sig själv online, och den som spelar ensam pausar direkt (R-1250, F-037).
 - Besked 2026-11-20: OL3 ändrat, spelet ligger på critical.l8p1.workers.dev så länge och flyttar till critical.trythis.one senare (F-289). DV1–DV3: allt arbete via grenen dev och testbygget critical-dev.l8p1.workers.dev, main när användaren säger Publicera.
@@ -197,7 +197,7 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | F-285 | Mushjulet som alternativ (besked MH1 2026-11-18): den som bordar byter utrustning med hjulet, och Engineer ändrar kraften till vapen, sköldar, motorer eller reparation för det system markören pekar på. Klick och tangenter finns kvar | Ej påbörjad |
 | F-287 | Fullskärm på iPhone: Safari på iPhone tillåter inte fullskärm för webbsidor, så spelet behöver en fil som säger att det ska öppnas utan webbläsarens fält när det läggs på hemskärmen, och fullskärmsknappen förklarar då hur man gör. Från F-286 (användaren 2026-11-19, FS2) | Ej påbörjad |
 | F-289 | Spelet på critical.trythis.one i stället för critical.l8p1.workers.dev (besked OL3 2026-11-19, ändrat 2026-11-20 till workers.dev så länge). En rad i publiceringen (`--domain critical.trythis.one`) och kontrollen; sparningar flyttas med export och import. Regeln om Sverige gäller där (OL4) | Ej påbörjad |
-| F-290 | Värden i bakgrunden: när värdens flik hamnar i bakgrunden eller telefonen låses får sidan inga bilder, och spelet står still för alla tills värden är tillbaka. Värdbytet kommer bara när värdens anslutning bryts. Agentens förslag: lämna över värdskapet till en annan spelare när värdens sida döljs (network-kit kan lämna över), och säga till de andra under tiden. Hittat 2026-11-20 i testet med flera webbläsare | Ej påbörjad |
+| F-290 | Värden i bakgrunden: när värdens flik hamnar i bakgrunden eller telefonen låses får sidan inga bilder, och spelet står still för alla tills värden är tillbaka. Värdbytet kommer bara när värdens anslutning bryts. Agentens förslag: lämna över värdskapet till en annan spelare när värdens sida döljs (network-kit kan lämna över), och säga till de andra under tiden. Hittat 2026-11-20 i testet med flera webbläsare. Besked 2026-11-21 (network-kit Q22, NK2): network-kit lämnar själv över värdskapet när värdens sida varit dold i ungefär tio sekunder, påslaget som standard (network-kit F-144). Critical bygger inget eget, utan tar in den versionen när den finns | Väntar på network-kit |
 
 ## Låg
 
