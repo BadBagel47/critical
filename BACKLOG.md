@@ -20,18 +20,11 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Besked 2026-11-20 (ON7): ja, man kan gå med mitt i en omgång och tar en ledig post.
 - Besked 2026-11-20 (ON8): ingen ruta för att välja; den som går med mitt i en omgång får den första lediga posten i ordningen Captain, Gunner, Engineer, och byter sedan med 1, 2 och 3 om en annan är ledig.
 
-**B** – strong model, high level – Smuggling
-- D-257 – Smuggeluppdrag från skumt folk på baserna, i listan vid bordet i baren men märkta
-- D-074 – Smuggelgods som en patrull kan upptäcka när den skannar skeppet, och Engineers minispel med två rattar som lägger skeppets våg över skanningens så att man slipper åka fast
-- Besked 2026-11-20 (SU5): smugglingen byggs i en egen körning direkt efter sidouppdragen. Besked 2026-11-17 (UP3): den som åker fast förlorar godset och lite anseende.
-- Besked 2026-11-21 (SM1–SM5): smuggeluppdrag ges av Drifters och fria baser, aldrig på Wardens baser, i listan i baren märkta SMUGGLE: en låda till en annan bas som betalar ungefär dubbelt så mycket som frakt och ger plus hos givaren. En Warden-patrull som kommer nära skannar skeppet i ungefär 8 sekunder, synligt på skärmen; utan smuggelgods händer inget, och den som flyr utom räckhåll bryter skanningen men tappar lite hos Wardens. Minispelet med två rattar spelas av Engineer, annars Captain, annars Gunner, i en liten ruta som inte döljer resten av skärmen. F och G vrider den första ratten, V och B den andra, och det går att klicka på pilarna i rutan; Engineer kan också använda piltangenterna. Skeppets dator spelar det inte.
-- Fråga VO4: Ska storyn ha röster i spelet, efter röstprovet i uppdragstestaren? Rekommendation: lyssna på hela storyn och säg vad du tycker om rösterna och känslorna. Blir det ja spelas karaktärernas fasta repliker in, och berättaren läser bara meningar utan genererade namn (R-1232).
-
-**C** – strong model, high level – Ljus, skuggor och effekter i spelet – väntar på svar
+**B** – strong model, high level – Ljus, skuggor och effekter i spelet – väntar på svar
 - D-261 – Avgör med designtestet om grafiken ska ritas med WebGL, som behövs för ljus som glöder
 - Fråga GR3: Vilken version i designtestet för ljus känns bäst, och hur många bilder i sekunden visar mätaren på din Mac och iPad med många ljus och partiklar? Väntar på svar: det avgör om spelet byter till att rita med grafikkortet.
 
-**D** – strong model, medium level – Meddelanden från skeppet
+**C** – strong model, medium level – Meddelanden från skeppet
 - D-256 – Inventera alla meddelanden som kan dyka upp, när, för vem och var
 - D-187 – Se över hur spelet och skeppet visar meddelanden, så att det viktiga syns först
 - F-255 – Visa Gunner när dartsen är hela igen, genom skeppets meddelanden
@@ -42,7 +35,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Fråga MD5: Ska ett meddelande som bara gäller en post bara visas för den? Rekommendation: ja, för läge och status. Fara och händelser visas för alla.
 
 
-**E** – strong model, medium level – Förfina rollerna
+**D** – strong model, medium level – Förfina rollerna
 - F-192 – En ryggsäck som köps och uppgraderas, och som avgör hur mycket utrustning och hur många turrets man får med sig
 - F-236 – Primära roller och tillfälligt övertagande: den som lämnar skeppet lämnar sina roller lediga, de kvar kan ta en av dem, och ägaren får tillbaka den direkt
 - F-235 – Bordarnas utrustning per roll, så att varje roll köper och har sin egen
@@ -50,76 +43,76 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Fråga RO1: Gäller ryggsäcken både utrustning och byte, och ersätter den CARGO PACK? Rekommendation: ja, en ryggsäck per roll som rymmer både och, och den ersätter CARGO PACK.
 - Fråga RO2: Hur många nivåer har ryggsäcken? Rekommendation: tre, där den första ger det man får med sig i dag.
 
-**F** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262) – väntar på svar
+**E** – strong model, high level – Pekskärm (byggs när användaren har provat designtestet D-262) – väntar på svar
 - F-090 – Styrspakar och knappar på skärmen för alla poster, bordning och paneler, så att spelet går att spela på iPad och sedan mobil i liggande format
 - Fråga P6: Vilket sikte för Gunner kändes bäst i designtestet, A, B eller C? Ingen rekommendation förrän du har provat.
 - Fråga P7: Fasta eller flytande spakar, och vilken storlek? Ingen rekommendation förrän du har provat.
 - Fråga P8: Ska gasen ligga kvar när spaken släpps, eller följa spaken tillbaka till noll? Ingen rekommendation förrän du har provat.
 
-**G** – strong model, high level – Viewer på en extra skärm
+**F** – strong model, high level – Viewer på en extra skärm
 - F-137 – Ett andra fönster för en extra skärm på samma dator, som visar de vyer besättningen skickar dit, så att man får en kommandobrygga
 - Fråga VW1: Byggs viewern först som ett andra fönster på samma dator, innan onlineläget finns? Rekommendation: ja.
 - Fråga VW2: Vem väljer vad viewern visar? Rekommendation: alla kan skicka dit, och den senaste som skickade syns.
 
-**H** – strong model, high level – Sällsynta skepp
+**G** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 - Fråga SS1: Hur ofta dyker Juggernauten upp? Rekommendation: högst en per omgång hos varje faktion, i de farligare systemen, och som pirat bara nära slutet.
 - Fråga SS2: Vad ger en namngiven pirat? Rekommendation: en prissumma och en unik del som loot, och en eller två sådana per omgång.
 
-**I** – strong model, high level – Värme – väntar på provspel ensam
+**H** – strong model, high level – Värme – väntar på provspel ensam
 - Besked 2026-11-21 (VÄ5): värmen väntar tills spelet fungerar ensam, efter provspel med skeppets dator (F-034) och Captains skott (F-291).
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 - Fråga VÄ1: Vad händer när något blir för varmt? Rekommendation: det stängs av en stund, vapnen slutar skjuta och motorerna tappar fart, men skrovet tar ingen skada.
 - Fråga VÄ2: Hur kyler Engineer? Rekommendation: med kraft till kylning i samma panel som kraften i dag, och med uppgraderingar som kyler bättre. En skiss först.
 
-**J** – strong model, high level – Slå ut och borda
+**I** – strong model, high level – Slå ut och borda
 - D-248 – Se över hur man slår ut ett skepp för att borda det, så att Gunner har ett tydligt sätt att göra det i stället för att skeppet exploderar
 - F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
 - Fråga SL1: Hur slår Gunner ut ett skepp i stället för att spränga det? Rekommendation: ett eget vapen som tar sköld och motorer men nästan inte skrovet, och ett skepp utan motorer driver och kan bordas.
 - Fråga SL2: Vilka skepp kan slås ut och bordas? Rekommendation: fraktskepp och gunboats, som har insidor. Fighters inte.
 
-**K** – strong model, high level – Missiler och raketer
+**J** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 - Fråga MI1: Är missiler och raketer två olika delar? Rekommendation: ja, två delar som köps för sig, med ammunition vid disken som raketerna i dag.
 
-**L** – strong model, high level – Kontakt med andra skepp
+**K** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 - Fråga KO1: Hur anropar Captain? Rekommendation: en knapp när ett skepp eller en station är nära, med en kort lista att välja ur: be om bränsle, muta, kräva tribut.
 - Fråga KO2: Hur många eskorter kan man ha? Rekommendation: en åt gången, hyrd på baser.
 
-**M** – strong model, high level – Anomalier
+**L** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 - Fråga AN1: Vilka sorters anomalier först? Rekommendation: tre: ett fält där man flyger och skjuter långsammare, strålning som skadar skölden, och moln som stör sensorerna.
 - Fråga AN2: Syns de på stjärnkartan? Rekommendation: ja, när man har varit i systemet eller har systemradar.
 
-**N** – strong model, high level – En värld som förändras
+**M** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 - Fråga VF1: Hur ofta händer något i världen? Rekommendation: ungefär var tionde till femtonde minut, med ett meddelande när det händer.
 - Fråga VF2: Ska två faktioner vara i krig i varje omgång? Rekommendation: ja, ett krig per omgång, där uppdrag för den ena sänker anseendet hos den andra.
 
-**O** – strong model, high level – Ljudeffekter
+**N** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - Fråga LJ1: Görs ljuden som i dag, av spelets egen ljudmotor, eller som inspelade filer? Rekommendation: som i dag, så slipper vi licensfrågor och stora filer.
 
-**P** – strong model, high level – Visuella effekter och feedback
+**O** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 - Fråga VE1: Ska skärmen skaka och blinka mer vid träffar? Rekommendation: lite mer, med ett val i menyn som stänger av skakningar och blixtar, av hänsyn till ljuskänsliga.
 
-**Q** – strong model, high level – Förslag: ekonomi och belöningar
+**P** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 - Fråga EK1: Förslaget om ekonomin skrevs innan den nya världen, butiken och kassorna per roll. Ska det skrivas om innan du svarar på frågorna i det? Rekommendation: ja.
 
-**R** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**Q** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 - Fråga SV1: Ska nivåerna justeras först när ekonomin är bestämd? Rekommendation: ja, efter gruppen om ekonomi och belöningar, eftersom priserna och nivåerna hänger ihop.
 
-**S** – strong model, high level – Handel
+**R** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 - Fråga HA1: Var handlar man varor? Rekommendation: i en egen flik i butiken, med en priskarta på stjärnkartan.
 - Fråga HA2: Delar varorna lastrum med malmen? Rekommendation: ja, samma lastrum, som byggs ut.
@@ -145,7 +138,6 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | F-260 | Faktionernas namn får unika stilar, så att man ser vems ett system eller en bas är på namnet. Användaren 2026-11-16. Hör ihop med att två baser i samma system kunde få samma namn, som rättas i F-258 | Ej påbörjad |
 | F-255 | Visa Gunner när dartsen är hela igen. Användaren 2026-11-16: en dart som kommer hem lagas, och en som skjutits ner byggs upp igen efter en stund, och det behöver synas för Gunner. Det ska gå genom hur skeppet meddelar status (D-187, docs/proposal-messages.md) | Ej påbörjad |
 | D-256 | Inventera alla meddelanden som kan dyka upp i spelet: vad som visas, när, för vem och var, så att D-187 har en fullständig lista att utgå från. Användaren 2026-11-16 | Ej påbörjad |
-| D-257 | Smuggeluppdrag från skumt folk på baser. Användaren 2026-11-16: det ska gå att prata med skumma personer på baser för att få smuggeluppdrag. Hör ihop med uppdragen (D-073) och handeln (F-068) | Pågår 2026-11-21 (claude/trusting-franklin-4z4ny4) |
 | F-252 | Uppgraderingar som loot (R-1141, R-1145). Delar ska kunna hittas i vrak och valv, och hamna i förrådet hos den roll som äger dem, men bara sådant rollen inte har max av (R-1175). I dag hittas bara extra platser | Ej påbörjad |
 | F-253 | Förrådet på handkontroll och pekskärm. I dag öppnas förrådet bara med I på tangentbordet | Ej påbörjad |
 | F-235 | Bordarnas utrustning per roll (R-1113). I dag betalar den som köper ur sin kassa, men utrustningen gäller alla bordare. Varje roll ska köpa och ha sin egen. Rör bordningsfilerna, så den görs när insidorna är klara (D-227) | Ej påbörjad |
@@ -182,7 +174,6 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | F-219 | Piraternas slutbas: urholkad asteroid i tre våningar, genererad varje gång, med stort lastutrymme och vakter, en skattkammare och bränsletunnor. Man kommer in vid dockorna i botten och arbetar sig uppåt (besked 2026-11-16). Bossen är en pirat i en mech-dräkt, och bossrummet har mekanik för att besegra den. Efter bossen tar man över basen, ingen sprängning eller flykt. Förslag och designtest: docs/design/prototypes/interior-pirate-base.html (tre pyloner, faser, svep som visas i förväg) | Ej påbörjad |
 | D-071 | Vi behöver en lösning för eskortskepp. Från D-075, godkänt av användaren: eskorter som hyrs mot lön och tar enkla order (följ, anfall mitt mål, håll avstånd). Hyrs på stationer, och i baren när den finns (D-072) | Ej påbörjad |
 | D-072 | Baser ska ha två våningar med olika funktioner. Vi funderar lite på hur detta kan göras bra. Agentens första tanke: nedre våningen med luftsluss, services och shipyard, övre med armory och en bar, hiss eller trappa emellan. Besked 2026-11-14: tanken är godkänd. Små stationer får en våning, större får två. Samma gäller för fientliga Besked 2026-11-16: tills vidare en vanlig bastyp, standardbasen i tre våningar (ljus mitt med entré och det lagliga, industri med last i källaren, kommando överst), plus piraternas slutbas. Fler bastyper kan komma senare. Plan i docs/proposal-bases.md, byggs i F-208 till F-212 | Planerad |
-| D-074 | Någon form av smuggelgods. Något man kan få i uppdrag att frakta som kan dra till sig pirater eller skepp som vill skydda sin faktion från handel med smuggelgods. Vi behöver titta närmare på hur detta funkar. Hänger ihop med F-068 (handel), D-073 (uppdrag) och F-035 (faktioner). Från D-075: patrullskepp skannar lasten, olaglig last ger böter och sämre anseende, och Engineer kan störa skanningen. Besked 2026-11-14: Engineer ska kunna påverka skanningen med ett aktivt minigame medan den pågår. Det får inte vara svårt, men ska vara roligt. Utforskas mer innan det byggs Besked 2026-11-15: läggs i backloggen och tas upp senare. Besked 2026-11-17 (UP3): smuggelgods kan upptäckas av en patrull som skannar skeppet. Skanningen går på tid, och Engineer kan undvika att bli upptäckt med ett minispel: två rattar vrids tills skeppets våg ligger ovanpå skanningens (vågen, förslag A för Engineers hack 2026-11-15). Den som åker fast förlorar godset och lite anseende. | Pågår 2026-11-21 (claude/trusting-franklin-4z4ny4) |
 | F-081 | Från D-075: skepp som slås ut i stället för att sprängas, så att de kan bordas medan besättningen är kvar. Gunner väljer mellan att slå ut och förstöra. Bestämt 2026-11-15: ett utslaget skepp har besättning och ström kvar och är därför i lockdown, med roterande röda ljus och smygande, till skillnad från ett vrak som är dött och mörkt (F-159) Besked 2026-11-15: storyn kan kräva att man bordar ett skepp för att plocka upp en karta till ett dolt system, se D-052 | Ej påbörjad |
 | F-082 | Från D-075: anropa andra skepp och stationer. Be om bränsle eller hjälp, muta, kräva tribut. En ny uppgift för Captain Sparad idé ur D-180 (2026-11-15): bara Captain kan anropa. | Ej påbörjad |
 | F-083 | Från D-075: skepp i nöd som ber om bränsle eller reparation och betalar eller minns det | Ej påbörjad |
@@ -443,3 +434,5 @@ Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.
 | F-291 | Byggt 2026-11-21: när ingen sitter på Gunner siktar Captain med musen, skjuter med klick eller mellanslag och byter vapen med hjulet (R-1256). | 2026-11-21 |
 | F-034 | Byggt 2026-11-21: skeppets dator på lediga poster (R-1257–R-1259, R-826–R-829). Väljs på sidan för nytt spel (SHIP'S COMPUTER), slås på med K på posten, AUTO på fliken. Captain kretsar runt fienden i strid och följer kursen annars, Gunner skjuter med en halv sekunds fördröjning och sämre sikte, Engineer lagar i fast ordning och flyttar energi till skölden vid beskjutning. Siffrorna sätts vid provspel. Inte byggt: att datorn backar ut skeppet när skrovet nästan är slut och ingen är kvar (R-812). | 2026-11-21 |
 | D-186 | Besvarat 2026-11-21 (SO4–SO7, alla enligt rekommendation) och byggt som F-034. | 2026-11-21 |
+| D-257 | Byggt 2026-11-21: smuggeluppdrag från Drifters och fria baser, märkta SMUGGLE, ungefär dubbel lön, aldrig till Wardens (R-1260). | 2026-11-21 |
+| D-074 | Byggt 2026-11-21: Warden-skepp som kommer nära skannar i åtta sekunder och följer med under tiden; den som flyr fortare tappar lite hos Wardens. Godset göms med två rattar i en liten ruta: Engineer, annars Captain, annars Gunner, med F G och V B, klick, och piltangenterna för Engineer. Åker man fast förloras godset och anseendet hos Wardens sjunker (R-1218, R-1261, R-1262). Siffrorna sätts vid provspel. | 2026-11-21 |
