@@ -119,7 +119,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
 
-Väntar på användaren: frågan SB2 om standardbasen (se Nästa steg i HANDOFF.md), förslagen D-187 (meddelanden), D-193 (permanenta prylar), D-186 (skeppets dator) och de kvarvarande frågorna i D-172 (straff i låsspel). F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
+Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter röstprovet i uppdragstestaren D-280? Rekommendation: lyssna på hela storyn och säg vad du tycker; blir det ja spelas karaktärernas fasta repliker in, och berättaren läser bara meningar utan genererade namn, R-1232), frågan SB2 om standardbasen (se Nästa steg i HANDOFF.md), förslagen D-187 (meddelanden), D-193 (permanenta prylar), D-186 (skeppets dator) och de kvarvarande frågorna i D-172 (straff i låsspel). F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
 
 ## Hög
 
