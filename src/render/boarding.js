@@ -248,7 +248,7 @@ export function drawBoarding(ctx, state, view, assets) {
   const alarm = level(state.ship, 'alarm') >= 3 && alarmText(state);
   if (alarm) label(ctx, font, VIEW_W / 2 + 60, 24, alarm, { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
   if (!it.trade) {
-    const carried = `CARRY  ${me ? me.carry.length : 0} / ${carryMax(state.ship)}`;
+    const carried = `CARRY  ${me ? me.carry.length : 0} / ${carryMax(state.ship, me)}`;
     label(ctx, font, VIEW_W - 8, 8, carried, { anchor: 'r', fg: COL.ochre[2] });
   }
   const credits = { anchor: 'r', fg: it.trade ? COL.ochre[2] : COL.dim };

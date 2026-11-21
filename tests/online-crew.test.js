@@ -6,7 +6,16 @@ import { step } from '../src/sim/step.js';
 import { thingsOf } from '../src/sim/things.js';
 import { tryBoard } from '../src/sim/boarding.js';
 import { gatherForTesting } from '../src/sim/sectors.js';
-import { addPlayer, dropPlayer, backPlayer, holderOf, takePost, postOf, crewOf, connectedPlayers } from '../src/sim/players.js';
+import {
+  addPlayer,
+  dropPlayer,
+  backPlayer,
+  holderOf,
+  takePost,
+  postOf,
+  crewOf,
+  connectedPlayers,
+} from '../src/sim/players.js';
 import { rolesOf } from '../src/sim/purses.js';
 import { packSave } from '../src/saves.js';
 import { B } from '../src/sim/balance.js';
@@ -34,7 +43,7 @@ test('R-1241: the post of a player who loses the connection is free for the othe
   assert.equal(holderOf(s, 'gunner').name, 'CY');
 });
 
-test('R-1242: a player who comes back keeps their own purse and gets a free post', () => {
+test('R-1242 R-1118: a player who comes back keeps their own purse and gets their own post back', () => {
   const s = crew();
   const bo = s.players[1];
   s.purses.gunner = 777;
@@ -43,11 +52,12 @@ test('R-1242: a player who comes back keeps their own purse and gets a free post
   assert.ok(backPlayer(s, bo.id));
   assert.equal(bo.post, 'gunner');
   assert.equal(s.purses.gunner, 777);
-  // Taken meanwhile: another free post.
+  // Taken meanwhile: given back, and the one who had it goes back to their own.
   dropPlayer(s, bo.id);
-  takePost(s, s.players[2], 'gunner');
+  assert.ok(takePost(s, s.players[2], 'gunner'));
   backPlayer(s, bo.id);
-  assert.equal(bo.post, 'engineer');
+  assert.equal(bo.post, 'gunner');
+  assert.equal(s.players[2].post, 'engineer');
 });
 
 test('R-1243: a boarder who is still gone when the wait is over is sent home, and the post stays free', () => {

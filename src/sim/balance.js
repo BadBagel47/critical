@@ -562,7 +562,12 @@ export const B = {
   DRONE_NODE: 2.5,
   // boarding gear
   RIFLE_STEP: 4,
-  PACK_EXTRA: 2,
+  // The backpack (R-1268): room by level, gear and loot together, and how much of CARRY_SLOW a load costs.
+  PACK_ROOM: [4, 6, 8],
+  // Running with nothing carried (F-292, R-1269): this much faster, and heard by guards this near.
+  SPRINT: 1.6,
+  SPRINT_HEARD: 110,
+  PACK_SLOW: [1, 0.5, 0],
   SUIT_HP: 50,
   COIL_TELEPORT: 25,
   HACK_BONUS: 1.4,

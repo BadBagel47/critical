@@ -14,7 +14,7 @@ import { SIZES, SIZE_NAMES } from '../src/sim/world.js';
 import { generateSector } from '../src/sim/sectors.js';
 import { createInterior } from '../src/sim/boarding.js';
 import { thingsOf } from '../src/sim/things.js';
-import { CATALOG, levelPrice } from '../src/sim/upgrades.js';
+import { CATALOG, levelPrice, forBuyer } from '../src/sim/upgrades.js';
 import { ROLE_NAME } from '../src/sim/purses.js';
 import { SHIPS } from '../src/sim/kinds.js';
 import { B } from '../src/sim/balance.js';
@@ -312,7 +312,9 @@ function purchases(perHour) {
     const left = perHour - FUEL_PER_HOUR / 3;
     let spent = 0;
     const times = {};
-    for (const id of order) {
+    for (const plain of order) {
+      // Boarding gear is the role's own (F-235).
+      const id = forBuyer(plain, role);
       const k = times[id] || 0;
       times[id] = k + 1;
       spent += levelPrice(id, k);

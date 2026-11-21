@@ -906,13 +906,13 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 
 | Nr | Regel | Status | Källa | Test |
 |---|---|---|---|---|
-| R-1108 | Varje spelare har sina primära roller från start. | bestämd | Användaren 2026-11-16 (D-189) | – |
-| R-1109 | När en spelare lämnar skeppet blir hens roller tillfälligt lediga, och de som är kvar kan ta över en ledig roll tills den som har den på riktigt kommer tillbaka. | bestämd | Användaren 2026-11-16 (D-189) | – |
-| R-1110 | Bara en spelare åt gången har en roll. Den som tillfälligt tar en ledig roll håller också kvar sin egen, så ingen annan kan ta någon av dem. | bestämd | Användaren 2026-11-16 (D-189) | – |
-| R-1118 | När den som har en roll kommer tillbaka får hen den direkt, och den som hade tagit över går tillbaka till sin egen roll. | bestämd | Användaren 2026-11-16 (D-189) | – |
-| R-1111 | Med två spelare tas den tredje rollen över på samma sätt, eller sköts av datorn. | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1108 | Varje spelare har sina primära roller från start. | byggd | Användaren 2026-11-16 (D-189); F-236 byggd 2026-11-21 | tests/players.test.js |
+| R-1109 | När en spelare lämnar skeppet blir hens roller tillfälligt lediga, och de som är kvar kan ta över en ledig roll tills den som har den på riktigt kommer tillbaka. | byggd | Användaren 2026-11-16 (D-189); F-236 byggd 2026-11-21 | tests/players.test.js |
+| R-1110 | Bara en spelare åt gången har en roll. Den som tillfälligt tar en ledig roll håller också kvar sin egen, så ingen annan kan ta någon av dem. | byggd | Användaren 2026-11-16 (D-189); F-236 byggd 2026-11-21 | tests/players.test.js |
+| R-1118 | När den som har en roll kommer tillbaka får hen den direkt, och den som hade tagit över går tillbaka till sin egen roll. | byggd | Användaren 2026-11-16 (D-189); F-236 byggd 2026-11-21 | tests/players.test.js |
+| R-1111 | Med två spelare tas den tredje rollen över på samma sätt, eller sköts av datorn. | byggd | Användaren 2026-11-16 (D-189); F-236 byggd 2026-11-21 | tests/players.test.js |
 | R-1112 | Om datorn får sköta roller, och vilka, bestäms när omgången startar och gäller hela omgången. Datorn slås på i vyn för en roll där det är tillåtet. | byggd | Användaren 2026-11-16 (D-189, D-186); F-034 byggd 2026-11-21 | tests/computer.test.js |
-| R-1113 | Varje roll köper utrustningen till sin egen bordare ur sin egen kassa. I dag betalar den som köper, men utrustningen gäller alla bordare (F-235). | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1113 | Varje roll köper utrustningen till sin egen bordare ur sin egen kassa. I dag betalar den som köper, men utrustningen gäller alla bordare (F-235). | byggd | Användaren 2026-11-16 (D-189); F-235 byggd 2026-11-21 | tests/purses.test.js |
 | R-1114 | Engineer köper det som rör skeppets skydd och energi, Gunner vapnen, och Captain motorer, bränsle och sensorer. | byggd | Användaren 2026-11-16 (F-188, agentens förslag godkänt) | tests/purses.test.js |
 | R-753 | Uppgraderingar går inte sönder var för sig tills vidare, och frågan tas upp igen med värmen. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-754 | Engineer ser rymden som de andra, med energi och skadevarningar i en smal remsa, och börjar i det läget. | byggd | HANDOFF beslut 2026-11-14 | saknas |
@@ -1231,6 +1231,10 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1265 | Sensorremsan uppe till höger under minikartan visar fiender i sikte, fiendelarmet med tid kvar, nödanrop, anfall på egna stationer som inte är HIGH, och prissumman. Det som syns visas alltid; det bortom kräver köpta sensorer, som tidigare. | byggd | Användaren 2026-11-21 (MD2, MD3); D-187 | tests/messages.test.js |
 | R-1266 | Alla meddelanden sparas, de senaste 40, och visas under SHIP'S MESSAGES i loggen på L. | byggd | Användaren 2026-11-21 (MD4); D-187 | saknas |
 | R-1267 | Gunner ser hur många darts som är hela och när nästa byggs, och får ett meddelande när en dart är klar. | byggd | Användaren 2026-11-16 (F-255) | saknas |
+| R-1268 | Varje roll har sin egen ryggsäck i tre nivåer, som rymmer både utrustning och byte och ersätter CARGO PACK. Nivå 1, som man har från början, rymmer fyra saker, nivå 2 sex och nivå 3 åtta; varje sorts utrustning utöver granaterna tar en plats. Med last går man lika långsamt som förr på nivå 1, hälften så långsamt på nivå 2 och i vanlig fart på nivå 3. | byggd | Användaren 2026-11-21 (RO1, RO2, RG1); F-192 | tests/carry.test.js |
+| R-1269 | Inne på baser och i vrak springer man med Shift, ungefär 60 % fortare, men bara när man inte bär något. Vakter i närheten hör stegen och kommer för att titta. | byggd | Användaren 2026-11-21 (SP1); F-292 | tests/carry.test.js |
+| R-1270 | Byte plockas upp med E, en sak i taget, och inget plockas upp av sig självt. X lägger ner allt man bär där man står. | byggd | Användaren 2026-11-21 (DR1, DR2); F-293 | tests/carry.test.js |
+| R-1271 | Mushjulet byter mellan geväret och sövningspistolen för den som bordar, och ändrar kraften för det system pekaren står på hos Engineer. | byggd | Användaren 2026-11-18 (MH1); F-285 | saknas |
 | R-947 | Inget moment i spelet pausar spelet. | byggd | HANDOFF beslut | saknas |
 | R-948 | En pausknapp fryser världen för alla spelare. | byggd | HANDOFF beslut | saknas |
 | R-949 | Hardcore mode ger ett liv. | byggd | HANDOFF beslut 2026-11-14 | saknas |

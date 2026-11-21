@@ -15,6 +15,24 @@ const at = (path) => ROOT + path;
 export const ITEMS = [
   {
     group: 'Spelet',
+    id: 'F-192, F-292, F-293, F-236',
+    title: 'Ryggsäck, springa och släppa',
+    where: 'dator',
+    steps: [
+      'Borda ett vrak. Plocka upp saker med E, en i taget, och lägg ner allt med X.',
+      'Spring med Shift utan last, och prova att springa förbi en vakt.',
+      'Köp en ryggsäck (BACKPACK) i armory och se att du bär mer och går fortare med last.',
+      'Med två spelare: låt den ena borda, och ta den andras post en stund. Se att den ges tillbaka.',
+    ],
+    links: [['Starta', at('')]],
+    ask: [
+      'Känns det bättre eller sämre att plocka upp med E?',
+      'Är det lagom att vakterna hör när man springer?',
+      'Är ryggsäckens nivåer värda priset?',
+    ],
+  },
+  {
+    group: 'Spelet',
     id: 'D-257, D-074',
     title: 'Smuggla förbi Wardens',
     where: 'dator',

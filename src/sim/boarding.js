@@ -168,5 +168,5 @@ export function stepBoarding(state, cmds, dt) {
     if (pod.alarm > 0) pod.alarm = Math.max(pirates ? 1 : 0, pod.alarm - dt);
   }
   // Everyone gets their health back once the whole crew is on the ship again.
-  if (!anyoneInside(state)) for (const p of state.players) p.hp = crewHpMax(state.ship);
+  if (!anyoneInside(state)) for (const p of state.players) p.hp = crewHpMax(state.ship, p.own);
 }

@@ -13,11 +13,14 @@ const freePost = (state) => POSTS.find((post) => !holderOf(state, post)) || null
 // `inside` is the id of the wreck or station the player is in, or null when on the ship.
 // `backTo` remembers the post a player left to go inside. `wants` is a post the player asked for while it was held.
 // `away` is how many seconds an online player has been gone since the connection was lost, or null (D-266).
+// `own` is the player's own post from the start (R-1108, F-236): kept for them while they are on the ship, and
+// given back to them at once when they come back from inside (R-1118).
 export function createPlayer(id, name, post) {
   return {
     id,
     name,
     post,
+    own: post,
     backTo: null,
     wants: null,
     wantsUntil: 0,
@@ -33,8 +36,10 @@ export function createPlayer(id, name, post) {
 export function addPlayer(state, name) {
   if (state.players.length >= MAX_PLAYERS) return null;
   const id = state.players.reduce((max, p) => Math.max(max, p.id), -1) + 1;
-  const player = createPlayer(id, name || `PLAYER ${id + 1}`, freePost(state));
-  player.hp = crewHpMax(state.ship);
+  // The first post that is nobody's own, else the first free one.
+  const post = POSTS.find((p) => !state.players.some((q) => q.own === p) && !holderOf(state, p)) || freePost(state);
+  const player = createPlayer(id, name || `PLAYER ${id + 1}`, post);
+  player.hp = crewHpMax(state.ship, player.own);
   state.players.push(player);
   state.events.push({ type: 'playerJoined', player: id, name: player.name });
   return player;
@@ -93,14 +98,28 @@ export function crewOf(state) {
   return crew;
 }
 
-// A player on the ship moves to a post, if nobody else holds it.
-// Two players who ask for each other's posts within a few seconds swap.
+// Whose own post this is, among the others on the ship and connected (F-236): that player keeps it, also while
+// they work another post for a while (R-1110). A post whose owner is inside or gone may be taken for a while.
+export function keptFor(state, post, but) {
+  return (
+    state.players.find((q) => q !== but && q.own === post && q.inside === null && !isAway(q) && q.post !== null) || null
+  );
+}
+
+// A player on the ship moves to a post, if nobody else holds it and it is not kept for its owner (F-236).
+// Two players who ask for each other's posts within a few seconds swap, own posts and all.
 export function takePost(state, player, post) {
   if (!POSTS.includes(post) || player.inside !== null || player.post === post) return false;
   const holder = holderOf(state, post);
+  const owner = !holder && keptFor(state, post, player);
+  if (owner) {
+    state.events.push({ type: 'postKept', player: player.id, post, by: owner.name });
+    return false;
+  }
   if (holder && holder.wants === player.post && player.post) {
     holder.post = player.post;
     holder.wants = null;
+    if (holder.own === post && player.own === holder.post) [holder.own, player.own] = [player.own, holder.own];
     state.events.push({ type: 'postChanged', player: holder.id, post: holder.post });
   } else if (holder) {
     player.wants = post;
@@ -119,12 +138,21 @@ export function leavePost(player) {
   player.backTo = player.post;
   player.post = null;
 }
-// Back on the ship the player gets the old post back, or another free one if it was taken meanwhile.
+// Back on the ship the player gets their own post back at once, and whoever had taken it meanwhile goes back to
+// their own (R-1118). Alone, it is the post the player left.
 export function returnToPost(state, player) {
   const old = player.backTo;
   player.backTo = null;
   if (player.post) return;
-  player.post = old && !holderOf(state, old) ? old : freePost(state);
+  const others = state.players.some((q) => q !== player && !isAway(q));
+  const want = others && player.own ? player.own : old;
+  const taker = want && holderOf(state, want);
+  if (taker && taker !== player && others) {
+    taker.post = taker.own && !holderOf(state, taker.own) ? taker.own : null;
+    if (!taker.post) taker.post = POSTS.find((p) => p !== want && !holderOf(state, p)) || null;
+    state.events.push({ type: 'postGivenBack', player: taker.id, post: taker.post, to: player.name });
+  }
+  player.post = want && !holderOf(state, want) ? want : freePost(state);
 }
 
 // Turn what each player asks for into commands for the ship. `inputs` is { [player id]: input }, where an input

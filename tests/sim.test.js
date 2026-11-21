@@ -641,12 +641,15 @@ test('boarding needs a docked ship, and loot carried to the airlock becomes fuel
   if (!it.loot.some((l) => l.type === 'cell')) it.loot.filter((l) => l.type === 'crate')[1].type = 'cell';
   const cell = it.loot.find((l) => l.type === 'cell'),
     crate = it.loot.find((l) => l.type === 'crate');
+  // Picked up with the use key, one thing at a time (F-293).
   av.x = cell.x;
   av.y = cell.y;
   step(s, { away: { 0: {} } }, DT);
+  assert.equal(av.carry.length, 0, 'not by walking over it');
+  step(s, { away: { 0: { usePressed: true } } }, DT);
   av.x = crate.x;
   av.y = crate.y;
-  step(s, { away: { 0: {} } }, DT);
+  step(s, { away: { 0: { usePressed: true } } }, DT);
   assert.equal(av.carry.length, 2);
   const fuel = s.ship.fuel;
   av.x = it.entry.x - 8;
@@ -659,16 +662,16 @@ test('boarding needs a docked ship, and loot carried to the airlock becomes fuel
   assert.equal(s.players[0].inside, null, 'the player is back on the ship');
 });
 
-test('a player can carry three things at most', () => {
+test('R-1268: a player carries as much as the backpack has room for', () => {
   const { s, it, av } = boarded();
   it.guards = [];
   it.turrets = [];
   for (const item of it.loot.slice(0, 5)) {
     av.x = item.x;
     av.y = item.y;
-    step(s, { away: { 0: {} } }, DT);
+    step(s, { away: { 0: { usePressed: true } } }, DT);
   }
-  assert.equal(av.carry.length, B.CARRY_MAX);
+  assert.equal(av.carry.length, B.PACK_ROOM[0], 'the first level of the backpack, with no gear beyond grenades');
 });
 
 test('near death the player is teleported home, drops the loot and cannot go back in', () => {
@@ -676,7 +679,7 @@ test('near death the player is teleported home, drops the loot and cannot go bac
   const item = it.loot[0];
   av.x = item.x;
   av.y = item.y;
-  step(s, { away: { 0: {} } }, DT);
+  step(s, { away: { 0: { usePressed: true } } }, DT);
   const before = it.loot.length;
   s.players[0].hp = B.TELEPORT_HP + 5;
   it.bolts.push({ x: av.x, y: av.y, vx: 0, vy: 0, ttl: 1, owner: 'enemy', dmg: 8 });
@@ -699,7 +702,7 @@ test('undocking with someone inside teleports them home at the usual cost', () =
   const item = it.loot[0];
   av.x = item.x;
   av.y = item.y;
-  step(s, { away: { 0: {} } }, DT);
+  step(s, { away: { 0: { usePressed: true } } }, DT);
   const before = it.loot.length;
   step(s, { captain: { dock: true } }, DT);
   assert.equal(s.ship.docked, null, 'the ship is free');
@@ -1804,7 +1807,7 @@ test('every catalog item belongs to a tab, and boarding gear is sold without a s
   atStation(s, station(s, 'neutral'));
   fillPurses(s, 1000);
   step(s, { shop: [{ action: 'buy', item: 'pack' }] }, DT);
-  assert.equal(s.ship.mods.pack, 1);
+  assert.equal(s.ship.mods['pack.captain'], 1, "boarding gear is the buyer's own (F-235)");
   step(s, { shop: [{ action: 'buy', item: 'tank' }] }, DT);
   assert.equal(s.ship.mods.tank, undefined, 'a hull upgrade still needs a shipyard');
 });
@@ -1868,15 +1871,19 @@ test('point defense stops some incoming fire, and repair drones mend the ship', 
   assert.ok(s.ship.hull > 110 && s.ship.nodes[1].hp > 60);
 });
 
-test('boarding gear changes what a boarder can do', () => {
+test('R-1113 R-1268: boarding gear changes what a boarder can do, and is the own of the role that bought it', () => {
   const plain = quiet(createState(1));
-  assert.equal(carryMax(plain.ship), B.CARRY_MAX);
+  assert.equal(carryMax(plain.ship), B.PACK_ROOM[0]);
   const s = quiet(createState(1)),
     w = dockAt(s);
   fillPurses(s, 3000);
-  for (const id of ['rifle', 'rifle', 'pack', 'suit', 'coils', 'charge', 'sentry', 'hack']) buyUpgrade(s, id);
-  assert.equal(rifleDmg(s.ship), B.RIFLE_DMG + 2 * B.RIFLE_STEP);
-  assert.equal(carryMax(s.ship), B.CARRY_MAX + B.PACK_EXTRA);
+  // Bought by the Gunner, for the Gunner's boarder (F-235). The solo player is the Gunner here.
+  s.players[0].own = 'gunner';
+  for (const id of ['rifle', 'rifle', 'pack', 'suit', 'coils', 'charge', 'sentry', 'hack'])
+    buyUpgrade(s, id, 1, 'gunner');
+  assert.equal(rifleDmg(s.ship, 'gunner'), B.RIFLE_DMG + 2 * B.RIFLE_STEP);
+  assert.equal(rifleDmg(s.ship, 'engineer'), B.RIFLE_DMG, "not the Engineer's");
+  assert.equal(carryMax(s.ship), B.PACK_ROOM[1]);
   assert.equal(crewHpMax(s.ship), B.CREW_HP + B.SUIT_HP);
   assert.equal(teleCooldown(s.ship), B.COIL_TELEPORT);
   run(s, {}, 0.1);
@@ -2041,7 +2048,7 @@ test('a friendly station is walked into without a lock, and its desks open the s
   assert.ok(s.events.some((e) => e.type === 'deskUsed' && e.desk === 'armory'));
   fillPurses(s, 500);
   step(s, { shop: [{ action: 'buy', item: 'pack' }] }, DT);
-  assert.equal(s.ship.mods.pack, 1, 'buying works while standing inside');
+  assert.equal(s.ship.mods['pack.captain'], 1, 'buying works while standing inside');
   av.x = it.entry.x;
   av.y = it.entry.y;
   step(s, { away: { 0: { usePressed: true } } }, DT);

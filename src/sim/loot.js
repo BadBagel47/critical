@@ -61,15 +61,39 @@ export function deposit(state, av) {
   av.carry = [];
 }
 
-// Loot is picked up by walking over it.
-export function pickUpLoot(state, it, av) {
-  for (const item of [...it.loot]) {
-    if (av.carry.length >= carryMax(state.ship)) break;
-    if (dist(item.x, item.y, av.x, av.y) >= 9) continue;
-    av.carry.push(item);
-    it.loot = it.loot.filter((l) => l !== item);
-    state.events.push({ type: 'pickup', item: item.type });
+// Loot is picked up with the use key, one thing at a time (F-293, R-1270): the nearest within reach.
+export const LOOT_REACH = 12;
+export function lootNear(it, av) {
+  let best = null;
+  let bestD = LOOT_REACH;
+  for (const item of it.loot) {
+    const d = dist(item.x, item.y, av.x, av.y);
+    if (d < bestD) {
+      best = item;
+      bestD = d;
+    }
   }
+  return best;
+}
+export function pickUp(state, it, av, item) {
+  if (av.carry.length >= carryMax(state.ship, av)) {
+    state.events.push({ type: 'packFull', player: av.player });
+    return false;
+  }
+  av.carry.push(item);
+  it.loot = it.loot.filter((l) => l !== item);
+  state.events.push({ type: 'pickup', item: item.type });
+  return true;
+}
+// X puts down all that is carried, where the boarder stands (F-293, R-1270).
+export function dropAll(state, it, av) {
+  if (!av.carry.length) return;
+  av.carry.forEach((item, i) => {
+    const a = (i / av.carry.length) * Math.PI * 2;
+    it.loot.push({ ...item, x: av.x + Math.cos(a) * 6, y: av.y + Math.sin(a) * 6 });
+  });
+  state.events.push({ type: 'dropped', player: av.player, count: av.carry.length });
+  av.carry = [];
 }
 
 // An extra slot found as loot is made for one role and one kind, and only for a role that can still have more
