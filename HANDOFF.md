@@ -176,6 +176,7 @@ Testbyggen sedan 2026-11-20 (användaren, DV1–DV3, projektregel i AGENTS.md):
 Arbetssätt
 - Onlineläget (2026-11-19, OL2, OL3, ON5, ON6): spelet och rummen på samma adress hos Cloudflare med adressen critical.trythis.one, och GitHub-adressen skickar vidare (R-1248, R-1249). Koden räcker för att gå med. Paus och fortsätt kräver att alla anslutna godkänner (R-1250, F-037).
 - Testbyggen (2026-11-20, DV1–DV3): allt arbete via grenen dev och testbygget på critical-dev.l8p1.workers.dev; main bara när användaren säger Publicera; planeringsdokumenten direkt till main. Ersätter beskedet 2026-11-15 om att allt slås ihop med main när testerna gått igenom, och OL5. Se Publicering.
+- Agentreglerna (2026-11-21, AR1): agenten säger bara till när det finns något att ta upp med agenten som skriver agentreglerna, och skriver ingen rad om det annars.
 - Adress för onlineläget (2026-11-20, OL3 ändrat): critical.l8p1.workers.dev så länge, critical.trythis.one senare (F-289).
 - Ordning (2026-11-19, OL1): Playtest i spelet först, sedan onlineläget (förberedelserna och spelets Worker med rummen), och därefter storyn och sidouppdragen.
 - Ordning (2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden. Priser sätts när det finns saker att köpa och uppgradera.
