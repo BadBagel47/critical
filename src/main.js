@@ -321,10 +321,13 @@ function runOnline(dt) {
   const state = game.state;
   readEvents(game);
   state.events.length = 0;
-  updateEffects(view.fx, state, view, dt);
-  const me = playerById(state, view.playerId);
-  const place = me && findThing(state, me.inside);
-  if (place && place.interior) updateInside(view.fx, place.interior, dt, state.paused);
+  // The effects remember what they have shown by the very thing, so they must see the same things from frame to
+  // frame: the real game. The guess is a new copy each frame, and showed every shot and blast again (2026-11-22).
+  const real = game.online.confirmed || state;
+  updateEffects(view.fx, real, view, dt);
+  const me = playerById(real, view.playerId);
+  const place = me && findThing(real, me.inside);
+  if (place && place.interior) updateInside(view.fx, place.interior, dt, real.paused);
 }
 
 function runGame(dt) {
@@ -390,7 +393,8 @@ function drawOnline() {
       .crew()
       .map((p) => (p.away ? p.name + ' (AWAY)' : p.name))
       .join('  ·  ');
-    font.draw(ctx, `ONLINE  ·  ROOM ${o.code}  ·  ${crew}`, VIEW_W / 2, VIEW_H - 24, COL.dim, { align: 'c' });
+    // Above the bars at the bottom left, clear of the Captain's panel (found 2026-11-22).
+    font.draw(ctx, `ROOM ${o.code}  ·  ${crew}`, 8, 284, COL.dim);
   }
   o.lines.slice(-3).forEach((l, i) => {
     label(ctx, font, VIEW_W / 2, 64 + i * 16, l.text, {

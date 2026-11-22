@@ -400,7 +400,11 @@ export function createOnline(game, hooks) {
   // round trip later. The others are guessed to do nothing in those steps. The guess is made anew each frame from the
   // real game, so a wrong guess is put right by itself. What the real steps make happen (sounds, sparks) is told
   // once, from the real game; the guess only shows.
-  const GUESS_MOST = 30; // steps: half a second
+  // At most this many of the newest inputs are stepped, to keep the guess cheap: two thirds of a second. Older ones
+  // that do something once (a post taken, the computer switched, a jump) are always stepped, so that a slow connection
+  // never makes the guess forget them for a moment and jump back and forth (found online 2026-11-22).
+  const GUESS_MOST = 40;
+  const once = (i) => i.take || i.auto || i.board || (i.captain && (i.captain.jump !== undefined || i.captain.dock));
   function guess(dt) {
     const real = o.confirmed;
     const events = real.events.splice(0);
@@ -409,7 +413,10 @@ export function createOnline(game, hooks) {
     try {
       seen = structuredClone(real);
       const pid = game.view.playerId;
-      const ahead = o.mine.length > GUESS_MOST ? o.mine.slice(-GUESS_MOST) : o.mine;
+      const ahead =
+        o.mine.length > GUESS_MOST
+          ? [...o.mine.slice(0, -GUESS_MOST).filter(once), ...o.mine.slice(-GUESS_MOST)]
+          : o.mine;
       for (const input of ahead) {
         const mine = { ...input };
         delete mine.pause;
