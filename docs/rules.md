@@ -1235,7 +1235,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1269 | Inne på baser och i vrak springer man med Shift, ungefär 60 % fortare, men bara när man inte bär något. Vakter i närheten hör stegen och kommer för att titta. | byggd | Användaren 2026-11-21 (SP1); F-292 | tests/carry.test.js |
 | R-1270 | Byte plockas upp med E, en sak i taget, och inget plockas upp av sig självt. X lägger ner allt man bär där man står. | byggd | Användaren 2026-11-21 (DR1, DR2); F-293 | tests/carry.test.js |
 | R-1271 | Mushjulet byter mellan geväret och sövningspistolen för den som bordar, och ändrar kraften för det system pekaren står på hos Engineer. | byggd | Användaren 2026-11-18 (MH1); F-285 | saknas |
-| R-1272 | Spelet ritas med grafikkortet (WebGL), med ljus uträknat per bildpunkt, skuggor och sken, som version C i designtestet för ljus. | bestämd | Användaren 2026-11-22 (GR3); D-261, F-294 | – |
+| R-1272 | Spelet ritas med grafikkortet (WebGL), med ljus uträknat per bildpunkt, skuggor och sken, som version C i designtestet för ljus. Insidan först; där det inte fungerar eller går för långsamt ritas det som förut, och menyn har ett val för det. | bestämd | Användaren 2026-11-22 (GR3); D-261, F-294; insidan byggd 2026-11-22 (F-294, WG1–WG3) | – |
 | R-947 | Inget moment i spelet pausar spelet. | byggd | HANDOFF beslut | saknas |
 | R-948 | En pausknapp fryser världen för alla spelare. | byggd | HANDOFF beslut | saknas |
 | R-949 | Hardcore mode ger ett liv. | byggd | HANDOFF beslut 2026-11-14 | saknas |

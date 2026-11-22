@@ -4,6 +4,7 @@
 import { VIEW_W, VIEW_H } from '../config.js';
 import { TILE, tileAt } from '../sim/boarding.js';
 import { TAU } from '../sim/util.js';
+import { glLightOn, shadeGL } from './gl-light.js';
 
 // What is left of the picture where no light falls: the shapes of the walls and little else, in a colder tone.
 const DARK = '#1f2338';
@@ -119,6 +120,8 @@ let map = null;
 // Darken what has been drawn of the place so far, except where the lights fall. `ox` and `oy` are where the
 // place is drawn on the screen. Space outside the hull is left as it is.
 export function shade(ctx, it, ox, oy, lights) {
+  // Drawn by the graphics card where it works and is chosen (F-294); otherwise the light map below.
+  if (glLightOn() && shadeGL(ctx, it, ox, oy, lights)) return;
   if (!map) {
     map = document.createElement('canvas');
     map.width = VIEW_W;

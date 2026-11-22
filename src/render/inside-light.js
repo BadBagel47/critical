@@ -63,7 +63,8 @@ export function lightsOf(state, place, it, style, origin) {
     const way = Math.atan2(f.y, f.x);
     const beam = (half, power) => {
       const area = litArea(it, a.x, a.y, B.LAMP_RANGE, way, half);
-      lights.push({ x: a.x, y: a.y, r: B.LAMP_RANGE, rgb: WARM, power, area, far: true });
+      // The heading and half width are for the light drawn by the graphics card (F-294).
+      lights.push({ x: a.x, y: a.y, r: B.LAMP_RANGE, rgb: WARM, power, area, far: true, dir: way, half });
     };
     beam(B.LAMP_ANGLE, 0.75);
     beam(B.LAMP_ANGLE + 0.16, 0.3);

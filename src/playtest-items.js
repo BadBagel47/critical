@@ -15,6 +15,23 @@ const at = (path) => ROOT + path;
 export const ITEMS = [
   {
     group: 'Spelet',
+    id: 'F-294',
+    title: 'Det nya ljuset inne',
+    where: 'dator, iPad',
+    steps: [
+      'Borda ett vrak eller en fientlig bas, där det är mörkt. Tänd lampan, kasta en flare och skjut.',
+      'Öppna menyn (O) och växla LIGHT INSIDE mellan NEW och CLASSIC för att jämföra.',
+      'Lägg till ?fps i adressen för att se bilder i sekunden med det nya ljuset.',
+    ],
+    links: [['Starta', at('')]],
+    ask: [
+      'Ser det nya ljuset ut som version C i designtestet?',
+      'Hur många bilder i sekunden visar mätaren på Mac och iPad?',
+      'Bytte spelet själv till CLASSIC någon gång?',
+    ],
+  },
+  {
+    group: 'Spelet',
     id: 'F-192, F-292, F-293, F-236',
     title: 'Ryggsäck, springa och släppa',
     where: 'dator',

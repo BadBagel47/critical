@@ -1095,8 +1095,10 @@ await page.evaluate(() => window.localStorage.clear());
     await settles(async () => (await at('s.purses.captain')) === 888 && (await at('c.mode')) !== 'menu'),
     'and a save file can be imported',
   );
-  // Hardcore: one life, and the run takes its saves with it. QUIT is the last row, below FULLSCREEN (F-286).
-  await press('KeyO', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'Enter', 'Enter');
+  // Hardcore: one life, and the run takes its saves with it. QUIT is the last row, below FULLSCREEN (F-286) and
+  // LIGHT INSIDE (F-294).
+  await press('KeyO', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown');
+  await press('Enter', 'Enter');
   check(
     await settles(async () => (await at('v.started')) === false && (await at('v.menu.row')) === 0),
     'quitting goes to the title screen, which now offers CONTINUE',

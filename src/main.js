@@ -1,5 +1,6 @@
 // Boot and the main loop: read input, step the game, draw the screen.
 import { VIEW_W, VIEW_H, STEP, COL } from './config.js';
+import { setLightStill } from './render/gl-light.js';
 import { loadAssets } from './assets.js';
 import { createInput } from './input.js';
 import { initAudio, isMuted } from './audio.js';
@@ -71,6 +72,8 @@ if (still) {
   let ticks = 0;
   performance.now = () => (ticks += 0.25);
 }
+// The screen tests draw the light with the light map, so that their pictures stay the same (F-294).
+setLightStill(still);
 let stillFrame = 0;
 const newSeed = () => (still ? 1 : Date.now() % 100000);
 // Everything the screen code needs: the game itself, how this player looks at it, what they are pressing,
