@@ -9,6 +9,7 @@
 // Run against the test build, or a local copy of it with the rooms:
 //   node tools/site.mjs dist local && npx --yes wrangler@4 dev --config wrangler.test.jsonc --port 8787
 //   node tests/online.mjs [base-url]   (default http://127.0.0.1:8787/)
+// LATENCY=150 makes every message wait that many milliseconds each way, as over a real network.
 import { createRequire } from 'node:module';
 const { chromium } = createRequire(import.meta.url)('playwright');
 
@@ -22,6 +23,30 @@ const check = (ok, what, seen) => {
   if (!ok) failed = true;
 };
 
+const LATENCY = Number(process.env.LATENCY) || 0;
+// In the page: every message to and from the room waits `ms` before it goes on, as over a slow network.
+function slowNetwork(ms) {
+  const Real = window.WebSocket;
+  class Slow extends Real {
+    send(data) {
+      setTimeout(() => {
+        if (this.readyState === 1) super.send(data);
+      }, ms);
+    }
+    addEventListener(type, fn, opts) {
+      if (type !== 'message') return super.addEventListener(type, fn, opts);
+      return super.addEventListener(type, (e) => setTimeout(() => fn.call(this, e), ms), opts);
+    }
+    set onmessage(fn) {
+      super.onmessage = fn ? (e) => setTimeout(() => fn.call(this, e), ms) : null;
+    }
+    get onmessage() {
+      return super.onmessage;
+    }
+  }
+  window.WebSocket = Slow;
+}
+
 async function player(name) {
   const b = await chromium.launch({
     ...(remote ? { proxy: { server: process.env.HTTPS_PROXY } } : {}),
@@ -31,6 +56,7 @@ async function player(name) {
   const ctx = await b.newContext({ viewport: { width: 960, height: 540 }, ignoreHTTPSErrors: !!remote });
   // The name is asked for only once; here it is there from the start.
   await ctx.addInitScript((n) => localStorage.setItem('critical-name', n), name);
+  if (LATENCY) await ctx.addInitScript(slowNetwork, LATENCY);
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push(name + ': ' + e.message));
   page.on('console', (m) => m.type() === 'error' && errors.push(name + ' console: ' + m.text()));
@@ -176,6 +202,31 @@ try {
   await dee.waitForTimeout(1500);
   const [d, e] = [await look(dee), await look(eli)];
   check(d.crew === e.crew && d.rng === e.rng, 'DEE follows ELI with the same game', `${d.rng} / ${e.rng}`);
+
+  // Coming back: ELI, now the host, reloads the page, and the game goes to DEE; ELI opens the link again and is
+  // ELI again, on ELI's own post (R-1246, R-1118).
+  const eliPost = await at(eli, () => {
+    const c = window.__critical;
+    return c.state.players.find((p) => p.id === c.view.playerId).post;
+  });
+  await eli.goto(base);
+  await dee.waitForFunction(() => window.__critical.online.role === 'host', null, { timeout: 30000 });
+  check(true, 'DEE hosts when ELI is gone');
+  await eli.goto(base + '#room=' + code2);
+  await eli.reload();
+  await eli.waitForFunction(() => window.__critical.online && window.__critical.online.ready, null, {
+    timeout: 20000,
+  });
+  await eli.waitForTimeout(1500);
+  const back = await at(eli, () => {
+    const c = window.__critical;
+    return { post: c.state.players.find((p) => p.id === c.view.playerId).post, n: c.state.players.length };
+  });
+  check(
+    back.post === eliPost && back.n === 2,
+    'ELI is back on their own post, as the same player',
+    JSON.stringify(back),
+  );
 } catch (e) {
   check(false, 'the run', e.message);
 }
