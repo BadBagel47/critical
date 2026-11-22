@@ -19,7 +19,17 @@ const STYLE = `
   .crit-dialog .code { font-size: 34px; letter-spacing: 0.3em; color: #dba445; }
   .crit-dialog .link { font-size: 13px; color: #9be4ee; word-break: break-all; user-select: all; -webkit-user-select: all; }
   .crit-dialog .qr { width: 180px; height: 180px; margin: 0 auto; background: #fff; padding: 6px; border-radius: 4px; }
-  .crit-dialog .qr svg { width: 100%; height: 100%; display: block; }`;
+  .crit-dialog .qr svg { width: 100%; height: 100%; display: block; }
+  .crit-dialog .box { max-height: 94vh; overflow-y: auto; }
+  /* A phone on its side: less room, everything smaller, so that the whole box fits (2026-11-22). */
+  @media (max-height: 520px) {
+    .crit-dialog .box { padding: 10px 14px; gap: 6px; }
+    .crit-dialog h2 { font-size: 15px; }
+    .crit-dialog p { font-size: 12px; }
+    .crit-dialog .code { font-size: 24px; }
+    .crit-dialog .qr { width: min(180px, 34vh); height: min(180px, 34vh); padding: 4px; }
+    .crit-dialog button { min-height: 36px; }
+  }`;
 
 let styled = false;
 function open(build) {

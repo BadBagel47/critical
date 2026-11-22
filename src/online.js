@@ -404,26 +404,51 @@ export function createOnline(game, hooks) {
   // that do something once (a post taken, the computer switched, a jump) are always stepped, so that a slow connection
   // never makes the guess forget them for a moment and jump back and forth (found online 2026-11-22).
   const GUESS_MOST = 40;
+  const GUESS_SLOW = 4; // milliseconds a frame: above this the guess steps three inputs at a time
   const once = (i) => i.take || i.auto || i.board || (i.captain && (i.captain.jump !== undefined || i.captain.dock));
+  // The guess is kept from frame to frame while the real game stands still, and only the inputs made since are
+  // stepped on it; when the host's steps move the real game on, it is made anew. That is most frames over a slow
+  // network, where the full guess cost a lot (found 2026-11-22 with 150 ms each way).
+  let kept = null; // { state, tick, count }: the guess, the real game's step it was made from, inputs stepped on it
   function guess(dt) {
     const real = o.confirmed;
     const events = real.events.splice(0);
     const t0 = performance.now();
+    const pid = game.view.playerId;
+    // Where the guess costs much (a slow machine, a slow network), runs of the very same input (keys held, nothing
+    // pressed) are stepped up to three at a time, as one longer step. A key pressed makes an input unlike those
+    // around it, so it is always stepped by itself.
+    const group = o.guessMs > GUESS_SLOW ? 3 : 1;
+    const stepMine = (seen, list) => {
+      seen.events = [];
+      const text = group > 1 ? list.map((x) => JSON.stringify(x)) : null;
+      for (let i = 0; i < list.length; ) {
+        let n = 1;
+        while (n < group && i + n < list.length && text[i + n] === text[i]) n++;
+        const mine = { ...list[i] };
+        delete mine.pause;
+        stepPlayers(seen, { [pid]: mine }, dt * n);
+        i += n;
+      }
+    };
     let seen = real;
     try {
-      seen = structuredClone(real);
-      const pid = game.view.playerId;
-      const ahead =
-        o.mine.length > GUESS_MOST
-          ? [...o.mine.slice(0, -GUESS_MOST).filter(once), ...o.mine.slice(-GUESS_MOST)]
-          : o.mine;
-      for (const input of ahead) {
-        const mine = { ...input };
-        delete mine.pause;
-        stepPlayers(seen, { [pid]: mine }, dt);
+      if (kept && kept.tick === o.tick && kept.base === real && kept.count <= o.mine.length) {
+        seen = kept.state;
+        stepMine(seen, o.mine.slice(kept.count));
+        kept.count = o.mine.length;
+      } else {
+        seen = structuredClone(real);
+        const ahead =
+          o.mine.length > GUESS_MOST
+            ? [...o.mine.slice(0, -GUESS_MOST).filter(once), ...o.mine.slice(-GUESS_MOST)]
+            : o.mine;
+        stepMine(seen, ahead);
+        kept = { state: seen, tick: o.tick, base: real, count: o.mine.length };
       }
     } catch {
       seen = real;
+      kept = null;
     }
     seen.events = events;
     game.state = seen;
