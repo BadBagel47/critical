@@ -169,3 +169,16 @@ test('D-264: the guess never reaches the real game, and a save is of the real ga
   assert.equal(o.confirmed, real);
   assert.equal(real.events.length, 0);
 });
+
+test('D-264: a post taken stays in the guess however many inputs are on their way (found online 2026-11-22)', () => {
+  const { game, o } = joined();
+  const before = game.state.players.find((p) => p.id === game.view.playerId).post;
+  const want = before === 'engineer' ? 'gunner' : 'engineer';
+  // The post is asked for, and then a long while of inputs that the host has not stepped yet.
+  o.run([{ take: want }], STEP);
+  for (let k = 0; k < 20; k++) {
+    o.run([{}, {}, {}], STEP);
+    assert.equal(game.state.players.find((p) => p.id === game.view.playerId).post, want, `frame ${k}`);
+  }
+  assert.ok(o.mine.length > 40, 'more than the guess steps in full');
+});
