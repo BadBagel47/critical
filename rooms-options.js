@@ -7,6 +7,12 @@ export default {
   mode: 'host',
   takeover: true,
   takeoverMs: 5_000,
+  // A host whose page has been hidden this long (a tab in the background, another app) hands the game to someone
+  // whose page shows (F-290, network-kit 0.21). A locked iPad closes the connection, and the takeover above applies.
+  handoverWhenHiddenMs: 10_000,
+  // The kit's notice when someone records with Playtest Recorder sits bottom left: the credits, the minimap and the
+  // sensor strip are top right, and the posts top left (network-kit 0.22).
+  recordingNotice: 'bottom-left',
   places: ['captain', 'gunner', 'engineer'],
   roles: { player: { seats: 3 }, viewer: { seats: 2 } },
   access: 'open',
