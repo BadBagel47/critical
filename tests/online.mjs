@@ -146,6 +146,36 @@ try {
   await cy.waitForTimeout(1500);
   const t1 = await at(cy, () => window.__critical.state.time);
   check(t1 > t0 + 0.5, 'the game runs on with CY', `${t0.toFixed(2)} -> ${t1.toFixed(2)}`);
+
+  // A new room: the host's page is hidden for a while (another tab, another app), and the game goes to the one
+  // whose page shows (F-290, network-kit's handover). Back again, the old host follows the new one.
+  const dee = await player('DEE');
+  await dee.goto(base);
+  await dee.waitForFunction(() => window.__critical && window.__critical.state);
+  await dee.waitForTimeout(500);
+  await at(dee, () => window.__critical.actions.hostOnline(false));
+  await dee.waitForFunction(() => window.__critical.online && window.__critical.online.code, null, { timeout: 15000 });
+  const code2 = await at(dee, () => window.__critical.online.code);
+  await dee.locator('.crit-dialog button', { hasText: 'CLOSE' }).click();
+  const eli = await player('ELI');
+  await eli.goto(base + '#room=' + code2);
+  await eli.waitForFunction(() => window.__critical.online && window.__critical.online.ready, null, { timeout: 20000 });
+  const hide = (page, hidden) =>
+    page.evaluate((h) => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => h });
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => (h ? 'hidden' : 'visible') });
+      document.dispatchEvent(new window.Event('visibilitychange'));
+    }, hidden);
+  await hide(dee, true);
+  await eli.waitForFunction(() => window.__critical.online.role === 'host', null, { timeout: 30000 });
+  check(true, 'the game went to ELI while the host was hidden');
+  await hide(dee, false);
+  await dee.waitForFunction(() => window.__critical.online.role === 'guest' && window.__critical.online.ready, null, {
+    timeout: 20000,
+  });
+  await dee.waitForTimeout(1500);
+  const [d, e] = [await look(dee), await look(eli)];
+  check(d.crew === e.crew && d.rng === e.rng, 'DEE follows ELI with the same game', `${d.rng} / ${e.rng}`);
 } catch (e) {
   check(false, 'the run', e.message);
 }

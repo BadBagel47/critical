@@ -229,7 +229,7 @@ export function createOnline(game, hooks) {
   }
   function onPeer(e) {
     // The room also tells a page about itself.
-    if (o.room && e.id === o.room.me) return;
+    if (e.self || (o.room && e.id === o.room.me)) return;
     if (o.role !== 'host') {
       if (e.event === 'drop') say(`${e.name} LOST THE CONNECTION`, 'warn');
       if (e.event === 'back') say(`${e.name} IS BACK`, 'good');
@@ -251,6 +251,19 @@ export function createOnline(game, hooks) {
       o.queues.delete(pid);
       if (e.event === 'drop') say(`${e.name} LOST THE CONNECTION  ·  THE POST IS FREE`, 'warn');
     }
+  }
+  // The game went to someone else while this page was hidden (F-290, network-kit's handover): this browser follows
+  // the new host from now on, and gets the whole game from them.
+  function becomeGuest() {
+    o.role = 'guest';
+    o.ready = false;
+    o.inbox = [];
+    o.outbox = [];
+    o.mine = [];
+    o.confirmed = null;
+    o.vote = null;
+    say('ANOTHER PLAYER HOSTS THE GAME NOW  ·  GETTING IT', 'info', 4);
+    if (o.room) o.room.send({ t: 'again' });
   }
   function becomeHost() {
     o.role = 'host';
@@ -279,10 +292,16 @@ export function createOnline(game, hooks) {
     room.on('message', onMessage);
     room.on('peer', onPeer);
     room.on('host', () => {
-      if (o.role === 'guest' && o.ready) becomeHost();
+      if (o.role === 'guest' && o.ready && room.isHost) becomeHost();
+      else if (o.role === 'host' && !room.isHost) becomeGuest();
     });
     room.on('role', ({ isHost }) => {
       if (isHost && o.role === 'guest' && o.ready) becomeHost();
+      else if (!isHost && o.role === 'host') becomeGuest();
+    });
+    // Sends that pile up behind the room's pace (network-kit F-141): the others will see this player late.
+    room.on('backlog', ({ waiting }) => {
+      if (waiting > 20) say('THE CONNECTION IS SLOW  ·  THE OTHERS SEE YOU LATE', 'warn', 3);
     });
     room.on('status', (s) => {
       if (s === 'reconnecting') say('THE CONNECTION IS LOST  ·  TRYING AGAIN', 'warn', 3);
