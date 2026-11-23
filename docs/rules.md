@@ -1236,6 +1236,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1270 | Byte plockas upp med E, en sak i taget, och inget plockas upp av sig självt. X lägger ner allt man bär där man står. | byggd | Användaren 2026-11-21 (DR1, DR2); F-293 | tests/carry.test.js |
 | R-1271 | Mushjulet byter mellan geväret och sövningspistolen för den som bordar, och ändrar kraften för det system pekaren står på hos Engineer. | byggd | Användaren 2026-11-18 (MH1); F-285 | saknas |
 | R-1272 | Spelet ritas med grafikkortet (WebGL), med ljus uträknat per bildpunkt, skuggor och sken, som version C i designtestet för ljus. Insidan först; där det inte fungerar eller går för långsamt ritas det som förut, och menyn har ett val för det. | bestämd | Användaren 2026-11-22 (GR3); D-261, F-294; insidan byggd 2026-11-22 (F-294, WG1–WG3) | – |
+| R-1273 | Ett högerklick på ett fiendeskepp markerar just det skeppet, för både Captain och Gunner, och ett högerklick till på samma skepp tar bort markeringen. Ett klick bredvid alla skepp ändrar inget. T finns kvar. | byggd | Användaren 2026-11-23 (MK1); F-297 | tests/players.test.js |
+| R-1274 | Flikarna för posterna visar vem som har varje post när besättningen är fler än en, FREE för en ledig post, AUTO när skeppets dator sköter den, och båda namnen på en post som någon har tagit medan ägaren är ombord eller borta. | byggd | Användaren 2026-11-22 (OL9); F-296 | tests/messages.test.js |
 | R-947 | Inget moment i spelet pausar spelet. | byggd | HANDOFF beslut | saknas |
 | R-948 | En pausknapp fryser världen för alla spelare. | byggd | HANDOFF beslut | saknas |
 | R-949 | Hardcore mode ger ett liv. | byggd | HANDOFF beslut 2026-11-14 | saknas |

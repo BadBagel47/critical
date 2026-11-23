@@ -28,18 +28,31 @@ const WARM = { color: COL.ochre[2], border: COL.ochre[0] };
 const ALARM = { color: COL.ember[2], border: COL.ember[0] };
 
 // The three posts. The player's own is lit, and one held by someone else carries their name.
+// What a post's tab says after its name (F-296, OL9): every tab names its holder, the own too, once there is a
+// crew; a post nobody holds says FREE, or AUTO when the ship's computer runs it (R-815, R-822); a post taken for a
+// while, while its owner is aboard or gone, names both.
+export function tabText(state, post, me) {
+  const crew = state.players.length > 1;
+  const short = (name) => name.slice(0, 8);
+  const holder = holderOf(state, post);
+  const owner = state.players.find((p) => p.own === post && p !== holder);
+  const auto = !holder && computerOn(state, post);
+  let who = '';
+  if (holder && (crew || me.post !== post)) who = short(holder.name);
+  if (holder && owner && holder.own !== post) who += ` FOR ${short(owner.name)}`;
+  if (!holder) who = auto ? 'AUTO' : crew ? 'FREE' : '';
+  return { who, auto };
+}
+
 export function drawTabs(ctx, font, state, view) {
   const me = playerById(state, view.playerId);
   let x = 8;
   POSTS.forEach((post, i) => {
     const mine = me.post === post;
-    const holder = holderOf(state, post);
-    const other = holder && !mine ? '  ' + holder.name : '';
-    // The ship's computer runs the post: AUTO on its tab (R-815, R-822).
-    const auto = !holder && computerOn(state, post) ? '  AUTO' : '';
+    const { who, auto } = tabText(state, post, me);
     const look = mine ? { fg: COL.out, bg: COL[post], border: null } : { fg: COL.dim, bg: COL.panel, border: COL.line };
     if (auto) look.fg = COL.ion[2];
-    x = label(ctx, font, x, 8, `${i + 1}  ${post.toUpperCase()}${other}${auto}`, look) + 4;
+    x = label(ctx, font, x, 8, `${i + 1}  ${post.toUpperCase()}${who ? '  ' + who : ''}`, look) + 4;
   });
   return x;
 }
@@ -379,7 +392,7 @@ const HELP = [
   ['ALL POSTS', '1 2 3 OR TAB  SWITCH POST     P  PAUSE     H  HELP     M  MAP     J  STAR MAP'],
   ['', 'I  STORES     L  LOG     E  GO ABOARD WHERE DOCKED     O  MENU     N  SOUND'],
   ['', "K  THE SHIP'S COMPUTER ON OR OFF ON THIS POST, WHERE IT WAS ALLOWED AT THE START"],
-  ['', 'Z  CHARGE THE BOOST, THE CAPTAIN LETS IT GO     T  MARK A SHIP FOR THE OTHERS'],
+  ['', 'Z  CHARGE THE BOOST, THE CAPTAIN LETS IT GO     T OR RIGHT CLICK  MARK A SHIP FOR THE OTHERS'],
   ['CAPTAIN', 'W S  THROTTLE     A D  TURN     X  FULL STOP     Q  DOCK AND UNDOCK'],
   ['', 'R  DARTS     SHIFT  AFTERBURNER     C  COURSE TO THE NEXT PLACE ON THE MAP'],
   ['', 'ON THE STAR MAP  PICK A SYSTEM NEXT TO THIS ONE, AND WHERE TO ARRIVE'],

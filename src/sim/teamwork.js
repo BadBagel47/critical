@@ -73,8 +73,8 @@ export function stepSurge(state, dt) {
 // the Captain a ship that the crew's shots hurt a little more.
 const foes = (state) => state.vessels.filter((v) => enemies(state, v.side, CREW));
 
-// The Gunner marks the enemy nearest to where they aim. Marking it again takes the mark away.
-export function markByGunner(state, at) {
+// The enemy nearest to a point, within reach of it, or null.
+function foeAt(state, at) {
   let best = null,
     least = B.MARK_REACH;
   for (const v of foes(state)) {
@@ -84,7 +84,18 @@ export function markByGunner(state, at) {
       best = v;
     }
   }
+  return best;
+}
+// The Gunner marks the enemy nearest to where they aim. Marking it again takes the mark away.
+export function markByGunner(state, at) {
+  const best = foeAt(state, at);
   state.marks.gunner = best && best.id !== state.marks.gunner ? best.id : null;
+}
+// A right click on a ship (F-297, R-1273): the Captain marks that very ship, and marks it off again the same way.
+// A click beside every ship changes nothing.
+export function markCaptainAt(state, at) {
+  const best = foeAt(state, at);
+  if (best) state.marks.captain = best.id !== state.marks.captain ? best.id : null;
 }
 // The Captain goes through the enemies from the nearest one out, and then to none.
 export function markByCaptain(state) {
