@@ -37,7 +37,10 @@ test('D-288: each test on the list has what Playtest needs, with links that work
     assert.ok(!ids.has(it.id), `${it.id} twice`);
     ids.add(it.id);
     assert.ok(Array.isArray(it.steps) && it.steps.length, `${it.id} has no steps`);
-    assert.ok([].concat(it.ask).every((q) => typeof q === 'string' && q.length), `${it.id} has no question`);
+    assert.ok(
+      [].concat(it.ask).every((q) => typeof q === 'string' && q.length),
+      `${it.id} has no question`,
+    );
     for (const [text, address] of it.links) {
       assert.ok(text, `${it.id} has a link without text`);
       assert.ok(address.startsWith(root), `${it.id}: ${address} does not start at the site's root`);

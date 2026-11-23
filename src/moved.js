@@ -5,4 +5,4 @@
   if (where.hostname !== 'badbagel47.github.io') return;
   var rest = where.pathname.replace(/^\/critical\/?/, '');
   where.replace('https://critical.l8p1.workers.dev/' + rest + where.search + where.hash);
-})(location);
+})(window.location);

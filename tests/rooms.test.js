@@ -27,8 +27,14 @@ test('R-1248 R-1250: three posts, a new player takes one at once, the code is en
 function movedFrom(href) {
   const u = new URL(href);
   let went = null;
-  const where = { hostname: u.hostname, pathname: u.pathname, search: u.search, hash: u.hash, replace: (to) => (went = to) };
-  new Function('location', readFileSync(new URL('../src/moved.js', import.meta.url), 'utf8'))(where);
+  const where = {
+    hostname: u.hostname,
+    pathname: u.pathname,
+    search: u.search,
+    hash: u.hash,
+    replace: (to) => (went = to),
+  };
+  new Function('window', readFileSync(new URL('../src/moved.js', import.meta.url), 'utf8'))({ location: where });
   return went;
 }
 test('R-1248: the old address on GitHub sends on to the game on Cloudflare, and nothing else moves', () => {
@@ -45,5 +51,8 @@ test('R-1248: the old address on GitHub sends on to the game on Cloudflare, and 
   assert.equal(movedFrom('https://critical-dev.l8p1.workers.dev/#room=ABC123'), null);
   assert.equal(movedFrom('http://localhost:8080/'), null);
   for (const page of ['index.html', 'playtest.html'])
-    assert.match(readFileSync(new URL('../' + page, import.meta.url), 'utf8'), /<script src="src\/moved\.js"><\/script>/);
+    assert.match(
+      readFileSync(new URL('../' + page, import.meta.url), 'utf8'),
+      /<script src="src\/moved\.js"><\/script>/,
+    );
 });
