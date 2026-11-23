@@ -2,7 +2,9 @@ name: Publish dev to main
 
 # Publicera (owner 2026-11-20, DV1–DV3): dev, as it is on the test build, becomes the published game. Started by
 # hand, by the owner or by an agent when the owner says Publicera, on the dev branch: the checks run on dev first,
-# and only then is dev merged into main, which GitHub Pages publishes.
+# and only then is dev merged into main. main is the game on Cloudflare, at critical.l8p1.workers.dev, with the rooms
+# for online play on the same address (D-269, R-1248, R-1249). GitHub Pages still publishes main too, but there the
+# page only sends on to Cloudflare (src/moved.js).
 on:
   workflow_dispatch:
 
@@ -20,6 +22,8 @@ jobs:
     concurrency:
       group: auto-merge
       cancel-in-progress: false
+    outputs:
+      main: ${{ steps.main.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,15 +31,71 @@ jobs:
           fetch-depth: 0
 
       - name: Merge dev into main
+        id: main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
           git fetch origin dev
           git merge --no-edit "${GITHUB_SHA}"
           git push origin main
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Trigger GitHub Pages build
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh api -X POST "repos/${GITHUB_REPOSITORY}/pages/builds"
+
+  deploy:
+    needs: publish
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-main
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.publish.outputs.main }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Put the site together
+        run: node tools/site.mjs dist "${{ needs.publish.outputs.main }}"
+
+      # Cloudflare now and then answers a deploy with error 10007 for a moment; then it is tried again.
+      - name: Deploy the game to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          for try in 1 2 3; do
+            npx --yes wrangler@4 deploy --config wrangler.jsonc 2>&1 | tee deploy.log
+            status=${PIPESTATUS[0]}
+            if [ "$status" = 0 ]; then exit 0; fi
+            if ! grep -q 10007 deploy.log; then exit "$status"; fi
+            sleep 20
+          done
+          exit 1
+
+      # The game answers with this very commit, not an older one, and the rooms answer too (network-kit B-119).
+      - name: Check that the game is the new one
+        run: |
+          want="${{ needs.publish.outputs.main }}"
+          for i in $(seq 1 36); do
+            got=$(curl -fsS "https://critical.l8p1.workers.dev/version.txt?$i" || true)
+            if [ "$got" = "$want" ]; then
+              echo "the game is $want"
+              for j in 1 2 3 4 5 6; do
+                code=$(curl -sS -o rooms.txt -w '%{http_code}' "https://critical.l8p1.workers.dev/rooms?$j" || true)
+                echo "rooms: $code $(head -c 300 rooms.txt)"
+                if [ "$code" = 200 ] && grep -q codeLength rooms.txt; then exit 0; fi
+                sleep 10
+              done
+              echo "the rooms do not answer"
+              exit 1
+            fi
+            sleep 5
+          done
+          echo "the game still answers with: $got"
+          exit 1
