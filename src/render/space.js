@@ -15,6 +15,7 @@ import { CREW, PIRATE, enemies } from '../sim/sides.js';
 import { drawFlame, steering, FLAME_ION, FLAME_FIRE } from './flames.js';
 import { drawStar, drawHaze, starLight, glareLight } from './system.js';
 import { currentSector } from '../sim/sectors.js';
+import { glLightOn, lightSpaceGL } from './gl-light.js';
 
 // Three layers of stars that move at different speeds, always the same ones.
 const STARS = (() => {
@@ -402,7 +403,8 @@ function drawArrows(ctx, font, state, cam) {
 }
 
 // ---------- light in space ----------
-// A light brightens the hulls and stars near it and leaves black space black.
+// A light brightens the hulls and stars near it and leaves black space black. Where the graphics card draws the
+// light (F-295) the lights go to it as a list; otherwise each is painted here.
 function shine(ctx, x, y, r, rgb, power) {
   if (power <= 0.01) return;
   const g = ctx.createRadialGradient(x, y, 0, x, y, r);
@@ -414,30 +416,29 @@ function shine(ctx, x, y, r, rgb, power) {
   ctx.fill();
 }
 const rgbOf = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(',');
-function drawSpaceLights(ctx, state, env, near) {
+// The lights in space that fall on something, in the world's own measure.
+export function spaceLights(state, env, near) {
+  const out = [];
+  const add = (x, y, r, rgb, power) => power > 0.01 && out.push({ x, y, r, rgb, power });
   const ship = state.ship;
-  ctx.save();
-  ctx.globalCompositeOperation = 'color-dodge';
-  for (const b of state.bolts)
-    if (near(b, 40)) shine(ctx, b.x, b.y, b.small ? 22 : 34, rgbOf(BOLT_COL[boltKind(b)][2]), 0.5);
-  for (const r of state.rockets) shine(ctx, r.x, r.y, 34, rgbOf(COL.ember[2]), 0.5);
-  for (const f of state.fx)
-    if (f.type === 'boom') shine(ctx, f.x, f.y, f.size * 3, '255,214,150', 0.8 * (1 - f.t / f.dur));
+  for (const b of state.bolts) if (near(b, 40)) add(b.x, b.y, b.small ? 22 : 34, rgbOf(BOLT_COL[boltKind(b)][2]), 0.5);
+  for (const r of state.rockets) add(r.x, r.y, 34, rgbOf(COL.ember[2]), 0.5);
+  for (const f of state.fx) if (f.type === 'boom') add(f.x, f.y, f.size * 3, '255,214,150', 0.8 * (1 - f.t / f.dur));
   // Engines light up what is behind them.
   const th = Math.max(0, ship.throttle);
   if (th > 0.02 && !ship.docked) {
     const p = toWorld(ship, { x: 0, y: 56 });
-    shine(ctx, p.x, p.y, 26 + th * 24, rgbOf(COL.ion[2]), 0.2 + th * 0.25);
+    add(p.x, p.y, 26 + th * 24, rgbOf(COL.ion[2]), 0.2 + th * 0.25);
   }
   for (const t of steering(ship)) {
     const p = toWorld(ship, { x: t.x, y: t.y + t.way * 3 });
-    shine(ctx, p.x, p.y, 14 + t.power * 10, rgbOf(COL.ion[2]), 0.25 + t.power * 0.3);
+    add(p.x, p.y, 14 + t.power * 10, rgbOf(COL.ion[2]), 0.25 + t.power * 0.3);
   }
   for (const v of state.vessels) {
     if (!near(v, 110)) continue;
     for (const g of lookOf(v).glow) {
       const p = toWorld(v, g);
-      shine(ctx, p.x, p.y, 16 + g.r * 5, rgbOf(v.side === PIRATE ? COL.ember[2] : COL.ion[2]), 0.45);
+      add(p.x, p.y, 16 + g.r * 5, rgbOf(v.side === PIRATE ? COL.ember[2] : COL.ion[2]), 0.45);
     }
   }
   // The lights on a station's docking arms fall on the station itself, in the colour that says how it
@@ -445,13 +446,19 @@ function drawSpaceLights(ctx, state, env, near) {
   for (const t of state.things) {
     if (t.kind === 'pod' && near(t, 40)) {
       const lamp = podLamp(t, state.time + (t.id % 7) * 0.13);
-      if (lamp) shine(ctx, t.x, t.y, 30, rgbOf(lamp), 0.5);
+      if (lamp) add(t.x, t.y, 30, rgbOf(lamp), 0.5);
     }
     if (t.kind !== 'station' || !near(t, 300)) continue;
     const { color, tips } = armLights(t, env);
     if (color === '#1c1c28') continue;
-    for (const p of tips) shine(ctx, p.x, p.y, 58, rgbOf(color), 0.5);
+    for (const p of tips) add(p.x, p.y, 58, rgbOf(color), 0.5);
   }
+  return out;
+}
+function drawSpaceLights(ctx, lights) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'color-dodge';
+  for (const l of lights) shine(ctx, l.x, l.y, l.r, l.rgb, l.power);
   ctx.restore();
 }
 
@@ -556,9 +563,20 @@ export function drawSpace(ctx, state, view, assets) {
   for (const b of state.bolts) drawBolt(ctx, b);
   for (const r of state.rockets) drawRocket(ctx, r, img);
   for (const f of state.fx) drawEffect(ctx, f);
-  if (view.lights) drawSpaceLights(ctx, state, env, near);
+  const lights = view.lights ? spaceLights(state, env, near) : [];
+  const gpu = view.lights && glLightOn();
+  if (!gpu) drawSpaceLights(ctx, lights);
   drawHaze(ctx, state, cam, state.time);
   ctx.restore();
+  // The graphics card lights the whole of space at once, and makes what is bright glow (F-295).
+  if (gpu) {
+    const ox = VIEW_W / 2 + (fx ? fx.offset.x : 0) - cam.x * ZOOM,
+      oy = VIEW_H / 2 + (fx ? fx.offset.y : 0) - cam.y * ZOOM;
+    lightSpaceGL(
+      ctx,
+      lights.map((l) => ({ ...l, x: l.x * ZOOM + ox, y: l.y * ZOOM + oy, r: l.r * ZOOM })),
+    );
+  }
   ctx.imageSmoothingEnabled = false;
   drawArrows(ctx, font, state, cam);
   return dock;

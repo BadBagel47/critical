@@ -2,7 +2,8 @@
 // (docs/design/prototypes/light.html): the picture drawn so far is lit point by point, the walls cast shadows, and
 // what is bright glows. It takes the place of the light map in light.js where WebGL works and it is chosen; where it
 // does not, or it is too slow, the light map is used as before (WG2), and the screen tests always use the light map
-// so that their pictures stay the same.
+// so that their pictures stay the same. Space is lit the same way (F-295): the lights of shots, engines, explosions
+// and stations fall on the hulls near them and leave black space black, and what is bright glows.
 import { VIEW_W, VIEW_H } from '../config.js';
 import { TILE, tileAt } from '../sim/boarding.js';
 
@@ -140,10 +141,18 @@ function setup() {
       vec3 lit = a * l + a * l * l * 0.25;
       gl_FragColor = vec4(mix(a, lit, inside), 1.0);
     }`);
+  // Space: a light brightens what it falls on most, and colours the dark round it a little, as a glow.
+  const space = program(`
+    uniform sampler2D albedo; uniform sampler2D lights;
+    void main(){
+      vec3 a = texture2D(albedo, vec2(uv.x, 1.0 - uv.y)).rgb;
+      vec3 l = texture2D(lights, uv).rgb * 2.0;
+      gl_FragColor = vec4(a + a * l * 3.0 + l * l * 0.35 + l * 0.12, 1.0);
+    }`);
   const bright = program(`
-    uniform sampler2D scene;
+    uniform sampler2D scene; uniform float from;
     void main(){ vec3 c = texture2D(scene, uv).rgb; float b = max(c.r, max(c.g, c.b));
-      gl_FragColor = vec4(c * smoothstep(0.45, 0.95, b), 1.0); }`);
+      gl_FragColor = vec4(c * smoothstep(from, 0.95, b), 1.0); }`);
   const blur = program(`
     uniform sampler2D src; uniform vec2 dir;
     void main(){
@@ -153,14 +162,15 @@ function setup() {
       gl_FragColor = vec4(c, 1.0);
     }`);
   const final = program(`
-    uniform sampler2D scene; uniform sampler2D bloom;
-    void main(){ gl_FragColor = vec4(texture2D(scene, uv).rgb + texture2D(bloom, uv).rgb * 1.6, 1.0); }`);
+    uniform sampler2D scene; uniform sampler2D bloom; uniform float strength;
+    void main(){ gl_FragColor = vec4(texture2D(scene, uv).rgb + texture2D(bloom, uv).rgb * strength, 1.0); }`);
   return {
     canvas,
     gl,
     quad,
     light,
     compose,
+    space,
     bright,
     blur,
     final,
@@ -226,9 +236,9 @@ function walls(g, it) {
 
 const rgbOf = (s) => s.split(',').map((n) => Number(n) / 255);
 
-// Lights what has been drawn of the place so far, in place of shade() in light.js. `ox`, `oy` are where the place
-// is drawn on the screen. Returns false when it could not, and the light map is to be used instead.
-export function shadeGL(ctx, it, ox, oy, lights) {
+// The work of a frame starts here: the frames are watched, and the WebGL state made on first use. Null when the
+// light map, or the old light in space, is to be used instead.
+function begin() {
   const now = performance.now();
   // Frames that come too slowly for three seconds: back to the light map, which is lighter on the machine (WG2).
   if (last && now - last < 500) {
@@ -237,7 +247,7 @@ export function shadeGL(ctx, it, ox, oy, lights) {
     if (slowSince !== null && now - slowSince > 3000) {
       setGlLight('classic');
       fellBack = true;
-      return false;
+      return null;
     }
   }
   last = now;
@@ -246,10 +256,14 @@ export function shadeGL(ctx, it, ox, oy, lights) {
   } catch (e) {
     broken = true;
     console.warn('The new light could not start; using the light map.', e);
-    return false;
+    return null;
   }
-  const g = G,
-    gl = g.gl;
+  return G;
+}
+
+// The picture drawn so far, to the graphics card, and the screen-sized target ready.
+function takePicture(g, ctx) {
+  const gl = g.gl;
   const src = ctx.canvas;
   const W = src.width,
     H = src.height;
@@ -259,11 +273,15 @@ export function shadeGL(ctx, it, ox, oy, lights) {
     g.sceneT = null;
   }
   g.sceneT ??= g.target(W, H);
-  walls(g, it);
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, g.albedo);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
-  // The lights, one after the other, added up at the game's own size.
+  return { W, H };
+}
+
+// The lights, one after the other, added up at the game's own size. `ox`, `oy` move them onto the screen.
+function addLights(g, lights, ox, oy) {
+  const gl = g.gl;
   gl.bindFramebuffer(gl.FRAMEBUFFER, g.lightT.fb);
   gl.viewport(0, 0, VIEW_W, VIEW_H);
   gl.clearColor(0, 0, 0, 1);
@@ -290,21 +308,16 @@ export function shadeGL(ctx, it, ox, oy, lights) {
     draw(g, g.light);
   }
   gl.disable(gl.BLEND);
-  // The lit picture at the screen's size.
-  gl.bindFramebuffer(gl.FRAMEBUFFER, g.sceneT.fb);
-  gl.viewport(0, 0, W, H);
-  bind(g, g.compose, 'albedo', 0, g.albedo);
-  bind(g, g.compose, 'lights', 1, g.lightT.tex);
-  bind(g, g.compose, 'walls', 2, g.walls);
-  gl.uniform2f(g.compose.u('worldSize'), g.wallsSize[0], g.wallsSize[1]);
-  gl.uniform2f(g.compose.u('origin'), ox, oy);
-  gl.uniform2f(g.compose.u('view'), VIEW_W, VIEW_H);
-  gl.uniform3f(g.compose.u('ambient'), AMBIENT[0], AMBIENT[1], AMBIENT[2]);
-  draw(g, g.compose);
-  // The glow: the bright parts, blurred a few times each way at half size.
+}
+
+// The glow of what is bright, and the whole back onto the game's picture in place of what was there. `from` is
+// how bright a point must be to glow, and `strength` how strongly it does.
+function glowAndShow(g, ctx, W, H, from, strength) {
+  const gl = g.gl;
   gl.bindFramebuffer(gl.FRAMEBUFFER, g.b1.fb);
   gl.viewport(0, 0, VIEW_W / 2, VIEW_H / 2);
   bind(g, g.bright, 'scene', 0, g.sceneT.tex);
+  gl.uniform1f(g.bright.u('from'), from);
   draw(g, g.bright);
   for (let i = 0; i < 3; i++) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, g.b2.fb);
@@ -320,16 +333,55 @@ export function shadeGL(ctx, it, ox, oy, lights) {
   gl.viewport(0, 0, W, H);
   bind(g, g.final, 'scene', 0, g.sceneT.tex);
   bind(g, g.final, 'bloom', 1, g.b1.tex);
+  gl.uniform1f(g.final.u('strength'), strength);
   draw(g, g.final);
   if (gl.getError() !== gl.NO_ERROR) {
     broken = true;
     return false;
   }
-  // Back onto the game's picture, in place of what was there.
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalCompositeOperation = 'copy';
   ctx.drawImage(g.canvas, 0, 0);
   ctx.restore();
   return true;
+}
+
+// Lights what has been drawn of the place so far, in place of shade() in light.js. `ox`, `oy` are where the place
+// is drawn on the screen. Returns false when it could not, and the light map is to be used instead.
+export function shadeGL(ctx, it, ox, oy, lights) {
+  const g = begin();
+  if (!g) return false;
+  const gl = g.gl;
+  const { W, H } = takePicture(g, ctx);
+  walls(g, it);
+  addLights(g, lights, ox, oy);
+  // The lit picture at the screen's size.
+  gl.bindFramebuffer(gl.FRAMEBUFFER, g.sceneT.fb);
+  gl.viewport(0, 0, W, H);
+  bind(g, g.compose, 'albedo', 0, g.albedo);
+  bind(g, g.compose, 'lights', 1, g.lightT.tex);
+  bind(g, g.compose, 'walls', 2, g.walls);
+  gl.uniform2f(g.compose.u('worldSize'), g.wallsSize[0], g.wallsSize[1]);
+  gl.uniform2f(g.compose.u('origin'), ox, oy);
+  gl.uniform2f(g.compose.u('view'), VIEW_W, VIEW_H);
+  gl.uniform3f(g.compose.u('ambient'), AMBIENT[0], AMBIENT[1], AMBIENT[2]);
+  draw(g, g.compose);
+  return glowAndShow(g, ctx, W, H, 0.45, 1.6);
+}
+
+// Lights space as it has been drawn so far (F-295), in place of the old light in space.js. The lights are where
+// they are on the screen. Returns false when it could not, and the old light is to be used instead.
+export function lightSpaceGL(ctx, lights) {
+  const g = begin();
+  if (!g) return false;
+  const gl = g.gl;
+  const { W, H } = takePicture(g, ctx);
+  addLights(g, lights, 0, 0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, g.sceneT.fb);
+  gl.viewport(0, 0, W, H);
+  bind(g, g.space, 'albedo', 0, g.albedo);
+  bind(g, g.space, 'lights', 1, g.lightT.tex);
+  draw(g, g.space);
+  return glowAndShow(g, ctx, W, H, 0.35, 1.7);
 }

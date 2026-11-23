@@ -1096,7 +1096,7 @@ await page.evaluate(() => window.localStorage.clear());
     'and a save file can be imported',
   );
   // Hardcore: one life, and the run takes its saves with it. QUIT is the last row, below FULLSCREEN (F-286) and
-  // LIGHT INSIDE (F-294).
+  // LIGHT (F-294, F-295).
   await press('KeyO', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowDown');
   await press('Enter', 'Enter');
   check(

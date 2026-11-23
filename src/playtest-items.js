@@ -20,7 +20,7 @@ export const ITEMS = [
     where: 'dator, iPad',
     steps: [
       'Borda ett vrak eller en fientlig bas, där det är mörkt. Tänd lampan, kasta en flare och skjut.',
-      'Öppna menyn (O) och växla LIGHT INSIDE mellan NEW och CLASSIC för att jämföra.',
+      'Öppna menyn (O) och växla LIGHT mellan NEW och CLASSIC för att jämföra.',
       'Lägg till ?fps i adressen för att se bilder i sekunden med det nya ljuset.',
     ],
     links: [['Starta', at('')]],
@@ -28,6 +28,26 @@ export const ITEMS = [
       'Ser det nya ljuset ut som version C i designtestet?',
       'Hur många bilder i sekunden visar mätaren på Mac och iPad?',
       'Bytte spelet själv till CLASSIC någon gång?',
+    ],
+  },
+  {
+    group: 'Spelet',
+    id: 'F-295',
+    title: 'Det nya ljuset i rymden',
+    where: 'dator, iPad',
+    steps: [
+      'Flyg in i en strid, eller kalla in skepp från testmenyn. Se skott, motorer, explosioner och stjärnan.',
+      'Öppna menyn (O) och växla LIGHT mellan NEW och CLASSIC för att jämföra.',
+      'Lägg till ?fps i adressen för att se bilder i sekunden med det nya ljuset.',
+    ],
+    links: [
+      ['Strid', at('?test&call=fighters')],
+      ['Vid stjärnan', at('?test&at=star')],
+    ],
+    ask: [
+      'Lyser och glöder skott, motorer och explosioner som du ville?',
+      'Blir det för starkt eller för suddigt någonstans?',
+      'Hur många bilder i sekunden visar mätaren på Mac och iPad, och bytte spelet själv till CLASSIC?',
     ],
   },
   {
