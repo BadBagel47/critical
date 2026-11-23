@@ -12,9 +12,11 @@ test('R-1240: only Playtest talks to another service, network-kit admin page, an
   // The light entry loads nothing more without a tester link; the whole client would load on every page.
   assert.match(start, /vendor\/network-kit\/client\/playtest-entry\.js/);
   assert.doesNotMatch(start, /client\/index\.js/);
-  // No other file of the game names an address on another site.
+  // No other file of the game names an address on another site. The one that sends the old address on GitHub on
+  // to the game (D-269, R-1248) names the game's own address and loads nothing.
+  assert.deepEqual(read('src/moved.js').match(/https?:\/\/[a-z0-9.-]+\//gi), ['https://critical.l8p1.workers.dev/']);
   for (const file of readdirSync(new URL('../src/', import.meta.url), { recursive: true })) {
-    if (!String(file).endsWith('.js') || file === 'playtest-start.js') continue;
+    if (!String(file).endsWith('.js') || file === 'playtest-start.js' || file === 'moved.js') continue;
     const text = read('src/' + file);
     assert.doesNotMatch(text, /https?:\/\/(?!localhost)[a-z0-9.-]+\.[a-z]{2,}\//i, `src/${file} names another site`);
   }
