@@ -18,6 +18,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Besked 2026-11-20 (ON7): ja, man kan gå med mitt i en omgång och tar en ledig post.
 - Besked 2026-11-20 (ON8): ingen ruta för att välja; den som går med mitt i en omgång får den första lediga posten i ordningen Captain, Gunner, Engineer, och byter sedan med 1, 2 och 3 om en annan är ledig.
 - F-296 – Tydligare flikar: namn på varje post, FREE för en ledig, AUTO för datorn och båda namnen på en lånad post
+- F-297 – Markera ett skepp med högerklick, för Captain och Gunner
 
 **B** – strong model, high level – Ljus, skuggor och effekter i spelet
 - F-295 – Rymden ritad med grafikkortet, som insidan redan är: skott, motorer, explosioner och stjärnan lyser och glöder
@@ -107,6 +108,7 @@ Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter rös
 
 | ID | Vad | Status |
 |---|---|---|
+| F-297 | Markera ett skepp med musen: ett högerklick på ett fiendeskepp markerar just det, för både Captain och Gunner, och ett högerklick till på samma skepp tar bort markeringen. T finns kvar. Klick krockar med skjutandet och shift med efterbrännaren, men högerklick är ledigt i rymden. Besked MK1 2026-11-23 | Ej påbörjad |
 | F-296 | Tydligare flikar för posterna uppe till vänster: varje flik visar namnet på den som har posten, också ens eget, en ledig post visar FREE och datorn AUTO, och en post som någon lånat medan ägaren är ombord visar båda namnen. Hittat vid ägarens första onlineprov 2026-11-22. Besked OL9 2026-11-22 | Ej påbörjad |
 | F-295 | Rymden ritad med grafikkortet (WebGL), som andra steget av F-294 (WG1): skott, motorer, explosioner och stjärnan lyser upp omgivningen och glöder, med samma val i menyn och samma återgång till dagens ritning som insidan. Besked 2026-11-22 (GR3, WG1–WG3) | Ej påbörjad |
 | B-259 | Markören blir väldigt långsam när fler skepp med aggro kommer in. Användaren 2026-11-16: "Behöver vi optimera?" Första mätning 2026-11-16, utan ändringar: spelets logik tar under 0,3 ms per steg även med 40 fientliga skepp, så det långsamma är troligen ritandet (ljus, skuggor, skott). I en automatisk webbläsare höll spelet 60 bilder i sekunden med 24 skepp, med en enstaka långsam bild. Det säger lite om en riktig dator. Nästa steg: användaren startar spelet med ?fps i adressen (https://badbagel47.github.io/critical/?fps) när det händer och läser av FPS och SLOWEST FRAME, och säger vilken post och ungefär hur många skepp. Provat igen 2026-11-18 efter B-282 (bilden var 4K-stor på retinaskärmar, troligen orsaken): ungefär 55 bilder i sekunden med piratvågor i automatisk webbläsare med retinaskärm. Användaren provar på sin Mac med ?fps | Väntar på användaren |
