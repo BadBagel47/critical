@@ -74,11 +74,12 @@ const noStorage = (game) => (game.storage ? null : 'THIS BROWSER DOES NOT ALLOW 
 
 // Fullscreen (F-286), where the browser can show the game so: the same as the button in the corner (src/fullscreen.js).
 // The menu is chosen within a frame of the key or the click, which the browser still counts as the player's own act.
-// The light inside drawn by the graphics card, or as before (F-294, WG2): NEW or CLASSIC, and why it went back.
+// The light inside and in space drawn by the graphics card, or as before (F-294, F-295, WG2): NEW or CLASSIC, and
+// why it went back.
 function lightRow() {
   const choice = glLightChoice();
   const right = choice === 'new' ? 'NEW' : glLightFellBack() ? 'CLASSIC  ·  TOO SLOW HERE' : 'CLASSIC';
-  return [{ id: 'light', label: 'LIGHT INSIDE', right, run: () => setGlLight(choice === 'new' ? 'classic' : 'new') }];
+  return [{ id: 'light', label: 'LIGHT', right, run: () => setGlLight(choice === 'new' ? 'classic' : 'new') }];
 }
 function fullscreenRow() {
   const fs = typeof window !== 'undefined' ? /** @type {any} */ (window).criticalFullscreen : null;
