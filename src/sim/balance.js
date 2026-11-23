@@ -263,6 +263,13 @@ export const B = {
   SHOT_HEARD: 260,
   GUARD_REACH: 6,
   GUARD_FORGET: 9,
+  // A noise (F-300, VK1-VK3): this many of the nearest guards that hear it come to look; the others stay and are
+  // wary for this long, noticing intruders this much faster. Those that come look round the spot for about this
+  // long before they go back, even while the place is on alarm.
+  GUARD_COME: 2,
+  GUARD_WARY: 30,
+  GUARD_WARY_EYES: 1.6,
+  GUARD_SEARCH: 17,
   TURRET_HP: 45,
   TURRET_SIGHT: 220,
   TURRET_TURN: 2.6,
@@ -566,6 +573,11 @@ export const B = {
   PACK_ROOM: [4, 6, 8],
   // Running with nothing carried (F-292, R-1269): this much faster, and heard by guards this near.
   SPRINT: 1.6,
+  // Walking another way than one looks (F-299, SP2): to the side this much of full speed, backwards this much.
+  // Running goes only within this angle of where one looks.
+  SIDE_PACE: 0.8,
+  BACK_PACE: 0.6,
+  RUN_CONE: Math.PI / 4,
   SPRINT_HEARD: 110,
   PACK_SLOW: [1, 0.5, 0],
   SUIT_HP: 50,

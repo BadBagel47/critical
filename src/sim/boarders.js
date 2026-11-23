@@ -13,7 +13,7 @@ import { cycleLock, hatchOpen, lockNear } from './airlock.js';
 import { cutPower, restorePower, stopCall, wreckHangar } from './pressure.js';
 import { breakinBonus, level, teleCooldown, gearLevel, carrySlow } from './upgrades.js';
 import { createBreakin } from './breakin.js';
-import { clamp, dist, headingTo, randRange, toWorld } from './util.js';
+import { forward, clamp, dist, headingTo, randRange, toWorld } from './util.js';
 import { fireDart, fireRifle, throwFlare, throwGrenade } from './firearms.js';
 import { createInterior, makeTrade, setMood } from './interior.js';
 import { deposit, lootNear, pickUp, dropAll } from './loot.js';
@@ -218,9 +218,39 @@ function footsteps(state, it, av) {
   }
 }
 
+// A noise (F-300, VK1-VK3): of the guards that hear it, the two nearest come to look, and the others stay where
+// they are but are wary for a while. The guard nearest the vault never leaves it for a noise. The place knows now.
 export function heard(state, it, at) {
-  for (const g of it.guards) if (dist(g.x, g.y, at.x, at.y) < B.SHOT_HEARD) alertGuard(g, at);
-  foundOut(state, it, at);
+  const keeper = vaultKeeper(it);
+  const near = it.guards
+    .filter((g) => awake(g) && g !== keeper && dist(g.x, g.y, at.x, at.y) < B.SHOT_HEARD)
+    .sort((a, b) => dist(a.x, a.y, at.x, at.y) - dist(b.x, b.y, at.x, at.y));
+  near.forEach((g, i) => {
+    if (i < B.GUARD_COME) alertGuard(g, at);
+    else g.wary = B.GUARD_WARY;
+  });
+  if (keeper && dist(keeper.x, keeper.y, at.x, at.y) < B.SHOT_HEARD) keeper.wary = B.GUARD_WARY;
+  if (!it.mood) return;
+  if (it.mood !== 'alarm') state.events.push({ type: 'foundOut' });
+  setMood(it, 'alarm');
+}
+
+// The guard that keeps the vault: the one that started nearest its door, as long as it is up (VK3).
+export function vaultKeeper(it) {
+  if (it.vault === undefined || it.vault === null || !it.rooms[it.vault]) return null;
+  const door = it.rooms[it.vault].door;
+  if (it.keeper === undefined) {
+    let best = null;
+    for (const g of it.guards) {
+      const home = g.home || g;
+      if (!best || dist(home.x, home.y, door.x, door.y) < dist(best.home.x, best.home.y, door.x, door.y)) best = g;
+    }
+    it.keeper = best && best.home ? best.id : null;
+  }
+  // With only one or two guards on their feet, the keeper goes to look like the others.
+  if (it.guards.filter(awake).length < 3) return null;
+  const g = it.guards.find((x) => x.id === it.keeper);
+  return g && awake(g) ? g : null;
 }
 
 // The ship is leaving: everyone still inside is teleported home, at the usual cost.
@@ -321,8 +351,13 @@ function walk(state, it, av, cmd, dt) {
   if (len <= 0) return;
   // Carrying things slows the boarder down, less with a better backpack (R-1268). With nothing carried, Shift runs,
   // and is heard (F-292, R-1269).
-  const run = cmd.sprint && !av.carry.length;
-  const pace = run ? B.SPRINT : 1 - carrySlow(state.ship, av.role) * av.carry.length;
+  // Slower to the side and backwards than ahead, measured against where the boarder looks (F-299, R-1278), and
+  // running only ahead.
+  const f = forward(av.heading || 0);
+  const c = (mx * f.x + my * f.y) / len;
+  const facing = c >= 0 ? B.SIDE_PACE + (1 - B.SIDE_PACE) * c : B.SIDE_PACE + (B.SIDE_PACE - B.BACK_PACE) * c;
+  const run = cmd.sprint && !av.carry.length && c > Math.cos(B.RUN_CONE);
+  const pace = run ? B.SPRINT : facing * (1 - carrySlow(state.ship, av.role) * av.carry.length);
   const sp = (B.CREW_SPEED_FOOT * pace * dt) / Math.max(1, len);
   if (run) footsteps(state, it, av);
   move(it, av, mx * sp, my * sp, B.CREW_RADIUS);

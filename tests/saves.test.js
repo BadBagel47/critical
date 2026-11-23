@@ -122,5 +122,5 @@ test('R-1247: the save version is raised whenever the game state changes shape',
     .slice(0, 12);
   // When this fails the game state has new, renamed or removed fields, and saves made before the change
   // would no longer load correctly. Raise SAVE_VERSION in src/saves.js and put the new values here.
-  assert.deepEqual({ version: SAVE_VERSION, print }, { version: 34, print: '00224877425a' });
+  assert.deepEqual({ version: SAVE_VERSION, print }, { version: 35, print: 'e466605e63bd' });
 });
