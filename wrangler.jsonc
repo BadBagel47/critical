@@ -1,0 +1,17 @@
+// The published game on Cloudflare (D-269, R-1248, R-1249): the main branch, at critical.l8p1.workers.dev, and
+// later at critical.trythis.one (F-289). Published by .github/workflows/publish.yml when the owner says Publicera.
+// The site is the folder made by tools/site.mjs; the rooms for online play are served under /rooms by
+// worker/index.js (F-040). The test build is wrangler.dev.jsonc.
+{
+  "name": "critical",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "assets": { "directory": "dist" },
+  "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }] },
+  // Free plan: SQLite-backed Durable Objects only.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  // network-kit's admin page decides whether the game takes new players, and keeps an eye on the free plan.
+  "services": [{ "binding": "NETWORK_KIT_ADMIN", "service": "network-kit-admin", "entrypoint": "GameApi" }],
+  "vars": { "ROOM_JURISDICTION": "eu", "GAME_NAME": "critical" }
+}
