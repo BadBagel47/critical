@@ -374,6 +374,7 @@ function mainframeInput(game, out) {
 }
 
 // Away from the ship, inside a wreck or a station.
+const MOUSE_IDLE_MS = 1200;
 function awayInput(game, out) {
   const { keys, state, view, me } = game;
   const m = keys.mouse;
@@ -383,6 +384,15 @@ function awayInput(game, out) {
   const origin = place ? insideOrigin(place.interior, av) : { x: 0, y: 0 };
   let aim = { x: m.x - origin.x, y: m.y - origin.y };
   let lob = aim;
+  const mx = axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx;
+  const my = axis(keys, ['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']) + keys.pad.ly;
+  // The mouse has lain still a while: the boarder looks the way they walk, and keeps looking that way when they
+  // stop, instead of turning toward a pointer that the moving view carries along (B-298).
+  const idle = !m.movedAt || performance.now() - m.movedAt > MOUSE_IDLE_MS;
+  if (idle && av && !keys.pad.used && !m.down) {
+    aim = mx || my ? { x: av.x + mx * 60, y: av.y + my * 60 } : null;
+    if (aim) lob = { x: av.x + mx * 95, y: av.y + my * 95 };
+  }
   if (keys.pad.used) {
     // With a gamepad the right stick aims, from where the boarder stands.
     const dir = stickAim(view, keys.pad);
@@ -392,8 +402,8 @@ function awayInput(game, out) {
     }
   }
   out.away = {
-    mx: axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx,
-    my: axis(keys, ['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']) + keys.pad.ly,
+    mx,
+    my,
     aim,
     fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5,
     grenade: keys.hit('KeyG') || m.rightClicked ? lob : null,

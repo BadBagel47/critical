@@ -32,7 +32,10 @@ function hall(it) {
 }
 function walked(s, av, away, seconds = 0.4) {
   const x0 = av.x;
-  for (let i = 0; i < seconds / DT; i++) step(s, { away: { 0: { mx: 1, my: 0, ...away } } }, DT);
+  for (let i = 0; i < seconds / DT; i++) {
+    const aim = { x: av.x + (away.back ? -200 : 200), y: av.y };
+    step(s, { away: { 0: { mx: 1, my: 0, aim, ...away } } }, DT);
+  }
   return av.x - x0;
 }
 
@@ -78,4 +81,17 @@ test('R-1269: Shift runs when nothing is carried, and not with a load', () => {
   Object.assign(av, start);
   const laden = walked(s, av, { sprint: true });
   assert.ok(laden < walk, 'with a load it is no faster than walking with one');
+});
+
+test('R-1278: walking another way than one looks is slower, and backwards slowest; running goes only ahead', () => {
+  const { s, it, av } = boarded();
+  const start = hall(it);
+  Object.assign(av, start);
+  const ahead = walked(s, av, {});
+  Object.assign(av, start);
+  const back = walked(s, av, { back: true });
+  assert.ok(Math.abs(back / ahead - B.BACK_PACE) < 0.08, `backwards ${back.toFixed(1)} against ${ahead.toFixed(1)}`);
+  Object.assign(av, start);
+  const runBack = walked(s, av, { back: true, sprint: true });
+  assert.ok(runBack <= back + 0.5, 'no running backwards');
 });

@@ -2313,7 +2313,9 @@ test('an alarm wakes the whole place and lasts until the crew has left', () => {
   post(g, at, toward + Math.PI);
   step(s, { away: { 0: { aim: { x: av.x + 10, y: av.y }, fire: true } } }, DT);
   assert.equal(it.mood, 'alarm', 'a rifle shot is heard');
-  assert.ok(it.guards.every((g) => g.mode === 'alert'));
+  // The nearest that hear it come to look; the others stay, wary (F-300).
+  const heardIt = it.guards.filter((x) => dist(x.x, x.y, av.x, av.y) < B.SHOT_HEARD);
+  assert.ok(heardIt.filter((x) => x.mode === 'alert').length === Math.min(B.GUARD_COME, heardIt.length));
   // The boarder is kept alive, so that it is the alarm that is tried and not the fight.
   s.players[0].hp = 10000;
   run(s, { away: { 0: {} } }, 30);
