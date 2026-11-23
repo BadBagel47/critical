@@ -11,6 +11,7 @@
 // that cannot reach the server slows down and finally gives up, so a
 // forgotten tab does not keep knocking for ever.
 
+import { RECORDER_NOTICE, RECORDER_NOTICE_LOOKBACK } from './playtest-entry.js';
 import { readLobbyLink, forgetLobbyLink } from './lobby.js';
 import {
   PROTOCOL, CLOSE, CLOSE_TEXT, FINAL_CLOSE_CODES, gameClosedText, normalizeCode, isValidCode, PART_CHARS, splitIntoParts, PartJoiner,
@@ -22,6 +23,10 @@ const MAX_INCOMING_CHARS = 8 * 1024 * 1024;
 import { tabSession } from './tab.js';
 import { Measure } from './measure.js';
 import { adminPass } from './admin-pass.js';
+
+/** Where the kit's recording notice may sit (F-154), and how long its text shows. */
+export const RECORDING_CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+const RECORDING_NOTICE_MS = 6000;
 
 // Identities already renewed in this page because the tab was a copy.
 const renewedInThisPage = new Set();
@@ -69,6 +74,9 @@ export class RoomError extends Error {
   }
 }
 
+/** How many held-back messages make the room say 'backlog' (F-141): about half a second's worth. */
+export const BACKLOG_WARN = 16;
+
 export class NetworkRoom {
   /**
    * @param {object} o
@@ -95,6 +103,14 @@ export class NetworkRoom {
     this.WebSocket = o.WebSocket ?? globalThis.WebSocket;
     this.win = o.window ?? (typeof window !== 'undefined' ? window : null);
     this.doc = o.document ?? (typeof document !== 'undefined' ? document : null);
+    // Playtest Recorder in the room (D-126, owner Q20): who records, and the kit's own
+    // notice to everyone else, unless the game shows its own (recordingNotice: false).
+    // F-154: the notice sits in a corner the game may choose ('top-left', 'top-right',
+    // 'bottom-left', 'bottom-right'), shows its text a moment, then only a small mark.
+    this.recorders = new Map(); // participant id → { lookback }
+    this.recordingNotice = o.recordingNotice !== false;
+    this.recordingCorner = RECORDING_CORNERS.includes(o.recordingNotice) ? o.recordingNotice : 'top-right';
+    this.recordingNoticeMs = RECORDING_NOTICE_MS;
     this.minDelayMs = o.minDelayMs ?? 500;
     this.maxDelayMs = o.maxDelayMs ?? 15_000;
     this.slowDelayMs = o.slowDelayMs ?? 60_000; // retry pace after slowAfterMs or in a hidden tab
@@ -377,6 +393,7 @@ export class NetworkRoom {
     this.ws = ws;
     this.socketWelcomed = false;
     this.outbox = [];
+    this.backlogChanged();
     this.tokens = this.rate;
     this.tokensAt = Date.now();
     const joiner = new PartJoiner(MAX_INCOMING_CHARS); // large messages arrive in parts (F-036)
@@ -560,6 +577,7 @@ export class NetworkRoom {
     clearTimeout(this.leaveTimer);
     clearInterval(this.silentTimer);
     this.outbox = [];
+    this.backlogChanged();
     this.dropSocket();
     this.unwatch?.();
   }
@@ -584,6 +602,7 @@ export class NetworkRoom {
   disconnect() {
     if (this.stopped) return;
     this.stopped = true;
+    this.showRecordingNotice?.(null);
     this.stopTimers();
     this.setStatus('closed');
     if (this.firstWelcome && !this.firstWelcome.done) {
@@ -642,6 +661,10 @@ export class NetworkRoom {
         this.applyRoom(msg.room);
         break;
       case 'msg':
+        if (msg.d && typeof msg.d === 'object' && msg.d.__nk === 'recording') {
+          this.recordingHeard(msg.from, msg.d);
+          break; // the kit's own message, never the game's
+        }
         if (msg.from === this.room?.hostId) {
           this.lastHostData = Date.now();
           this.measure?.hostMessage();
@@ -672,10 +695,12 @@ export class NetworkRoom {
       case 'ev':
         if (msg.e === 'drop') this.measure?.peerDropped();
         if (msg.e === 'host') this.measure?.hostChanged();
+        // `self`: the event is about this browser, e.g. its own join when it made the room (B-142).
         this.emit('peer', {
           event: msg.e, id: msg.id, why: msg.why, name: msg.name ?? this.player(msg.id)?.name ?? null,
-          returning: msg.returning === true, player: this.player(msg.id),
+          returning: msg.returning === true, player: this.player(msg.id), self: msg.id === this.me,
         });
+        this.recordingPeer(msg.e, msg.id);
         break;
       case 'ok':
         this.emit('ok', { command: msg.c, n: msg.n });
@@ -837,7 +862,29 @@ export class NetworkRoom {
     if (droppable) return false;
     this.outbox.push(text);
     this.outboxTimer ??= setTimeout(() => this.drain(), 50);
+    this.backlogChanged();
     return true;
+  }
+
+  /** Messages held back by the pace (about 32 a second per connection), waiting to go (F-141). */
+  get waiting() {
+    return this.outbox.length;
+  }
+
+  /**
+   * Tell the game when sends pile up (F-141): the event 'backlog' with { waiting } when the
+   * queue passes BACKLOG_WARN, and again with waiting 0 when it has drained. Send less
+   * often, or with `latest` for values where only the newest counts.
+   */
+  backlogChanged() {
+    const waiting = this.outbox.length;
+    if (!this.backlogged && waiting >= BACKLOG_WARN) {
+      this.backlogged = true;
+      this.emit('backlog', { waiting });
+    } else if (this.backlogged && waiting === 0) {
+      this.backlogged = false;
+      this.emit('backlog', { waiting: 0 });
+    }
   }
 
   /** Send the newest pending value of each kind as soon as the pace allows (F-037). */
@@ -855,6 +902,7 @@ export class NetworkRoom {
     this.outboxTimer = null;
     while (this.outbox.length > 0 && this.ready && this.takeToken()) this.rawSend(this.outbox.shift());
     if (this.outbox.length > 0 && this.ready) this.outboxTimer = setTimeout(() => this.drain(), 50);
+    this.backlogChanged();
   }
 
   numbered(msg, kind) {
@@ -991,7 +1039,113 @@ export class NetworkRoom {
    * Leave on purpose. An owner leaving closes the room unless the game passes
    * ownership on. A host may pass a last `snapshot` for whoever continues.
    */
+  // ---- Playtest Recorder in the room (D-126, owner Q20)
+
+  /**
+   * This browser records (or stops): everyone in the room is told, also those who
+   * join later. A player's message reaches only the host, so the host passes it on.
+   */
+  announceRecording(on, { lookback = false } = {}) {
+    const note = { __nk: 'recording', on: Boolean(on), lookback: Boolean(lookback) };
+    if (this.me) {
+      if (on) this.recorders.set(this.me, { lookback: note.lookback });
+      else this.recorders.delete(this.me);
+    }
+    if (this.isHost) return this.send({ ...note, by: this.me });
+    return this.send(note);
+  }
+
+  recordingHeard(from, d) {
+    const id = typeof d.by === 'string' ? d.by : from;
+    if (d.on) this.recorders.set(id, { lookback: Boolean(d.lookback) });
+    else this.recorders.delete(id);
+    // The host passes a player's word on to the others.
+    if (this.isHost && typeof d.by !== 'string' && from !== this.me) this.send({ __nk: 'recording', on: Boolean(d.on), lookback: Boolean(d.lookback), by: from });
+    this.recordingChanged();
+  }
+
+  recordingPeer(event, id) {
+    if (event === 'gone' && this.recorders.delete(id)) this.recordingChanged();
+    // The host tells whoever comes in or back who records.
+    if (this.isHost && (event === 'join' || event === 'back') && id !== this.me) {
+      for (const [by, r] of this.recorders) this.send({ __nk: 'recording', on: true, lookback: r.lookback, by }, { to: [id] });
+    }
+  }
+
+  /** Who records, other than this browser; the game hears it as the event 'recording'. */
+  recordingChanged() {
+    const others = [...this.recorders].filter(([id]) => id !== this.me);
+    const lookback = others.some(([, r]) => r.lookback);
+    this.emit('recording', { recording: others.length > 0, by: others.map(([id]) => id), lookback });
+    this.showRecordingNotice(others.length > 0 ? (lookback ? RECORDER_NOTICE_LOOKBACK : RECORDER_NOTICE) : null);
+  }
+
+  showRecordingNotice(text) {
+    const doc = this.doc;
+    if (!this.recordingNotice || !doc?.documentElement) return;
+    if (!text) {
+      clearTimeout(this.recordingNoticeTimer);
+      this.recordingNoticeEl?.remove();
+      this.recordingNoticeEl = null;
+      this.recordingNoticeText = null;
+      return;
+    }
+    if (!this.recordingNoticeEl) {
+      // Styles through the CSSOM for a strict Content-Security-Policy.
+      const box = doc.createElement('div');
+      box.setAttribute('role', 'status');
+      const [v, h] = this.recordingCorner.split('-');
+      Object.assign(box.style, { position: 'fixed', zIndex: '2147481998', pointerEvents: 'none', maxWidth: 'min(280px, calc(100vw - 24px))' });
+      box.style[v] = '8px';
+      box.style[h] = '8px';
+      // Clear of a notch or the home bar where the browser knows them; ignored where it does not.
+      box.style[v] = `max(8px, env(safe-area-inset-${v}))`;
+      box.style[h] = `max(8px, env(safe-area-inset-${h}))`;
+      const mark = doc.createElement('button');
+      mark.setAttribute('type', 'button');
+      Object.assign(mark.style, {
+        pointerEvents: 'auto', display: 'block', margin: '0', border: '0', cursor: 'pointer', textAlign: 'left',
+        font: '12px/1.35 system-ui, sans-serif', color: '#e6edf3', background: 'rgba(40, 44, 52, .82)',
+        padding: '3px 8px', borderRadius: '8px',
+      });
+      const dot = doc.createElement('span');
+      dot.textContent = '\u25CF ';
+      dot.style.color = '#ff6b6b';
+      const words = doc.createElement('span');
+      mark.append(dot, words);
+      // A tap shows the text again; it does not reach the game.
+      const own = (e) => e.stopPropagation?.();
+      mark.addEventListener('pointerdown', own);
+      mark.addEventListener('click', (e) => {
+        own(e);
+        this.expandRecordingNotice();
+      });
+      box.append(mark);
+      doc.documentElement.append(box);
+      this.recordingNoticeEl = box;
+      this.recordingNoticeMark = mark;
+      this.recordingNoticeWords = words;
+    }
+    if (text === this.recordingNoticeText) return;
+    this.recordingNoticeText = text;
+    this.recordingNoticeMark.setAttribute('aria-label', text);
+    this.recordingNoticeMark.setAttribute('title', text);
+    this.expandRecordingNotice();
+  }
+
+  /** The whole text for a moment, then only the mark (F-154). */
+  expandRecordingNotice() {
+    if (!this.recordingNoticeWords || !this.recordingNoticeText) return;
+    this.recordingNoticeWords.textContent = this.recordingNoticeText;
+    clearTimeout(this.recordingNoticeTimer);
+    this.recordingNoticeTimer = setTimeout(() => {
+      if (this.recordingNoticeWords) this.recordingNoticeWords.textContent = 'REC';
+    }, this.recordingNoticeMs);
+  }
+
   leave(snapshot) {
+    this.recorders.clear();
+    this.showRecordingNotice(null);
     if (this.stopped) return;
     if (snapshot !== undefined && this.isHost) this.sendSnapshot(snapshot, { force: true });
     this.command('leave');

@@ -1,5 +1,6 @@
 // Boot and the main loop: read input, step the game, draw the screen.
 import { VIEW_W, VIEW_H, STEP, COL } from './config.js';
+import { setLightStill } from './render/gl-light.js';
 import { loadAssets } from './assets.js';
 import { createInput } from './input.js';
 import { initAudio, isMuted } from './audio.js';
@@ -21,6 +22,8 @@ import { resetEffects, updateEffects, updateInside } from './render/effects.js';
 import { pressActions } from './render/actions.js';
 import { label } from './render/draw.js';
 import { pickScale, speedWatch } from './render/scale.js';
+import { createOnline, onlineAvailable } from './online.js';
+import { ask, invite, tell } from './dialog.js';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('game'));
 const ctx = canvas.getContext('2d');
@@ -69,12 +72,15 @@ if (still) {
   let ticks = 0;
   performance.now = () => (ticks += 0.25);
 }
+// The screen tests draw the light with the light map, so that their pictures stay the same (F-294).
+setLightStill(still);
 let stillFrame = 0;
 const newSeed = () => (still ? 1 : Date.now() % 100000);
 // Everything the screen code needs: the game itself, how this player looks at it, what they are pressing,
 // where saves are kept and what they hold, and the things the menu can do.
 const game = {
   ctx,
+  online: null,
   keys,
   assets: null,
   state: createState(newSeed()),
@@ -109,7 +115,9 @@ function load(slot) {
 }
 
 function save(slot) {
-  const ok = writeSlot(game.storage, slot, game.state, Date.now());
+  // Online, a guest draws a guess of the game (D-264); what is saved is the real one.
+  const real = (game.online && game.online.confirmed) || game.state;
+  const ok = writeSlot(game.storage, slot, real, Date.now());
   refreshSaves();
   if (slot !== AUTO) game.view.menu.note = ok ? 'SAVED' : 'THE BROWSER HAS NO ROOM FOR THE SAVE';
   else if (ok) toast(game.view, game.state, 'GAME SAVED', COL.dim, 2);
@@ -142,14 +150,110 @@ picker.addEventListener('change', async () => {
   }
 });
 
+// ---------- online play (F-040) ----------
+const NAME_KEY = 'critical-name';
+const storedName = () => {
+  try {
+    return (game.storage && game.storage.getItem(NAME_KEY)) || '';
+  } catch {
+    return '';
+  }
+};
+async function askName() {
+  const name = await ask('YOUR NAME', 'THE OTHERS IN THE ROOM SEE IT', {
+    value: storedName(),
+    max: 12,
+    pattern: /^[A-Z0-9 ]+$/,
+  });
+  if (name) {
+    try {
+      game.storage.setItem(NAME_KEY, name);
+    } catch {
+      // kept for this time only
+    }
+  }
+  return name;
+}
+function startSession() {
+  game.online = createOnline(game, {
+    play(state, pid) {
+      play(state);
+      game.view.playerId = pid;
+    },
+    stepped: followShip,
+    ended(o) {
+      if (game.online === o) game.online = null;
+      game.view.panel = null;
+    },
+  });
+  return game.online;
+}
+// Host a room: a new game, or the latest save, with this player as the captain of the crew.
+async function hostOnline(fromSave) {
+  const name = storedName() || (await askName());
+  if (!name) return;
+  if (fromSave) {
+    const latest = latestSlot(game.saves);
+    const save = latest && readSlot(game.storage, latest);
+    if (!save) return tell('NO SAVED GAME', 'START A NEW GAME ONLINE INSTEAD.');
+    play(save.state);
+  } else play(createState(newSeed(), { size: game.view.menu.size, computer: { ...game.view.menu.computer } }));
+  const me = playerById(game.state, game.view.playerId);
+  if (me) me.name = name;
+  const session = startSession();
+  try {
+    await session.host(name);
+    showInvite();
+  } catch (e) {
+    game.online = null;
+    tell('NO ROOM', String((e && e.message) || 'THE ROOM COULD NOT BE MADE').toUpperCase());
+  }
+}
+async function joinOnline(code) {
+  if (!code)
+    code = await ask('JOIN WITH A CODE', 'THE HOST SEES THE CODE IN THE MENU UNDER INVITE', {
+      max: 12,
+      pattern: /^[A-Z0-9 -]+$/,
+    });
+  if (!code) return;
+  const name = storedName() || (await askName());
+  if (!name) return;
+  const session = startSession();
+  game.view.started = false;
+  try {
+    await session.join(code.replace(/[\s-]/g, ''), name);
+  } catch (e) {
+    game.online = null;
+    openPage(game, 'title');
+    tell('COULD NOT JOIN', String((e && e.message) || 'NO ROOM HAS THAT CODE').toUpperCase());
+  }
+}
+async function showInvite() {
+  const o = game.online;
+  if (!o || !o.code) return;
+  const kit = await import(new URL('../vendor/network-kit/client/index.js', import.meta.url).href);
+  invite(o.code, o.link, kit.qrSvg(o.link, { margin: 2 }));
+}
+function leaveOnline() {
+  if (game.online) game.online.leave();
+  game.online = null;
+}
+
 game.actions = {
   newGame: (options) => play(createState(newSeed(), options)),
+  hostOnline,
+  joinOnline: () => joinOnline(null),
+  invite: showInvite,
+  leaveOnline,
+  askName,
+  votePause: () => game.online && game.online.pause(),
   load,
   save,
   exportGame,
   importGame: () => picker.click(),
   closeMenu: () => (game.view.panel = null),
   quit() {
+    leaveOnline();
     game.view.started = false;
     game.view.panel = null;
     openPage(game, 'title');
@@ -176,7 +280,11 @@ function planAfterLoss() {
   }
   const latest = latestSlot(game.saves);
   if (latest) return { line: 'PRESS R TO LOAD THE LAST SAVE', go: () => load(latest) };
-  return { line: 'PRESS R TO TRY AGAIN', go: () => game.actions.newGame({ test: state.test, size: state.size }) };
+  const computer = state.computer ? { ...state.computer.allowed } : undefined;
+  return {
+    line: 'PRESS R TO TRY AGAIN',
+    go: () => game.actions.newGame({ test: state.test, size: state.size, computer }),
+  };
 }
 
 // The camera follows the ship, looking a little ahead of where it is going.
@@ -201,7 +309,32 @@ function heldInput() {
 }
 
 let acc = 0;
+// Online (F-040): this player's inputs for the steps of this frame go to the session, which steps the game in time
+// with the others. Effects and events are as on one computer.
+function runOnline(dt) {
+  const { view } = game;
+  acc += dt;
+  if (acc < STEP && (keys.pressed.size || keys.mouse.clicked || keys.mouse.rightClicked)) acc = STEP;
+  const inputs = [];
+  while (acc >= STEP) {
+    inputs.push(inputs.length ? heldInput() : playerInput(game));
+    acc -= STEP;
+  }
+  game.online.run(inputs, STEP);
+  const state = game.state;
+  readEvents(game);
+  state.events.length = 0;
+  // The effects remember what they have shown by the very thing, so they must see the same things from frame to
+  // frame: the real game. The guess is a new copy each frame, and showed every shot and blast again (2026-11-22).
+  const real = game.online.confirmed || state;
+  updateEffects(view.fx, real, view, dt);
+  const me = playerById(real, view.playerId);
+  const place = me && findThing(real, me.inside);
+  if (place && place.interior) updateInside(view.fx, place.interior, dt, real.paused);
+}
+
 function runGame(dt) {
+  if (game.online && game.online.active()) return runOnline(dt);
   const { state, view } = game;
   acc += dt;
   // A key press or click must never be lost, so a frame that carries one always runs a step.
@@ -244,7 +377,35 @@ function drawMeter(now, dt) {
   label(ctx, game.assets.font, 8, 166, `SLOWEST FRAME  ${meter.worst} MS`, opts);
   label(ctx, game.assets.font, 8, 182, `SCALE  ${scale}  ·  ${VIEW_W * scale} × ${VIEW_H * scale}`, opts);
   // How many new pictures of the star are made each second, when it is in sight (F-205).
-  label(ctx, game.assets.font, 8, 182, `STAR PICTURES  ${starPicturesPerSecond()} / S`, opts);
+  label(ctx, game.assets.font, 8, 198, `STAR PICTURES  ${starPicturesPerSecond()} / S`, opts);
+  // Online, a guest's guess of the game (D-264): how long it takes, and how many steps it is ahead of the host's.
+  const o = game.online;
+  if (o && o.confirmed) {
+    const ahead = `${o.mine.length} STEPS AHEAD`;
+    label(ctx, game.assets.font, 8, 214, `GUESS  ${o.guessMs.toFixed(1)} MS  ·  ${ahead}`, opts);
+  }
+}
+
+// Online: the room and the crew at the top, and what has just happened (F-040).
+const LINE_COL = { good: COL.acid[2], warn: COL.ochre[2], bad: COL.ember[2], info: COL.ion[2] };
+function drawOnline() {
+  const o = game.online;
+  const font = game.assets.font;
+  if (o.code && game.view.started) {
+    const crew = o
+      .crew()
+      .map((p) => (p.away ? p.name + ' (AWAY)' : p.name))
+      .join('  ·  ');
+    // Above the bars at the bottom left, clear of the Captain's panel (found 2026-11-22).
+    font.draw(ctx, `ROOM ${o.code}  ·  ${crew}`, 8, 284, COL.dim);
+  }
+  o.lines.slice(-3).forEach((l, i) => {
+    label(ctx, font, VIEW_W / 2, 64 + i * 16, l.text, {
+      anchor: 'c',
+      fg: LINE_COL[l.color] || COL.text,
+      border: COL.line,
+    });
+  });
 }
 
 // ?test&at=star starts a test game right by the star, ?test&at=haze at the edge of the system and
@@ -284,6 +445,7 @@ function frame(now) {
   ctx.imageSmoothingEnabled = false;
   drawScreen(game, settle(game), now / 1000);
   if (meter && real > 0) drawMeter(now, real);
+  if (game.online) drawOnline();
   // Where the game draws a sight of its own, the pointer of the system is hidden, so that there are not two.
   const pointer = drawsPointer(game, settle(game)) ? 'none' : 'crosshair';
   if (canvas.style.cursor !== pointer) canvas.style.cursor = pointer;
@@ -309,6 +471,14 @@ loadAssets()
       if (asked.has('nofuel')) game.state.ship.fuel = 0;
       for (const what of (asked.get('call') || '').split(',').filter(Boolean)) game.actions.summon(what);
     }
+    // Online play is offered where the game has rooms (its Worker), and a room's link opens it (F-040).
+    onlineAvailable().then((yes) => {
+      const link = /[#&]room=([A-Z0-9]+)/i.exec(window.location.hash);
+      if (yes && link) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        joinOnline(link[1].toUpperCase());
+      }
+    });
     // A handle for the browser smoke test and for trying things out in the console.
     window['__critical'] = {
       get state() {
@@ -332,6 +502,10 @@ loadAssets()
       },
       view: game.view,
       input: keys,
+      actions: game.actions,
+      get online() {
+        return game.online;
+      },
       audio: { isMuted },
       // How many frames have been drawn in the ?still mode, for the screenshot test to wait on.
       get frames() {

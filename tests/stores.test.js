@@ -90,7 +90,7 @@ test('R-1142 R-1133: what a boarder carries works at once, and the breaching cha
   const s = atYard();
   order(s, 'buy', 'suit');
   assert.equal(level(s.ship, 'suit'), 1, 'no shipyard needed');
-  assert.equal(kindOf('suit'), 'gear');
+  assert.equal(kindOf('suit.captain'), 'gear');
   assert.equal(CATALOG.charge.role, 'gunner');
 });
 

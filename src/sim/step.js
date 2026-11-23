@@ -8,6 +8,8 @@
 import { B } from './balance.js';
 import { stepCaptain, stepGunner, stepEngineer, stepDrones } from './posts.js';
 import { crewCommands } from './players.js';
+import { runComputer } from './computer.js';
+import { stepScan } from './scan.js';
 import { nodeFactor } from './ship.js';
 import { stepSurge, stepMarks } from './teamwork.js';
 import { stepRocks } from './rocks.js';
@@ -84,6 +86,7 @@ export function step(state, cmds, dt) {
     return state;
   }
   const ship = state.ship;
+  cmds = runComputer(state, { ...cmds });
   stepCaptain(state, cmds.captain, dt);
   stepJump(state, cmds.captain, dt);
   stepFuel(state, dt);
@@ -92,6 +95,7 @@ export function step(state, cmds, dt) {
   stepGunner(state, cmds.gunner, dt);
   stepTraffic(state, dt);
   stepVessels(state, dt);
+  stepScan(state, cmds.scan, dt);
   stepStations(state, cmds, dt);
   stepSiege(state, dt);
   stepHunt(state, dt);

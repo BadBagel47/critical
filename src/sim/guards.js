@@ -107,6 +107,8 @@ export const newGuard = (state, p, heading, kind = 'soldier') => ({
   down: false,
   // A light it has seen and is on its way to look at, or nothing.
   curious: null,
+  // Seconds it stays wary after hearing something it did not go to look at (F-300).
+  wary: 0,
   // How long a technician has worked on a turret, see mend.
   mending: 0,
   // One of the attackers that boarded a station of the crew's, see siege.js.
@@ -337,6 +339,17 @@ function decide(state, it, g) {
   else g.path = [...wayTo(it, ways, spot.tx, spot.ty), g.peek];
 }
 
+// A floor tile a few tiles from p, to look at while searching; null when none was found.
+function nearbyFloor(state, it, p) {
+  const c = tileOf(p);
+  for (let k = 0; k < 8; k++) {
+    const tx = c.tx + Math.round(randRange(state, -3, 3)),
+      ty = c.ty + Math.round(randRange(state, -3, 3));
+    if (FLOOR.has(tileAt(it, tx, ty))) return { tx, ty };
+  }
+  return null;
+}
+
 // How long a guard looks out and how long it stays in cover.
 const LOOK = { bold: [1.8, 2.8], careful: [1.2, 1.9], retreat: [0.8, 1.2] };
 const HIDE = { bold: [0.5, 0.9], careful: [1.1, 1.8], retreat: [2.4, 3.4] };
@@ -349,7 +362,8 @@ function watch(it, g, dt) {
     // On a trading station the staff only take notice of a visitor in the staff rooms.
     if (it.trade && !inStaff(it, av)) continue;
     if (!inSight(it, g, av)) continue;
-    const near = 1 + 1.5 * (1 - dist(g.x, g.y, av.x, av.y) / B.GUARD_SIGHT);
+    // A wary guard, one that heard something but did not go to look, notices sooner (F-300).
+    const near = (1 + 1.5 * (1 - dist(g.x, g.y, av.x, av.y) / B.GUARD_SIGHT)) * (g.wary > 0 ? B.GUARD_WARY_EYES : 1);
     av.spotted = Math.min(1, av.spotted + (dt * near) / (B.GUARD_NOTICE * kindOf(g).notice));
     av.watched = true;
     if (av.spotted >= 1) return { intruder: av };
@@ -439,6 +453,7 @@ export function stepGuard(state, it, g, dt) {
     return null;
   }
   g.cool -= dt;
+  if (g.wary > 0) g.wary -= dt;
   if (g.mode !== 'alert') {
     const found = watch(it, g, dt);
     if (!found) {
@@ -462,8 +477,10 @@ export function stepGuard(state, it, g, dt) {
   }
   if (target) alertGuard(g, target);
   if (!target) g.lost += dt;
-  // Nobody has been seen for a while: back to the round, unless the whole place is hunting.
-  if (g.lost > B.GUARD_FORGET && it.mood !== 'alarm') {
+  // Nobody has been seen for a while: back to the round, and wary for a time. While the whole place is on alarm
+  // the search goes on longer, but not for ever: a guard lured away by a noise goes back in the end (F-300, VK2).
+  if (g.lost > (it.mood === 'alarm' ? B.GUARD_SEARCH : B.GUARD_FORGET)) {
+    g.wary = B.GUARD_WARY;
     g.mode = 'idle';
     g.plan = 'fight';
     g.flanked = false;
@@ -501,6 +518,13 @@ export function stepGuard(state, it, g, dt) {
       const f = forward(headingTo(target.x - g.x, target.y - g.y));
       const sp = B.GUARD_SPEED * k.speed * dir * dt;
       if (dir) move(it, g, f.x * sp, f.y * sp, B.CREW_RADIUS);
+    } else if (!moving && !target && g.lost > 2 && dist(g.x, g.y, g.seen.x, g.seen.y) <= 8) {
+      // Nothing there: look round the spot, a few steps this way and that (F-300, VK2).
+      const spot = nearbyFloor(state, it, g.seen);
+      if (spot) {
+        const at = tileOf(g);
+        g.path = wayTo(it, waysFrom(it, at.tx, at.ty), spot.tx, spot.ty);
+      }
     } else if (!moving && !g.cover && !target && dist(g.x, g.y, g.seen.x, g.seen.y) > 8) {
       // Nothing in sight and nowhere to fight from: go and look where the intruder was last seen.
       const at = tileOf(g),

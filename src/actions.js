@@ -17,7 +17,7 @@ import { dockCandidate } from './sim/ship.js';
 import { findDock, nameOf } from './sim/things.js';
 import { isTrading } from './sim/stations.js';
 import { useTarget } from './sim/boarding.js';
-import { level } from './sim/upgrades.js';
+import { level, carryMax } from './sim/upgrades.js';
 
 const LOCK_VERB = { pipes: 'BYPASS', code: 'BYPASS', dial: 'PICK' };
 // Who can do what, for the things that are not the same for every post. [captain, gunner, engineer].
@@ -109,6 +109,14 @@ function onBoard(state, me) {
   return list.filter(Boolean);
 }
 
+// What a thing on the floor is called on the button that picks it up.
+const LOOT_NAMES = {
+  crate: 'THE CRATE',
+  cell: 'THE FUEL CELL',
+  chart: 'THE STAR CHART',
+  part: 'THE PART',
+  survivor: 'THE SURVIVOR',
+};
 const DESK = { services: 'SERVICES', shipyard: 'SHIPYARD', armory: 'ARMORY', jobs: 'JOBS' };
 
 function away(state, me) {
@@ -116,7 +124,14 @@ function away(state, me) {
   const it = place && place.interior;
   const av = it && it.avatars.find((a) => a.player === me.id);
   const at = av && useTarget(it, av);
-  if (!at) return [];
+  // X puts down all that is carried (F-293), whatever else is near.
+  const drop = av && av.carry.length ? [act('drop', 'KeyX', 'PUT DOWN ALL', 'DROP')] : [];
+  if (!at) return drop;
+  if (at.type === 'loot') {
+    const full = av.carry.length >= carryMax(state.ship, av);
+    const what = LOOT_NAMES[at.item.type] || 'IT';
+    return [use('pickup', full ? 'NO ROOM  ·  PUT SOMETHING DOWN' : `PICK UP ${what}`, 'TAKE', { off: full }), ...drop];
+  }
   if (at.type === 'guard') return [use('takedown', 'TAKE DOWN', 'TAKE DOWN')];
   if (at.type === 'turret') return [use('turn', 'TURN THE TURRET', 'TURN', { hold: true, progress: it.turning })];
   if (at.type === 'alarm')

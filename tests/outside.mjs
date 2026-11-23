@@ -3,6 +3,9 @@
 // page and to nothing else. The last check opens the game with a made-up tester link to see that. Playtest then keeps
 // these in the browser: localStorage nk-playtest:tester, nk-playtest:place and nk-playtest:queue, sessionStorage
 // nk-playtest:run and nk-playtest:pair, and with Playtest Remote network-kit's room keys (network-kit:…).
+// Online play (F-040) keeps the player's name in localStorage critical-name, and network-kit's room keys
+// (network-kit:…), so that a reload comes back to the same place in the room. It talks only to the game's own
+// address (/rooms), where the rooms are.
 // Run with a server on the repo root: node tests/outside.mjs [base-url]
 import { createRequire } from 'node:module';
 const { chromium } = createRequire(import.meta.url)('playwright');

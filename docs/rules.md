@@ -906,13 +906,13 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 
 | Nr | Regel | Status | Källa | Test |
 |---|---|---|---|---|
-| R-1108 | Varje spelare har sina primära roller från start. | bestämd | Användaren 2026-11-16 (D-189) | – |
-| R-1109 | När en spelare lämnar skeppet blir hens roller tillfälligt lediga, och de som är kvar kan ta över en ledig roll tills den som har den på riktigt kommer tillbaka. | bestämd | Användaren 2026-11-16 (D-189) | – |
-| R-1110 | Bara en spelare åt gången har en roll. Den som tillfälligt tar en ledig roll håller också kvar sin egen, så ingen annan kan ta någon av dem. | bestämd | Användaren 2026-11-16 (D-189) | – |
-| R-1118 | När den som har en roll kommer tillbaka får hen den direkt, och den som hade tagit över går tillbaka till sin egen roll. | bestämd | Användaren 2026-11-16 (D-189) | – |
-| R-1111 | Med två spelare tas den tredje rollen över på samma sätt, eller sköts av datorn. | bestämd | Användaren 2026-11-16 (D-189) | – |
-| R-1112 | Om datorn får sköta roller, och vilka, bestäms när omgången startar och gäller hela omgången. Datorn slås på i vyn för en roll där det är tillåtet. | bestämd | Användaren 2026-11-16 (D-189, D-186) | – |
-| R-1113 | Varje roll köper utrustningen till sin egen bordare ur sin egen kassa. I dag betalar den som köper, men utrustningen gäller alla bordare (F-235). | bestämd | Användaren 2026-11-16 (D-189) | – |
+| R-1108 | Varje spelare har sina primära roller från start. | byggd | Användaren 2026-11-16 (D-189); F-236 byggd 2026-11-21 | tests/players.test.js |
+| R-1109 | När en spelare lämnar skeppet blir hens roller tillfälligt lediga, och de som är kvar kan ta över en ledig roll tills den som har den på riktigt kommer tillbaka. | byggd | Användaren 2026-11-16 (D-189); F-236 byggd 2026-11-21 | tests/players.test.js |
+| R-1110 | Bara en spelare åt gången har en roll. Den som tillfälligt tar en ledig roll håller också kvar sin egen, så ingen annan kan ta någon av dem. | byggd | Användaren 2026-11-16 (D-189); F-236 byggd 2026-11-21 | tests/players.test.js |
+| R-1118 | När den som har en roll kommer tillbaka får hen den direkt, och den som hade tagit över går tillbaka till sin egen roll. | byggd | Användaren 2026-11-16 (D-189); F-236 byggd 2026-11-21 | tests/players.test.js |
+| R-1111 | Med två spelare tas den tredje rollen över på samma sätt, eller sköts av datorn. | byggd | Användaren 2026-11-16 (D-189); F-236 byggd 2026-11-21 | tests/players.test.js |
+| R-1112 | Om datorn får sköta roller, och vilka, bestäms när omgången startar och gäller hela omgången. Datorn slås på i vyn för en roll där det är tillåtet. | byggd | Användaren 2026-11-16 (D-189, D-186); F-034 byggd 2026-11-21 | tests/computer.test.js |
+| R-1113 | Varje roll köper utrustningen till sin egen bordare ur sin egen kassa. I dag betalar den som köper, men utrustningen gäller alla bordare (F-235). | byggd | Användaren 2026-11-16 (D-189); F-235 byggd 2026-11-21 | tests/purses.test.js |
 | R-1114 | Engineer köper det som rör skeppets skydd och energi, Gunner vapnen, och Captain motorer, bränsle och sensorer. | byggd | Användaren 2026-11-16 (F-188, agentens förslag godkänt) | tests/purses.test.js |
 | R-753 | Uppgraderingar går inte sönder var för sig tills vidare, och frågan tas upp igen med värmen. | byggd | HANDOFF beslut 2026-11-14 | saknas |
 | R-754 | Engineer ser rymden som de andra, med energi och skadevarningar i en smal remsa, och börjar i det läget. | byggd | HANDOFF beslut 2026-11-14 | saknas |
@@ -976,21 +976,24 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-812 | När skrovet nästan är slut, ingen är kvar och datorn sköter Captain, backar skeppet till en säker plats och kommer tillbaka när någon kallar från luftslussen. | bestämd | proposal-bases.md §4 | – |
 | R-813 | Datorn gör aldrig något stort på egen hand, utom att backa ut skeppet när den sköter Captain. | bestämd | proposal-bases.md §4 | – |
 | R-814 | När skrovet nästan är slut, ingen är kvar och datorn inte sköter Captain, ligger skeppet kvar och skyddas av basens dockningssköld. | bestämd | proposal-bases.md §4 | – |
-| R-815 | Det ska synas när skeppets dator sköter något. | bestämd | proposal-computer.md (Det som är bestämt), BACKLOG D-186 | – |
-| R-816 | Vid start väljer man vilka roller datorn får sköta, och som standard är det ingen. | bestämd | proposal-computer.md (Det som är bestämt), BACKLOG D-186 | – |
+| R-815 | Det ska synas när skeppets dator sköter något. | byggd | proposal-computer.md (Det som är bestämt), BACKLOG D-186; AUTO på fliken, F-034 byggd 2026-11-21 | saknas |
+| R-816 | Vid start väljer man vilka roller datorn får sköta, och som standard är det ingen. | byggd | proposal-computer.md (Det som är bestämt), BACKLOG D-186; F-034 byggd 2026-11-21 | tests/computer.test.js |
 | R-817 | En roll som datorn sköter är öppen för alla spelare att handla åt i butiken. | bestämd | proposal-computer.md (Det som är bestämt), BACKLOG D-186 och D-189 | – |
 | R-818 | Uppgraderingarna sorteras efter kategori och roll. | bestämd | BACKLOG F-188 | – |
 | R-819 | Ekonomin delas mellan rollerna, så att varje roll bestämmer över sina egna förbättringar. | bestämd | BACKLOG D-189 | – |
 | R-820 | Startkanonen tar ingen plats, Captain siktar med skeppet och Gunner skjuter. | förslag | proposal-bases.md §6 | – |
 | R-821 | Skeppets delar (vapen, pansar, sköld och energi) får nivå 2 och 3 i stället för att köpas en gång. | förslag | proposal-items.md 2.1 och fråga 3 | – |
-| R-822 | En post som datorn sköter visar AUTO på sin flik, och den som tar posten tar över direkt. | förslag | proposal-computer.md | – |
-| R-823 | Datorn tar en ikryssad post av sig själv när ingen sitter där. | förslag | proposal-computer.md fråga 1 | – |
-| R-824 | Valet av datorposter kan ändras från menyn under omgången, men bara när alla spelare är överens. | förslag | proposal-computer.md fråga 2 | – |
+| R-822 | En post som datorn sköter visar AUTO på sin flik, och den som tar posten tar över direkt. | byggd | proposal-computer.md; Användaren 2026-11-21 (SO7) | saknas |
+| R-823 | Datorn tar en ikryssad post av sig själv när ingen sitter där. | ersatt av: R-1257 | proposal-computer.md fråga 1; Användaren 2026-11-21 (SO7) | – |
+| R-824 | Valet av datorposter kan ändras från menyn under omgången, men bara när alla spelare är överens. | ersatt av: R-1112 | proposal-computer.md fråga 2; valet gäller hela omgången | – |
 | R-825 | Datorn följer det som är utpekat och gör aldrig något stort på egen hand, som att docka eller hoppa. | ersatt av: R-813 | proposal-computer.md fråga 3 (ersatt av krock 10) | – |
-| R-826 | Datorn reagerar en halv sekund senare och träffar ungefär hälften så ofta som en van spelare, lika för alla svårighetsgrader. | förslag | proposal-computer.md fråga 4 | – |
-| R-827 | Datorn som Captain håller satt kurs och låg fart nära stationer och vrak. | förslag | proposal-computer.md | – |
-| R-828 | Datorn som Gunner skjuter på den fiende Captain märkt, annars den närmaste som skjuter på skeppet, och aldrig på stationer, med raketer eller med Heavy Laser. | förslag | proposal-computer.md | – |
-| R-829 | Datorn som Engineer lagar det som är värst skadat och flyttar energi till skölden när skeppet blir beskjutet. | förslag | proposal-computer.md | – |
+| R-826 | Datorn reagerar en halv sekund senare och träffar ungefär hälften så ofta som en van spelare, lika för alla svårighetsgrader. | byggd | proposal-computer.md fråga 4; Användaren 2026-11-21 (SO5) | tests/computer.test.js |
+| R-827 | Datorn som Captain håller satt kurs och låg fart nära stationer och vrak. | byggd | proposal-computer.md; Användaren 2026-11-21 (SO4); i strid gäller R-1258 | tests/computer.test.js |
+| R-828 | Datorn som Gunner skjuter på den fiende Captain märkt, annars den närmaste som skjuter på skeppet, och aldrig på stationer, med raketer eller med Heavy Laser. | byggd | proposal-computer.md; Användaren 2026-11-21 (SO5) | tests/computer.test.js |
+| R-829 | Datorn som Engineer lagar det som är värst skadat och flyttar energi till skölden när skeppet blir beskjutet. | byggd | proposal-computer.md; Användaren 2026-11-21 (SO5) | tests/computer.test.js |
+| R-1257 | Den som sitter på en post där datorn får sköta slår på eller av datorn med K. Påslagen sköter den posten så fort ingen sitter där, släpper den direkt när någon tar posten, och tar den igen när posten lämnas. | byggd | Användaren 2026-11-21 (SO7); F-034 | tests/computer.test.js |
+| R-1258 | I strid kretsar datorn som Captain runt fienden på lagom avstånd och byter håll då och då, så att skeppet varken ligger still eller far iväg. | byggd | Användaren 2026-11-21 (SO1, SO4); F-034 | tests/computer.test.js |
+| R-1259 | Varje post datorn är påslagen för räknas som en fjärdedels spelare för hur tätt piraterna kommer: tätare än ensam, glesare än två. | byggd | Användaren 2026-11-21 (SO6); F-034 | tests/computer.test.js |
 | R-830 | Under bordning försvarar och lagar datorn skeppet. | förslag | proposal-computer.md fråga 5 | – |
 | R-831 | Piratvågorna är glesare för en ensam spelare men något tätare när datorn hjälper till. | förslag | proposal-computer.md fråga 6 | – |
 | R-832 | Skeppet har sex skadedelar som förut, men det ersattes av fem delar 2026-11-15. | ersatt av: ett senare beslut, se källan | HANDOFF beslut 2026-11-14 | – |
@@ -1157,7 +1160,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-932 | Uppdragen finns i flera sorter: frakt, passagerare, prisjakt, eskort och räddning. | bestämd | BACKLOG D-073 | – |
 | R-933 | En faktions bas har flest uppdrag för den faktionen, ibland från andra, och neutrala baser har mer blandat. | bestämd | BACKLOG D-073 | – |
 | R-934 | Ett uppdrag kan ge plus i anseende hos en faktion och minus hos en annan. | bestämd | BACKLOG D-073 | – |
-| R-935 | Engineer kan störa en skanning av smuggelgods med ett aktivt minispel som inte är svårt men roligt. | bestämd | BACKLOG D-074 | – |
+| R-935 | Engineer kan störa en skanning av smuggelgods med ett aktivt minispel som inte är svårt men roligt. | byggd | BACKLOG D-074; D-074 byggd 2026-11-21: Engineer, annars Captain, annars Gunner (SM4) | tests/smuggle.test.js |
 | R-936 | Det finns anomalier i rymden, till exempel områden där man flyger och skjuter långsammare eller tar skada. | bestämd | BACKLOG F-053, proposal-world.md steg 3 besked | – |
 | R-937 | På den minsta kartan ska slutet gå att nå utan att ta en enda bas. | förslag | proposal-bases.md §2 | – |
 | R-938 | Tre pyloner håller uppe bossens sköld och måste slås ut. | förslag | proposal-bases.md §10 | – |
@@ -1174,7 +1177,10 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1215 | Ett val ger +10 i anseende hos sidan som får saken och -5 hos den andra. | förslag | docs/proposal-missions.md (D-274) | – |
 | R-1216 | Uppdragsloggen har en egen tangent och är gemensam för besättningen. Huvudstoryn står överst, med nuvarande steg, avklarade steg och de ledtrådar man fått, sidouppdragen under, och det valda uppdragets mål markeras på stjärnkartan och systemkartan. | bestämd | Användaren 2026-11-17 (D-274, US3) | – |
 | R-1217 | Saker som hör till storyn finns bara medan storyn pågår, till exempel en sak som säljs på en bas eller ligger i ett vrak. De kan inte säljas eller tappas. | förslag | Användaren 2026-11-17 (D-274), docs/proposal-missions.md | – |
-| R-1218 | En patrull kan skanna skeppet efter smuggelgods. Skanningen går på tid, och Engineer kan undvika att bli upptäckt genom att vrida två rattar tills skeppets våg ligger ovanpå skanningens. Den som åker fast förlorar godset och lite anseende. | bestämd | Användaren 2026-11-17 (UP3, D-074); vågen är förslag A för Engineers hack 2026-11-15; preciserar R-935 och R-941 | – |
+| R-1218 | En patrull kan skanna skeppet efter smuggelgods. Skanningen går på tid, och Engineer kan undvika att bli upptäckt genom att vrida två rattar tills skeppets våg ligger ovanpå skanningens. Den som åker fast förlorar godset och lite anseende. | byggd | Användaren 2026-11-17 (UP3, D-074); vågen är förslag A för Engineers hack 2026-11-15; preciserar R-935 och R-941; D-074 byggd 2026-11-21 (SM2–SM5) | tests/smuggle.test.js |
+| R-1260 | Smuggeluppdrag ges av Drifters och fria baser, aldrig av Wardens eller Charter, i listan i baren märkta SMUGGLE. Godset ska till en annan bas som inte är Wardens, och uppdraget betalar ungefär dubbelt så mycket som en låda. | byggd | Användaren 2026-11-21 (SM1); D-257 | tests/smuggle.test.js |
+| R-1261 | En Warden-skepp som kommer nära skannar skeppet i ungefär åtta sekunder, och samma skepp skannar inte igen på en stund. Utan smuggelgods händer inget. Den som flyr fort utom räckhåll bryter skanningen men tappar lite hos Wardens. | byggd | Användaren 2026-11-21 (SM2); D-074 | tests/smuggle.test.js |
+| R-1262 | Smuggelgodset göms med två rattar som vrids tills skeppets våg ligger på skanningens en stund. Engineer vrider dem, annars Captain, annars Gunner, i en liten ruta som inte döljer resten av skärmen, med F och G, V och B, klick på pilarna, och för Engineer också piltangenterna. Skeppets dator gör det inte. | byggd | Användaren 2026-11-21 (SM3–SM5); D-074 | tests/smuggle.test.js |
 | R-1219 | En del av samtalen i storyn sker inne på basen, så att någon går dit till fots. | bestämd | Användaren 2026-11-17 (US7, D-274) | – |
 | R-1220 | Sidouppdragen väljs i baren på en bas, i ett gränssnitt som butikens. | bestämd | Användaren 2026-11-17 (US9, D-073); ersätter förslaget om en anslagstavla i R-940 för valet av uppdrag | – |
 | R-1221 | De första sidouppdragen är frakt, prisjakt och räddning. Eskort kommer när eskortskeppen finns, och passagerare sist. | bestämd | Användaren 2026-11-17 (UP2, D-073) | – |
@@ -1202,9 +1208,9 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1245 | Online sparar värden, och varje sparning skickas också till alla spelare, så att vem som helst kan fortsätta en annan dag. Sparningen visar vem som hade vilken post. | bestämd | Användaren 2026-11-19 (Kör B rek), ON3; D-268 | tests/online-crew.test.js |
 | R-1246 | Den som kommer tillbaka till en sparad omgång under samma namn får samma post föreslagen. | bestämd | Användaren 2026-11-19 (Kör B rek), ON4; D-267 | tests/online-crew.test.js |
 | R-1247 | Gamla sparningar får sluta fungera när sparningens form ändras. | byggd | Användaren 2026-11-19 (Kör B rek), ON1; D-263 | tests/saves.test.js |
-| R-1248 | Spelet och rummen för onlineläget ligger på samma adress hos Cloudflare, och spelets gamla adress på GitHub skickar vidare dit. | bestämd | Användaren 2026-11-19 (OL2); D-269 | – |
-| R-1249 | Spelets adress blir critical.trythis.one. | bestämd | Användaren 2026-11-19 (OL3); D-269 | – |
-| R-1250 | Online pausar och fortsätter spelet först när alla anslutna spelare har godkänt inom tio sekunder; menyn pausar aldrig av sig själv online, och den som spelar ensam pausar direkt. | bestämd | Användaren 2026-11-19 (ON5); F-037 | – |
+| R-1248 | Spelet och rummen för onlineläget ligger på samma adress hos Cloudflare, och spelets gamla adress på GitHub skickar vidare dit. | byggd | Användaren 2026-11-19 (OL2); D-269 byggd 2026-11-23 | tests/rooms.test.js |
+| R-1249 | Spelets adress blir critical.trythis.one. Så länge ligger det på critical.l8p1.workers.dev. | bestämd | Användaren 2026-11-19 (OL3), ändrat 2026-11-20: workers.dev så länge; D-269, F-289 | – |
+| R-1250 | Online pausar och fortsätter spelet först när alla anslutna spelare har godkänt inom tio sekunder; menyn pausar aldrig av sig själv online, och den som spelar ensam pausar direkt. | byggd | Användaren 2026-11-19 (ON5); F-037 byggd 2026-11-20 | tests/online.test.js |
 | R-1251 | Sidouppdragen är frakt (en låda lämnas på en annan bas), prisjakt (en namngiven pirat skjuts ner) och räddning (bordarna bär ut en överlevande ur ett vrak), och målets system markeras på stjärnkartan. | byggd | Användaren 2026-11-20 (Kör B rek), SU1; D-073 | tests/jobs.test.js |
 | R-1252 | Sidouppdragen tas vid ett bord i baren inne på en bas som handlar med besättningen, som en lista. | byggd | Användaren 2026-11-20 (Kör B rek), SU2; D-073 | tests/jobs.test.js |
 | R-1253 | Ett sidouppdrag betalar 300 till 1500 krediter efter avstånd och fara, med tidsgräns hälften till; ett som inte hinns med betalar inget och kostar lite anseende hos den som gav det. | byggd | Användaren 2026-11-20 (Kör B rek), SU3; D-073 | tests/jobs.test.js |
@@ -1219,6 +1225,24 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 |---|---|---|---|---|
 | R-945 | Spelet går också att spela ensam. | byggd | HANDOFF beslut | saknas |
 | R-946 | Den som spelar ensam börjar som Captain. | byggd | HANDOFF beslut | saknas |
+| R-1256 | När ingen sitter på Gunner-posten siktar Captain med musen, skjuter med musknappen eller mellanslag och byter vapen med hjulet, medan skeppet styrs med tangenterna. Skölden, dartsen och märkning kräver Gunner-posten. Den som tar Gunner-posten tar över vapnen. | byggd | Användaren 2026-11-21 (SO1, SO3); F-291 | tests/players.test.js |
+| R-1263 | Fara (ett anfall på en egen station med risk HIGH, skeppets egen varning, fiender som är här) står överst och trängs aldrig undan av annat. | byggd | Användaren 2026-11-21 (MD1); D-187 | tests/messages.test.js |
+| R-1264 | Läget för en post visas bara för den posten: att komma i position att docka för Captain, en överladdning för den som löser ut den, dartsen för Gunner. Dockad, hopp, fara och händelser visas för alla. | byggd | Användaren 2026-11-21 (MD5); D-187, F-255 | tests/messages.test.js |
+| R-1265 | Sensorremsan uppe till höger under minikartan visar fiender i sikte, fiendelarmet med tid kvar, nödanrop, anfall på egna stationer som inte är HIGH, och prissumman. Det som syns visas alltid; det bortom kräver köpta sensorer, som tidigare. | byggd | Användaren 2026-11-21 (MD2, MD3); D-187 | tests/messages.test.js |
+| R-1266 | Alla meddelanden sparas, de senaste 40, och visas under SHIP'S MESSAGES i loggen på L. | byggd | Användaren 2026-11-21 (MD4); D-187 | saknas |
+| R-1267 | Gunner ser hur många darts som är hela och när nästa byggs, och får ett meddelande när en dart är klar. | byggd | Användaren 2026-11-16 (F-255) | saknas |
+| R-1268 | Varje roll har sin egen ryggsäck i tre nivåer, som rymmer både utrustning och byte och ersätter CARGO PACK. Nivå 1, som man har från början, rymmer fyra saker, nivå 2 sex och nivå 3 åtta; varje sorts utrustning utöver granaterna tar en plats. Med last går man lika långsamt som förr på nivå 1, hälften så långsamt på nivå 2 och i vanlig fart på nivå 3. | byggd | Användaren 2026-11-21 (RO1, RO2, RG1); F-192 | tests/carry.test.js |
+| R-1269 | Inne på baser och i vrak springer man med Shift, ungefär 60 % fortare, men bara när man inte bär något. Vakter i närheten hör stegen och kommer för att titta. | byggd | Användaren 2026-11-21 (SP1); F-292 | tests/carry.test.js |
+| R-1270 | Byte plockas upp med E, en sak i taget, och inget plockas upp av sig självt. X lägger ner allt man bär där man står. | byggd | Användaren 2026-11-21 (DR1, DR2); F-293 | tests/carry.test.js |
+| R-1271 | Mushjulet byter mellan geväret och sövningspistolen för den som bordar, och ändrar kraften för det system pekaren står på hos Engineer. | byggd | Användaren 2026-11-18 (MH1); F-285 | saknas |
+| R-1272 | Spelet ritas med grafikkortet (WebGL), med ljus uträknat per bildpunkt, skuggor och sken, som version C i designtestet för ljus. Insidan först; där det inte fungerar eller går för långsamt ritas det som förut, och menyn har ett val för det. | bestämd | Användaren 2026-11-22 (GR3); D-261, F-294; insidan byggd 2026-11-22 (F-294, WG1–WG3) | – |
+| R-1273 | Ett högerklick på ett fiendeskepp markerar just det skeppet, för både Captain och Gunner, och ett högerklick till på samma skepp tar bort markeringen. Ett klick bredvid alla skepp ändrar inget. T finns kvar. | byggd | Användaren 2026-11-23 (MK1); F-297 | tests/players.test.js |
+| R-1274 | Flikarna för posterna visar vem som har varje post när besättningen är fler än en, FREE för en ledig post, AUTO när skeppets dator sköter den, och båda namnen på en post som någon har tagit medan ägaren är ombord eller borta. | byggd | Användaren 2026-11-22 (OL9); F-296 | tests/messages.test.js |
+| R-1275 | Av vakterna som hör ett skott eller steg går de två närmaste dit; de andra stannar på sina platser men är vaksamma en stund och ser intrång fortare. | byggd | Användaren 2026-11-23 (VK1); F-300 | tests/guards-noise.test.js |
+| R-1276 | Vakten närmast valvet lämnar det inte för ett ljud, så länge minst tre vakter står upp. | byggd | Användaren 2026-11-23 (VK3); F-300 | tests/guards-noise.test.js |
+| R-1277 | Vakter som letat utan att hitta någon letar runt platsen en stund och går sedan tillbaka till sin runda, vaksammare en tid; också när basen har larm. | byggd | Användaren 2026-11-23 (VK2); F-300 | tests/guards-noise.test.js |
+| R-1278 | En bordare går långsammare åt sidan (80 %) och bakåt (60 %) än framåt, mätt mot det håll hen tittar, och springer bara framåt. | byggd | Användaren 2026-11-23 (SP2); F-299 | tests/carry.test.js |
+| R-1279 | När musen legat stilla en stund tittar bordaren åt det håll hen går, och fortsätter titta dit när hen stannar. | byggd | Ägaren 2026-11-23; B-298 | saknas |
 | R-947 | Inget moment i spelet pausar spelet. | byggd | HANDOFF beslut | saknas |
 | R-948 | En pausknapp fryser världen för alla spelare. | byggd | HANDOFF beslut | saknas |
 | R-949 | Hardcore mode ger ett liv. | byggd | HANDOFF beslut 2026-11-14 | saknas |

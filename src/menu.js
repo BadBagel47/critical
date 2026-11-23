@@ -5,6 +5,8 @@
 //   row.confirm   a question shown first, for choices that throw something away. Choosing again goes ahead.
 //   row.slider    the row sets a volume instead: 'effects' or 'music'
 //   row.off       the row cannot be chosen right now, and `right` says why
+import { knownAvailable } from './online.js';
+import { glLightChoice, glLightFellBack, setGlLight } from './render/gl-light.js';
 import { VIEW_W, VIEW_H, COL } from './config.js';
 import { rect, bar } from './render/draw.js';
 import { volumeOf, setVolume, isMuted, toggleMute } from './audio.js';
@@ -20,7 +22,20 @@ const STEP_Y = 20;
 const SLIDER = { x: X + W - 150, w: 110 };
 
 // `size` is how big a world a new game gets, see sim/world.js.
-export const createMenu = () => ({ page: 'title', row: 0, confirm: null, note: null, size: 'short' });
+// `computer` is which posts the ship's computer may run in a new game; none by default (R-816, F-034).
+export const createMenu = () => ({
+  page: 'title',
+  row: 0,
+  confirm: null,
+  note: null,
+  size: 'short',
+  computer: { captain: false, gunner: false, engineer: false },
+});
+// What the ship's computer may run, in a few words.
+export function computerSummary(computer) {
+  const posts = Object.keys(computer).filter((p) => computer[p]);
+  return posts.length ? posts.map((p) => p.toUpperCase()).join('  ') : 'NO POSTS';
+}
 // Open a page with the first row that can be chosen picked.
 export function openPage(game, page) {
   const menu = game.view.menu;
@@ -31,6 +46,13 @@ export function openPage(game, page) {
     rows.findIndex((r) => !r.off),
   );
 }
+const storedNameOf = (game) => {
+  try {
+    return (game.storage && game.storage.getItem('critical-name')) || '';
+  } catch {
+    return '';
+  }
+};
 const rootOf = (game) => (game.view.started ? 'main' : 'title');
 
 const slotName = (slot) => (slot === AUTO ? 'AUTOSAVE' : 'SLOT ' + slot);
@@ -52,6 +74,12 @@ const noStorage = (game) => (game.storage ? null : 'THIS BROWSER DOES NOT ALLOW 
 
 // Fullscreen (F-286), where the browser can show the game so: the same as the button in the corner (src/fullscreen.js).
 // The menu is chosen within a frame of the key or the click, which the browser still counts as the player's own act.
+// The light inside drawn by the graphics card, or as before (F-294, WG2): NEW or CLASSIC, and why it went back.
+function lightRow() {
+  const choice = glLightChoice();
+  const right = choice === 'new' ? 'NEW' : glLightFellBack() ? 'CLASSIC  ·  TOO SLOW HERE' : 'CLASSIC';
+  return [{ id: 'light', label: 'LIGHT INSIDE', right, run: () => setGlLight(choice === 'new' ? 'classic' : 'new') }];
+}
 function fullscreenRow() {
   const fs = typeof window !== 'undefined' ? /** @type {any} */ (window).criticalFullscreen : null;
   if (!fs || !fs.supported) return [];
@@ -64,6 +92,7 @@ const PAGES = {
       const a = game.actions;
       const latest = latestSlot(game.saves);
       const size = game.view.menu.size;
+      const computer = { ...game.view.menu.computer };
       return [
         {
           id: 'continue',
@@ -72,12 +101,12 @@ const PAGES = {
           off: !latest,
           run: () => a.load(latest),
         },
-        { id: 'new', label: 'NEW GAME', run: () => a.newGame({ size }) },
+        { id: 'new', label: 'NEW GAME', run: () => a.newGame({ size, computer }) },
         {
           id: 'hardcore',
           label: 'NEW GAME  ·  HARDCORE',
           right: 'ONE LIFE',
-          run: () => a.newGame({ hardcore: true, size }),
+          run: () => a.newGame({ hardcore: true, size, computer }),
         },
         {
           id: 'size',
@@ -85,10 +114,24 @@ const PAGES = {
           right: `${SIZE_NAMES[size]}  ·  ${SIZES[size]} SYSTEMS`,
           run: () => (game.view.menu.size = SIZE_ORDER[(SIZE_ORDER.indexOf(size) + 1) % SIZE_ORDER.length]),
         },
+        {
+          id: 'computer',
+          label: "SHIP'S COMPUTER",
+          right: computerSummary(computer),
+          run: () => openPage(game, 'computer'),
+        },
         { id: 'load', label: 'LOAD GAME', run: () => openPage(game, 'load') },
         { id: 'sound', label: 'SOUND', run: () => openPage(game, 'sound') },
         ...fullscreenRow(),
-        { id: 'test', label: 'TEST MODE', right: 'EVERYTHING UNLOCKED', run: () => a.newGame({ test: true }) },
+        ...(knownAvailable()
+          ? [{ id: 'online', label: 'PLAY ONLINE', right: 'WITH UP TO THREE', run: () => openPage(game, 'online') }]
+          : []),
+        {
+          id: 'test',
+          label: 'TEST MODE',
+          right: 'EVERYTHING UNLOCKED',
+          run: () => a.newGame({ test: true, computer }),
+        },
       ];
     },
   },
@@ -108,7 +151,16 @@ const PAGES = {
         { id: 'load', label: 'LOAD GAME', right: hard, off: !!hard, run: () => openPage(game, 'load') },
         { id: 'sound', label: 'SOUND', run: () => openPage(game, 'sound') },
         { id: 'export', label: 'EXPORT THIS GAME TO A FILE', right: hard, off: !!hard, run: a.exportGame },
+        // Online (F-040): the invitation, a pause for everyone by vote (R-1250), and leaving the room.
+        ...(game.online && game.online.active()
+          ? [
+              { id: 'invite', label: 'INVITE', right: game.online.code || '', run: a.invite },
+              { id: 'votepause', label: 'PAUSE FOR EVERYONE', right: 'THE OTHERS AGREE WITH P', run: a.votePause },
+              { id: 'leaveroom', label: 'LEAVE THE ROOM', run: a.leaveOnline },
+            ]
+          : []),
         ...fullscreenRow(),
+        ...lightRow(),
         // Only a test game has this.
         ...(state.test
           ? [{ id: 'testing', label: 'TEST  ·  CALL IN SHIPS', run: () => openPage(game, 'testing') }]
@@ -133,6 +185,33 @@ const PAGES = {
     },
   },
   // What a test game can call in. Each is on a key too, so that it can be done without opening the menu.
+  // Online play (F-040, docs/design/prototypes/online.html).
+  online: {
+    title: 'PLAY ONLINE',
+    rows(game) {
+      const a = game.actions;
+      const latest = latestSlot(game.saves);
+      return [
+        { id: 'name', label: 'YOUR NAME', right: storedNameOf(game) || 'NOT SET', run: a.askName },
+        { id: 'hostnew', label: 'NEW ROOM  ·  NEW GAME', run: () => a.hostOnline(false) },
+        {
+          id: 'hostsave',
+          label: 'NEW ROOM  ·  CONTINUE',
+          right: latest ? slotName(latest) : 'NO SAVED GAME',
+          off: !latest,
+          run: () => a.hostOnline(true),
+        },
+        { id: 'join', label: 'JOIN WITH A CODE', run: a.joinOnline },
+        {
+          id: 'privacy',
+          label: 'ABOUT ONLINE PLAY',
+          right: 'WHAT IS SENT',
+          run: () => window.open('privacy.html', '_blank'),
+        },
+        back(game),
+      ];
+    },
+  },
   testing: {
     title: 'TEST  ·  CALL IN SHIPS',
     rows(game) {
@@ -146,6 +225,20 @@ const PAGES = {
         { id: 'traffic', label: 'FACTION TRAFFIC', run: () => game.actions.summon('traffic') },
         back(game),
       ];
+    },
+  },
+  // Which posts the ship's computer may run in a new game (F-034, R-816, R-1112). It holds for the whole game.
+  computer: {
+    title: "SHIP'S COMPUTER",
+    rows(game) {
+      const c = game.view.menu.computer;
+      const row = (post) => ({
+        id: 'computer.' + post,
+        label: post.toUpperCase(),
+        right: c[post] ? 'MAY RUN IT' : 'NO',
+        run: () => (c[post] = !c[post]),
+      });
+      return [row('captain'), row('gunner'), row('engineer'), back(game)];
     },
   },
   sound: {
@@ -165,7 +258,7 @@ const PAGES = {
 export function menuRows(game) {
   const page = PAGES[game.view.menu.page];
   const rows = page.rows(game);
-  const y0 = game.view.started ? (VIEW_H - rows.length * STEP_Y) / 2 + 8 : 108;
+  const y0 = game.view.started ? (VIEW_H - rows.length * STEP_Y) / 2 + 8 : 100;
   return rows.map((row, i) => ({ ...row, x: X, y: y0 + i * STEP_Y, w: W, h: ROW_H }));
 }
 // Every row of the current page by name. Used by the browser test.
@@ -275,7 +368,8 @@ export function drawMenu(game, t) {
     align: 'c',
   });
   if (!view.started) {
-    font.draw(ctx, 'EARLY VERSION  ·  ONLINE PLAY COMES LATER', VIEW_W / 2, 344, COL.faint, { align: 'c' });
+    const later = knownAvailable() ? 'EARLY VERSION' : 'EARLY VERSION  ·  ONLINE PLAY COMES LATER';
+    font.draw(ctx, later, VIEW_W / 2, 344, COL.faint, { align: 'c' });
     void t;
   }
 }

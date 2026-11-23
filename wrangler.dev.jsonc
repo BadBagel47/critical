@@ -1,0 +1,16 @@
+// The test build of the game on Cloudflare (DV2, 2026-11-20): the dev branch, at critical-dev.l8p1.workers.dev.
+// Published by .github/workflows/auto-merge.yml after every change that reaches dev. The site is the folder made by
+// tools/site.mjs; the rooms for online play are served under /rooms by worker/index.js (F-040).
+{
+  "name": "critical-dev",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "assets": { "directory": "dist" },
+  "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }] },
+  // Free plan: SQLite-backed Durable Objects only.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  // The test build answers to network-kit's preview admin page, so that tests are not counted with real play.
+  "services": [{ "binding": "NETWORK_KIT_ADMIN", "service": "network-kit-admin-preview", "entrypoint": "GameApi" }],
+  "vars": { "ROOM_JURISDICTION": "eu", "GAME_NAME": "critical-dev" }
+}

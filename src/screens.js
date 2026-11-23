@@ -4,8 +4,8 @@
 import { VIEW_W, VIEW_H, ZOOM, COL } from './config.js';
 import { toast } from './events.js';
 import { toggleMute, soundWaiting } from './audio.js';
-import { createMenu, openPage, drawMenu, menuButtons } from './menu.js';
-import { POSTS, playerById } from './sim/players.js';
+import { createMenu, openPage, drawMenu, menuButtons, menuRows } from './menu.js';
+import { POSTS, playerById, holderOf } from './sim/players.js';
 import { findDock } from './sim/things.js';
 import { isTrading } from './sim/stations.js';
 import { turretMount } from './sim/weapons.js';
@@ -23,8 +23,17 @@ import { drawMainframe, mainframeClick, mainframeButtons } from './render/mainfr
 import { drawStoryLog, drawStoryCard } from './render/story.js';
 import { drawJobs, jobRows } from './render/jobs.js';
 import { atMainframe } from './sim/mainframe.js';
-import { drawEngineer, engineerClick, engineerButtons, SYSTEM_KEYS, hackTarget, hackBox } from './render/engineer.js';
+import {
+  drawEngineer,
+  engineerClick,
+  engineerSystemAt,
+  engineerButtons,
+  SYSTEM_KEYS,
+  hackTarget,
+  hackBox,
+} from './render/engineer.js';
 import { drawActions, actionButtons } from './render/actions.js';
+import { drawScan, myScanTurn, scanButtons } from './render/scan.js';
 import { pursesLine } from './sim/purses.js';
 
 // What is kept about the screen. None of it is part of the game: two players look at the same game differently.
@@ -119,13 +128,25 @@ function onBoard(game, out) {
   if (keys.hit('Digit3')) out.take = 'engineer';
   if (keys.hit('Tab')) out.take = POSTS[(at + 1) % POSTS.length];
   if (keys.hit('PadPrevPost')) out.take = POSTS[(at + POSTS.length - 1) % POSTS.length];
+  // K: the ship's computer on or off on this post, where it may run it (R-1257).
+  if (keys.hit('KeyK')) out.auto = true;
+  // A Warden scan with goods to hide, and this player's turn: F and G turn the first dial, V and B the second, and
+  // the Engineer's arrow keys do as well (R-1262).
+  if (myScanTurn(game)) {
+    const eng = me.post === 'engineer';
+    out.scan = {
+      a: axis(keys, eng ? ['KeyG', 'ArrowRight'] : ['KeyG'], eng ? ['KeyF', 'ArrowLeft'] : ['KeyF']),
+      b: axis(keys, eng ? ['KeyB', 'ArrowUp'] : ['KeyB'], eng ? ['KeyV', 'ArrowDown'] : ['KeyV']),
+    };
+  }
 }
 
 function captainInput(game, out) {
-  const { keys } = game;
+  const { keys, state } = game;
   onBoard(game, out);
   // The course is the Captain's own instrument. It changes nothing in the game, so it lives in the view.
-  if (keys.hit('KeyC')) game.view.course = nextCourse(game.state, game.view);
+  const course = keys.hit('KeyC');
+  if (course) game.view.course = nextCourse(game.state, game.view);
   out.captain = {
     throttle: axis(keys, ['KeyW', 'ArrowUp'], ['KeyS', 'ArrowDown']) + keys.pad.rt - keys.pad.lt,
     turn: axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx,
@@ -134,6 +155,29 @@ function captainInput(game, out) {
     boost: keys.down('ShiftLeft', 'ShiftRight'),
     surge: keys.hit('KeyZ'),
     mark: keys.hit('KeyT'),
+    // A right click marks the ship under the pointer (F-297).
+    markAt: keys.mouse.rightClicked ? pointer(game) : null,
+  };
+  // The ship's computer follows the course when it flies the ship (R-827), so the game is told it too.
+  if (course) out.captain.course = game.view.course === undefined ? null : game.view.course;
+  // No one on the Gunner's post: the Captain aims with the mouse and fires with a click or Space, and the wheel
+  // changes the weapon (R-1256, F-291). The keys stay the Captain's own.
+  if (!holderOf(state, 'gunner')) out.gunner = captainGuns(game);
+}
+
+// Where the pointer is, in space.
+const pointer = (game) => ({
+  x: game.view.cam.x + (game.keys.mouse.x - VIEW_W / 2) / ZOOM,
+  y: game.view.cam.y + (game.keys.mouse.y - VIEW_H / 2) / ZOOM,
+});
+
+function captainGuns(game) {
+  const { keys, view } = game;
+  const m = keys.mouse;
+  return {
+    aim: { x: view.cam.x + (m.x - VIEW_W / 2) / ZOOM, y: view.cam.y + (m.y - VIEW_H / 2) / ZOOM },
+    fire: (m.down && !game.overAction) || keys.down('Space'),
+    weapon: m.wheel > 0 ? 1 : m.wheel < 0 ? -1 : null,
   };
 }
 
@@ -155,7 +199,8 @@ function gunnerInput(game, out) {
     weapon:
       keys.hit('KeyQ') || keys.mouse.wheel > 0 ? 1 : keys.hit('PadPrevWeapon') || keys.mouse.wheel < 0 ? -1 : null,
     surge: keys.hit('KeyZ'),
-    mark: keys.hit('KeyT') ? aim : null,
+    // T marks the enemy nearest the aim, a right click the one under the pointer (F-297).
+    mark: keys.hit('KeyT') ? aim : keys.mouse.rightClicked ? pointer(game) : null,
     // X switches the shield on and off (R-1129), and R sends the Darts out and calls them home (R-1187).
     shield: keys.hit('KeyX'),
     darts: keys.hit('KeyR'),
@@ -168,7 +213,9 @@ function engineerInput(game, out) {
   const { keys, state, view } = game;
   const rows = SYSTEM_KEYS.length;
   onBoard(game, out);
-  const cmd = { power: [], repair: null, tool: quickTool(keys), surge: null };
+  // While the Engineer hides goods from a scan, the arrow keys and B work the dials instead (R-1262).
+  const dials = myScanTurn(game);
+  const cmd = { power: [], repair: null, tool: dials ? null : quickTool(keys), surge: null };
   // The keys follow how the systems are laid out. On the panel they are in a column: up and down pick one,
   // left and right set its power. In the strip beside the view of space they are in a row, so there left and
   // right pick one, and up and down raise and lower its power.
@@ -185,10 +232,11 @@ function engineerInput(game, out) {
         ['ArrowUp', 'KeyW'],
         ['ArrowDown', 'KeyS'],
       ];
-  if (keys.hit(...before)) view.engRow = (view.engRow + rows - 1) % rows;
-  if (keys.hit(...after)) view.engRow = (view.engRow + 1) % rows;
-  if (keys.hit(...more)) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: 1 });
-  if (keys.hit(...less)) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: -1 });
+  const free = (codes) => (dials ? codes.filter((c) => !c.startsWith('Arrow')) : codes);
+  if (keys.hit(...free(before))) view.engRow = (view.engRow + rows - 1) % rows;
+  if (keys.hit(...free(after))) view.engRow = (view.engRow + 1) % rows;
+  if (keys.hit(...free(more))) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: 1 });
+  if (keys.hit(...free(less))) cmd.power.push({ sys: SYSTEM_KEYS[view.engRow], delta: -1 });
   // While a station's code lock is being worked on, Space or a click on it stops the needle of the hack.
   const m = keys.mouse;
   const box = hackBox();
@@ -196,6 +244,12 @@ function engineerInput(game, out) {
   if (hackTarget(state) && (keys.hit('Space') || onHack)) cmd.ring = true;
   // Z builds up an overcharge for the system that is picked.
   if (keys.hit('KeyZ')) cmd.surge = SYSTEM_KEYS[view.engRow];
+  // The mouse wheel: up gives more power, down less, to the system the pointer is on on the panel, or in the strip
+  // beside the view of space to the one that is picked (F-285).
+  if (keys.mouse.wheel) {
+    const sys = view.engOpen ? engineerSystemAt(keys.mouse.x, keys.mouse.y) : SYSTEM_KEYS[view.engRow];
+    if (sys) cmd.power.push({ sys, delta: keys.mouse.wheel < 0 ? 1 : -1 });
+  }
   if (keys.mouse.clicked && view.engOpen) {
     const click = engineerClick(state, keys.mouse.x, keys.mouse.y, keys.mouse.shift);
     if (click && click.power) cmd.power.push(...click.power);
@@ -320,6 +374,7 @@ function mainframeInput(game, out) {
 }
 
 // Away from the ship, inside a wreck or a station.
+const MOUSE_IDLE_MS = 1200;
 function awayInput(game, out) {
   const { keys, state, view, me } = game;
   const m = keys.mouse;
@@ -329,6 +384,15 @@ function awayInput(game, out) {
   const origin = place ? insideOrigin(place.interior, av) : { x: 0, y: 0 };
   let aim = { x: m.x - origin.x, y: m.y - origin.y };
   let lob = aim;
+  const mx = axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx;
+  const my = axis(keys, ['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']) + keys.pad.ly;
+  // The mouse has lain still a while: the boarder looks the way they walk, and keeps looking that way when they
+  // stop, instead of turning toward a pointer that the moving view carries along (B-298).
+  const idle = !m.movedAt || performance.now() - m.movedAt > MOUSE_IDLE_MS;
+  if (idle && av && !keys.pad.used && !m.down) {
+    aim = mx || my ? { x: av.x + mx * 60, y: av.y + my * 60 } : null;
+    if (aim) lob = { x: av.x + mx * 95, y: av.y + my * 95 };
+  }
   if (keys.pad.used) {
     // With a gamepad the right stick aims, from where the boarder stands.
     const dir = stickAim(view, keys.pad);
@@ -338,18 +402,22 @@ function awayInput(game, out) {
     }
   }
   out.away = {
-    mx: axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx,
-    my: axis(keys, ['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']) + keys.pad.ly,
+    mx,
+    my,
     aim,
     fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5,
     grenade: keys.hit('KeyG') || m.rightClicked ? lob : null,
     flare: keys.hit('KeyQ') ? lob : null,
-    swap: keys.hit('KeyR'),
+    // R or the mouse wheel changes between the rifle and the tranq gun (F-285).
+    swap: keys.hit('KeyR') || m.wheel !== 0,
     lampPressed: keys.hit('KeyF'),
     use: keys.down('KeyE'),
     usePressed: keys.hit('KeyE'),
     charge: keys.hit('KeyC'),
     deploy: keys.hit('KeyT'),
+    // Shift runs while nothing is carried (F-292), and X puts down all that is carried (F-293).
+    sprint: keys.down('ShiftLeft', 'ShiftRight'),
+    drop: keys.hit('KeyX'),
   };
 }
 
@@ -359,17 +427,22 @@ function drawOnBoard(game) {
   const { ctx, state, view, assets } = game;
   if (game.me.post === 'engineer' && view.engOpen) {
     drawEngineer(ctx, state, view, assets);
+    drawScan(ctx, assets.font, game);
     return;
   }
   const dock = drawSpace(ctx, state, view, assets);
   drawHud(ctx, state, view, assets, dock);
+  drawScan(ctx, assets.font, game);
 }
 function drawTitleScreen(game, t) {
   drawStars(game.ctx, { x: t * 12, y: -t * 20 });
   drawMenu(game, t);
   // Browsers let a page make a sound only after a key press or click (B-281). Until then the title says so.
+  // Below the line under the rows, however many rows there are.
+  const rows = menuRows(game);
+  const y = rows.length ? rows[rows.length - 1].y + 44 : 282;
   if (soundWaiting() && Math.floor(t * 1.5) % 2 === 0)
-    game.assets.font.draw(game.ctx, 'PRESS ANY KEY FOR SOUND', VIEW_W / 2, 282, COL.ochre[2], { align: 'c' });
+    game.assets.font.draw(game.ctx, 'PRESS ANY KEY FOR SOUND', VIEW_W / 2, y, COL.ochre[2], { align: 'c' });
 }
 // The game menu lies on top of wherever the player is. The game goes on behind it.
 function drawGameMenu(game, t) {
@@ -518,7 +591,11 @@ export function buttonsOf(game) {
   const mode = settle(game);
   const screen = SCREENS[mode];
   game.me = game.view.started ? playerById(game.state, game.view.playerId) : null;
-  return [...(screen.buttons ? screen.buttons(game) : []), ...actionButtons(game, mode)];
+  return [
+    ...(screen.buttons ? screen.buttons(game) : []),
+    ...actionButtons(game, mode),
+    ...scanButtons(game).map(({ name, x, y, w, h }) => ({ name, x, y, w, h })),
+  ];
 }
 
 // What this player asks the game for in one step. See crewCommands in sim/players.js.
@@ -585,7 +662,7 @@ function drawStory(game) {
   const { ctx, state, view, keys } = game;
   const font = game.assets.font;
   view.storyButtons = [];
-  if (view.log) return drawStoryLog(ctx, font, state);
+  if (view.log) return drawStoryLog(ctx, font, state, view);
   if (!state.story) return;
   const card = storyCard(game);
   if (card !== null) view.storyButtons = drawStoryCard(ctx, font, state, card, keys.mouse);
@@ -610,10 +687,11 @@ export function viewKeys(game, mode) {
     for (const code of Object.keys(calls)) if (keys.hit(code)) game.actions.summon(calls[code]);
   }
   // V folds the Engineer's screen away and brings it back.
-  if (mode === 'engineer' && keys.hit('KeyV')) view.engOpen = !view.engOpen;
+  const dials = myScanTurn(game);
+  if (mode === 'engineer' && !dials && keys.hit('KeyV')) view.engOpen = !view.engOpen;
   // B opens the Captain's boarding radar, and closes it.
   if (mode === 'radar' && keys.hit('KeyB', 'KeyE', 'Escape')) view.panel = null;
-  else if (mode === 'captain' && keys.hit('KeyB') && radarPlace(state)) view.panel = 'radar';
+  else if (mode === 'captain' && !dials && keys.hit('KeyB') && radarPlace(state)) view.panel = 'radar';
   const canOpenMap = mode === 'map' || mode === 'stars' || POSTS.includes(mode) || mode === 'crew';
   if (keys.hit('KeyM') && canOpenMap) view.panel = mode === 'map' ? null : 'map';
   // I opens the stores, and closes them (R-1171).

@@ -95,7 +95,8 @@ test('R-1113 R-1117: boarding gear and the bounty are paid from the purse of the
   const s = atYard(3);
   fillPurses(s, 1000);
   buy(s, 'flare', 2);
-  assert.equal(s.purses.engineer, 1000 - CATALOG.flare.price);
+  assert.equal(s.purses.engineer, 1000 - CATALOG['flare.engineer'].price);
+  assert.equal(s.ship.mods['flare.engineer'], 1, "R-1113 F-235: it is the Engineer's own");
   assert.equal(s.purses.captain, 1000);
   s.bounty = { amount: 300, beaten: 0, by: null };
   step(s, { shop: [{ action: 'bounty', player: 1 }] }, DT);

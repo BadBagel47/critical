@@ -3,6 +3,7 @@ import { COL } from './config.js';
 import { playEvents, setEngine } from './audio.js';
 import { openShop } from './render/shop.js';
 import { findDock } from './sim/things.js';
+import { playerById } from './sim/players.js';
 
 const WARM = COL.ochre[2];
 const GOOD = COL.acid[2];
@@ -109,6 +110,17 @@ const TOAST = {
   sold: (e) => [`SOLD  ·  ${e.name}  ·  +${e.credits} CREDITS`, LOOT],
   restocked: (e) => [`${e.what} RESTOCKED`, LOOT],
   shieldOn: () => ['SHIELD ON  ·  IT DRAWS A LITTLE FUEL', TECH],
+  scanStart: (e) => [
+    e.hidden ? 'WARDEN SCAN  ·  HIDE THE GOODS  ·  MATCH THE WAVES' : 'WARDEN SCAN',
+    e.hidden ? WARM : TECH,
+  ],
+  scanFooled: () => ['THE SCAN FOUND NOTHING', GOOD],
+  scanClear: () => ['SCAN DONE  ·  NOTHING FOUND', TECH],
+  scanFled: () => ['YOU FLED THE SCAN  ·  THE WARDENS TAKE IT AMISS', WARM],
+  scanOver: () => null,
+  smuggleCaught: () => ['CAUGHT  ·  THE WARDENS TOOK THE SMUGGLED GOODS', BAD],
+  computerOn: (e) => [`SHIP'S COMPUTER ON  ·  ${e.post.toUpperCase()}  ·  IT RUNS THE POST WHEN NO ONE IS THERE`, TECH],
+  computerOff: (e) => [`SHIP'S COMPUTER OFF  ·  ${e.post.toUpperCase()}`, TECH],
   shieldOff: (e) => [e.why === 'fuel' ? 'SHIELD OFF  ·  NO FUEL LEFT' : 'SHIELD OFF', WARM],
   holdFire: (e) => [`${e.name}:  HOLD YOUR FIRE`, WARM],
   fightBack: (e) => [`${e.name}  ·  FIGHTING BACK`, BAD],
@@ -122,7 +134,10 @@ const TOAST = {
   gunDown: () => ['STATION GUN DESTROYED', LOOT],
   noRockets: () => ['OUT OF ROCKETS', WARM],
   dartLost: () => ['A DART WAS SHOT DOWN', BAD],
-  dartBuilt: () => ['A NEW DART IS READY', TECH],
+  dartBuilt: (e) => [
+    e.ready >= e.of ? `ALL DARTS READY  ·  ${e.of} OF ${e.of}` : `A NEW DART IS READY  ·  ${e.ready} OF ${e.of}`,
+    TECH,
+  ],
   jumpCharging: (e) => [`JUMP DRIVE CHARGING  ·  ${e.name}`, TECH],
   jumpCancelled: () => ['JUMP CANCELLED', WARM],
   cannotJump: (e) => ['CANNOT JUMP  ·  ' + e.reason, WARM],
@@ -171,6 +186,8 @@ const TOAST = {
   surgeCooling: (e) => [`BOOST COOLING  ·  ${Math.ceil(e.left)} S`, WARM],
   surgeNoPower: () => ['THE ENGINES HAVE NO POWER FOR A BOOST', WARM],
   powerLost: () => ['REACTOR DAMAGED  ·  POWER LOST', BAD],
+  postKept: (e) => [`${e.post.toUpperCase()} IS ${e.by}'S OWN POST  ·  FREE WHEN THEY GO ABOARD`, WARM],
+  postGivenBack: (e) => [`${e.to} IS BACK  ·  ${e.post ? 'BACK TO ' + e.post.toUpperCase() : 'NO FREE POST'}`, TECH],
   postTaken: (e) => [`${e.post.toUpperCase()} IS HELD BY ${e.by}  ·  THEY CAN SWAP BY ASKING FOR YOUR POST`, WARM],
   playerJoined: (e) => [`${e.name} JOINED THE CREW`, TECH],
   playerLeft: (e) => [`${e.name} LEFT THE CREW`, COL.dim],
@@ -198,6 +215,8 @@ const TOAST = {
   reliefLost: () => ['THE SHIP WITH THE HELP IS GONE', GOOD],
 };
 // Things that only concern the player they happened to.
+// Messages for one post only (MD5, D-187): the state of that post. Danger and what happens are for everyone.
+const FOR_POST = { dartBuilt: 'gunner', dartOut: 'gunner' };
 const PERSONAL = new Set([
   'boarded',
   'teleported',
@@ -206,6 +225,8 @@ const PERSONAL = new Set([
   'teleCharging',
   'lockedOut',
   'postTaken',
+  'postKept',
+  'postGivenBack',
   'stationClosed',
   'cannotHack',
   'ringTurning',
@@ -216,7 +237,12 @@ const PERSONAL = new Set([
 export function toast(view, state, text, color = COL.text, seconds = 3.5) {
   if (view.toasts.some((t) => t.text === text)) return;
   view.toasts.push({ text, color, until: state.time + seconds });
+  // Every message is kept in the log on L too, so that what went by in a fight can be read later (MD4).
+  const kept = (view.messages ||= []);
+  kept.push({ text, color, at: state.time });
+  if (kept.length > LOG_KEPT) kept.splice(0, kept.length - LOG_KEPT);
 }
+const LOG_KEPT = 40;
 
 // Called once per frame, after the game has been stepped and before its event list is emptied.
 export function readEvents(game) {
@@ -242,6 +268,10 @@ export function readEvents(game) {
       view.panel = null;
     }
     if (PERSONAL.has(e.type) && !mine) continue;
+    // What concerns one post only is told to that post (MD5): the Gunner hears about the Darts.
+    const post = FOR_POST[e.type];
+    const me = playerById(state, view.playerId);
+    if (post && me && me.post !== post) continue;
     const made = TOAST[e.type] && TOAST[e.type](e, state);
     if (made) toast(view, state, made[0], made[1]);
   }

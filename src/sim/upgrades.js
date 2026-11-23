@@ -175,7 +175,17 @@ export const CATALOG = {
     desc: 'SHOWS WHO HOLDS THE SYSTEMS NEAR BY, AS THEY ARE NOW',
   },
   rifle: { tab: 'armory', name: 'RIFLE UPGRADE', slot: null, price: 120, levels: 2, desc: 'BOARDERS HIT HARDER' },
-  pack: { tab: 'armory', name: 'CARGO PACK', slot: null, price: 140, desc: 'CARRY TWO MORE THINGS PER TRIP' },
+  // The backpack (F-192, R-1268): room for gear and loot together, and a lighter step under a load. With none the
+  // boarder has the first of three levels; these are the second and the third. It replaces the cargo pack.
+  pack: {
+    tab: 'armory',
+    name: 'BACKPACK',
+    slot: null,
+    price: 160,
+    prices: [160, 280],
+    levels: 2,
+    desc: 'ROOM FOR MORE, AND A LIGHTER STEP UNDER A LOAD',
+  },
   suit: { tab: 'armory', name: 'SUIT ARMOR', slot: null, price: 160, desc: 'BOARDERS TAKE MORE BEFORE THE TELEPORT' },
   // The one thing in the armory that is used up: the ship carries one at a time, and buys a new one after.
   charge: {
@@ -233,6 +243,21 @@ export const itemsOf = (tab) => Object.keys(CATALOG).filter((id) => CATALOG[id].
 
 // What a thing is: a part of the ship that is installed at a shipyard, gear that a boarder carries and that
 // works at once, or a slot (R-1132, R-1142, R-1174). And the filter it is under in the shop (R-1176).
+// Each role buys and has its own boarding gear (F-235, R-1113): every such item is in the catalogue once for each
+// role, as '<item>.<role>', and is paid from that role's purse. The plain name still stands for the item: buying it
+// buys it for the one who buys, and its level is the highest any role has.
+export const BOARDER_GEAR = ['rifle', 'pack', 'suit', 'tranq', 'flare', 'sentry'];
+const GEAR_ROLES = ['captain', 'gunner', 'engineer'];
+for (const id of BOARDER_GEAR) {
+  const base = CATALOG[id];
+  delete CATALOG[id];
+  for (const role of GEAR_ROLES) CATALOG[`${id}.${role}`] = { ...base, role, gear: id };
+}
+export const gearId = (id, role) => `${id}.${GEAR_ROLES.includes(role) ? role : 'captain'}`;
+const isGear = (id) => BOARDER_GEAR.includes(id);
+// The item a plain name stands for, for the one who buys it.
+export const forBuyer = (id, own) => (isGear(id) ? gearId(id, own) : id);
+
 export const kindOf = (id) => CATALOG[id].kind || (CATALOG[id].tab === 'armory' ? 'gear' : 'part');
 export const CATS = { upgrade: 'UPGRADES', boarding: 'BOARDING', slot: 'SLOTS' };
 export const catOf = (id) => ({ part: 'upgrade', gear: 'boarding', slot: 'slot' })[kindOf(id)];
@@ -240,7 +265,10 @@ export const levelsOf = (id) => CATALOG[id].levels || 1;
 
 // `ship.mods[id]` is the level that works: installed, or carried. `ship.owned[id]` is the levels the crew has
 // bought or found, also those that lie in the stores (R-1135).
-export const level = (ship, id) => ship.mods[id] || 0;
+export const level = (ship, id) =>
+  isGear(id) ? Math.max(...GEAR_ROLES.map((r) => ship.mods[gearId(id, r)] || 0)) : ship.mods[id] || 0;
+// The level of a boarding item that one role has (F-235).
+export const gearLevel = (ship, id, role) => ship.mods[gearId(id, role)] || 0;
 export const has = (ship, id) => level(ship, id) > 0;
 export const owned = (ship, id) => Math.max(level(ship, id), (ship.owned && ship.owned[id]) || 0);
 export const stored = (ship, id) => owned(ship, id) - level(ship, id);
@@ -272,9 +300,22 @@ export function fuelMarks(ship) {
   for (let k = 1; k * step < 0.999; k++) marks.push(k * step);
   return marks;
 }
-export const crewHpMax = (ship) => B.CREW_HP + (has(ship, 'suit') ? B.SUIT_HP : 0);
-export const carryMax = (ship) => B.CARRY_MAX + (has(ship, 'pack') ? B.PACK_EXTRA : 0);
-export const rifleDmg = (ship) => B.RIFLE_DMG + B.RIFLE_STEP * level(ship, 'rifle');
+// With no role given, the best any role has.
+export const crewHpMax = (ship, role) =>
+  B.CREW_HP + ((role ? gearLevel(ship, 'suit', role) : level(ship, 'suit')) > 0 ? B.SUIT_HP : 0);
+export const rifleDmg = (ship, role) =>
+  B.RIFLE_DMG + B.RIFLE_STEP * (role ? gearLevel(ship, 'rifle', role) : level(ship, 'rifle'));
+// The backpack's level for a role, from 1 to 3 (F-192, R-1268).
+export const packStage = (ship, role) => 1 + (role ? gearLevel(ship, 'pack', role) : level(ship, 'pack'));
+// How much a boarder can carry: the backpack's room, less one for each kind of gear beyond the grenades (R-1268).
+export function carryMax(ship, av) {
+  const room = B.PACK_ROOM[packStage(ship, av && av.role) - 1];
+  if (!av) return room;
+  const gear = [av.charges, av.sentries, av.flares, av.darts].filter((n) => n > 0).length;
+  return Math.max(1, room - gear);
+}
+// How much each thing carried slows a boarder: all of it, half, or none, by the backpack's level (RG1).
+export const carrySlow = (ship, role) => B.CARRY_SLOW * B.PACK_SLOW[packStage(ship, role) - 1];
 export const teleCooldown = (ship) => (has(ship, 'coils') ? B.COIL_TELEPORT : B.TELEPORT_COOLDOWN);
 export const breakinBonus = (ship) => (has(ship, 'hack') ? B.HACK_BONUS : 1);
 // What level `k` (from 0) of a thing costs.
@@ -293,6 +334,7 @@ export const payerOf = (id, own = 'captain') => (CATALOG[id] && CATALOG[id].role
 
 // Why an item cannot be bought right now, or null when it can. `own` is the purse boarding gear is paid from.
 export function blockedReason(state, id, discount = 1, own = 'captain') {
+  id = forBuyer(id, own);
   const item = CATALOG[id],
     ship = state.ship,
     have = owned(ship, id);
@@ -341,6 +383,7 @@ export function applyTestLoadout(state) {
 // Buy the next level of a thing. A part goes into the stores, to be installed at a shipyard (R-1135). Gear works
 // at once (R-1142). A slot opens at once (R-1180).
 export function buyUpgrade(state, id, discount = 1, own = 'captain') {
+  id = forBuyer(id, own);
   const reason = blockedReason(state, id, discount, own);
   if (reason) {
     state.events.push({ type: 'cannotBuy', reason });

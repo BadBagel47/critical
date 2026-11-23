@@ -378,7 +378,7 @@ function drawStorySpot(ctx, font, state) {
 // Where the pirate of a bounty and the wreck of a rescue are in this system (D-073).
 function drawJobSpots(ctx, font, state) {
   for (const job of state.jobs ? state.jobs.taken : []) {
-    if (job.to.sector !== state.sector || job.kind === 'cargo') continue;
+    if (job.to.sector !== state.sector || job.kind === 'cargo' || job.kind === 'smuggle') continue;
     const p = toMap(jobSpot(state, job).x, jobSpot(state, job).y);
     ctx.strokeStyle = COL.ochre[2];
     ctx.lineWidth = 1;

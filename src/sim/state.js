@@ -1,6 +1,7 @@
 // The whole game in one plain object. It holds only numbers, strings, lists and plain objects,
 // so it can be saved, sent and compared as it is.
 import { createShip } from './ship.js';
+import { createComputer } from './computer.js';
 import { createPlayer } from './players.js';
 import { thingsOf, mapInfo } from './things.js';
 import { arrival, placeShip } from './system.js';
@@ -75,6 +76,10 @@ export function createState(seed = 1, options = {}) {
     // How far the crew has come in the main story (questline.js). A test game has none.
     story: createStoryState(!!options.test),
     jobs: createJobs(),
+    // Which posts the ship's computer may run, chosen when the game starts, and where it is on (computer.js).
+    computer: createComputer(options.computer),
+    // A Warden patrol's scan of the ship for smuggled goods, while it lasts (scan.js).
+    scan: null,
   };
   state.sectors = createSectors(state, state.size);
   generateSector(state, 0);

@@ -110,17 +110,43 @@ test('going inside leaves the post free, and coming back gives it back', () => {
   assert.equal(gunner.post, 'gunner', 'back at the old post');
 });
 
-test('a post taken while its holder was away stays taken, and the one who returns gets a free post', () => {
+test('R-1108 R-1109 R-1118: an own post may be taken while its owner is aboard, and is given back at once', () => {
   const s = crewOf(2);
   const wreck = dockAtOpenWreck(s);
+  assert.deepEqual(
+    s.players.map((p) => p.own),
+    ['captain', 'gunner'],
+  );
+  // While the Gunner is on the ship, the Gunner's post is kept for them.
+  stepPlayers(s, { 0: { take: 'gunner' } }, DT);
+  assert.equal(playerById(s, 0).post, 'captain');
   stepPlayers(s, { 1: { board: true } }, DT);
   stepPlayers(s, { 0: { take: 'gunner' } }, DT);
-  assert.equal(playerById(s, 0).post, 'gunner');
+  assert.equal(playerById(s, 0).post, 'gunner', 'taken for a while');
   wreck.interior.guards = [];
   wreck.interior.turrets = [];
   stepPlayers(s, { 1: { away: { usePressed: true } } }, DT);
   assert.equal(playerById(s, 1).inside, null);
-  assert.equal(playerById(s, 1).post, 'captain', 'the first free post');
+  assert.equal(playerById(s, 1).post, 'gunner', 'the owner has it back at once');
+  assert.equal(playerById(s, 0).post, 'captain', 'and the other is back on their own');
+});
+
+test('R-1110 R-1111: who takes a free post keeps their own, and the third post of two players is free to take', () => {
+  const s = crewOf(3);
+  const wreck = dockAtOpenWreck(s);
+  stepPlayers(s, { 2: { board: true } }, DT);
+  wreck.interior.guards = [];
+  // The Engineer is aboard: the Gunner takes the Engineer's post, and the Gunner's own post is kept.
+  stepPlayers(s, { 1: { take: 'engineer' } }, DT);
+  assert.equal(playerById(s, 1).post, 'engineer');
+  stepPlayers(s, { 0: { take: 'gunner' } }, DT);
+  assert.equal(playerById(s, 0).post, 'captain', 'the Gunner keeps their own post');
+  // Two players: the third post is nobody's own, and either may take it.
+  const two = crewOf(2);
+  stepPlayers(two, { 1: { take: 'engineer' } }, DT);
+  assert.equal(playerById(two, 1).post, 'engineer');
+  stepPlayers(two, { 0: { take: 'gunner' } }, DT);
+  assert.equal(playerById(two, 0).post, 'captain', 'and their own is kept for them meanwhile');
 });
 
 test('station desks only take orders from a player who is inside the station', () => {
@@ -155,4 +181,43 @@ test('a player who leaves frees the post, and the last player cannot leave', () 
   assert.equal(holderOf(s, 'gunner'), null);
   assert.equal(removePlayer(s, 0), false);
   assert.equal(s.players.length, 1);
+});
+
+test('R-1256: with no one on the Gunner post the Captain aims and fires while steering, and nothing more', () => {
+  const s = quiet(createState(1));
+  assert.equal(holderOf(s, 'gunner'), null);
+  const wasShield = s.ship.shieldOn;
+  run(
+    s,
+    { 0: { captain: { throttle: 1 }, gunner: { aim: { x: 0, y: -900 }, fire: true, shield: true, darts: true } } },
+    1,
+  );
+  assert.ok(s.ship.throttle > 0.5, 'the Captain steers');
+  assert.ok(s.bolts.length > 0, 'and fires the guns at the same time');
+  assert.equal(s.ship.shieldOn, wasShield, 'the shield is still for the Gunner post');
+});
+
+test('R-1256: once someone holds the Gunner post, the Captain no longer fires', () => {
+  const s = crewOf(2);
+  run(s, { 0: { gunner: { aim: { x: 0, y: -900 }, fire: true } } }, 1);
+  assert.equal(s.bolts.length, 0);
+  // The Gunner goes aboard a wreck: the post is free again, and the Captain has the guns.
+  s.players[1].post = null;
+  run(s, { 0: { gunner: { aim: { x: 0, y: -900 }, fire: true } } }, 1);
+  assert.ok(s.bolts.length > 0);
+});
+
+test('R-1273: a right click marks the very ship under the pointer, and a second one marks it off', async () => {
+  const { makeVessel } = await import('../src/sim/vessels.js');
+  const s = quiet(createState(1));
+  s.vessels = [];
+  const near = makeVessel(s, 'fighter', 200, 0);
+  const far = makeVessel(s, 'fighter', 600, 0);
+  s.vessels.push(near, far);
+  run(s, { 0: { captain: { markAt: { x: far.x + 5, y: far.y } } } }, DT);
+  assert.equal(s.marks.captain, far.id, 'the one clicked, not the nearest');
+  run(s, { 0: { captain: { markAt: { x: 0, y: 900 } } } }, DT);
+  assert.equal(s.marks.captain, far.id, 'a click beside every ship changes nothing');
+  run(s, { 0: { captain: { markAt: { x: far.x, y: far.y } } } }, DT);
+  assert.equal(s.marks.captain, null);
 });

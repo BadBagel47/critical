@@ -36,7 +36,8 @@ function launchAndBuild(state, dt) {
   if (ship.dartRegen < B.DART_REGEN) return;
   ship.dartStock++;
   ship.dartRegen = 0;
-  state.events.push({ type: 'dartBuilt' });
+  // How many are whole now, of how many (F-255).
+  state.events.push({ type: 'dartBuilt', ready: ship.dartStock + state.darts.length, of: dartsMax(ship) });
 }
 
 // The hostile ship closest to the frigate, if one is within reach.

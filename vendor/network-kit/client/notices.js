@@ -14,6 +14,8 @@ import { NetworkRoom } from './room.js';
 
 const SEEN_KEY = 'nk-notices-seen';
 const CHECK_MS = 60_000;
+const IDLE_AFTER_MS = 30 * 60_000; // no touch or key this long: ask seldom (F-107)
+const IDLE_CHECK_MS = 10 * 60_000;
 
 /** "{until}" in a notice's text becomes the local time of its `until`. */
 export function noticeText(notice) {
@@ -34,6 +36,9 @@ let armedOn = null;
 // The events after which a page may start sound: lifting the finger (iPad and
 // Android need this, a finger down is not enough), a click, a key (B-084).
 const UNLOCK = ['touchend', 'click', 'keydown'];
+// What counts as someone at the page for notices (F-139): a big screen or a long turn
+// may see no touches, so a game can also send `window.dispatchEvent(new Event('nk-activity'))`.
+const TOUCH_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart', 'gamepadconnected', 'nk-activity'];
 
 function play(ctx, { level, volume }) {
   const t0 = ctx.currentTime + 0.02;
@@ -293,10 +298,14 @@ export class NoticeBoard {
 export function watchNotices(server, {
   basePath = '/rooms', mode = null, everyMs = CHECK_MS, board = null, sound = true, onNotice = null,
   fetchStatus = null, document: doc = globalThis.document, window: win = globalThis,
+  idleAfterMs = IDLE_AFTER_MS, idleEveryMs = IDLE_CHECK_MS,
 } = {}) {
   board ??= new NoticeBoard({ document: doc, sound });
   let timer = null;
   let stopped = false;
+  // A page nobody has touched for a while asks seldom (F-107): a screen left
+  // on all night would otherwise ask 1,440 times a day.
+  let touchedAt = Date.now();
   const ask = fetchStatus ?? (() => NetworkRoom.status(server, { basePath, mode, window: win }));
   const check = async () => {
     if (stopped || doc?.hidden) return;
@@ -312,19 +321,42 @@ export function watchNotices(server, {
     }
     board.keepOnly(new Set(notices.map((n) => n.id)));
   };
+  const schedule = () => {
+    clearTimeout(timer);
+    if (stopped) return;
+    const idle = idleAfterMs && Date.now() - touchedAt > idleAfterMs;
+    timer = setTimeout(async () => {
+      await check();
+      schedule();
+    }, idle ? idleEveryMs : everyMs);
+  };
   const onVisible = () => {
-    if (!doc.hidden) check();
+    if (!doc.hidden) {
+      check();
+      schedule();
+    }
+  };
+  const onTouch = () => {
+    const wasIdle = idleAfterMs && Date.now() - touchedAt > idleAfterMs;
+    touchedAt = Date.now();
+    if (wasIdle) {
+      check();
+      schedule();
+    }
   };
   doc?.addEventListener?.('visibilitychange', onVisible);
-  timer = setInterval(check, everyMs);
+  // Touches, keys, the wheel and a gamepad count (F-139); so does the game saying so (`nk-activity`).
+  for (const type of TOUCH_EVENTS) win?.addEventListener?.(type, onTouch, { capture: true, passive: true });
   check();
+  schedule();
   return {
     board,
     check,
     stop() {
       stopped = true;
-      clearInterval(timer);
+      clearTimeout(timer);
       doc?.removeEventListener?.('visibilitychange', onVisible);
+      for (const type of TOUCH_EVENTS) win?.removeEventListener?.(type, onTouch, { capture: true });
     },
   };
 }

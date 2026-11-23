@@ -43,7 +43,7 @@ export const B = {
     offered: 4,
     refresh: 600,
     reach: 3,
-    base: { cargo: 250, bounty: 450, rescue: 400 },
+    base: { cargo: 250, bounty: 450, rescue: 400, smuggle: 500 },
     perHop: 150,
     perTier: 100,
     timedShare: 0.4,
@@ -52,6 +52,31 @@ export const B = {
     timeBase: 240,
     timePerHop: 240,
     standing: { done: 8, failed: 4 },
+    // Smuggling (D-257, R-1260): how often a Drifter or free base has a smuggling job among its jobs, and that a
+    // smuggling job pays about twice as much as carrying a crate, up to twice the highest pay.
+    smuggleShare: 0.6,
+    smugglePay: 2,
+  },
+  // A Warden patrol scans the ship (D-074, R-1261, R-1262): when it comes within `range`, unless it scanned this
+  // ship less than `again` seconds ago. The scan takes `time` seconds. A ship further away than `breaks` cuts it
+  // short; when it got there flying faster than `fleeSpeed` it fled, and the Wardens think `fled` less of the crew.
+  // With smuggled goods aboard, the two dials must lie within `near` of the scan's for `hold` seconds; a dial
+  // turns `turn` of a full round a second. Caught, the goods are lost and the Wardens think `caught` less.
+  SCAN: {
+    range: 260,
+    again: 120,
+    time: 8,
+    breaks: 520,
+    fleeSpeed: 90,
+    fled: 3,
+    near: 0.06,
+    hold: 1.2,
+    turn: 0.35,
+    caught: 10,
+    // While it scans, the Warden ship keeps `follow` from the ship, at up to `followSpeed`: a ship that flies
+    // faster gets away, and has fled.
+    follow: 170,
+    followSpeed: 120,
   },
   WARY_PRICE: 1.5,
   // a side that the crew shoots at warns them first. A hit after the warning, but not in the first moment
@@ -94,6 +119,20 @@ export const B = {
   WAVE_INTERVAL: 40,
   WAVE_INTERVAL_MIN: 28,
   MAX_PIRATES: 5,
+  // The ship's computer on free posts (F-034, R-826): clearly worse than a person. It reacts this many seconds
+  // late, aims off by up to this much, counts the ship as hit for this long after a hit, and fights within this
+  // range, circling at this distance, turning the other way round every so many seconds, at this throttle. It slows
+  // near stations and wrecks within this distance, and each post it runs counts as this much of a player for the
+  // pace of the pirates (R-1259). To be set by playing.
+  COMPUTER_DELAY: 0.5,
+  COMPUTER_AIM_ERROR: 18,
+  COMPUTER_HURT_TIME: 4,
+  COMPUTER_FIGHT_RANGE: 650,
+  COMPUTER_ORBIT: 260,
+  COMPUTER_SWERVE: 6,
+  COMPUTER_FIGHT_THROTTLE: 0.7,
+  COMPUTER_SLOW_NEAR: 320,
+  COMPUTER_CREW: 0.25,
   // Fewer people on board means more time between waves, so a small crew can still leave the ship.
   PIRATE_PACE: { 1: 2.2, 2: 1.4, 3: 1 },
   PIRATE_BOLT_SPEED: 290,
@@ -224,6 +263,13 @@ export const B = {
   SHOT_HEARD: 260,
   GUARD_REACH: 6,
   GUARD_FORGET: 9,
+  // A noise (F-300, VK1-VK3): this many of the nearest guards that hear it come to look; the others stay and are
+  // wary for this long, noticing intruders this much faster. Those that come look round the spot for about this
+  // long before they go back, even while the place is on alarm.
+  GUARD_COME: 2,
+  GUARD_WARY: 30,
+  GUARD_WARY_EYES: 1.6,
+  GUARD_SEARCH: 17,
   TURRET_HP: 45,
   TURRET_SIGHT: 220,
   TURRET_TURN: 2.6,
@@ -523,7 +569,17 @@ export const B = {
   DRONE_NODE: 2.5,
   // boarding gear
   RIFLE_STEP: 4,
-  PACK_EXTRA: 2,
+  // The backpack (R-1268): room by level, gear and loot together, and how much of CARRY_SLOW a load costs.
+  PACK_ROOM: [4, 6, 8],
+  // Running with nothing carried (F-292, R-1269): this much faster, and heard by guards this near.
+  SPRINT: 1.6,
+  // Walking another way than one looks (F-299, SP2): to the side this much of full speed, backwards this much.
+  // Running goes only within this angle of where one looks.
+  SIDE_PACE: 0.8,
+  BACK_PACE: 0.6,
+  RUN_CONE: Math.PI / 4,
+  SPRINT_HEARD: 110,
+  PACK_SLOW: [1, 0.5, 0],
   SUIT_HP: 50,
   COIL_TELEPORT: 25,
   HACK_BONUS: 1.4,

@@ -137,6 +137,8 @@ export function createInput(canvas) {
     input.mouse.y = ((e.clientY - r.top) / r.height) * VIEW_H;
     input.mouse.shift = e.shiftKey;
     input.mouse.moved = true;
+    // When the mouse was last moved: a boarder steered with the keys alone looks the way they walk (B-298).
+    input.mouse.movedAt = performance.now();
     input.pad.used = false;
   };
   // Pointer events cover the mouse and fingers alike, and tell which of them it was.

@@ -4,6 +4,7 @@
 // Which side a ship is on decides whom it fights: pirates fight everyone, and the ships of a faction
 // fight pirates, and the crew only when the crew has made an enemy of that faction.
 import { connectedPlayers } from './players.js';
+import { computerPosts } from './computer.js';
 import { B } from './balance.js';
 import { earn } from './purses.js';
 import { SHIPS } from './kinds.js';
@@ -23,13 +24,19 @@ import {
 } from './sides.js';
 import { addThing, thingsOf, findThing } from './things.js';
 import { currentSector, createWreck } from './sectors.js';
-import { forward, headingTo, angleDiff, turnToward, toWorld, dist, rand, randRange, TAU } from './util.js';
+import { forward, headingTo, angleDiff, turnToward, toWorld, dist, rand, randRange, TAU, clamp } from './util.js';
 
 export const classOf = (v) => SHIPS[v.kind];
 export const pirates = (state) => state.vessels.filter((v) => v.side === PIRATE);
 const pirateCount = (state) => state.vessels.reduce((n, v) => n + (v.side === PIRATE ? 1 : 0), 0);
 // Only those who are there count (R-1244): a player who has lost the connection does not make the pirates come faster.
-const pace = (state) => B.PIRATE_PACE[Math.min(3, Math.max(1, connectedPlayers(state).length))] || 1;
+// The ship's computer counts as a little of a player for each post it is on (R-1259), between the table's steps.
+const pace = (state) => {
+  const n = clamp(connectedPlayers(state).length + computerPosts(state) * B.COMPUTER_CREW, 1, 3);
+  const lo = Math.floor(n);
+  const hi = Math.min(3, lo + 1);
+  return B.PIRATE_PACE[lo] + (B.PIRATE_PACE[hi] - B.PIRATE_PACE[lo]) * (n - lo);
+};
 export const firstWaveDelay = (state) => B.FIRST_WAVE_DELAY * pace(state);
 // How far a ship looks for someone to fight.
 const SIGHT = 700;
