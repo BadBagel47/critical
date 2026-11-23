@@ -12,7 +12,7 @@ import {
   surging,
   shipNose,
 } from './ship.js';
-import { startSurge, fireSurge, markByCaptain, markByGunner } from './teamwork.js';
+import { startSurge, fireSurge, markByCaptain, markCaptainAt, markByGunner } from './teamwork.js';
 import { findDock } from './things.js';
 import { ringToBridge } from './stations.js';
 import { WEAPONS, weaponsOf, turretMount } from './weapons.js';
@@ -85,6 +85,7 @@ export function stepCaptain(state, cmd, dt) {
       else startSurge(state, 'engines');
     }
     if (cmd.mark) markByCaptain(state);
+    if (cmd.markAt) markCaptainAt(state, cmd.markAt);
   }
   // Without power the engines give nothing: no thrust and no steering. The ship drifts on.
   if (ship.power.engines <= 0) {

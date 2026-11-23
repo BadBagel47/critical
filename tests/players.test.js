@@ -206,3 +206,18 @@ test('R-1256: once someone holds the Gunner post, the Captain no longer fires', 
   run(s, { 0: { gunner: { aim: { x: 0, y: -900 }, fire: true } } }, 1);
   assert.ok(s.bolts.length > 0);
 });
+
+test('R-1273: a right click marks the very ship under the pointer, and a second one marks it off', async () => {
+  const { makeVessel } = await import('../src/sim/vessels.js');
+  const s = quiet(createState(1));
+  s.vessels = [];
+  const near = makeVessel(s, 'fighter', 200, 0);
+  const far = makeVessel(s, 'fighter', 600, 0);
+  s.vessels.push(near, far);
+  run(s, { 0: { captain: { markAt: { x: far.x + 5, y: far.y } } } }, DT);
+  assert.equal(s.marks.captain, far.id, 'the one clicked, not the nearest');
+  run(s, { 0: { captain: { markAt: { x: 0, y: 900 } } } }, DT);
+  assert.equal(s.marks.captain, far.id, 'a click beside every ship changes nothing');
+  run(s, { 0: { captain: { markAt: { x: far.x, y: far.y } } } }, DT);
+  assert.equal(s.marks.captain, null);
+});

@@ -49,3 +49,24 @@ test('R-1265: the sensor strip tells of enemies in sight, and of an attack on a 
   assert.ok(texts(sensorLines(s)).some((t) => /UNDER ATTACK.*RISK LOW/.test(t)));
   assert.ok(!texts(statusLines(s, s.players[0], null)).some((t) => /UNDER ATTACK/.test(t)), 'not at the top');
 });
+
+test('R-1274: the tabs name who holds each post, FREE, AUTO, and both names on a post taken for a while', async () => {
+  const { tabText } = await import('../src/render/hud.js');
+  const { addPlayer } = await import('../src/sim/players.js');
+  const alone = game();
+  const me = alone.players[0];
+  assert.equal(tabText(alone, 'captain', me).who, '', 'alone, the own tab needs no name');
+  assert.equal(tabText(alone, 'gunner', me).who, '', 'nor the others');
+  const s = game();
+  addPlayer(s, 'BOOMER');
+  s.players[0].name = 'HECTOR';
+  const [hector, boomer] = s.players;
+  assert.equal(tabText(s, 'captain', hector).who, 'HECTOR');
+  assert.equal(tabText(s, 'gunner', hector).who, 'BOOMER');
+  assert.equal(tabText(s, 'engineer', hector).who, 'FREE');
+  // Boomer goes aboard, and Hector takes the Gunner's post for a while.
+  boomer.post = null;
+  boomer.inside = 1;
+  hector.post = 'gunner';
+  assert.equal(tabText(s, 'gunner', hector).who, 'HECTOR FOR BOOMER');
+});

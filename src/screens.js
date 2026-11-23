@@ -155,6 +155,8 @@ function captainInput(game, out) {
     boost: keys.down('ShiftLeft', 'ShiftRight'),
     surge: keys.hit('KeyZ'),
     mark: keys.hit('KeyT'),
+    // A right click marks the ship under the pointer (F-297).
+    markAt: keys.mouse.rightClicked ? pointer(game) : null,
   };
   // The ship's computer follows the course when it flies the ship (R-827), so the game is told it too.
   if (course) out.captain.course = game.view.course === undefined ? null : game.view.course;
@@ -162,6 +164,12 @@ function captainInput(game, out) {
   // changes the weapon (R-1256, F-291). The keys stay the Captain's own.
   if (!holderOf(state, 'gunner')) out.gunner = captainGuns(game);
 }
+
+// Where the pointer is, in space.
+const pointer = (game) => ({
+  x: game.view.cam.x + (game.keys.mouse.x - VIEW_W / 2) / ZOOM,
+  y: game.view.cam.y + (game.keys.mouse.y - VIEW_H / 2) / ZOOM,
+});
 
 function captainGuns(game) {
   const { keys, view } = game;
@@ -191,7 +199,8 @@ function gunnerInput(game, out) {
     weapon:
       keys.hit('KeyQ') || keys.mouse.wheel > 0 ? 1 : keys.hit('PadPrevWeapon') || keys.mouse.wheel < 0 ? -1 : null,
     surge: keys.hit('KeyZ'),
-    mark: keys.hit('KeyT') ? aim : null,
+    // T marks the enemy nearest the aim, a right click the one under the pointer (F-297).
+    mark: keys.hit('KeyT') ? aim : keys.mouse.rightClicked ? pointer(game) : null,
     // X switches the shield on and off (R-1129), and R sends the Darts out and calls them home (R-1187).
     shield: keys.hit('KeyX'),
     darts: keys.hit('KeyR'),
