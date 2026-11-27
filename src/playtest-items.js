@@ -32,6 +32,40 @@ export const ITEMS = [
   },
   {
     group: 'Spelet',
+    id: 'F-090',
+    title: 'Pekskärm på iPad',
+    where: 'iPad',
+    steps: [
+      'Öppna spelet på iPad i liggande format. Spakarna kommer där tummen sätts ned, knapparna ligger längs kanterna.',
+      'Som Captain: vänster tumme flyger. Utan Gunner skjuter höger tumme. Tryck på flikarna högst upp för att byta post.',
+      'Som Gunner: höger tumme siktar och skjuter. Prova de andra sätten under MENU, TOUCH CONTROLS, GUNNER AIMS.',
+      'Borda ett vrak: vänster tumme går, höger siktar och skjuter.',
+    ],
+    links: [
+      ['Starta', at('')],
+      ['Strid', at('?test&call=fighters')],
+    ],
+    ask: [
+      'Vilket sätt att sikta som Gunner kändes bäst?',
+      'Är spakarna och knapparna lagom stora, och hamnar knapparna rätt för tummarna?',
+      'P8: Ska gasen ligga kvar när spaken släpps, som nu, eller följa spaken tillbaka till noll?',
+    ],
+  },
+  {
+    group: 'Spelet',
+    id: 'F-137',
+    title: 'Den andra skärmen',
+    where: 'dator med en extra skärm eller tv',
+    steps: [
+      'Öppna menyn (O) och välj SECOND SCREEN. Flytta fönstret till den andra skärmen och klicka i det för helskärm.',
+      'Flyg runt: skärmen visar stjärnkartan. Kalla in skepp: den visar striden. Borda: den visar bordningen.',
+      'Tryck Y på någon post, eller på kartan, för att skicka din vy dit en stund.',
+    ],
+    links: [['Starta', at('?test')]],
+    ask: ['Byter skärmen vy vid rätt tillfällen, och är striden lagom vid?', 'Vad mer skulle du vilja se där?'],
+  },
+  {
+    group: 'Spelet',
     id: 'F-295',
     title: 'Det nya ljuset i rymden',
     where: 'dator, iPad',

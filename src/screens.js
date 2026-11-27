@@ -9,9 +9,10 @@ import { POSTS, playerById, holderOf } from './sim/players.js';
 import { findDock } from './sim/things.js';
 import { isTrading } from './sim/stations.js';
 import { turretMount } from './sim/weapons.js';
+import { CREW, enemies } from './sim/sides.js';
 import { createEffects, drawFlash } from './render/effects.js';
 import { drawSpace, drawStars } from './render/space.js';
-import { drawHud, drawOverlay, drawHelp, drawToasts } from './render/hud.js';
+import { drawHud, drawOverlay, drawHelp, drawToasts, tabRects } from './render/hud.js';
 import { nextCourse } from './render/instruments.js';
 import { drawRadar, radarPlace, radarPoint } from './render/radar.js';
 import { drawBoarding, insideOrigin } from './render/boarding.js';
@@ -33,6 +34,7 @@ import {
   hackBox,
 } from './render/engineer.js';
 import { drawActions, actionButtons } from './render/actions.js';
+import { drawTouch } from './render/touch.js';
 import { drawScan, myScanTurn, scanButtons } from './render/scan.js';
 import { pursesLine } from './sim/purses.js';
 
@@ -113,6 +115,9 @@ export function settle(game) {
 
 // ---------- what the keys and the mouse do in each mode ----------
 const axis = (keys, plus, minus) => (keys.down(...plus) ? 1 : 0) - (keys.down(...minus) ? 1 : 0);
+// The sticks on a touch screen (touch.js, F-090), or none.
+const NO_STICKS = { lx: 0, ly: 0, rx: 0, ry: 0, left: null, right: null, fire: false };
+const sticksOf = (keys) => keys.sticks || NO_STICKS;
 const stickAim = (view, pad) => {
   if (Math.hypot(pad.rx, pad.ry) > 0.35) view.padAim = Math.atan2(pad.rx, -pad.ry);
   return { x: Math.sin(view.padAim), y: -Math.cos(view.padAim) };
@@ -128,6 +133,14 @@ function onBoard(game, out) {
   if (keys.hit('Digit3')) out.take = 'engineer';
   if (keys.hit('Tab')) out.take = POSTS[(at + 1) % POSTS.length];
   if (keys.hit('PadPrevPost')) out.take = POSTS[(at + POSTS.length - 1) % POSTS.length];
+  // On a touch screen a tap on a post tab takes that post (F-090).
+  if (keys.touch && keys.mouse.clicked) {
+    const m = keys.mouse;
+    const tab = tabRects(state, game.view, game.assets.font).find(
+      (t) => m.x >= t.x && m.x < t.x + t.w && m.y >= t.y - 4 && m.y < t.y + t.h + 4,
+    );
+    if (tab && !tab.mine) out.take = tab.post;
+  }
   // K: the ship's computer on or off on this post, where it may run it (R-1257).
   if (keys.hit('KeyK')) out.auto = true;
   // A Warden scan with goods to hide, and this player's turn: F and G turn the first dial, V and B the second, and
@@ -148,8 +161,9 @@ function captainInput(game, out) {
   const course = keys.hit('KeyC');
   if (course) game.view.course = nextCourse(game.state, game.view);
   out.captain = {
-    throttle: axis(keys, ['KeyW', 'ArrowUp'], ['KeyS', 'ArrowDown']) + keys.pad.rt - keys.pad.lt,
-    turn: axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx,
+    // On a touch screen the left stick: up and down the throttle, as W and S, and the sides turn (P3).
+    throttle: axis(keys, ['KeyW', 'ArrowUp'], ['KeyS', 'ArrowDown']) + keys.pad.rt - keys.pad.lt - sticksOf(keys).ly,
+    turn: axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx + sticksOf(keys).lx,
     stop: keys.hit('KeyX'),
     dock: keys.hit('KeyQ'),
     boost: keys.down('ShiftLeft', 'ShiftRight'),
@@ -172,8 +186,15 @@ const pointer = (game) => ({
 });
 
 function captainGuns(game) {
-  const { keys, view } = game;
+  const { keys, view, state } = game;
   const m = keys.mouse;
+  const st = sticksOf(keys);
+  // On a touch screen the right stick aims the guns and fires them, while the left one flies the ship.
+  if (st.right !== null) {
+    const dir = stickAim(view, st);
+    const mount = turretMount(state.ship);
+    return { aim: { x: mount.x + dir.x * 220, y: mount.y + dir.y * 220 }, fire: st.fire, weapon: null };
+  }
   return {
     aim: { x: view.cam.x + (m.x - VIEW_W / 2) / ZOOM, y: view.cam.y + (m.y - VIEW_H / 2) / ZOOM },
     fire: (m.down && !game.overAction) || keys.down('Space'),
@@ -186,15 +207,19 @@ function gunnerInput(game, out) {
   const m = keys.mouse;
   onBoard(game, out);
   let aim = { x: view.cam.x + (m.x - VIEW_W / 2) / ZOOM, y: view.cam.y + (m.y - VIEW_H / 2) / ZOOM };
-  if (keys.pad.used) {
-    // With a gamepad the right stick points the turret.
-    const dir = stickAim(view, keys.pad);
+  const st = sticksOf(keys);
+  if (keys.pad.used || st.right !== null) {
+    // With a gamepad, or the right stick on a touch screen, the stick points the turret.
+    const dir = stickAim(view, st.right !== null ? st : keys.pad);
     const mount = turretMount(state.ship);
     aim = { x: mount.x + dir.x * 220, y: mount.y + dir.y * 220 };
   }
+  // On a touch screen with a target tapped (P6, the third way): the turret follows it and fires while it is there.
+  const locked = touchLocked(game);
+  if (locked) aim = { x: locked.x, y: locked.y };
   out.gunner = {
     aim,
-    fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5,
+    fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5 || st.fire || !!locked,
     // Q goes round the weapons, and the wheel goes either way (R-1239).
     weapon:
       keys.hit('KeyQ') || keys.mouse.wheel > 0 ? 1 : keys.hit('PadPrevWeapon') || keys.mouse.wheel < 0 ? -1 : null,
@@ -205,6 +230,31 @@ function gunnerInput(game, out) {
     shield: keys.hit('KeyX'),
     darts: keys.hit('KeyR'),
   };
+}
+
+// The target the Gunner tapped on a touch screen, while it is there and an enemy. A tap where there is none lets go.
+function touchLocked(game) {
+  const { keys, state, view } = game;
+  const touch = keys.touchLayer;
+  if (touch && touch.lockAt) {
+    const at = touch.lockAt;
+    touch.lockAt = null;
+    const p = { x: view.cam.x + (at.x - VIEW_W / 2) / ZOOM, y: view.cam.y + (at.y - VIEW_H / 2) / ZOOM };
+    let best = null;
+    let bestD = 60;
+    for (const v of state.vessels) {
+      const d = Math.hypot(v.x - p.x, v.y - p.y);
+      if (d < bestD && enemies(state, CREW, v.side)) {
+        best = v;
+        bestD = d;
+      }
+    }
+    view.touchLock = best ? best.id : null;
+  }
+  if (view.touchLock === undefined || view.touchLock === null) return null;
+  const v = state.vessels.find((x) => x.id === view.touchLock);
+  if (!v || v.hp <= 0) view.touchLock = null;
+  return view.touchLock === null ? null : v;
 }
 
 const quickTool = (keys) => (keys.hit('KeyQ') ? { type: 'pulse' } : keys.hit('KeyB') ? { type: 'buoy' } : null);
@@ -384,8 +434,9 @@ function awayInput(game, out) {
   const origin = place ? insideOrigin(place.interior, av) : { x: 0, y: 0 };
   let aim = { x: m.x - origin.x, y: m.y - origin.y };
   let lob = aim;
-  const mx = axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx;
-  const my = axis(keys, ['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']) + keys.pad.ly;
+  const st = sticksOf(keys);
+  const mx = axis(keys, ['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + keys.pad.lx + st.lx;
+  const my = axis(keys, ['KeyS', 'ArrowDown'], ['KeyW', 'ArrowUp']) + keys.pad.ly + st.ly;
   // The mouse has lain still a while: the boarder looks the way they walk, and keeps looking that way when they
   // stop, instead of turning toward a pointer that the moving view carries along (B-298).
   const idle = !m.movedAt || performance.now() - m.movedAt > MOUSE_IDLE_MS;
@@ -393,9 +444,9 @@ function awayInput(game, out) {
     aim = mx || my ? { x: av.x + mx * 60, y: av.y + my * 60 } : null;
     if (aim) lob = { x: av.x + mx * 95, y: av.y + my * 95 };
   }
-  if (keys.pad.used) {
-    // With a gamepad the right stick aims, from where the boarder stands.
-    const dir = stickAim(view, keys.pad);
+  if (keys.pad.used || st.right !== null) {
+    // With a gamepad, or the right stick on a touch screen (P5), the stick aims, from where the boarder stands.
+    const dir = stickAim(view, st.right !== null ? st : keys.pad);
     if (av) {
       aim = { x: av.x + dir.x * 60, y: av.y + dir.y * 60 };
       lob = { x: av.x + dir.x * 95, y: av.y + dir.y * 95 };
@@ -405,7 +456,7 @@ function awayInput(game, out) {
     mx,
     my,
     aim,
-    fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5,
+    fire: (m.down && !game.overAction) || keys.down('Space') || keys.pad.rt > 0.5 || st.fire,
     grenade: keys.hit('KeyG') || m.rightClicked ? lob : null,
     flare: keys.hit('KeyQ') ? lob : null,
     // R or the mouse wheel changes between the rifle and the tranq gun (F-285).
@@ -668,6 +719,15 @@ function drawStory(game) {
   if (card !== null) view.storyButtons = drawStoryCard(ctx, font, state, card, keys.mouse);
 }
 
+// How long a view sent to the second screen stays there, and which of its views a mode sends (F-137).
+export const SENT_MS = 20000;
+export function sentView(game, mode) {
+  if (mode === 'engineer') return game.view.engOpen ? 'engineer' : 'space';
+  if (mode === 'map' || mode === 'stars' || mode === 'radar') return mode;
+  if (mode === 'away' || mode === 'mainframe' || (game.me && game.me.inside !== null)) return 'boarding';
+  return 'space';
+}
+
 // Keys that only change what is shown, and never reach the game.
 export function viewKeys(game, mode) {
   const { keys, state, view } = game;
@@ -681,6 +741,11 @@ export function viewKeys(game, mode) {
     return;
   }
   if (state.won && !view.wonSeen && keys.hit('Enter', 'NumpadEnter')) view.wonSeen = true;
+  // Y sends what this player sees to the second screen for a while (F-137, VW2). Said only when one is open.
+  if (keys.hit('KeyY')) {
+    view.sent = { what: sentView(game, mode), playerId: view.playerId, by: view.playerId, until: Date.now() + SENT_MS };
+    if (game.viewerOpen && game.viewerOpen()) toast(view, state, 'SENT TO THE SECOND SCREEN', COL.ion[2], 2);
+  }
   // In a test game the number keys from 6 call in an attack on the own base, pirates and a raid, and 0 removes them, see sim/testing.js.
   if (state.test) {
     const calls = { Digit6: 'siege', Digit7: 'fighters', Digit8: 'gunboat', Digit9: 'raid', Digit0: 'clear' };
@@ -747,6 +812,7 @@ export function drawScreen(game, mode, t) {
     drawOverlay(ctx, font, 'PAUSED', [`PAUSED BY ${state.pausedBy}`, '', 'PRESS P TO RESUME'], COL.text);
   }
   drawActions(ctx, game, mode, screen.pad);
+  if (keys.touch && keys.touchLayer) drawTouch(ctx, font, keys.touchLayer, keys);
   // The story's card and log lie over everything else.
   if (!state.over && mode !== 'title' && mode !== 'menu') drawStory(game);
   if (view.help && !state.over) drawHelp(ctx, font);

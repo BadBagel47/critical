@@ -89,6 +89,8 @@ export function createInput(canvas) {
     padKeys: new Set(),
     // Keys held by something on the screen, such as a button that is being pressed.
     virtual: new Set(),
+    // Keys held by a finger on a touch button (touch.js).
+    held: new Set(),
     pressed: new Set(),
     // The player uses a touch screen: the last press came from a finger, or the device has no mouse.
     touch: !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches),
@@ -132,6 +134,8 @@ export function createInput(canvas) {
     input.mouse.down = false;
   });
   const place = (e) => {
+    // Fingers are followed by touch.js, which works the mouse for a finger that is a tap.
+    if (e.pointerType === 'touch') return;
     const r = canvas.getBoundingClientRect();
     input.mouse.x = ((e.clientX - r.left) / r.width) * VIEW_W;
     input.mouse.y = ((e.clientY - r.top) / r.height) * VIEW_H;
@@ -145,6 +149,11 @@ export function createInput(canvas) {
   canvas.addEventListener('pointermove', place);
   canvas.addEventListener('pointerdown', (e) => {
     input.touch = e.pointerType === 'touch';
+    if (input.touch) {
+      canvas.focus();
+      gesture();
+      return;
+    }
     place(e);
     if (e.button === 0) {
       input.mouse.down = true;
@@ -155,6 +164,7 @@ export function createInput(canvas) {
     gesture();
   });
   const release = (e) => {
+    if (e.pointerType === 'touch') return;
     if (e.button === 0) input.mouse.down = false;
   };
   window.addEventListener('pointerup', release);
@@ -168,7 +178,8 @@ export function createInput(canvas) {
     },
     { passive: false },
   );
-  input.down = (...codes) => codes.some((c) => input.keys.has(c) || input.padKeys.has(c) || input.virtual.has(c));
+  input.down = (...codes) =>
+    codes.some((c) => input.keys.has(c) || input.padKeys.has(c) || input.virtual.has(c) || input.held.has(c));
   input.hit = (...codes) => codes.some((c) => input.pressed.has(c));
   input.endFrame = () => {
     input.pressed.clear();

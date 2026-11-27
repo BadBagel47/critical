@@ -3,6 +3,8 @@ import { VIEW_W, VIEW_H, STEP, COL } from './config.js';
 import { setLightStill } from './render/gl-light.js';
 import { loadAssets } from './assets.js';
 import { createInput } from './input.js';
+import { createTouch } from './touch.js';
+import { tabRects } from './render/hud.js';
 import { initAudio, isMuted } from './audio.js';
 import { readEvents, toast } from './events.js';
 import { openPage, menuInput } from './menu.js';
@@ -17,7 +19,7 @@ import { step, stepPlayers } from './sim/step.js';
 import { summon } from './sim/testing.js';
 import { chooseStory } from './sim/questline.js';
 import { findThing, thingsOf } from './sim/things.js';
-import { playerById } from './sim/players.js';
+import { holderOf, playerById } from './sim/players.js';
 import { resetEffects, updateEffects, updateInside } from './render/effects.js';
 import { pressActions } from './render/actions.js';
 import { label } from './render/draw.js';
@@ -48,6 +50,10 @@ resize();
 
 const keys = createInput(canvas);
 keys.onGesture = initAudio;
+// Fingers on a touch screen (F-090): the sticks and buttons, read by the screens through `keys`.
+const touch = createTouch(canvas, keys);
+keys.sticks = touch.sticks;
+keys.touchLayer = touch;
 
 // Saves are kept in the browser. Some browsers do not allow that, and then the game runs without saving.
 function findStorage() {
@@ -239,8 +245,20 @@ function leaveOnline() {
   game.online = null;
 }
 
+// The second screen (F-137): a window of its own that draws the game, to be put on a TV or another screen. It reads
+// the game from this window, so the page must not be opened without it (`noopener` is not used).
+let viewer = null;
+game.viewerOpen = () => !!viewer && !viewer.closed;
+function openViewer() {
+  if (game.viewerOpen()) viewer.focus();
+  else viewer = window.open('viewer.html', 'critical-viewer', 'popup,width=1280,height=720');
+  if (!viewer)
+    toast(game.view, game.state, 'THE BROWSER STOPPED THE WINDOW  ·  ALLOW POP-UPS FOR THE GAME', COL.ochre[2], 4);
+}
+
 game.actions = {
   newGame: (options) => play(createState(newSeed(), options)),
+  openViewer,
   hostOnline,
   joinOnline: () => joinOnline(null),
   invite: showInvite,
@@ -422,6 +440,24 @@ function startAt(where) {
   if (spots[where]) Object.assign(state.ship, spots[where]);
 }
 
+// What the fingers do this frame. A finger on something of the game's own that is tapped (a button of a panel, an
+// action, a post tab) is a tap, and not a stick.
+function touchFrame(mode) {
+  const { state, view } = game;
+  const playing = view.started && mode !== 'menu' && !state.paused && !state.over;
+  game.me = view.started ? playerById(state, view.playerId) : null;
+  const tapped = () => {
+    const boxes = buttonsOf(game);
+    if (view.started && game.me && game.me.inside === null) boxes.push(...tabRects(state, view, game.assets.font));
+    return boxes;
+  };
+  let boxes = null;
+  const isTap = (x, y) =>
+    (boxes ??= tapped()).some((b) => x >= b.x - 4 && x < b.x + b.w + 4 && y >= b.y - 4 && y < b.y + b.h + 4);
+  const on = { gunnerFree: view.started && !holderOf(state, 'gunner'), engOpen: !!view.engOpen };
+  touch.update(playing ? mode : 'none', on, isTap);
+}
+
 let last = performance.now();
 function frame(now) {
   if (still) now = ++stillFrame * (1000 / 60);
@@ -432,6 +468,7 @@ function frame(now) {
   if (!still && real > 0 && speed.seen(real, scale) !== null) resize();
   const mode = settle(game);
   keys.pollPad(SCREENS[mode].pad, !!SCREENS[mode].cursor, dt);
+  touchFrame(mode);
   viewKeys(game, mode);
   game.me = game.view.started ? playerById(game.state, game.view.playerId) : null;
   pressActions(game, mode);
@@ -502,6 +539,10 @@ loadAssets()
       },
       view: game.view,
       input: keys,
+      // The pictures and the font, for the second screen (F-137, src/viewer.js), which draws with them.
+      get assets() {
+        return game.assets;
+      },
       actions: game.actions,
       get online() {
         return game.online;
