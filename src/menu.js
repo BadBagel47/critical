@@ -7,6 +7,7 @@
 //   row.off       the row cannot be chosen right now, and `right` says why
 import { knownAvailable } from './online.js';
 import { glLightChoice, glLightFellBack, setGlLight } from './render/gl-light.js';
+import { touchOptions, setTouchOption } from './touch.js';
 import { VIEW_W, VIEW_H, COL } from './config.js';
 import { rect, bar } from './render/draw.js';
 import { volumeOf, setVolume, isMuted, toggleMute } from './audio.js';
@@ -160,8 +161,24 @@ const PAGES = {
               { id: 'leaveroom', label: 'LEAVE THE ROOM', run: a.leaveOnline },
             ]
           : []),
+        // A second screen for a TV or another screen beside this one (F-137). Not on a touch screen, where there is
+        // no second screen to put it on.
+        ...(game.keys && game.keys.touch
+          ? []
+          : [
+              {
+                id: 'viewer',
+                label: 'SECOND SCREEN',
+                right: game.viewerOpen && game.viewerOpen() ? 'OPEN  ·  Y SENDS YOUR VIEW' : 'A WINDOW FOR A TV',
+                run: a.openViewer,
+              },
+            ]),
         ...fullscreenRow(),
         ...lightRow(),
+        // The touch controls (F-090), for a player on a touch screen.
+        ...(game.keys && game.keys.touch
+          ? [{ id: 'touch', label: 'TOUCH CONTROLS', run: () => openPage(game, 'touch') }]
+          : []),
         // Only a test game has this.
         ...(state.test
           ? [{ id: 'testing', label: 'TEST  ·  CALL IN SHIPS', run: () => openPage(game, 'testing') }]
@@ -240,6 +257,33 @@ const PAGES = {
         run: () => (c[post] = !c[post]),
       });
       return [row('captain'), row('gunner'), row('engineer'), back(game)];
+    },
+  },
+  // The touch controls (F-090): how the Gunner aims (P6), how big the sticks are, and whether the buttons take taps
+  // a good way round them (P7).
+  touch: {
+    title: 'TOUCH CONTROLS',
+    rows(game) {
+      const o = touchOptions();
+      const AIMS = { A: 'DRAG ON SPACE', B: 'RIGHT STICK', C: 'TAP THE TARGET' };
+      const SIZES = { S: 'SMALL', M: 'MEDIUM', L: 'LARGE' };
+      const next = (list, v) => list[(list.indexOf(v) + 1) % list.length];
+      return [
+        {
+          id: 'aim',
+          label: 'GUNNER AIMS',
+          right: AIMS[o.aim],
+          run: () => setTouchOption('aim', next(['B', 'A', 'C'], o.aim)),
+        },
+        {
+          id: 'size',
+          label: 'STICKS',
+          right: SIZES[o.size],
+          run: () => setTouchOption('size', next(['S', 'M', 'L'], o.size)),
+        },
+        { id: 'big', label: 'BIGGER BUTTONS', right: o.big ? 'ON' : 'OFF', run: () => setTouchOption('big', !o.big) },
+        back(game),
+      ];
     },
   },
   sound: {

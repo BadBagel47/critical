@@ -1243,6 +1243,12 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1277 | Vakter som letat utan att hitta någon letar runt platsen en stund och går sedan tillbaka till sin runda, vaksammare en tid; också när basen har larm. | byggd | Användaren 2026-11-23 (VK2); F-300 | tests/guards-noise.test.js |
 | R-1278 | En bordare går långsammare åt sidan (80 %) och bakåt (60 %) än framåt, mätt mot det håll hen tittar, och springer bara framåt. | byggd | Användaren 2026-11-23 (SP2); F-299 | tests/carry.test.js |
 | R-1279 | När musen legat stilla en stund tittar bordaren åt det håll hen går, och fortsätter titta dit när hen stannar. | byggd | Ägaren 2026-11-23; B-298 | saknas |
+| R-1280 | På pekskärm kommer spakarna där tummen sätts ned, och spakarnas storlek och större tryckytor för knapparna väljs i menyn. | byggd | Användaren 2026-11-27 (P7); F-090 | tests/touch.test.js |
+| R-1281 | På pekskärm siktar och skjuter Gunner med höger spak; att dra på rymden eller trycka på målet kan väljas i menyn i stället. | byggd | Användaren 2026-11-27 (P6); F-090 | tests/touch.test.js |
+| R-1282 | På pekskärm flyger Captain med vänster spak, upp och ner för gasen som W och S och åt sidorna för att svänga, med knappar för boost och dockning, och skjuter med höger spak när Gunners post är ledig. | byggd | Användaren 2026-11-17 (P3); F-090 | tests/touch.test.js |
+| R-1283 | På pekskärm går bordaren med vänster spak och siktar och skjuter med höger, och knapparna ligger i rader längs kanterna. | byggd | Användaren 2026-11-17 (P5); F-090 | tests/touch.test.js |
+| R-1284 | Den andra skärmen visar av sig själv bordarnas vy när någon är ombord, en vid bild av striden när fiender är nära, och stjärnkartan under resa; inget i spelet kräver den. | byggd | Användaren 2026-11-14 och 2026-11-27 (VW3, ställd i chatten som VW1); F-137 | tests/viewer.test.js |
+| R-1285 | Varje post kan skicka sin egen vy till den andra skärmen med Y, och den ligger kvar där en stund innan skärmen följer läget igen. | byggd | Användaren 2026-11-27 (VW2); F-137 | tests/viewer.test.js |
 | R-947 | Inget moment i spelet pausar spelet. | byggd | HANDOFF beslut | saknas |
 | R-948 | En pausknapp fryser världen för alla spelare. | byggd | HANDOFF beslut | saknas |
 | R-949 | Hardcore mode ger ett liv. | byggd | HANDOFF beslut 2026-11-14 | saknas |

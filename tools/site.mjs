@@ -8,7 +8,7 @@ import { join } from 'node:path';
 const out = process.argv[2] || 'dist';
 const commit = process.argv[3] || 'local';
 const root = new URL('../', import.meta.url).pathname;
-const PARTS = ['index.html', 'playtest.html', 'privacy.html', 'src', 'assets', 'vendor', 'docs'];
+const PARTS = ['index.html', 'playtest.html', 'privacy.html', 'viewer.html', 'src', 'assets', 'vendor', 'docs'];
 
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });

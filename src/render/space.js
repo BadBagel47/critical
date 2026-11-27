@@ -497,9 +497,12 @@ function drawShadow(ctx, state, v, env) {
   ctx.restore();
 }
 
+// `view.zoom`, when given, draws space nearer or further than the game does, as the second screen does for a wide
+// view of a fight (F-137); it then leaves out the arrows at the edges, which are the players' own.
 export function drawSpace(ctx, state, view, assets) {
   const { img, font } = assets;
   const cam = view.cam;
+  const zoom = view.zoom || ZOOM;
   const ship = state.ship;
   const fx = view.fx;
   const post = playerById(state, view.playerId).post;
@@ -513,7 +516,7 @@ export function drawSpace(ctx, state, view, assets) {
   drawStars(ctx, cam, fx, state.sector);
   ctx.save();
   ctx.translate(VIEW_W / 2 + (fx ? fx.offset.x : 0), VIEW_H / 2 + (fx ? fx.offset.y : 0));
-  ctx.scale(ZOOM, ZOOM);
+  ctx.scale(zoom, zoom);
   ctx.translate(-cam.x, -cam.y);
   // Where a pixel of space does not cover a whole number of pixels on the screen, the pictures are smoothed.
   // Otherwise some of their pixels would be drawn wider than others, and they would shimmer as they move.
@@ -521,7 +524,7 @@ export function drawSpace(ctx, state, view, assets) {
   ctx.imageSmoothingEnabled = !even;
   ctx.imageSmoothingQuality = 'high';
   const near = (o, margin) =>
-    Math.abs(o.x - cam.x) < VIEW_W / 2 / ZOOM + margin && Math.abs(o.y - cam.y) < VIEW_H / 2 / ZOOM + margin;
+    Math.abs(o.x - cam.x) < VIEW_W / 2 / zoom + margin && Math.abs(o.y - cam.y) < VIEW_H / 2 / zoom + margin;
   if (currentSector(state).star) drawStar(ctx, cam, state.time, state.sector);
   for (const t of state.things) {
     const look = THING_LOOK[t.kind];
@@ -570,14 +573,14 @@ export function drawSpace(ctx, state, view, assets) {
   ctx.restore();
   // The graphics card lights the whole of space at once, and makes what is bright glow (F-295).
   if (gpu) {
-    const ox = VIEW_W / 2 + (fx ? fx.offset.x : 0) - cam.x * ZOOM,
-      oy = VIEW_H / 2 + (fx ? fx.offset.y : 0) - cam.y * ZOOM;
+    const ox = VIEW_W / 2 + (fx ? fx.offset.x : 0) - cam.x * zoom,
+      oy = VIEW_H / 2 + (fx ? fx.offset.y : 0) - cam.y * zoom;
     lightSpaceGL(
       ctx,
-      lights.map((l) => ({ ...l, x: l.x * ZOOM + ox, y: l.y * ZOOM + oy, r: l.r * ZOOM })),
+      lights.map((l) => ({ ...l, x: l.x * zoom + ox, y: l.y * zoom + oy, r: l.r * zoom })),
     );
   }
   ctx.imageSmoothingEnabled = false;
-  drawArrows(ctx, font, state, cam);
+  if (!view.zoom) drawArrows(ctx, font, state, cam);
   return dock;
 }

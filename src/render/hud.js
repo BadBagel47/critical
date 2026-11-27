@@ -44,16 +44,30 @@ export function tabText(state, post, me) {
   return { who, auto };
 }
 
-export function drawTabs(ctx, font, state, view) {
+// Where the post tabs lie at the top left, each as { post, x, y, w, h, text, mine, auto }. A tap on one on a touch
+// screen takes that post (F-090).
+export function tabRects(state, view, font) {
   const me = playerById(state, view.playerId);
   let x = 8;
-  POSTS.forEach((post, i) => {
-    const mine = me.post === post;
+  return POSTS.map((post, i) => {
     const { who, auto } = tabText(state, post, me);
-    const look = mine ? { fg: COL.out, bg: COL[post], border: null } : { fg: COL.dim, bg: COL.panel, border: COL.line };
-    if (auto) look.fg = COL.ion[2];
-    x = label(ctx, font, x, 8, `${i + 1}  ${post.toUpperCase()}${who ? '  ' + who : ''}`, look) + 4;
+    const text = `${i + 1}  ${post.toUpperCase()}${who ? '  ' + who : ''}`;
+    const w = font.width(text) + 8;
+    const r = { post, x, y: 8, w, h: 14, text, mine: me.post === post, auto };
+    x += w + 4;
+    return r;
   });
+}
+
+export function drawTabs(ctx, font, state, view) {
+  let x = 8;
+  for (const t of tabRects(state, view, font)) {
+    const look = t.mine
+      ? { fg: COL.out, bg: COL[t.post], border: null }
+      : { fg: COL.dim, bg: COL.panel, border: COL.line };
+    if (t.auto) look.fg = COL.ion[2];
+    x = label(ctx, font, t.x, t.y, t.text, look) + 4;
+  }
   return x;
 }
 
