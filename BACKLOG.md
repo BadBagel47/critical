@@ -86,7 +86,7 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 
 **O** – strong model, high level – Dialogporträtt (hör ihop med frågan VO4 om röster)
 - F-301 – Porträtt av karaktärerna som byts efter taggar i manuset, så att dialogen får ansikten som reagerar på det som sägs
-- Fråga DP1: Vilken stil ska porträtten ha? Rekommendation: samma stil som spelets grafik, provad på en karaktär innan resten görs.
+- Besked DP1 (2026-11-27): samma stil som spelets grafik, provad på en karaktär först.
 - Fråga DP2: Ska munnen röra sig när någon pratar? Rekommendation: ja, med en bild med öppen mun per uttryck, eftersom det ger mycket liv för lite jobb.
 
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
@@ -106,7 +106,7 @@ Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter rös
 
 | ID | Vad | Status |
 |---|---|---|
-| F-301 | Porträtt till dialogen som byts efter det talade manuset. Användaren 2026-11-27: 2D-porträtt av karaktärerna, utan bakgrund och med samma karaktär i olika uttryck, som byts beroende på vad som sägs. Agentens förslag: varje replik i manuset märks med ett uttryck, till exempel [angry], och spelet visar porträttet för det uttrycket medan repliken spelas. Samma taggar styr rösten, eftersom ElevenLabs röstmodell redan läser taggar som [angry] och [whispers] (som i röstprovet D-280). Byte mitt i en replik går med ordens tider från ElevenLabs. Valfritt: en bild med öppen mun per uttryck, som växlar med ljudets volym. Porträtten tas fram med ElevenLabs bildverktyg som PNG med genomskinlig bakgrund, först ett grundporträtt per karaktär och sedan uttrycken med grundporträttet som förlaga. Att låta spelet gissa känslan ur ljudet avråds, det blir opålitligt. Hör ihop med F-276 och VO4 | Ej påbörjad |
+| F-301 | Porträtt till dialogen som byts efter det talade manuset. Användaren 2026-11-27: 2D-porträtt av karaktärerna, utan bakgrund och med samma karaktär i olika uttryck, som byts beroende på vad som sägs. Agentens förslag: varje replik i manuset märks med ett uttryck, till exempel [angry], och spelet visar porträttet för det uttrycket medan repliken spelas. Samma taggar styr rösten, eftersom ElevenLabs röstmodell redan läser taggar som [angry] och [whispers] (som i röstprovet D-280). Byte mitt i en replik går med ordens tider från ElevenLabs. Valfritt: en bild med öppen mun per uttryck, som växlar med ljudets volym. Porträtten tas fram med ElevenLabs bildverktyg som PNG med genomskinlig bakgrund, först ett grundporträtt per karaktär och sedan uttrycken med grundporträttet som förlaga. Att låta spelet gissa känslan ur ljudet avråds, det blir opålitligt. Hör ihop med F-276 och VO4. Besked 2026-11-27 (DP1): samma stil som spelets grafik, provad på en karaktär innan resten görs. DP2 (munrörelse) är öppen: användaren tycker att det låter som väldigt många bilder | Ej påbörjad |
 | F-260 | Faktionernas namn får unika stilar, så att man ser vems ett system eller en bas är på namnet. Användaren 2026-11-16. Hör ihop med att två baser i samma system kunde få samma namn, som rättas i F-258 | Ej påbörjad |
 | F-252 | Uppgraderingar som loot (R-1141, R-1145). Delar ska kunna hittas i vrak och valv, och hamna i förrådet hos den roll som äger dem, men bara sådant rollen inte har max av (R-1175). I dag hittas bara extra platser | Ej påbörjad |
 | F-253 | Förrådet på handkontroll och pekskärm. I dag öppnas förrådet bara med I på tangentbordet | Ej påbörjad |
