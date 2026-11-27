@@ -84,6 +84,11 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Fråga HA1: Var handlar man varor? Rekommendation: i en egen flik i butiken, med en priskarta på stjärnkartan.
 - Fråga HA2: Delar varorna lastrum med malmen? Rekommendation: ja, samma lastrum, som byggs ut.
 
+**O** – strong model, high level – Dialogporträtt (hör ihop med frågan VO4 om röster)
+- F-301 – Porträtt av karaktärerna som byts efter taggar i manuset, så att dialogen får ansikten som reagerar på det som sägs
+- Fråga DP1: Vilken stil ska porträtten ha? Rekommendation: samma stil som spelets grafik, provad på en karaktär innan resten görs.
+- Fråga DP2: Ska munnen röra sig när någon pratar? Rekommendation: ja, med en bild med öppen mun per uttryck, eftersom det ger mycket liv för lite jobb.
+
 Hos en annan agent: F-048 (musik) är byggd av en annan agent enligt docs/music-brief.md. Det senaste musikvalet gäller tills vidare (användaren, 2026-11-15).
 
 Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter röstprovet i uppdragstestaren D-280? Rekommendation: lyssna på hela storyn och säg vad du tycker; blir det ja spelas karaktärernas fasta repliker in, och berättaren läser bara meningar utan genererade namn, R-1232), frågan SB2 om standardbasen (se Nästa steg i HANDOFF.md), förslagen D-187 (meddelanden), D-193 (permanenta prylar), D-186 (skeppets dator) och de kvarvarande frågorna i D-172 (straff i låsspel). F-091 (mining laser) tas upp när F-085 är provad. D-060, D-061 och D-062 (nätverksförberedelser), F-040 (onlineläget) och F-038 (hoppa in mitt i ett spel) väntar på nätverksmotorn och dess gränser.
@@ -101,6 +106,7 @@ Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter rös
 
 | ID | Vad | Status |
 |---|---|---|
+| F-301 | Porträtt till dialogen som byts efter det talade manuset. Användaren 2026-11-27: 2D-porträtt av karaktärerna, utan bakgrund och med samma karaktär i olika uttryck, som byts beroende på vad som sägs. Agentens förslag: varje replik i manuset märks med ett uttryck, till exempel [angry], och spelet visar porträttet för det uttrycket medan repliken spelas. Samma taggar styr rösten, eftersom ElevenLabs röstmodell redan läser taggar som [angry] och [whispers] (som i röstprovet D-280). Byte mitt i en replik går med ordens tider från ElevenLabs. Valfritt: en bild med öppen mun per uttryck, som växlar med ljudets volym. Porträtten tas fram med ElevenLabs bildverktyg som PNG med genomskinlig bakgrund, först ett grundporträtt per karaktär och sedan uttrycken med grundporträttet som förlaga. Att låta spelet gissa känslan ur ljudet avråds, det blir opålitligt. Hör ihop med F-276 och VO4 | Ej påbörjad |
 | F-260 | Faktionernas namn får unika stilar, så att man ser vems ett system eller en bas är på namnet. Användaren 2026-11-16. Hör ihop med att två baser i samma system kunde få samma namn, som rättas i F-258 | Ej påbörjad |
 | F-252 | Uppgraderingar som loot (R-1141, R-1145). Delar ska kunna hittas i vrak och valv, och hamna i förrådet hos den roll som äger dem, men bara sådant rollen inte har max av (R-1175). I dag hittas bara extra platser | Ej påbörjad |
 | F-253 | Förrådet på handkontroll och pekskärm. I dag öppnas förrådet bara med I på tangentbordet | Ej påbörjad |
