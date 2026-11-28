@@ -13,7 +13,8 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 **A** – strong model, high level – Fler skepp att möta och borda
 - F-039 – Fler skeppsklasser som fungerar olika, för mer variation
 - F-304 – Kunna gå ombord på fler sorters skepp och platser
-- Fråga FS1: Vilka nya skepp först? Rekommendation: tre, en snabb interceptor, en eskort som skyddar fraktskepp och en bevakad transport som kan slås ut och bordas, med en designskiss först.
+- Designskiss 2026-11-28: docs/design/prototypes/ships.html, sju skepp att välja bland (D-307).
+- Fråga FS1: Vilka skepp byggs först? Rekommendation: interceptorn, eskortkorvetten och kuriren.
 
 **B** – strong model, high level – Varierade insidor och figurer
 - F-305 – Mer varierade inomhusmiljöer
@@ -418,3 +419,4 @@ Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter rös
 | F-081 | Gunboats och fraktskepp slås ut och blir platser att borda med besättningen kvar i lockdown; skjuter man vidare sprängs de; lämnade lagas de efter 90 sekunder; dubbel last och piratpris när besättningen är besegrad (SL2–SL4) | 2026-11-28 |
 | B-304 | Med strömmen ute är de släckta lamporna mörka och nödlamporna orange, så att ingen lampa ser ut att lysa utan att ge ljus | 2026-11-28 |
 | B-305 | Konsoler ställs på den ruta i rummet som har mest golv runt sig, nära mitten, med golv på alla fyra sidor (R-1290) | 2026-11-28 |
+| D-307 | Designskiss av nya skepp (F-039, F-304): docs/design/prototypes/ships.html med bilderna från docs/design/tools/ships3.py. Interceptorn som redan är ritad, och sex nya: eskortkorvett, bepansrad kurir, minläggare, bärgare, tankfartyg och torpedbåt, med vad varje post gör och planritningar för de fem som kan bordas | 2026-11-28 |
