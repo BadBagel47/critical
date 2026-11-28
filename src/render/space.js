@@ -80,11 +80,14 @@ export function drawStars(ctx, cam, fx = null, sector = 0) {
 // Shots are coloured by who fired them: the crew, its Darts, the pirates, and everyone else.
 const BOLT_COL = {
   crew: COL.ochre,
+  // The ion gun's bolts (F-081).
+  ion: ['#2c2060', '#5b44c8', '#a690ff', '#ffffff'],
   dart: COL.ion,
   pirate: COL.acid,
   other: [COL.steel[1], COL.steel[2], COL.steel[3], '#ffffff'],
 };
-const boltKind = (b) => (b.side === CREW ? (b.small ? 'dart' : 'crew') : b.side === PIRATE ? 'pirate' : 'other');
+const boltKind = (b) =>
+  b.ion ? 'ion' : b.side === CREW ? (b.small ? 'dart' : 'crew') : b.side === PIRATE ? 'pirate' : 'other';
 function drawBolt(ctx, b) {
   const k = b.small ? 0.6 : 1;
   const col = BOLT_COL[boltKind(b)];

@@ -711,8 +711,8 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-587 | Drönare kan fyllas på vid larm, och vakter kan komma med ett skepp som dockar. | bestämd | proposal-bases.md §4 | – |
 | R-588 | En ryggsäck köps och uppgraderas och avgör hur mycket utrustning och hur många turrets man får med sig. Utan den får man med sig lite. | bestämd | BACKLOG F-192 | – |
 | R-589 | Vapen som skjuter rakt fram skjuter inte när skeppet ligger dockat, och försvar vid dockning kräver köpta kanontorn. | bestämd | BACKLOG F-211 | – |
-| R-590 | Ett skepp som slagits ut har besättning och ström kvar och är i lockdown, men ett vrak är dött och mörkt. | bestämd | BACKLOG F-081 | – |
-| R-591 | Skepp som skadas nog blir drivande och kan bordas, och Gunner väljer mellan att slå ut och förstöra. | bestämd | BACKLOG F-081 | – |
+| R-590 | Ett skepp som slagits ut har besättning och ström kvar och är i lockdown, men ett vrak är dött och mörkt. | byggd | BACKLOG F-081; byggd 2026-11-28 | tests/hulks.test.js |
+| R-591 | Skepp som skadas nog blir drivande och kan bordas, och Gunner väljer mellan att slå ut och förstöra. | byggd | BACKLOG F-081; byggd 2026-11-28 | tests/hulks.test.js |
 | R-592 | Drönarna kommer från en drönarhangar som går att slå ut. | förslag | proposal-bases.md §4 | – |
 | R-593 | Ett kommunikationsrum stoppar anropet om förstärkning om man hinner dit. | förslag | proposal-bases.md §4 | – |
 | R-594 | Trycket inne ökar med hur farlig sektorn är. | förslag | proposal-bases.md §4 | – |
@@ -1249,6 +1249,10 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1283 | På pekskärm går bordaren med vänster spak och siktar och skjuter med höger, och knapparna ligger i rader längs kanterna. | byggd | Användaren 2026-11-17 (P5); F-090 | tests/touch.test.js |
 | R-1284 | Den andra skärmen visar av sig själv bordarnas vy när någon är ombord, en vid bild av striden när fiender är nära, och stjärnkartan under resa; inget i spelet kräver den. | byggd | Användaren 2026-11-14 och 2026-11-27 (VW3, ställd i chatten som VW1); F-137 | tests/viewer.test.js |
 | R-1285 | Varje post kan skicka sin egen vy till den andra skärmen med Y, och den ligger kvar där en stund innan skärmen följer läget igen. | byggd | Användaren 2026-11-27 (VW2); F-137 | tests/viewer.test.js |
+| R-1286 | Ett skepp slås ut när besättningen skadat det under en fjärdedel av skrovet, med alla vapen. Jonkanonen, som säljs för skrovet, tar sköldar dubbelt så fort och skrovet lite, och slår ut ett skepp med det mesta av skrovet kvar. | byggd | Användaren 2026-11-28 (SL1, utan val: rekommendationen); D-248, F-081 | tests/hulks.test.js |
+| R-1287 | Gunboats och fraktskepp kan slås ut och bordas. Fighters och piratkryssaren kan inte. | byggd | Användaren 2026-11-28 (SL2); F-081 | tests/hulks.test.js |
+| R-1288 | Ett utslaget skepp som ingen dockar vid har lagats av sin besättning efter 90 sekunder och flyger och slåss igen. Tiden står still medan fregatten är dockad där eller bordare är ombord, och en besegrad besättning lagar inget. | byggd | Användaren 2026-11-28 (SL3); F-081 | tests/hulks.test.js |
+| R-1289 | Ett utslaget skepp har sin last kvar, dubbelt så många lådor som ett vrak, och en piratbåt ger sitt pris när besättningen är besegrad eller sövd, en gång. | byggd | Användaren 2026-11-28 (SL4); F-081 | tests/hulks.test.js |
 | R-947 | Inget moment i spelet pausar spelet. | byggd | HANDOFF beslut | saknas |
 | R-948 | En pausknapp fryser världen för alla spelare. | byggd | HANDOFF beslut | saknas |
 | R-949 | Hardcore mode ger ett liv. | byggd | HANDOFF beslut 2026-11-14 | saknas |

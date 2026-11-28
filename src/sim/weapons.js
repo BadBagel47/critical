@@ -8,6 +8,7 @@ import { B, SHIP_GEOM, WING_MOUNTS } from './balance.js';
 import { THINGS } from './kinds.js';
 import { shipNose } from './ship.js';
 import { hurtVessel, classOf, struckByCrew } from './vessels.js';
+import { hurtHulk } from './hulks.js';
 import { damageStation, struckBy } from './stations.js';
 import { CREW } from './sides.js';
 import { has } from './upgrades.js';
@@ -17,6 +18,8 @@ export const WEAPONS = {
   pulse: { name: 'PULSE', mod: null, work: workPulse },
   heavy: { name: 'HEAVY', mod: 'heavy', charges: true, work: workHeavy },
   rockets: { name: 'ROCKETS', mod: 'rockets', ammo: (ship) => ship.rockets, work: workRockets },
+  // Knocks a ship out instead of blowing it up (SL1, F-081).
+  ion: { name: 'ION', mod: 'ion', work: workIon },
 };
 export const weaponsOf = (ship) => Object.keys(WEAPONS).filter((id) => !WEAPONS[id].mod || has(ship, WEAPONS[id].mod));
 export const turretMount = (ship) => toWorld(ship, SHIP_GEOM.turret);
@@ -46,6 +49,28 @@ function workPulse(state, ship, ctl) {
   state.events.push({ type: 'shot' });
 }
 
+// The ion gun fires from the nose turret like the pulse gun, a little slower, with bolts that burn through a ship's
+// systems more than its hull (SL1).
+function workIon(state, ship, ctl) {
+  if (!ctl.fire) return;
+  ship.firing = true;
+  if (ship.fireCooldown > 0) return;
+  const from = turretMount(ship);
+  const d = forward(ship.turretAngle + randRange(state, -0.01, 0.01));
+  state.bolts.push({
+    x: from.x + d.x * 9,
+    y: from.y + d.y * 9,
+    vx: d.x * B.BOLT_SPEED + ship.vx,
+    vy: d.y * B.BOLT_SPEED + ship.vy,
+    ttl: B.BOLT_TTL,
+    side: CREW,
+    dmg: B.ION_DMG,
+    ion: true,
+  });
+  ship.fireCooldown = B.ION_INTERVAL / ctl.power;
+  state.events.push({ type: 'ionShot' });
+}
+
 // Hold to charge, let go to fire. Letting go early wastes the charge.
 function workHeavy(state, ship, ctl, dt) {
   if (ctl.fire && ship.heavyCool <= 0) {
@@ -73,6 +98,11 @@ function fireHeavy(state) {
   for (const v of state.vessels) {
     if (inBeam(v.x, v.y, B.HEAVY_WIDTH / 2 + classOf(v).radius) && struckByCrew(state, v))
       hurtVessel(state, v, B.HEAVY_DMG);
+  }
+  // A knocked-out ship in the way takes the beam on its own hull (F-081).
+  for (const t of [...state.things]) {
+    if (!t.crew || !inBeam(t.x, t.y, B.HEAVY_WIDTH / 2 + 24)) continue;
+    hurtHulk(state, t, B.HEAVY_DMG, CREW);
   }
   // A station in the way takes the beam on its shield, and then on the first gun it crosses, or its hull.
   for (const st of state.things) {

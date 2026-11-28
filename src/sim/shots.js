@@ -9,6 +9,7 @@ import { damageStation, struckBy } from './stations.js';
 import { hurtRock } from './rocks.js';
 import { has } from './upgrades.js';
 import { forward, headingTo, turnToward, toWorld, dist, rand } from './util.js';
+import { hurtHulk } from './hulks.js';
 
 const spark = (state, b, dur) => state.fx.push({ type: 'hit', x: b.x, y: b.y, t: 0, dur });
 
@@ -46,7 +47,7 @@ function boltMeetsShips(state, b) {
     spark(state, b, 0.2);
     // The crew's shots hit the ship that the Captain has marked a little harder.
     const marked = b.side === CREW && state.marks.captain === v.id;
-    hurtVessel(state, v, b.dmg * (marked ? B.MARK_BONUS : 1), b.side);
+    hurtVessel(state, v, b.dmg * (marked ? B.MARK_BONUS : 1), b.side, !!b.ion);
     return;
   }
   if (enemies(state, b.side, CREW)) boltMeetsFrigate(state, b);
@@ -60,8 +61,10 @@ function boltMeetsThings(state, b, solids) {
     if (station && !struckBy(state, station, b.side)) continue;
     b.ttl = 0;
     spark(state, b, 0.15);
-    if (station) damageStation(state, station, b.dmg, b, b.side);
+    if (station) damageStation(state, station, b.ion ? b.dmg * B.ION_HULL : b.dmg, b, b.side);
     else if (c.thing.kind === 'rock') hurtRock(state, c.thing, b.dmg);
+    // A knocked-out ship takes the shot on its own hull, and blows up when that is gone (F-081).
+    else if (c.thing.crew) hurtHulk(state, c.thing, b.dmg, b.side, !!b.ion);
     return;
   }
 }
@@ -99,9 +102,14 @@ export function stepRockets(state, dt, solids) {
     }
     const station = wall && wall.thing.kind === 'station' ? wall.thing : null;
     if (station && struckBy(state, station, CREW)) damageStation(state, station, B.ROCKET_DMG, r, CREW);
+    const hulks = new Set();
     for (const c of solids) {
-      if (c.thing.kind === 'rock' && dist(c.x, c.y, r.x, r.y) < B.ROCKET_RADIUS + c.r)
-        hurtRock(state, c.thing, B.ROCKET_DMG);
+      if (dist(c.x, c.y, r.x, r.y) >= B.ROCKET_RADIUS + c.r) continue;
+      if (c.thing.kind === 'rock') hurtRock(state, c.thing, B.ROCKET_DMG);
+      else if (c.thing.crew && !hulks.has(c.thing)) {
+        hulks.add(c.thing);
+        hurtHulk(state, c.thing, B.ROCKET_DMG, CREW);
+      }
     }
     state.events.push({ type: 'rocketHit' });
   }

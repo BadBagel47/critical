@@ -168,7 +168,8 @@ export function drawPlaceLine(ctx, font, state, place) {
     } else if (it.pressure && it.pressure.relief) {
       label(ctx, font, x, 40, 'HELP IS COMING IN TO DOCK', { anchor: 'c', fg: COL.ember[2], border: COL.ember[0] });
     }
-  } else {
+  } else if (it.timer !== null) {
+    // A ship knocked out with its crew aboard has no reactor running down (F-081).
     const col = it.timer < 30 ? COL.ember : COL.ochre;
     const text = 'REACTOR UNSTABLE   ' + fmt(Math.max(0, it.timer));
     label(ctx, font, x, 8, text, { anchor: 'c', fg: col[2], border: col[0] });

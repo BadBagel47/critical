@@ -138,6 +138,16 @@ function noise(dur, gain = 0.3, cutoff = 1200, delay = 0) {
 // One small sound per kind of event. The number is the shortest gap in seconds between two of the same.
 const SOUNDS = {
   shot: [0.05, () => tone(900, 420, 0.07, 'square', 0.12)],
+  // The ion gun: a lower, buzzing shot (F-081).
+  ionShot: [0.06, () => tone(420, 260, 0.1, 'sawtooth', 0.09)],
+  // A ship knocked out: a short crack and its engines winding down.
+  knockedOut: [
+    0.3,
+    () => {
+      noise(0.25, 0.3, 1200);
+      tone(320, 60, 0.9, 'sawtooth', 0.18);
+    },
+  ],
   pirateShot: [0.06, () => tone(360, 190, 0.09, 'sawtooth', 0.08)],
   otherShot: [0.08, () => tone(520, 300, 0.07, 'square', 0.05)],
   rifle: [0.05, () => tone(700, 380, 0.05, 'square', 0.1)],

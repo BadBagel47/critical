@@ -22,58 +22,52 @@ Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går 
 - Fråga VÄ1: Vad händer när något blir för varmt? Rekommendation: det stängs av en stund, vapnen slutar skjuta och motorerna tappar fart, men skrovet tar ingen skada.
 - Fråga VÄ2: Hur kyler Engineer? Rekommendation: med kraft till kylning i samma panel som kraften i dag, och med uppgraderingar som kyler bättre. En skiss först.
 
-**C** – strong model, high level – Slå ut och borda
-- D-248 – Se över hur man slår ut ett skepp för att borda det, så att Gunner har ett tydligt sätt att göra det i stället för att skeppet exploderar
-- F-081 – Skepp som skadas nog blir drivande och kan bordas medan besättningen är kvar, så att Gunner får välja mellan att slå ut och förstöra
-- Fråga SL1: Hur slår Gunner ut ett skepp i stället för att spränga det? Rekommendation: ett eget vapen som tar sköld och motorer men nästan inte skrovet, och ett skepp utan motorer driver och kan bordas.
-- Fråga SL2: Vilka skepp kan slås ut och bordas? Rekommendation: fraktskepp och gunboats, som har insidor. Fighters inte.
-
-**D** – strong model, high level – Missiler och raketer
+**C** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 - Fråga MI1: Är missiler och raketer två olika delar? Rekommendation: ja, två delar som köps för sig, med ammunition vid disken som raketerna i dag.
 
-**E** – strong model, high level – Kontakt med andra skepp
+**D** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 - Fråga KO1: Hur anropar Captain? Rekommendation: en knapp när ett skepp eller en station är nära, med en kort lista att välja ur: be om bränsle, muta, kräva tribut.
 - Fråga KO2: Hur många eskorter kan man ha? Rekommendation: en åt gången, hyrd på baser.
 
-**F** – strong model, high level – Anomalier
+**E** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 - Fråga AN1: Vilka sorters anomalier först? Rekommendation: tre: ett fält där man flyger och skjuter långsammare, strålning som skadar skölden, och moln som stör sensorerna.
 - Fråga AN2: Syns de på stjärnkartan? Rekommendation: ja, när man har varit i systemet eller har systemradar.
 
-**G** – strong model, high level – En värld som förändras
+**F** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 - Fråga VF1: Hur ofta händer något i världen? Rekommendation: ungefär var tionde till femtonde minut, med ett meddelande när det händer.
 - Fråga VF2: Ska två faktioner vara i krig i varje omgång? Rekommendation: ja, ett krig per omgång, där uppdrag för den ena sänker anseendet hos den andra.
 
-**H** – strong model, high level – Ljudeffekter
+**G** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - Fråga LJ1: Görs ljuden som i dag, av spelets egen ljudmotor, eller som inspelade filer? Rekommendation: som i dag, så slipper vi licensfrågor och stora filer.
 
-**I** – strong model, high level – Visuella effekter och feedback
+**H** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 - Fråga VE1: Ska skärmen skaka och blinka mer vid träffar? Rekommendation: lite mer, med ett val i menyn som stänger av skakningar och blixtar, av hänsyn till ljuskänsliga.
 
-**J** – strong model, high level – Förslag: ekonomi och belöningar
+**I** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 - Fråga EK1: Förslaget om ekonomin skrevs innan den nya världen, butiken och kassorna per roll. Ska det skrivas om innan du svarar på frågorna i det? Rekommendation: ja.
 
-**K** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**J** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 - Fråga SV1: Ska nivåerna justeras först när ekonomin är bestämd? Rekommendation: ja, efter gruppen om ekonomi och belöningar, eftersom priserna och nivåerna hänger ihop.
 
-**L** – strong model, high level – Handel
+**K** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 - Fråga HA1: Var handlar man varor? Rekommendation: i en egen flik i butiken, med en priskarta på stjärnkartan.
 - Fråga HA2: Delar varorna lastrum med malmen? Rekommendation: ja, samma lastrum, som byggs ut.
 
-**M** – strong model, high level – Dialogporträtt (hör ihop med frågan VO4 om röster)
+**L** – strong model, high level – Dialogporträtt (hör ihop med frågan VO4 om röster)
 - F-301 – Porträtt av karaktärerna som byts efter taggar i manuset, så att dialogen får ansikten som reagerar på det som sägs
 - Besked DP1 (2026-11-27): samma stil som spelets grafik, provad på en karaktär först.
 - Fråga DP2: Ska munnen röra sig när någon pratar? Rekommendation: ja, med en bild med öppen mun per uttryck, eftersom det ger mycket liv för lite jobb.
@@ -119,7 +113,6 @@ Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter rös
 | F-119 | Faktioner som är i krig med varandra. Då får sidouppdragen man tar större tyngd. Agentens förslag: ett krig mellan två av faktionerna per omgång, där deras patruller slåss med varandra och uppdrag för den ena sänker anseendet hos den andra. Krig kan börja och ta slut som händelser i världen (F-087) | Ej påbörjad |
 | F-103 | Stora baser med två våningar: 1,5 gånger större än dagens stationer, med annan design, mer vapen och starkare sköld till försvar. Dagens storlek är bra för små stationer. Design visas först Besked 2026-11-16: ersatt av standardbasen i tre våningar och en större utsida som byggs av samma data som insidan, se docs/proposal-bases.md, F-208 och D-217 | Ersatt |
 | D-104 | Utredning om hur rewards, priser, ekonomi, händelser, reputation etc hänger ihop och påverkar världen och skeppet Förslaget är framtaget 2026-11-15 i docs/proposal-economy.md och väntar på användarens svar på frågorna där. Mätt 2026-11-16 med den simulerade spelaren (docs/economy.md): ensam i första sektorn ger en timme ungefär 8 700 krediter, mest från vrak, och de tolv vanligaste uppgraderingarna går att köpa inom 16 minuter. Vraken ger ungefär 45 gånger mer bränsle än flygningen drar, så bränslet betyder i praktiken ingenting så länge det finns vrak | Väntar på användaren |
-| D-248 | Se över hur man slår ut ett skepp för att borda det. Användaren 2026-11-16: i dag exploderar skeppen. Hör till F-081 och R-590, R-591 | Ej påbörjad |
 | B-251 | Webbläsartestet "the boarder walks" misslyckas ibland hos GitHub men inte lokalt: 2026-11-16 föll det två gånger i rad på en ändring som bara rörde dokument och gick igenom tredje gången. Troligen tidsberoende eller slump i vrakets planlösning | Ej påbörjad |
 | F-211 | Skeppet medan man bordar: vapen rakt fram skjuter inte dockat, försvar dockad kräver köpta kanontorn. Skeppet får lämna dockan men inte hoppa så länge någon är kvar i basen, och ingen teleporteras tillbaka. Vid nästan slut skrov backar det ut om en spelare i skeppet väljer det, eller av sig självt om datorn sköter Captain, och kommer tillbaka när någon kallar från luftslussen. Annars ligger det kvar under dockningsskölden. Ersätter D-043. Datorns del hänger ihop med D-186 | Ej påbörjad |
 | F-212 | Baserna anpassas efter antalet spelare, så att det inte blir för svårt ensam: vakter, drönare, tid till förstärkning, hur fort läget skärps och bossens liv. Förslag på nivåer i docs/proposal-bases.md, siffrorna sätts vid provspel | Ej påbörjad |
@@ -128,7 +121,6 @@ Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter rös
 | F-219 | Piraternas slutbas: urholkad asteroid i tre våningar, genererad varje gång, med stort lastutrymme och vakter, en skattkammare och bränsletunnor. Man kommer in vid dockorna i botten och arbetar sig uppåt (besked 2026-11-16). Bossen är en pirat i en mech-dräkt, och bossrummet har mekanik för att besegra den. Efter bossen tar man över basen, ingen sprängning eller flykt. Förslag och designtest: docs/design/prototypes/interior-pirate-base.html (tre pyloner, faser, svep som visas i förväg) | Ej påbörjad |
 | D-071 | Vi behöver en lösning för eskortskepp. Från D-075, godkänt av användaren: eskorter som hyrs mot lön och tar enkla order (följ, anfall mitt mål, håll avstånd). Hyrs på stationer, och i baren när den finns (D-072) | Ej påbörjad |
 | D-072 | Baser ska ha två våningar med olika funktioner. Vi funderar lite på hur detta kan göras bra. Agentens första tanke: nedre våningen med luftsluss, services och shipyard, övre med armory och en bar, hiss eller trappa emellan. Besked 2026-11-14: tanken är godkänd. Små stationer får en våning, större får två. Samma gäller för fientliga Besked 2026-11-16: tills vidare en vanlig bastyp, standardbasen i tre våningar (ljus mitt med entré och det lagliga, industri med last i källaren, kommando överst), plus piraternas slutbas. Fler bastyper kan komma senare. Plan i docs/proposal-bases.md, byggs i F-208 till F-212 | Planerad |
-| F-081 | Från D-075: skepp som slås ut i stället för att sprängas, så att de kan bordas medan besättningen är kvar. Gunner väljer mellan att slå ut och förstöra. Bestämt 2026-11-15: ett utslaget skepp har besättning och ström kvar och är därför i lockdown, med roterande röda ljus och smygande, till skillnad från ett vrak som är dött och mörkt (F-159) Besked 2026-11-15: storyn kan kräva att man bordar ett skepp för att plocka upp en karta till ett dolt system, se D-052 | Ej påbörjad |
 | F-082 | Från D-075: anropa andra skepp och stationer. Be om bränsle eller hjälp, muta, kräva tribut. En ny uppgift för Captain Sparad idé ur D-180 (2026-11-15): bara Captain kan anropa. | Ej påbörjad |
 | F-083 | Från D-075: skepp i nöd som ber om bränsle eller reparation och betalar eller minns det | Ej påbörjad |
 | F-084 | Besked 2026-11-21 (VÄ5): väntar tills spelet fungerar ensam. Från D-075: värme som en andra resurs bredvid energi. Vapen och motorer blir varma, och Engineer måste kyla. Användaren: det där med värme är riktigt bra, då kan vi även göra uppgraderingar som kyler systemen bättre | Ej påbörjad |
@@ -409,3 +401,5 @@ Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter rös
 | F-137 | En andra skärm i ett eget fönster från menyn (SECOND SCREEN), till exempel en tv: visar bordarna när någon är ombord, en vid bild av striden när fiender är nära och stjärnkartan under resa; Y skickar den egna vyn dit i 20 sekunder. Besked 2026-11-27: VW2 alla kan skicka, VW3 efter läget | 2026-11-27 |
 | B-302 | Det som ritas en gång sparas nu under platsens, sakens eller figurens nummer (src/render/keep.js). Uppmätt med fördröjning: gästen inne på en bas från 278 till 18 millisekunder per bild, lika med värden | 2026-11-28 |
 | B-303 | Lampan slås av och på överallt, också för en besökare, innan något annat i steget kan avbryta | 2026-11-28 |
+| D-248 | Ett skepp slås ut under en fjärdedel av skrovet med alla vapen, och jonkanonen slår ut med det mesta av skrovet kvar (SL1) | 2026-11-28 |
+| F-081 | Gunboats och fraktskepp slås ut och blir platser att borda med besättningen kvar i lockdown; skjuter man vidare sprängs de; lämnade lagas de efter 90 sekunder; dubbel last och piratpris när besättningen är besegrad (SL2–SL4) | 2026-11-28 |

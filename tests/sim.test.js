@@ -2017,7 +2017,7 @@ test('test mode starts with everything installed, room for it, credits and all c
   assert.equal(s.ship.rockets, B.ROCKET_LOAD);
   assert.equal(s.ship.dartStock, 3);
   assert.equal(s.charts.length, s.sectors.length);
-  assert.deepEqual(weaponsOf(s.ship), ['pulse', 'heavy', 'rockets']);
+  assert.deepEqual(weaponsOf(s.ship), ['pulse', 'heavy', 'rockets', 'ion']);
   assert.equal(createState(1).test, false, 'a normal game is unchanged');
   run(s, { captain: { throttle: 1, boost: true, darts: false }, gunner: { aim: { x: 0, y: -200 }, fire: true } }, 5);
 });

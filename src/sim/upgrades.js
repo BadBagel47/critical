@@ -32,6 +32,15 @@ export const CATALOG = {
     price: 220,
     desc: 'CHARGED BEAM, FIRES STRAIGHT AHEAD',
   },
+  // Knocks gunboats and freighters out to be boarded, instead of blowing them up (SL1, F-081).
+  ion: {
+    tab: 'hull',
+    role: 'gunner',
+    name: 'ION CANNON',
+    slot: 'hull',
+    price: 180,
+    desc: 'KNOCKS SHIPS OUT TO BOARD, BARELY HURTS A HULL',
+  },
   rockets: {
     tab: 'hull',
     role: 'gunner',

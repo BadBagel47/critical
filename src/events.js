@@ -58,6 +58,10 @@ const TOAST = {
   recalled: (e) => [`UNDOCKED  ·  ${e.count} TELEPORTED HOME`, BAD],
   doorOpen: () => ['VAULT OPEN', LOOT],
   wreckExploded: () => ['THE WRECK BLEW UP', BAD],
+  // Knocked out instead of blown up (F-081).
+  knockedOut: (e) => [`${e.name} KNOCKED OUT  ·  DOCK AND BOARD BEFORE THEY REPAIR IT  ·  SHOOT ON TO DESTROY`, GOOD],
+  crewBeaten: (e) => [`THE CREW OF THE ${e.name} IS BEATEN` + (e.bounty ? `  ·  +${e.bounty} CREDITS` : ''), LOOT],
+  hulkRepaired: (e) => [`THE ${e.name} IS REPAIRED AND FIGHTS AGAIN`, BAD],
   lockOpen: (e) => (e.kind === 'pod' ? null : ['LOCK BYPASSED  ·  E TO BOARD', GOOD]),
   reactorShaken: (e) => [
     `BYPASS FAILED  ·  THE REACTOR LOSES ${e.lost} S` + (e.last ? '  ·  ONE MORE BLOWS THE WRECK' : ''),

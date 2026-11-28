@@ -14,6 +14,7 @@ import { openCommand } from './pressure.js';
 import { TAU, dist, headingTo, rand } from './util.js';
 import { newTurret } from './defences.js';
 import { credits, fillVault } from './loot.js';
+import { crewInside } from './hulks.js';
 
 // ---------- generation ----------
 // The floor plan itself is made in layout.js. Here it is filled with guards, turrets and loot.
@@ -299,6 +300,8 @@ function fillInterior(state, it, wreck) {
   }
   if (base) fillBase(state, it, wreck);
   else fillWreck(state, it, wreck, deep);
+  // A ship that was knocked out has its crew and power (F-081, R-590).
+  if (wreck.crew) crewInside(state, it);
   return it;
 }
 
@@ -383,7 +386,7 @@ function addCamera(state, it, box) {
 
 // Where the turning lights of an alarm are: one for every 300 tiles of floor, spread evenly along the corridors
 // and over the holds (R-1182).
-function beaconsFor(it) {
+export function beaconsFor(it) {
   const spots = [];
   const every = 9;
   for (const h of it.halls) {
