@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nya skepp, förslag</title>
+<style>
+/* Design sketches for more ship classes (F-039, F-304, 2026-11-28): one card for each proposal, with the ship in the
+   colours of the sides that fly it, at three times the size it has in the game, what it does, what each post does
+   against it, and a floor plan where it can be boarded. The pictures are made by docs/design/tools/ships3.py. The page
+   keeps to the game's own dark world, so it has one theme by choice. */
+:root {
+  color-scheme: dark;
+  --bg: #0b0c16;
+  --panel: #14162a;
+  --line: #2f3350;
+  --text: #c9ccd8;
+  --dim: #8f93ab;
+  --accent: #dba445;
+  --good: #96d66e;
+  --display: 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --body: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Courier New', monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--body); font-size: 15px; line-height: 1.5; padding: 20px 16px 48px; }
+main { max-width: 980px; margin: 0 auto; display: grid; gap: 22px; }
+h1 { font-family: var(--display); font-weight: 600; font-size: 1.8rem; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 1.25rem; margin: 0; }
+h3 { font-family: var(--display); font-weight: 600; font-size: .95rem; margin: 10px 0 2px; color: var(--accent); }
+p { margin: 0; max-width: 70ch; }
+.lede { color: var(--dim); }
+img.px { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+.lineup { overflow-x: auto; background: #090a12; border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+.lineup img { width: 100%; height: auto; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); }
+.card.rec { border-color: #4c9a50; }
+.ships { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.ships figure { margin: 0; text-align: center; color: var(--dim); font-size: .8rem; }
+.tag { display: inline-block; font-size: .75rem; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--line); color: var(--dim); margin-right: 6px; }
+.tag.yes { color: var(--good); border-color: #4c9a50; }
+.tag.rec { color: #0b0c16; background: var(--good); border-color: var(--good); font-weight: 700; }
+.plan { margin-top: 8px; }
+ul { margin: 4px 0 0; padding-left: 1.2em; }
+li { margin: 2px 0; }
+.posts li b { color: var(--text); }
+.note { color: var(--dim); font-size: .9rem; }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 8px; }
+@media (max-width: 720px) { .card { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Nya skepp, förslag</h1>
+    <p class="lede">Sju skepp att möta, och vilka av dem som kan bordas. Skeppen är ritade i spelets stil och visas tre gånger förstorade, i färgerna hos de sidor som skulle flyga dem. Inget av det här är byggt. Välj vilka som byggs först.</p>
+  </header>
+
+  <section class="box">
+    <h2>I samma skala som i spelet</h2>
+    <p class="note">Från vänster: er fregatt, fightern, interceptorn, gunboaten och fraktskeppet som finns i dag, och sedan de sex nya: eskortkorvetten, kuriren, minläggaren, bärgaren, tankfartyget och torpedbåten.</p>
+    <div class="lineup"><img class="px" src="../img/ships/lineup.png" alt="Alla skepp på rad i samma skala: fregatten, fightern, interceptorn, gunboaten, fraktskeppet, och de sex nya förslagen."></div>
+  </section>
+
+  <article class="card rec">
+    <div>
+      <h2>Interceptor</h2>
+      <p><span class="tag rec">Rekommenderad</span><span class="tag">kan inte bordas</span></p>
+      <div class="ships" data-scale="3">
+        <figure><img class="px" src="../../../assets/sprites/interceptor.png" alt="Interceptorn, ett smalt skepp med svepta vingar i stål."><figcaption>redan ritad</figcaption></figure>
+      </div>
+    </div>
+    <div>
+      <p>Ett litet, mycket snabbt jaktskepp som anfaller i svep: det dyker in, skjuter en skur och drar sig undan innan det vänder igen. Svårt att träffa, men tål lite. Flygs av pirater och av faktionernas patruller.</p>
+      <h3>Vad varje post gör</h3>
+      <ul class="posts">
+        <li><b>Captain</b> vänder skeppet så att Gunner får skottlinje när interceptorn kommer in.</li>
+        <li><b>Gunner</b> skjuter framför den, eftersom den rör sig fort. Raketer passar bra.</li>
+        <li><b>Engineer</b> lägger kraft på sköldarna under svepen och på vapnen däremellan.</li>
+      </ul>
+      <h3>Vad den tillför</h3>
+      <p>En fiende som kräver att man leder skotten och samarbetar om vinkeln. Bilden finns redan i spelet men används inte.</p>
+    </div>
+  </article>
+
+  <article class="card rec">
+    <div>
+      <h2>Eskortkorvett</h2>
+      <p><span class="tag rec">Rekommenderad</span><span class="tag yes">kan bordas</span></p>
+      <div class="ships" data-scale="3">
+        <figure><img class="px" src="../img/ships/corvette-patrol.png" alt="Eskortkorvetten i stål och grönt, med två lysande sköldsändare på utriggare."><figcaption>patrull</figcaption></figure>
+        <figure><img class="px" src="../img/ships/corvette-pirate.png" alt="Eskortkorvetten i piraternas plommonfärg."><figcaption>pirat</figcaption></figure>
+      </div>
+      <img class="px plan" src="../img/ships/corvette-plan.png" alt="Planritning av korvetten: brygga överst, en korridor genom mitten, besättning och vapenrum, två rum med sköldsändare i brunt, luftsluss och motorer längst bak.">
+    </div>
+    <div>
+      <p>Följer med fraktskepp och kurirer och lägger en sköld över skeppet den skyddar. Så länge korvetten är kvar tar man sig inte igenom till lasten. Den har ett torn på ryggen och håller sig nära det den vaktar.</p>
+      <h3>Vad varje post gör</h3>
+      <ul class="posts">
+        <li><b>Captain</b> väljer: först korvetten, eller runt den till fraktskeppet medan skölden håller.</li>
+        <li><b>Gunner</b> riktar in sig på sköldsändarna. Jonkanonen slår ut dem snabbt.</li>
+        <li><b>Engineer</b> kan med en skanning se hur mycket skölden har kvar.</li>
+      </ul>
+      <h3>Borda</h3>
+      <p>De två rummen med sköldsändare är målet. Stängs de av inifrån faller skölden över konvojen, även om korvetten fortfarande flyger.</p>
+    </div>
+  </article>
+
+  <article class="card rec">
+    <div>
+      <h2>Bepansrad kurir</h2>
+      <p><span class="tag rec">Rekommenderad</span><span class="tag yes">kan bordas</span></p>
+      <div class="ships" data-scale="3">
+        <figure><img class="px" src="../img/ships/courier-trader.png" alt="Kuriren i stål och ockra, smal och tjockt pansrad med ett mörkt valv i mitten."><figcaption>handel</figcaption></figure>
+        <figure><img class="px" src="../img/ships/courier-pirate.png" alt="Kuriren i piraternas färger."><figcaption>pirat</figcaption></figure>
+      </div>
+      <img class="px plan" src="../img/ships/courier-plan.png" alt="Planritning av kuriren: brygga, kojer och vaktrum, ett stort valv i brunt mitt i skeppet, luftsluss, säkerhetsrum och motorer.">
+    </div>
+    <div>
+      <p>Ett snabbt, tjockt pansrat transportskepp som bär det som är värt att vakta: krediter, sjökort och ibland något som storyn behöver. Den slåss inte, den flyr, och har ofta två fighters med sig.</p>
+      <h3>Vad varje post gör</h3>
+      <ul class="posts">
+        <li><b>Captain</b> jagar ikapp med efterbrännaren innan den hinner hoppa ut ur systemet.</li>
+        <li><b>Gunner</b> slår ut den. Pansaret gör det svårt att spränga, och sprängd är lasten borta.</li>
+        <li><b>Engineer</b> öppnar valvet ombord, där låset är svårare än vanligt.</li>
+      </ul>
+      <h3>Borda</h3>
+      <p>Valvet i mitten är det man kommer för. Vakterna är få men tåliga, och säkerhetsrummet har kameror.</p>
+    </div>
+  </article>
+
+  <article class="card">
+    <div>
+      <h2>Minläggare</h2>
+      <p><span class="tag yes">kan bordas</span></p>
+      <div class="ships" data-scale="3">
+        <figure><img class="px" src="../img/ships/minelayer-pirate.png" alt="Minläggaren i plommonfärg, kantig, med ett ställ med fyra minor med röda lampor i aktern."><figcaption>pirat</figcaption></figure>
+        <figure><img class="px" src="../img/ships/minelayer-patrol.png" alt="Minläggaren i stål och grönt."><figcaption>patrull</figcaption></figure>
+      </div>
+      <img class="px plan" src="../img/ships/minelayer-plan.png" alt="Planritning av minläggaren: brygga, besättning, verkstad, luftsluss, vapenrum och ett stort minrum i rött i aktern.">
+    </div>
+    <div>
+      <p>Lägger minor efter sig när den flyr eller patrullerar. Minorna ligger kvar en stund och sprängs när något kommer nära, också pirater.</p>
+      <h3>Vad varje post gör</h3>
+      <ul class="posts">
+        <li><b>Captain</b> styr runt minfälten, eller lockar fiender in i dem.</li>
+        <li><b>Gunner</b> kan skjuta minorna på avstånd.</li>
+        <li><b>Engineer</b> ser minorna på kartan efter en skanning.</li>
+      </ul>
+      <h3>Borda</h3>
+      <p>Minrummet är farligt: en granat där inne sätter igång kedjan och spränger skeppet. Den som har tid kan ta med minor hem som last.</p>
+    </div>
+  </article>
+
+  <article class="card">
+    <div>
+      <h2>Bärgare</h2>
+      <p><span class="tag yes">kan bordas</span></p>
+      <div class="ships" data-scale="3">
+        <figure><img class="px" src="../img/ships/salvager-drifter.png" alt="Bärgaren i rost och stål, med två kranarmar med klor i fören och ett öppet lastrum med skrot."><figcaption>drifters</figcaption></figure>
+        <figure><img class="px" src="../img/ships/salvager-pirate.png" alt="Bärgaren i piraternas färger."><figcaption>pirat</figcaption></figure>
+      </div>
+      <img class="px plan" src="../img/ships/salvager-plan.png" alt="Planritning av bärgaren: brygga, två kranrum, ett stort lastrum i brunt, luftsluss, besättning och motorer.">
+    </div>
+    <div>
+      <p>Kommer efter en strid och plockar upp det som driver: bärgningsgods och vrak. Den tävlar med er om bytet, och en drifter-bärgare blir sur om man stjäl dess fynd.</p>
+      <h3>Vad varje post gör</h3>
+      <ul class="posts">
+        <li><b>Captain</b> hinner först till godset, eller låter bärgaren samla och tar sedan allt på en gång.</li>
+        <li><b>Gunner</b> slår ut den, vilket kostar anseende hos dess sida om den inte är pirat.</li>
+        <li><b>Engineer</b> kan med traktorstrålen ta godset framför näsan på den.</li>
+      </ul>
+      <h3>Borda</h3>
+      <p>Lastrummet är fullt av det den har samlat, mer ju längre den har hållit på.</p>
+    </div>
+  </article>
+
+  <article class="card">
+    <div>
+      <h2>Tankfartyg</h2>
+      <p><span class="tag yes">kan bordas</span></p>
+      <div class="ships" data-scale="3">
+        <figure><img class="px" src="../img/ships/tanker-trader.png" alt="Tankfartyget i stål, med tre stora runda tankar med gula varningsmärken längs en ryggrad."><figcaption>handel</figcaption></figure>
+        <figure><img class="px" src="../img/ships/tanker-drifter.png" alt="Tankfartyget med rostfärgad brygga och motor."><figcaption>drifters</figcaption></figure>
+      </div>
+      <img class="px plan" src="../img/ships/tanker-plan.png" alt="Planritning av tankfartyget: brygga, besättning och luftsluss överst, tre stora tankrum i brunt längs en lång korridor, och pumprum i rött längst bak.">
+    </div>
+    <div>
+      <p>Långsamt och obeväpnat, med bränsle i tre stora tankar. Sprängt tar det med sig allt i närheten, också den som sköt. Utslaget och bordat fyller det fregattens tankar.</p>
+      <h3>Vad varje post gör</h3>
+      <ul class="posts">
+        <li><b>Captain</b> håller avstånd om det blir strid nära det.</li>
+        <li><b>Gunner</b> kan spränga det mitt bland pirater som vapen, eller slå ut det försiktigt.</li>
+        <li><b>Engineer</b> pumpar över bränslet ombord i pumprummet, vilket tar en stund.</li>
+      </ul>
+      <h3>Borda</h3>
+      <p>Ett lugnt skepp med få vakter, men varje skott ombord kan träffa en tank.</p>
+    </div>
+  </article>
+
+  <article class="card">
+    <div>
+      <h2>Torpedbåt</h2>
+      <p><span class="tag">kan inte bordas</span></p>
+      <div class="ships" data-scale="3">
+        <figure><img class="px" src="../img/ships/torpedo-pirate.png" alt="Torpedbåten i plommonfärg, lång och smal med två rör i fören."><figcaption>pirat</figcaption></figure>
+        <figure><img class="px" src="../img/ships/torpedo-patrol.png" alt="Torpedbåten i stål och grönt."><figcaption>patrull</figcaption></figure>
+      </div>
+    </div>
+    <div>
+      <p>Avfyrar långsamma torpeder som träffar mycket hårt. Torpederna går att skjuta ner på vägen, och punktförsvaret tar dem ibland.</p>
+      <h3>Vad varje post gör</h3>
+      <ul class="posts">
+        <li><b>Captain</b> väjer när en torped är på väg.</li>
+        <li><b>Gunner</b> skjuter ner torpeden eller båten innan den hinner skjuta igen.</li>
+        <li><b>Engineer</b> lägger kraft på sköldarna precis innan träffen.</li>
+      </ul>
+      <h3>Vad den tillför</h3>
+      <p>Ett hot som alla tre posterna måste svara på samtidigt.</p>
+    </div>
+  </article>
+
+  <section class="box">
+    <h2>Fler att borda</h2>
+    <p>Utöver de nya skeppen går det att göra fler av dem som redan finns till platser att borda:</p>
+    <ul>
+      <li><b>Piratkryssaren</b> som slutstrid: slå ut den och ta bryggan inifrån, i stället för att bara skjuta den i bitar.</li>
+      <li><b>Fraktskepp i konvoj</b>: med en eskortkorvett blir det en riktig kapning med två steg.</li>
+      <li><b>Fightern och torpedbåten</b> är för små för att ha en insida. De sprängs som i dag.</li>
+    </ul>
+  </section>
+
+  <section class="box">
+    <h2>Rekommendation</h2>
+    <p>Bygg först interceptorn, eskortkorvetten och kuriren. Interceptorn är redan ritad och ger striderna ett snabbare tempo. Korvetten och kuriren hör ihop med det ni just fått, att slå ut och borda: korvetten skyddar något, och kuriren bär något värt att ta. Därefter tankfartyget och minläggaren, som båda ger Captain något att väja för.</p>
+  </section>
+</main>
+<script>
+// Each ship is shown at three times the size it has in the game, sharp, whatever the screen.
+for (const img of document.querySelectorAll('.ships img')) {
+  const scale = Number(img.closest('.ships').dataset.scale) || 3;
+  const fit = () => (img.style.width = img.naturalWidth * scale + 'px');
+  if (img.complete) fit();
+  else img.addEventListener('load', fit);
+}
+for (const img of document.querySelectorAll('img.plan')) {
+  const fit = () => (img.style.width = img.naturalWidth * 0.75 + 'px');
+  if (img.complete) fit();
+  else img.addEventListener('load', fit);
+}
+</script>
+<script type="module" src="../../../src/playtest-start.js"></script>
+</body>
+</html>
