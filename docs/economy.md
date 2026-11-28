@@ -11,6 +11,7 @@
 | NOSE TURRET | hull | GUNNER | hull | 140 | 1 |
 | TWIN WING TURRETS | hull | GUNNER | hull | 150 | 1 |
 | HEAVY LASER | hull | GUNNER | hull | 220 | 1 |
+| ION CANNON | hull | GUNNER | hull | 180 | 1 |
 | ROCKET PODS | hull | GUNNER | hull | 200 | 1 |
 | FIGHTER BAY | hull | GUNNER | hull | 320 | 3 |
 | ARMOR PLATING | hull | ENGINEER | hull | 160 | 1 |

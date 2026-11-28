@@ -42,7 +42,8 @@ function remember(state, sources) {
       continue;
     }
     state.known.push(info);
-    state.events.push({ type: 'found', kind: t.kind, ...(t.align ? { align: t.align } : {}) });
+    // A ship just knocked out says so itself (F-081); it is not news as a wreck found.
+    if (!t.crew) state.events.push({ type: 'found', kind: t.kind, ...(t.align ? { align: t.align } : {}) });
   }
   // Something that is gone is forgotten once someone looks at where it was.
   const exists = (k) => state.things.some((t) => t.id === k.id);

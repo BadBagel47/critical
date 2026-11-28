@@ -88,8 +88,12 @@ function markStation(ctx, font, k, p, env) {
   };
 }
 function markWreck(ctx, font, k, p, env) {
-  rect(ctx, Math.round(p.x) - 3, Math.round(p.y) - 3, 6, 6, COL.ochre[2], COL.out);
   const wreck = env.state.things.find((t) => t.id === k.id);
+  if (wreck && wreck.crew) {
+    rect(ctx, Math.round(p.x) - 3, Math.round(p.y) - 3, 6, 6, COL.ember[2], COL.out);
+    return { reach: 4, lines: [[hulkLine(wreck), COL.ember[2]]] };
+  }
+  rect(ctx, Math.round(p.x) - 3, Math.round(p.y) - 3, 6, 6, COL.ochre[2], COL.out);
   const lines = [['WRECK', COL.ochre[2]]];
   if (env.scan && wreck) lines.push([risk(wreck.difficulty), COL.dim]);
   return { reach: 4, lines };
@@ -124,6 +128,29 @@ function drawPod(ctx, pod, env) {
 
 const spriteOf = (name) => (ctx, t, env) =>
   sprite(ctx, env.img[typeof name === 'function' ? name(t) : name], t.x, t.y, t.heading);
+const wreckSprite = spriteOf((wreck) => (wreck.hull === 'hull' ? 'wreck' : 'wreck_' + wreck.hull));
+
+// A ship knocked out with its crew aboard (F-081): the ship as it was, dark, with sparks where it is hurt, its
+// hull, and how long until its crew has it flying again. The time stops while the crew's ship is docked there.
+const hulkSprite = (t, img) => spriteOfVessel({ kind: t.crew.ship.kind, side: t.crew.side }, img);
+export const hulkLine = (t) =>
+  t.crew.beaten ? 'CREW BEATEN' : `KNOCKED OUT  ·  REPAIRED IN ${Math.max(0, Math.ceil(t.crew.repair))} S`;
+function drawHulk(ctx, t, env) {
+  const img = hulkSprite(t, env.img);
+  ctx.globalAlpha = 0.75;
+  sprite(ctx, img, t.x, t.y, t.heading);
+  ctx.globalAlpha = 1;
+  const time = env.state.time;
+  // Sparks that come and go on the hull.
+  for (let k = 0; k < 3; k++) {
+    if (Math.floor(time * 7 + k * 2.3 + t.id) % 3) continue;
+    const a = t.id * 1.7 + k * 2.1;
+    rect(ctx, t.x + Math.cos(a) * 9 - 1, t.y + Math.sin(a) * 14 - 1, 2, 2, k ? COL.ochre[3] : COL.white);
+  }
+  const ship = t.crew.ship;
+  const y = t.y - (img ? img.height / 2 : 20) - 8;
+  hpBar(ctx, t.x, y, 30, Math.max(0, ship.hp) / ship.hpMax, COL.ember[1]);
+}
 
 //   margin  how far outside the screen it is still drawn
 //   draw    how it is drawn in space
@@ -139,9 +166,10 @@ export const THING_LOOK = {
     image: (rock, env) => env.img['rock' + rock.variant],
   },
   wreck: {
-    margin: 110,
-    draw: spriteOf((wreck) => (wreck.hull === 'hull' ? 'wreck' : 'wreck_' + wreck.hull)),
-    image: (wreck, env) => env.img[wreck.hull === 'hull' ? 'wreck' : 'wreck_' + wreck.hull],
+    margin: 170,
+    draw: (ctx, wreck, env) => (wreck.crew ? drawHulk(ctx, wreck, env) : wreckSprite(ctx, wreck, env)),
+    image: (wreck, env) =>
+      wreck.crew ? hulkSprite(wreck, env.img) : env.img[wreck.hull === 'hull' ? 'wreck' : 'wreck_' + wreck.hull],
     mark: markWreck,
     dot: { size: 3, color: () => COL.ochre[2] },
     arrow: () => COL.ochre[2],

@@ -492,6 +492,20 @@ export const B = {
   // Wrecks are a bonus (R-1097). A ship that leaves a wreck does so this often when it is shot down. A system the
   // crew comes back to after this many seconds may have a new wreck, more likely where the pirates are.
   KILL_WRECK_CHANCE: 0.4,
+  // Knocked out instead of blown up (F-081, D-248, SL1-SL4): a gunboat or a freighter whose hull falls to this
+  // share of its full strength, or whose systems the ion gun has burned through, drifts with its crew aboard and
+  // can be boarded. Shot on, it blows up. Left alone, its crew has it flying again after this many seconds. Its
+  // hold is whole: this many times the crates of a wreck.
+  DISABLE_AT: 0.25,
+  DISABLED_FOR: 90,
+  CREWED_LOOT: 2,
+  // The ion gun (SL1): fires like the pulse gun, eats shields twice as fast, hurts a hull little, and burns
+  // through a ship's systems: when they have taken this share of its full hull, it is knocked out.
+  ION_DMG: 6,
+  ION_INTERVAL: 0.25,
+  ION_HULL: 0.15,
+  ION_SHIELD: 2,
+  ION_DISABLE: 0.6,
   WRECK_RETURN_TIME: 300,
   WRECK_RETURN_CHANCE: { pirate: 0.5, contested: 0.35, other: 0.15 },
   WRECK_RETURN_MAX: 2,

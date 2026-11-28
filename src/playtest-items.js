@@ -32,6 +32,25 @@ export const ITEMS = [
   },
   {
     group: 'Spelet',
+    id: 'F-081, D-248',
+    title: 'Slå ut och borda',
+    where: 'dator',
+    steps: [
+      'Kalla in en gunboat från testmenyn. Skjut tills den har en fjärdedel av skrovet kvar och sluta: den driver.',
+      'Docka vid den och borda innan 90 sekunder har gått. Besättningen är kvar och basen är i lockdown.',
+      'Söv eller slå ner alla vakter, och se att priset betalas. Bär ut lasten.',
+      'Prova jonkanonen (ION, köps för skrovet på ett varv): den slår ut med det mesta av skrovet kvar.',
+      'Skjut på ett utslaget skepp tills det sprängs, och låt ett annat vara tills det lagas och anfaller igen.',
+    ],
+    links: [['Gunboat', at('?test&call=gunboat')]],
+    ask: [
+      'Är det lätt nog att sluta skjuta i tid, eller behövs jonkanonen för att lyckas?',
+      'Är 90 sekunder lagom innan skeppet är lagat?',
+      'Är det värt att borda ett utslaget skepp i stället för att spränga det?',
+    ],
+  },
+  {
+    group: 'Spelet',
     id: 'F-090',
     title: 'Pekskärm på iPad',
     where: 'iPad',

@@ -24,6 +24,7 @@ import {
 } from './sides.js';
 import { addThing, thingsOf, findThing } from './things.js';
 import { currentSector, createWreck } from './sectors.js';
+import { knockedOut, knockOut } from './hulks.js';
 import { forward, headingTo, angleDiff, turnToward, toWorld, dist, rand, randRange, TAU, clamp } from './util.js';
 
 export const classOf = (v) => SHIPS[v.kind];
@@ -102,13 +103,16 @@ export function struckByCrew(state, v) {
   );
 }
 
-// Damage a ship, and handle what happens when it is destroyed. `by` is the side that did it.
-export function hurtVessel(state, v, dmg, by = CREW) {
+// Damage a ship, and handle what happens when it is destroyed. `by` is the side that did it. An ion bolt (`ion`)
+// eats shields twice as fast, hurts the hull little, and burns through the ship's systems (SL1).
+export function hurtVessel(state, v, dmg, by = CREW, ion = false) {
   if (v.hp <= 0) return;
-  const absorbed = Math.min(v.shield, dmg);
+  const absorbed = Math.min(v.shield, ion ? dmg * B.ION_SHIELD : dmg);
   v.shield -= absorbed;
   if (absorbed > 0) state.fx.push({ type: 'shield', x: v.x, y: v.y, t: 0, dur: 0.2 });
-  v.hp -= dmg - absorbed;
+  const left = ion ? Math.max(0, dmg - absorbed / B.ION_SHIELD) : dmg - absorbed;
+  v.hp -= ion ? left * B.ION_HULL : left;
+  if (ion) v.ion = (v.ion || 0) + left;
   const c = SHIPS[v.kind];
   const crew = by === CREW;
   // Shooting at someone who is not an enemy costs their good will. They fight back, or run if they cannot.
@@ -118,12 +122,27 @@ export function hurtVessel(state, v, dmg, by = CREW) {
     if (!BRAINS[c.brain]) fleeFrom(state, v, state.ship);
   }
   if (crew && state.raid && v.raid === state.raid.id) state.raid.helped = true;
+  // A gunboat or a freighter the crew has hurt badly enough is knocked out, to be boarded or finished off (F-081).
+  if (crew && knockedOut(v)) {
+    knockOut(state, v);
+    return;
+  }
   if (v.hp > 0) return;
+  rewardKill(state, v, by);
+}
+
+// What happens when a ship is destroyed: the blast, the bounty and the good will, a wreck now and then, and the
+// salvage. `paid` is set when its bounty has been paid already, as for a knocked-out ship whose crew was beaten.
+export function rewardKill(state, v, by = CREW, paid = false) {
+  const c = SHIPS[v.kind];
+  const crew = by === CREW;
   state.fx.push({ type: 'boom', x: v.x, y: v.y, t: 0, dur: c.boom.dur, size: c.boom.size });
   if (crew && v.side === PIRATE) {
     // Only the crew's own kills count, and pay.
-    state.kills++;
-    earn(state, c.bounty);
+    if (!paid) {
+      state.kills++;
+      earn(state, c.bounty);
+    }
     thankForPirate(state);
   } else if (crew) {
     changeStanding(state, v.side, -B.STANDING_LOSS.shipKill);
@@ -136,7 +155,7 @@ export function hurtVessel(state, v, dmg, by = CREW) {
     id: v.id,
     kind: v.kind,
     name: c.name,
-    bounty: crew && v.side === PIRATE ? c.bounty : 0,
+    bounty: crew && v.side === PIRATE && !paid ? c.bounty : 0,
     by,
     side: v.side,
   });

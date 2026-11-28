@@ -31,6 +31,7 @@ import { stepStory } from './questline.js';
 import { stepAway } from './away.js';
 import { stepJobs } from './jobs.js';
 import { level, shieldMax, dockShieldMax } from './upgrades.js';
+import { stepHulks } from './hulks.js';
 
 function age(list, dt) {
   for (const f of list) f.t += dt;
@@ -95,6 +96,7 @@ export function step(state, cmds, dt) {
   stepGunner(state, cmds.gunner, dt);
   stepTraffic(state, dt);
   stepVessels(state, dt);
+  stepHulks(state, dt);
   stepScan(state, cmds.scan, dt);
   stepStations(state, cmds, dt);
   stepSiege(state, dt);

@@ -114,7 +114,7 @@ export function tryBoard(state, playerId) {
   }
   if (!wreck.interior) wreck.interior = createInterior(state, wreck);
   const it = wreck.interior;
-  if (wreck.kind === 'wreck' && it.timer === null) {
+  if (wreck.kind === 'wreck' && !wreck.crew && it.timer === null) {
     // Every failed bypass has cost the reactor some of its time.
     it.timer = Math.max(30, B.REACTOR_TIME[wreck.difficulty] - wreck.lockFails * B.LOCK_FAIL_REACTOR);
   }
