@@ -184,6 +184,7 @@ Testbyggen sedan 2026-11-20 (användaren, DV1–DV3, projektregel i AGENTS.md):
 
 ## Decisions
 
+- Mörker när strömmen går (2026-11-28, MÖ1): en bas utan ström är så mörk som planen säger, med var tredje nödlampa svag och orange och annars bara bordarens egen lampa (F). Användaren tyckte att man såg väldigt lite och inga väggar, och valde att låta det vara så.
 Arbetssätt
 - Onlineläget (2026-11-19, OL2, OL3, ON5, ON6): spelet och rummen på samma adress hos Cloudflare med adressen critical.trythis.one, och GitHub-adressen skickar vidare (R-1248, R-1249). Koden räcker för att gå med. Paus och fortsätt kräver att alla anslutna godkänner (R-1250, F-037).
 - Testbyggen (2026-11-20, DV1–DV3): allt arbete via grenen dev och testbygget på critical-dev.l8p1.workers.dev; main bara när användaren säger Publicera; planeringsdokumenten direkt till main. Ersätter beskedet 2026-11-15 om att allt slås ihop med main när testerna gått igenom, och OL5. Se Publicering.
