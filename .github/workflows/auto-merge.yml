@@ -98,6 +98,8 @@ jobs:
 
   deploy-dev:
     needs: merge
+    # Also after a change to documents alone, where the checks were skipped: the design pages are on the test build.
+    if: ${{ always() && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-dev
