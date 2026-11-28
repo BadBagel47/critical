@@ -403,3 +403,40 @@ test('R-1205: three ways between floors: the lift is heard, and the ways lead to
   assert.ok(Math.abs(av.y - lift.at[1].y) < 1 && Math.abs(av.x - lift.at[1].x) < 1, 'at the same spot');
   assert.ok(g.curious, 'and a guard near the lift comes to see who it was');
 });
+
+// What is to be worked in a base never stands in or against a wall, also where the round hull cuts a room off
+// (found 2026-11-28: the switchgear stood in the outer wall).
+test('R-1290: the switchgear, the hangar, the comms and the mainframe stand on floor, with floor on every side of them', async () => {
+  const { createState } = await import('../src/sim/state.js');
+  const { thingsOf } = await import('../src/sim/things.js');
+  const { createInterior } = await import('../src/sim/interior.js');
+  const { tileAt, TILE } = await import('../src/sim/floor.js');
+  const floor = (c) => c === '.' || c === ',';
+  for (let seed = 1; seed <= 30; seed++) {
+    const s = createState(seed);
+    for (const st of thingsOf(s, 'station').slice(0, 2)) {
+      const side = st.side;
+      st.side = 'pirate';
+      const it = createInterior(s, st);
+      st.side = side;
+      for (const [name, p] of Object.entries({
+        breaker: it.breaker,
+        hangar: it.hangar,
+        comms: it.comms,
+        mf: it.mainframe,
+      })) {
+        const tx = Math.floor(p.x / TILE),
+          ty = Math.floor(p.y / TILE);
+        // Floor under it and on all four sides; a room cut off by the hull may leave a wall at a corner.
+        for (const [dx, dy] of [
+          [0, 0],
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ])
+          assert.ok(floor(tileAt(it, tx + dx, ty + dy)), `seed ${seed}: the ${name} is against a wall`);
+      }
+    }
+  }
+});

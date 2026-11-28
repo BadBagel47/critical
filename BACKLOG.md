@@ -10,64 +10,74 @@ Prioriterat för: användarens egen ordning: Playtest och onlineläget först, s
 Ordning (användaren 2026-11-16): först en spelbar värld där upplägget går att prova, sedan butiken och uppgraderingarna, och först därefter ekonomins värden, eftersom priser kan sättas först när det finns saker att köpa. Ändrat igen 2026-11-16 (användaren): butiken först, sedan uppdragen. Butiken och standardbasen är byggda, så uppdragen är nästa. Användaren 2026-11-17: först uppdragsstrukturen och en uppdragstestare, sedan uppdragen och storyn (A). Strukturen och testaren är klara 2026-11-17 (D-274, F-275), och D-274 väntar på att användaren läser storys i testaren. Frågorna under varje grupp har fasta etiketter efter projektregeln om frågeserier, så de byter inte namn när grupperna får nya bokstäver (agentregler v1.10). Priserna i butiken är preliminära tills uppdragen finns, eftersom uppdragen blir den stora inkomsten och priserna sätts efter den.
 
 
-**A** – strong model, high level – Sällsynta skepp
+**A** – strong model, high level – Fler skepp att möta och borda
+- F-039 – Fler skeppsklasser som fungerar olika, för mer variation
+- F-304 – Kunna gå ombord på fler sorters skepp och platser
+- Fråga FS1: Vilka nya skepp först? Rekommendation: tre, en snabb interceptor, en eskort som skyddar fraktskepp och en bevakad transport som kan slås ut och bordas, med en designskiss först.
+
+**B** – strong model, high level – Varierade insidor och figurer
+- F-305 – Mer varierade inomhusmiljöer
+- F-306 – Olika utseende för varje sorts vakt och för spelarnas roller
+- Fråga VI1: Hur ser rollerna ut? Rekommendation: samma figur i rollens färg, Captain blå, Gunner orange och Engineer grön, med något eget som syns ovanifrån.
+
+**C** – strong model, high level – Sällsynta skepp
 - F-070 – Lägg in Juggernauten enligt vald design, som tungt och långsamt krigsskepp på patrull hos faktioner och mycket sällan som pirat
 - F-086 – Namngivna unika skepp som dyker upp ibland, till exempel en känd pirat med prissumma
 - Fråga SS1: Hur ofta dyker Juggernauten upp? Rekommendation: högst en per omgång hos varje faktion, i de farligare systemen, och som pirat bara nära slutet.
 - Fråga SS2: Vad ger en namngiven pirat? Rekommendation: en prissumma och en unik del som loot, och en eller två sådana per omgång.
 
-**B** – strong model, high level – Värme – väntar på provspel ensam
+**D** – strong model, high level – Värme – väntar på provspel ensam
 - Besked 2026-11-21 (VÄ5): värmen väntar tills spelet fungerar ensam, efter provspel med skeppets dator (F-034) och Captains skott (F-291).
 - F-084 – Vapen och motorer blir varma och Engineer måste kyla, med uppgraderingar som kyler bättre, så att Engineer får mer att göra
 - Fråga VÄ1: Vad händer när något blir för varmt? Rekommendation: det stängs av en stund, vapnen slutar skjuta och motorerna tappar fart, men skrovet tar ingen skada.
 - Fråga VÄ2: Hur kyler Engineer? Rekommendation: med kraft till kylning i samma panel som kraften i dag, och med uppgraderingar som kyler bättre. En skiss först.
 
-**C** – strong model, high level – Missiler och raketer
+**E** – strong model, high level – Missiler och raketer
 - F-064 – Homing missiles som nytt vapen, raketer som släpper målet om de missar, och ammunition som köps på stationer. Båda kan träffa annat som ligger i banan
 - Fråga MI1: Är missiler och raketer två olika delar? Rekommendation: ja, två delar som köps för sig, med ammunition vid disken som raketerna i dag.
 
-**D** – strong model, high level – Kontakt med andra skepp
+**F** – strong model, high level – Kontakt med andra skepp
 - F-082 – Anropa skepp och stationer för att be om bränsle, muta eller kräva tribut, så att Captain får en ny uppgift
 - F-083 – Skepp i nöd som ber om bränsle eller reparation, så att det händer saker som inte är strid
 - D-071 – Eskorter som hyrs på stationer mot lön och tar enkla order, så att man kan få skydd
 - Fråga KO1: Hur anropar Captain? Rekommendation: en knapp när ett skepp eller en station är nära, med en kort lista att välja ur: be om bränsle, muta, kräva tribut.
 - Fråga KO2: Hur många eskorter kan man ha? Rekommendation: en åt gången, hyrd på baser.
 
-**E** – strong model, high level – Anomalier
+**G** – strong model, high level – Anomalier
 - F-053 – Områden i rymden som påverkar skeppet, till exempel där man flyger och skjuter långsammare eller tar skada
 - Fråga AN1: Vilka sorters anomalier först? Rekommendation: tre: ett fält där man flyger och skjuter långsammare, strålning som skadar skölden, och moln som stör sensorerna.
 - Fråga AN2: Syns de på stjärnkartan? Rekommendation: ja, när man har varit i systemet eller har systemradar.
 
-**F** – strong model, high level – En värld som förändras
+**H** – strong model, high level – En värld som förändras
 - F-087 – Händelser som ändrar världen: en station byter ägare, priser rör sig, en sektor blir farligare
 - F-119 – Faktioner i krig med varandra, så att det spelar roll vems uppdrag man tar
 - Fråga VF1: Hur ofta händer något i världen? Rekommendation: ungefär var tionde till femtonde minut, med ett meddelande när det händer.
 - Fråga VF2: Ska två faktioner vara i krig i varje omgång? Rekommendation: ja, ett krig per omgång, där uppdrag för den ena sänker anseendet hos den andra.
 
-**G** – strong model, high level – Ljudeffekter
+**I** – strong model, high level – Ljudeffekter
 - F-049 – Gå igenom ljudeffekterna, lägg till de som saknas och förbättra de som finns
 - Fråga LJ1: Görs ljuden som i dag, av spelets egen ljudmotor, eller som inspelade filer? Rekommendation: som i dag, så slipper vi licensfrågor och stora filer.
 
-**H** – strong model, high level – Visuella effekter och feedback
+**J** – strong model, high level – Visuella effekter och feedback
 - F-124 – Gå igenom allt som händer i spelet och se till att skärmen svarar tydligt på det, så att spelet känns mer levande och lättare att läsa
 - F-230 – Olika stjärnor i olika system, i färg och storlek, så att varje system känns eget
 - Fråga VE1: Ska skärmen skaka och blinka mer vid träffar? Rekommendation: lite mer, med ett val i menyn som stänger av skakningar och blixtar, av hänsyn till ljuskänsliga.
 
-**I** – strong model, high level – Förslag: ekonomi och belöningar
+**K** – strong model, high level – Förslag: ekonomi och belöningar
 - D-104 – Ta fram en översikt över hur belöningar, priser, händelser och anseende hänger ihop, så att världen går att balansera
 - D-097 – Ta fram en plan över vad olika skepp lämnar efter sig och hur ofta, så att lootet blir rimligt
 - Fråga EK1: Förslaget om ekonomin skrevs innan den nya världen, butiken och kassorna per roll. Ska det skrivas om innan du svarar på frågorna i det? Rekommendation: ja.
 
-**J** – strong model, high level – Svårare start och uppgraderingar som lönar sig
+**L** – strong model, high level – Svårare start och uppgraderingar som lönar sig
 - F-050 – Justera nivåerna för vapen, sköld, motorer och engineering, så att början känns svår och uppgraderingar blir värda pengarna
 - Fråga SV1: Ska nivåerna justeras först när ekonomin är bestämd? Rekommendation: ja, efter gruppen om ekonomi och belöningar, eftersom priserna och nivåerna hänger ihop.
 
-**K** – strong model, high level – Handel
+**M** – strong model, high level – Handel
 - F-068 – Varor som köps och säljs hos stationer med olika priser, ett lastrum som går att bygga ut och en priskarta, så att man kan tjäna pengar på att frakta
 - Fråga HA1: Var handlar man varor? Rekommendation: i en egen flik i butiken, med en priskarta på stjärnkartan.
 - Fråga HA2: Delar varorna lastrum med malmen? Rekommendation: ja, samma lastrum, som byggs ut.
 
-**L** – strong model, high level – Dialogporträtt (hör ihop med frågan VO4 om röster)
+**N** – strong model, high level – Dialogporträtt (hör ihop med frågan VO4 om röster)
 - F-301 – Porträtt av karaktärerna som byts efter taggar i manuset, så att dialogen får ansikten som reagerar på det som sägs
 - Besked DP1 (2026-11-27): samma stil som spelets grafik, provad på en karaktär först.
 - Fråga DP2: Ska munnen röra sig när någon pratar? Rekommendation: ja, med en bild med öppen mun per uttryck, eftersom det ger mycket liv för lite jobb.
@@ -89,6 +99,10 @@ Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter rös
 
 | ID | Vad | Status |
 |---|---|---|
+| F-039 | Fler skeppsklasser som fungerar olika, till exempel Interceptorn. Användaren 2026-11-28: fler typer av skepp för att öka variationen | Ej påbörjad |
+| F-304 | Kunna gå ombord på fler sorters skepp och platser. Användaren 2026-11-28. Hör ihop med F-039 och F-081: varje ny skeppsklass som är stor nog får en insida | Ej påbörjad |
+| F-305 | Mer varierade inomhusmiljöer: fler sorters rum och inredning, olika planlösningar och stil efter vem som äger skeppet eller basen och vad det används till. Användaren 2026-11-28 | Ej påbörjad |
+| F-306 | Olika utseende för varje sorts vakt och för spelarnas roller. Vakterna skiljer sig i dag bara med ett litet färgmärke, den tunga är större och drönaren egen (F-126), och alla bordare ser likadana ut. Användaren 2026-11-28 | Ej påbörjad |
 | F-301 | Porträtt till dialogen som byts efter det talade manuset. Användaren 2026-11-27: 2D-porträtt av karaktärerna, utan bakgrund och med samma karaktär i olika uttryck, som byts beroende på vad som sägs. Agentens förslag: varje replik i manuset märks med ett uttryck, till exempel [angry], och spelet visar porträttet för det uttrycket medan repliken spelas. Samma taggar styr rösten, eftersom ElevenLabs röstmodell redan läser taggar som [angry] och [whispers] (som i röstprovet D-280). Byte mitt i en replik går med ordens tider från ElevenLabs. Valfritt: en bild med öppen mun per uttryck, som växlar med ljudets volym. Porträtten tas fram med ElevenLabs bildverktyg som PNG med genomskinlig bakgrund, först ett grundporträtt per karaktär och sedan uttrycken med grundporträttet som förlaga. Att låta spelet gissa känslan ur ljudet avråds, det blir opålitligt. Hör ihop med F-276 och VO4. Besked 2026-11-27 (DP1): samma stil som spelets grafik, provad på en karaktär innan resten görs. DP2 (munrörelse) är öppen: användaren tycker att det låter som väldigt många bilder | Ej påbörjad |
 | F-260 | Faktionernas namn får unika stilar, så att man ser vems ett system eller en bas är på namnet. Användaren 2026-11-16. Hör ihop med att två baser i samma system kunde få samma namn, som rättas i F-258 | Ej påbörjad |
 | F-252 | Uppgraderingar som loot (R-1141, R-1145). Delar ska kunna hittas i vrak och valv, och hamna i förrådet hos den roll som äger dem, men bara sådant rollen inte har max av (R-1175). I dag hittas bara extra platser | Ej påbörjad |
@@ -153,7 +167,6 @@ Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter rös
 | ID | Vad | Status |
 |---|---|---|
 | F-036 | Pirater som bordar er, med försvar i vågor i bordningsläget | Parkerad |
-| F-039 | Fler skeppsklasser som fungerar olika, till exempel Interceptorn | Parkerad |
 | F-076 | Köpa nya skepp och bygga flotta. Tittas på i framtiden. Går emot beslutet att spelarskeppet alltid är samma fregatt, så det beslutet behöver prövas om då. Kommer från D-075 | Parkerad |
 | D-146 | Göra spelet i 3D, med samma vy uppifrån, för bättre ljussättning och en viewer med 3D-vy. Besked 2026-11-14: färdigt spel i 2D först. Om det görs om i 3D blir det ett helt omtag, eftersom det är ett stort ingrepp. Inget vi lägger tid på nu. Agentens bedömning finns kvar: det går, eftersom spellogiken är skild från bilden, men all grafik måste göras om och det kräver troligen ett färdigt 3D-bibliotek | Parkerad |
 
@@ -403,3 +416,5 @@ Väntar på användaren: frågan VO4 (ska storyn ha röster i spelet, efter rös
 | B-303 | Lampan slås av och på överallt, också för en besökare, innan något annat i steget kan avbryta | 2026-11-28 |
 | D-248 | Ett skepp slås ut under en fjärdedel av skrovet med alla vapen, och jonkanonen slår ut med det mesta av skrovet kvar (SL1) | 2026-11-28 |
 | F-081 | Gunboats och fraktskepp slås ut och blir platser att borda med besättningen kvar i lockdown; skjuter man vidare sprängs de; lämnade lagas de efter 90 sekunder; dubbel last och piratpris när besättningen är besegrad (SL2–SL4) | 2026-11-28 |
+| B-304 | Med strömmen ute är de släckta lamporna mörka och nödlamporna orange, så att ingen lampa ser ut att lysa utan att ge ljus | 2026-11-28 |
+| B-305 | Konsoler ställs på den ruta i rummet som har mest golv runt sig, nära mitten, med golv på alla fyra sidor (R-1290) | 2026-11-28 |

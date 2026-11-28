@@ -285,10 +285,10 @@ function fillInterior(state, it, wreck) {
   const roomFor = (use) => rooms.find((r) => r.use === use);
   if (base) {
     // What stands in a base: the mainframe in the command room, the switchgear, the drone hangar and the comms.
-    it.mainframe = { ...roomFor('COMMAND').mid };
-    it.breaker = { ...roomFor('BREAKER').mid, out: false, loud: false };
-    it.hangar = { ...roomFor('DRONES').mid, out: false };
-    it.comms = { ...roomFor('COMMS').mid };
+    it.mainframe = clearSpot(it, roomFor('COMMAND'));
+    it.breaker = { ...clearSpot(it, roomFor('BREAKER')), out: false, loud: false };
+    it.hangar = { ...clearSpot(it, roomFor('DRONES')), out: false };
+    it.comms = clearSpot(it, roomFor('COMMS'));
     it.beacons = beaconsFor(it);
   }
   // The reactor of a wreck stands where the plan put its engines, or in the room furthest in (see madePlan).
@@ -303,6 +303,39 @@ function fillInterior(state, it, wreck) {
   // A ship that was knocked out has its crew and power (F-081, R-590).
   if (wreck.crew) crewInside(state, it);
   return it;
+}
+
+// Where something to be worked stands in a room (found 2026-11-28): its middle, or, where the room is cut off by the
+// round hull or a wall and the middle is against a wall, the nearest tile of the room with floor all round it, so
+// that nothing to be reached stands in a wall or is hard to get at.
+const floorAt = (it, tx, ty) => {
+  const c = tileAt(it, tx, ty);
+  return c === '.' || c === ',';
+};
+// How much floor there is round a tile, itself counted: 9 is floor all round.
+const room9 = (it, tx, ty) => {
+  if (!floorAt(it, tx, ty)) return 0;
+  let n = 0;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (floorAt(it, tx + dx, ty + dy)) n++;
+  return n;
+};
+export function clearSpot(it, room) {
+  const mid = room.mid;
+  const tx = Math.floor(mid.x / TILE),
+    ty = Math.floor(mid.y / TILE);
+  if (room9(it, tx, ty) === 9) return { ...mid };
+  // The tile of the room with the most floor round it, and of those the nearest the middle.
+  let best = null;
+  let bestScore = -1;
+  for (let y = room.r0; y <= room.r1; y++)
+    for (let x = room.c0; x <= room.c1; x++) {
+      const score = room9(it, x, y) * 10000 - ((x - tx) ** 2 + (y - ty) ** 2);
+      if (room9(it, x, y) && score > bestScore) {
+        best = { x: x * TILE + TILE / 2, y: y * TILE + TILE / 2 };
+        bestScore = score;
+      }
+    }
+  return best || { ...mid };
 }
 
 // Rooms that nothing is put in: the ways in and out, the ways between floors, the rooms of the guns and those

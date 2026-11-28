@@ -94,7 +94,19 @@ export function drawGlows(ctx, state, it, style, origin) {
   for (let ty = ty0; ty < ty1; ty++)
     for (let tx = tx0; tx < tx1; tx++) {
       if (!lampAt(it, style, tx, ty)) continue;
-      ctx.globalAlpha = lampLevel(scatter(tx, ty), time);
+      const n = scatter(tx, ty);
+      // With a base's power out only the emergency lamps burn, orange, and the others are dark, so that no lamp
+      // seems to shine without throwing light (found 2026-11-28).
+      if (!it.wreck && !it.power) {
+        const lit = n % 3 === 0;
+        rect(ctx, tx * TILE + 3, ty * TILE + 10, 10, 3, lit ? '#8a4a20' : '#1a1a22');
+        if (lit) {
+          ctx.fillStyle = `rgb(${EMERGENCY})`;
+          ctx.fillRect(tx * TILE + 4, ty * TILE + 11, 8, 1);
+        }
+        continue;
+      }
+      ctx.globalAlpha = lampLevel(n, time);
       rect(ctx, tx * TILE + 3, ty * TILE + 10, 10, 3, style.lamp[1]);
       ctx.fillStyle = style.lamp[3];
       ctx.fillRect(tx * TILE + 4, ty * TILE + 11, 8, 1);
