@@ -7,19 +7,21 @@ import { bar, label, rect } from './draw.js';
 import { crewHpMax, hullMax, shieldMax } from '../sim/upgrades.js';
 import { hunters } from './radar.js';
 import { deckBox } from './boarding.js';
+import { keeper, tilesOf } from './keep.js';
 
 const fmt = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 
 // A small plan of the whole place in the corner, since it no longer fits on the screen. It is drawn once and
 // kept, and drawn again when a door has opened.
-const plans = new WeakMap();
+const plans = keeper();
 
 export function drawPlan(ctx, font, it, me, x, y, radar = []) {
   // On a base only the floor the player is on.
   const box = deckBox(it, me || it.entry);
   const ox = box.x0;
   let kept = plans.get(it);
-  if (!kept || kept.tiles !== it.tiles) {
+  const text = kept && kept.tiles === it.tiles ? kept.text : tilesOf(it);
+  if (!kept || kept.text !== text) {
     const canvas = document.createElement('canvas');
     canvas.width = it.w;
     canvas.height = it.h;
@@ -42,7 +44,7 @@ export function drawPlan(ctx, font, it, me, x, y, radar = []) {
                     : '#1d1f2b';
         g.fillRect(tx, ty, 1, 1);
       }
-    kept = { canvas, tiles: it.tiles };
+    kept = { canvas, tiles: it.tiles, text };
     plans.set(it, kept);
   }
   rect(ctx, x - 3, y - 3, box.w + 6, it.h + 6, COL.panel, COL.line);

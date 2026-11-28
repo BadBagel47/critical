@@ -11,6 +11,7 @@
 // top of it, as on any other place.
 import { TILE, tileAt } from '../sim/boarding.js';
 import { DECK } from '../sim/base.js';
+import { keeper, tilesOf } from './keep.js';
 
 // A number from 0 to 1 that is always the same for the same arguments.
 const hash = (x, y, s = 0) => {
@@ -1062,13 +1063,14 @@ function mark(it, deck) {
 }
 
 // The pictures of the floors of each base, made when a floor is first seen.
-const made = new WeakMap();
+const made = keeper();
 
 // Lay down the picture of a floor of a base.
 export function drawBaseDeck(ctx, it, deck) {
   let pics = made.get(it);
-  if (!pics || pics.tiles !== it.tiles) {
-    pics = { tiles: it.tiles, decks: [] };
+  const tiles = pics && pics.tiles === it.tiles ? pics.text : tilesOf(it);
+  if (!pics || pics.text !== tiles) {
+    pics = { tiles: it.tiles, text: tiles, decks: [] };
     made.set(it, pics);
   }
   if (!pics.decks[deck]) pics.decks[deck] = buildDeck(it, deck);

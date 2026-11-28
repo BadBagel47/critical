@@ -4,6 +4,7 @@ import { VIEW_W, VIEW_H, ZOOM } from '../config.js';
 import { B } from '../sim/balance.js';
 import { systemRadius } from '../sim/system.js';
 import { TAU } from '../sim/util.js';
+import { keeper } from './keep.js';
 
 // ---------- the star ----------
 // The star is worked out one pixel at a time, in the few colours and the fixed dither pattern that the ships
@@ -408,7 +409,7 @@ function lightOn(canvas, img, x, y, angle, px, py, side, k) {
 let scratch = null;
 // What lies still is lit the same way every frame, so its light is worked out once and kept. `keep` is what
 // to keep it under: the thing itself. Ships move and turn, and are worked out anew each time.
-const kept = new WeakMap();
+const kept = keeper();
 export function starLight(ctx, state, img, x, y, angle = 0, px = img.width / 2, py = img.height / 2, keep = null) {
   if (!state.sectors[state.sector].star) return;
   const d = Math.hypot(x, y);

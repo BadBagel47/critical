@@ -3,10 +3,11 @@
 // on the floor when they are down. It is all worked out from what the game already holds, and from what this
 // screen remembers of each figure from the frame before. Nothing here changes the game.
 import { COL } from '../config.js';
+import { keeper } from './keep.js';
 
 // What is remembered of each figure: where it stood, how far it has walked, its health, and until when it shows
 // that it was hit.
-const memory = new WeakMap();
+const memory = keeper();
 function recall(who, hp, time) {
   let m = memory.get(who);
   if (!m) {
