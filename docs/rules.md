@@ -1253,6 +1253,7 @@ Här säger reglerna en sak och spelet en annan, eftersom beslutet inte är bygg
 | R-1287 | Gunboats och fraktskepp kan slås ut och bordas. Fighters och piratkryssaren kan inte. | byggd | Användaren 2026-11-28 (SL2); F-081 | tests/hulks.test.js |
 | R-1288 | Ett utslaget skepp som ingen dockar vid har lagats av sin besättning efter 90 sekunder och flyger och slåss igen. Tiden står still medan fregatten är dockad där eller bordare är ombord, och en besegrad besättning lagar inget. | byggd | Användaren 2026-11-28 (SL3); F-081 | tests/hulks.test.js |
 | R-1289 | Ett utslaget skepp har sin last kvar, dubbelt så många lådor som ett vrak, och en piratbåt ger sitt pris när besättningen är besegrad eller sövd, en gång. | byggd | Användaren 2026-11-28 (SL4); F-081 | tests/hulks.test.js |
+| R-1290 | Det man behöver komma åt på en bas, som ställverket, drönarhangaren, comms och mainframen, står på golv med golv på alla fyra sidor, så nära rummets mitt som det går, också där basens runda skrov skär av ett rum. | byggd | Användaren 2026-11-28 | tests/base.test.js |
 | R-947 | Inget moment i spelet pausar spelet. | byggd | HANDOFF beslut | saknas |
 | R-948 | En pausknapp fryser världen för alla spelare. | byggd | HANDOFF beslut | saknas |
 | R-949 | Hardcore mode ger ett liv. | byggd | HANDOFF beslut 2026-11-14 | saknas |
