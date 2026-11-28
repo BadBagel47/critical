@@ -6,6 +6,7 @@
 // and stations fall on the hulls near them and leave black space black, and what is bright glows.
 import { VIEW_W, VIEW_H } from '../config.js';
 import { TILE, tileAt } from '../sim/boarding.js';
+import { keyOf } from './keep.js';
 
 const KEY = 'critical-light';
 // Light that falls nowhere still shows the shapes, in a cold tone: the light map's DARK.
@@ -207,8 +208,9 @@ function bind(g, prog, name, unit, tex) {
 // The place's tiles as a picture, one point per pixel of the place: red where a wall stops light, green inside.
 // Made again only when a tile has changed (a door opened, a wall blown).
 function walls(g, it) {
-  const key = it.tiles.join('');
-  if (g.wallsKey === key && g.wallsIt === it) return;
+  // Kept under the place and its tiles, not the object: a guest draws a new copy of the game each frame (keep.js).
+  const key = keyOf(it) + '|' + it.tiles.join('');
+  if (g.wallsKey === key) return;
   const w = it.w * TILE,
     h = it.h * TILE;
   const c = document.createElement('canvas');
@@ -230,7 +232,6 @@ function walls(g, it) {
   gl.bindTexture(gl.TEXTURE_2D, g.walls);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
   g.wallsKey = key;
-  g.wallsIt = it;
   g.wallsSize = [w, h];
 }
 

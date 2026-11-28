@@ -182,3 +182,22 @@ test('D-264: a post taken stays in the guess however many inputs are on their wa
   }
   assert.ok(o.mine.length > 40, 'more than the guess steps in full');
 });
+
+// What the screen keeps for a thing, a place or a figure is found again in a fresh copy of the game, as the guess
+// is each frame; kept under the object, a guest made the floors of a base anew each frame (found online 2026-11-28).
+test('D-264: pictures kept for a place, a thing or a boarder are found again in a copy of the game', async () => {
+  const { keeper, tilesOf } = await import('../src/render/keep.js');
+  const kept = keeper();
+  const place = { planSeed: 77, tiles: ['#..#', '#..#'] };
+  const ship = { id: 12, x: 0 };
+  const boarder = { player: 1, x: 3 };
+  for (const o of [place, ship, boarder]) kept.set(o, 'made for ' + JSON.stringify(o));
+  for (const o of [place, ship, boarder]) assert.equal(kept.get(structuredClone(o)), 'made for ' + JSON.stringify(o));
+  assert.equal(tilesOf(structuredClone(place)), tilesOf(place), 'the same tiles');
+  assert.notEqual(tilesOf({ tiles: ['#.D#', '#..#'] }), tilesOf(place), 'a door opened');
+  // Something with nothing to know it by is kept by the object, and let go with it.
+  const loose = { x: 1 };
+  kept.set(loose, 'loose');
+  assert.equal(kept.get(loose), 'loose');
+  assert.equal(kept.get({ x: 1 }), undefined);
+});

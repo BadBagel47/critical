@@ -7,6 +7,7 @@ import { rect } from './draw.js';
 import { DECK_NAMES } from '../sim/base.js';
 import { likeOf } from '../sim/furnish.js';
 import { glow } from './inside-things.js';
+import { keeper } from './keep.js';
 
 const FLOOR = new Set(['.', ',', 'A']);
 
@@ -207,7 +208,7 @@ export function drawTiles(ctx, it, origin, style, time = 0) {
 }
 
 // What each tile of furniture belongs to: the use of the room it stands in. Worked out once for each place.
-const thingUses = new WeakMap();
+const thingUses = keeper();
 
 function useAt(it, tx, ty) {
   let map = thingUses.get(it);
