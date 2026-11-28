@@ -435,6 +435,8 @@ export function stepAvatar(state, place, it, av, cmd, dt) {
   if (!cmd) return;
   if (cmd.aim) av.heading = headingTo(cmd.aim.x - av.x, cmd.aim.y - av.y);
   walk(state, it, av, cmd, dt);
+  // The lamp works everywhere, also for a visitor on a trading station whose power has gone out (found 2026-11-28).
+  if (cmd.lampPressed) av.lamp = !av.lamp;
   if (it.trade) {
     stepVisitor(state, place, it, av, cmd, dt);
     return;
@@ -459,7 +461,6 @@ export function stepAvatar(state, place, it, av, cmd, dt) {
   if (at && at.type === 'loot') pickUp(state, it, av, at.item);
   if (cmd.drop) dropAll(state, it, av);
   if (cmd.grenade && av.grenades > 0) throwGrenade(it, av, cmd.grenade);
-  if (cmd.lampPressed) av.lamp = !av.lamp;
   if (cmd.flare && av.flares > 0) throwFlare(state, it, av, cmd.flare);
   // What is carried is stowed on the ship at the airlock, through its open hatch.
   const onHatch = tileAt(it, Math.floor(av.x / TILE), Math.floor(av.y / TILE)) === 'A' || atAirlockDoor(it, av);
